@@ -4,13 +4,13 @@ services:
   web:
     build: .
     ports:
-      - "8000:8000"
+      - "8080:8080"
     environment:
       - DEBUG=False
       - SECRET_KEY=your-production-secret-key-change-this
       - ALLOWED_HOSTS=localhost,127.0.0.1
       - SHOP_NAME=Clock Shop
-      - CURRENCY_SYMBOL=$
+      - CURRENCY_SYMBOL=৳
       - LOW_STOCK_THRESHOLD=10
     volumes:
       - ./db.sqlite3:/app/db.sqlite3
