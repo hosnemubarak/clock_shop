@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ transfer.transfer_number }} | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Transfer: {{ transfer.transfer_number }}</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'transfer_list' %}">Transfers</a></li>
+                    <li class="breadcrumb-item active">{{ transfer.transfer_number }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Transfer Items</h5>
+                <span class="badge 
+                    {% if transfer.status == 'completed' %}bg-success
+                    {% elif transfer.status == 'pending' %}bg-warning
+                    {% else %}bg-danger{% endif %} fs-12">
+                    {{ transfer.get_status_display }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product</th>
+                                <th>Batch</th>
+                                <th class="text-center">Quantity</th>
+                                <th class="text-end">Unit Cost</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in transfer.items.all %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td><code>{{ item.source_batch.batch_number }}</code></td>
+                                <td class="text-center">{{ item.quantity }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.unit_cost|floatformat:2 }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.total_cost|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Transfer Details</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted">Transfer #</td>
+                        <td class="fw-medium">{{ transfer.transfer_number }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">From</td>
+                        <td><a href="{% url 'warehouse_detail' transfer.source_warehouse.pk %}">{{ transfer.source_warehouse.name }}</a></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">To</td>
+                        <td><a href="{% url 'warehouse_detail' transfer.destination_warehouse.pk %}">{{ transfer.destination_warehouse.name }}</a></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Date</td>
+                        <td>{{ transfer.transfer_date|date:"F d, Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Created By</td>
+                        <td>{{ transfer.created_by.username|default:"-" }}</td>
+                    </tr>
+                    {% if transfer.completed_date %}
+                    <tr>
+                        <td class="text-muted">Completed</td>
+                        <td>{{ transfer.completed_date|date:"F d, Y H:i" }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+                
+                {% if transfer.notes %}
+                <hr>
+                <p class="text-muted mb-0"><strong>Notes:</strong> {{ transfer.notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if transfer.status == 'pending' %}
+        <div class="card">
+            <div class="card-body">
+                <form method="post" action="{% url 'transfer_complete' transfer.pk %}" id="completeForm">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-success w-100 mb-2" onclick="confirmComplete()">
+                        <i class="las la-check"></i> Complete Transfer
+                    </button>
+                </form>
+                <form method="post" action="{% url 'transfer_cancel' transfer.pk %}" id="cancelForm">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-outline-danger w-100" onclick="confirmCancel()">
+                        <i class="las la-times"></i> Cancel Transfer
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmComplete() {
+    showConfirmModal(
+        'Are you sure you want to complete this transfer? Stock will be moved from {{ transfer.source_warehouse.name }} to {{ transfer.destination_warehouse.name }}.',
+        'Complete Transfer',
+        function() {
+            document.getElementById('completeForm').submit();
+        }
+    );
+}
+
+function confirmCancel() {
+    showConfirmModal(
+        'Are you sure you want to cancel this transfer? No stock will be moved.',
+        'Cancel Transfer',
+        function() {
+            document.getElementById('cancelForm').submit();
+        }
+    );
+}
+</script>
+{% endblock %}

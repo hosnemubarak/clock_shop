@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Dashboard | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Dashboard</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li class="breadcrumb-item active">Dashboard</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <a href="{% url 'sale_list' %}" class="text-decoration-none">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted mb-0">Today's Sales</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-end justify-content-between mt-4">
+                        <div>
+                            <h4 class="fs-22 fw-semibold mb-4 text-dark">{{ CURRENCY_SYMBOL }}{{ total_sales_today|floatformat:2|intcomma }}</h4>
+                            <span class="text-primary">View Sales <i class="las la-arrow-right"></i></span>
+                        </div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-primary-subtle rounded fs-3">
+                                <i class="las la-shopping-cart text-primary"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <a href="{% url 'sales_report' %}" class="text-decoration-none">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted mb-0">Monthly Sales</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-end justify-content-between mt-4">
+                        <div>
+                            <h4 class="fs-22 fw-semibold mb-4 text-dark">{{ CURRENCY_SYMBOL }}{{ total_sales_month|floatformat:2|intcomma }}</h4>
+                            <span class="text-success">View Report <i class="las la-arrow-right"></i></span>
+                        </div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-success-subtle rounded fs-3">
+                                <i class="las la-chart-line text-success"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <a href="{% url 'profit_report' %}" class="text-decoration-none">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted mb-0">Monthly Profit</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-end justify-content-between mt-4">
+                        <div>
+                            <h4 class="fs-22 fw-semibold mb-4 text-dark">{{ CURRENCY_SYMBOL }}{{ profit_month|floatformat:2|intcomma }}</h4>
+                            <span class="text-info">View Report <i class="las la-arrow-right"></i></span>
+                        </div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-info-subtle rounded fs-3">
+                                <i class="las la-money-bill-wave text-info"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <a href="{% url 'customer_report' %}" class="text-decoration-none">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted mb-0">Outstanding Dues</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-end justify-content-between mt-4">
+                        <div>
+                            <h4 class="fs-22 fw-semibold mb-4 text-danger">{{ CURRENCY_SYMBOL }}{{ total_dues|floatformat:2|intcomma }}</h4>
+                            <span class="text-danger">View Dues <i class="las la-arrow-right"></i></span>
+                        </div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-danger-subtle rounded fs-3">
+                                <i class="las la-exclamation-triangle text-danger"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Second Row Stats -->
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <a href="{% url 'product_list' %}" class="text-decoration-none">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <p class="fw-medium text-muted mb-0">Total Products</p>
+                            <h2 class="mt-4 ff-secondary fw-semibold text-dark">{{ total_products }}</h2>
+                        </div>
+                        <div>
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-secondary-subtle rounded-circle fs-2">
+                                    <i class="las la-box text-secondary"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <a href="{% url 'stock_report' %}?stock_filter=low" class="text-decoration-none">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <p class="fw-medium text-muted mb-0">Low Stock Items</p>
+                            <h2 class="mt-4 ff-secondary fw-semibold {% if low_stock_products > 0 %}text-warning{% else %}text-dark{% endif %}">{{ low_stock_products }}</h2>
+                        </div>
+                        <div>
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-warning-subtle rounded-circle fs-2">
+                                    <i class="las la-exclamation-circle text-warning"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <a href="{% url 'customer_list' %}" class="text-decoration-none">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <p class="fw-medium text-muted mb-0">Total Customers</p>
+                            <h2 class="mt-4 ff-secondary fw-semibold text-dark">{{ total_customers }}</h2>
+                        </div>
+                        <div>
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-primary-subtle rounded-circle fs-2">
+                                    <i class="las la-users text-primary"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex gap-2">
+                    <a href="{% url 'sale_create' %}" class="btn btn-primary flex-grow-1">
+                        <i class="las la-plus"></i> New Sale
+                    </a>
+                    <a href="{% url 'batch_create' %}" class="btn btn-success flex-grow-1">
+                        <i class="las la-plus"></i> Stock In
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Sales -->
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-header align-items-center d-flex">
+                <h4 class="card-title mb-0 flex-grow-1">Recent Sales</h4>
+                <div class="flex-shrink-0">
+                    <a href="{% url 'sale_list' %}" class="btn btn-soft-primary btn-sm">View All</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless table-centered align-middle mb-0">
+                        <thead class="text-muted table-light">
+                            <tr>
+                                <th>Invoice</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in recent_sales %}
+                            <tr>
+                                <td><a href="{% url 'sale_detail' sale.pk %}" class="fw-medium">{{ sale.invoice_number }}</a></td>
+                                <td>{{ sale.customer.name|default:"Walk-in" }}</td>
+                                <td>{{ sale.sale_date|date:"M d, Y" }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
+                                <td>
+                                    {% if sale.payment_status == 'paid' %}
+                                    <span class="badge bg-success-subtle text-success">Paid</span>
+                                    {% elif sale.payment_status == 'partial' %}
+                                    <span class="badge bg-warning-subtle text-warning">Partial</span>
+                                    {% else %}
+                                    <span class="badge bg-danger-subtle text-danger">Unpaid</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">No recent sales</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Alerts -->
+    <div class="col-xl-4">
+        <div class="card">
+            <div class="card-header align-items-center d-flex">
+                <h4 class="card-title mb-0 flex-grow-1">Low Stock Alerts</h4>
+                <div class="flex-shrink-0">
+                    <a href="{% url 'stock_report' %}?stock_filter=low" class="btn btn-soft-warning btn-sm">View All</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless table-sm align-middle mb-0">
+                        <thead class="text-muted table-light">
+                            <tr>
+                                <th>Product</th>
+                                <th>Warehouse</th>
+                                <th>Qty</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for batch in low_stock_batches %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'product_detail' batch.product.pk %}">{{ batch.product.name|truncatechars:25 }}</a>
+                                </td>
+                                <td><small>{{ batch.warehouse.code }}</small></td>
+                                <td>
+                                    <span class="badge bg-danger">{{ batch.quantity }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">No low stock alerts</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

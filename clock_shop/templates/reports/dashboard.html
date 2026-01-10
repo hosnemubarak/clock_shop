@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}Reports | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Reports Dashboard</h4>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <a href="{% url 'sales_report' %}" class="card card-animate text-decoration-none">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-primary-subtle rounded-2">
+                            <i class="las la-chart-line text-primary fs-2"></i>
+                        </span>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h5 class="mb-1">Sales Report</h5>
+                        <p class="text-muted mb-0">Daily/weekly/monthly sales</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <a href="{% url 'profit_report' %}" class="card card-animate text-decoration-none">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-success-subtle rounded-2">
+                            <i class="las la-money-bill-wave text-success fs-2"></i>
+                        </span>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h5 class="mb-1">Profit Report</h5>
+                        <p class="text-muted mb-0">Profit by product/category</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <a href="{% url 'stock_report' %}" class="card card-animate text-decoration-none">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-info-subtle rounded-2">
+                            <i class="las la-boxes text-info fs-2"></i>
+                        </span>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h5 class="mb-1">Stock Report</h5>
+                        <p class="text-muted mb-0">Inventory levels & value</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <a href="{% url 'customer_report' %}" class="card card-animate text-decoration-none">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-warning-subtle rounded-2">
+                            <i class="las la-users text-warning fs-2"></i>
+                        </span>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h5 class="mb-1">Customer Report</h5>
+                        <p class="text-muted mb-0">Dues & top customers</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <a href="{% url 'transfer_report' %}" class="card card-animate text-decoration-none">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-secondary-subtle rounded-2">
+                            <i class="las la-exchange-alt text-secondary fs-2"></i>
+                        </span>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h5 class="mb-1">Transfer Report</h5>
+                        <p class="text-muted mb-0">Stock transfer history</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <a href="{% url 'dead_stock_report' %}" class="card card-animate text-decoration-none">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-danger-subtle rounded-2">
+                            <i class="las la-exclamation-triangle text-danger fs-2"></i>
+                        </span>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h5 class="mb-1">Dead Stock</h5>
+                        <p class="text-muted mb-0">Slow/non-moving items</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-xl-3 col-md-6">
+        <a href="{% url 'batch_report' %}" class="card card-animate text-decoration-none">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-dark-subtle rounded-2">
+                            <i class="las la-layer-group text-dark fs-2"></i>
+                        </span>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h5 class="mb-1">Batch Analysis</h5>
+                        <p class="text-muted mb-0">Batch age & tracking</p>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}

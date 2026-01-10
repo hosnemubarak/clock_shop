@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Profit Report | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Profit Report</h4>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Generate</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Total Revenue</p>
+                <h4 class="fs-22 fw-semibold mt-4">{{ CURRENCY_SYMBOL }}{{ totals.total_revenue|floatformat:2|intcomma|default:"0.00" }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Total Cost (COGS)</p>
+                <h4 class="fs-22 fw-semibold mt-4">{{ CURRENCY_SYMBOL }}{{ totals.total_cost|floatformat:2|intcomma|default:"0.00" }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Gross Profit</p>
+                <h4 class="fs-22 fw-semibold mt-4 text-success">{{ CURRENCY_SYMBOL }}{{ totals.total_profit|floatformat:2|intcomma|default:"0.00" }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Profit Margin</p>
+                <h4 class="fs-22 fw-semibold mt-4">{{ totals.margin|default:0 }}%</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Profit by Product</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Revenue</th>
+                                <th class="text-end">Cost</th>
+                                <th class="text-end">Profit</th>
+                                <th class="text-end">Margin</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in profit_by_product %}
+                            <tr>
+                                <td>{{ p.product__name|truncatechars:25 }}</td>
+                                <td><small>{{ p.product__category__name }}</small></td>
+                                <td class="text-center">{{ p.quantity_sold }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ p.revenue|floatformat:2 }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ p.cost|floatformat:2 }}</td>
+                                <td class="text-end text-success">{{ CURRENCY_SYMBOL }}{{ p.profit|floatformat:2 }}</td>
+                                <td class="text-end">{{ p.margin }}%</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="7" class="text-center text-muted">No data</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Profit by Category</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th class="text-end">Profit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in profit_by_category %}
+                            <tr>
+                                <td>{{ c.product__category__name|default:"Uncategorized" }}</td>
+                                <td class="text-end text-success">{{ CURRENCY_SYMBOL }}{{ c.profit|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Profit by Warehouse</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Warehouse</th>
+                                <th class="text-end">Profit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for w in profit_by_warehouse %}
+                            <tr>
+                                <td>{{ w.batch__warehouse__name|default:"Unknown" }}</td>
+                                <td class="text-end text-success">{{ CURRENCY_SYMBOL }}{{ w.profit|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

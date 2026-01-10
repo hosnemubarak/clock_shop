@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ customer.name }} | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Customer Details</h4>
+            <div class="page-title-right">
+                <a href="{% url 'customer_edit' customer.pk %}" class="btn btn-primary"><i class="las la-pen"></i> Edit</a>
+                <a href="{% url 'customer_statement' customer.pk %}" class="btn btn-info"><i class="las la-file-alt"></i> Statement</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="avatar-xl mx-auto">
+                        <div class="avatar-title bg-primary-subtle rounded-circle text-primary fs-1">
+                            {{ customer.name|slice:":1"|upper }}
+                        </div>
+                    </div>
+                </div>
+                <h5 class="text-center">{{ customer.name }}</h5>
+                
+                <table class="table table-borderless mt-4">
+                    <tr>
+                        <td class="text-muted"><i class="las la-phone me-2"></i>Phone</td>
+                        <td>{{ customer.phone|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted"><i class="las la-envelope me-2"></i>Email</td>
+                        <td>{{ customer.email|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted"><i class="las la-map-marker me-2"></i>Address</td>
+                        <td>{{ customer.address|default:"-" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Financial Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Total Purchases</span>
+                    <span class="fw-medium">{{ CURRENCY_SYMBOL }}{{ customer.total_purchases|floatformat:2|intcomma }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Total Paid</span>
+                    <span class="fw-medium text-success">{{ CURRENCY_SYMBOL }}{{ customer.total_paid|floatformat:2|intcomma }}</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold">Outstanding Due</span>
+                    <span class="fw-bold {% if customer.total_due > 0 %}text-danger{% else %}text-success{% endif %}">
+                        {{ CURRENCY_SYMBOL }}{{ customer.total_due|floatformat:2|intcomma }}
+                    </span>
+                </div>
+                
+                {% if customer.total_due > 0 %}
+                <hr>
+                <a href="{% url 'payment_create' %}?customer={{ customer.pk }}" class="btn btn-success w-100">
+                    <i class="las la-money-bill"></i> Receive Payment
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        {% if unpaid_invoices %}
+        <div class="card border-warning">
+            <div class="card-header bg-warning-subtle">
+                <h5 class="card-title mb-0 text-warning">Unpaid Invoices</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Invoice</th>
+                                <th>Date</th>
+                                <th>Total</th>
+                                <th>Paid</th>
+                                <th>Due</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in unpaid_invoices %}
+                            <tr>
+                                <td><a href="{% url 'sale_detail' sale.pk %}">{{ sale.invoice_number }}</a></td>
+                                <td>{{ sale.sale_date|date:"M d, Y" }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2 }}</td>
+                                <td class="text-danger">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Recent Purchases</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Invoice</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in purchases %}
+                            <tr>
+                                <td><a href="{% url 'sale_detail' sale.pk %}">{{ sale.invoice_number }}</a></td>
+                                <td>{{ sale.sale_date|date:"M d, Y" }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
+                                <td>
+                                    {% if sale.payment_status == 'paid' %}
+                                    <span class="badge bg-success">Paid</span>
+                                    {% elif sale.payment_status == 'partial' %}
+                                    <span class="badge bg-warning">Partial</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Unpaid</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted">No purchases</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Payment History</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Reference</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.payment_date|date:"M d, Y H:i" }}</td>
+                                <td class="text-success">{{ CURRENCY_SYMBOL }}{{ payment.amount|floatformat:2 }}</td>
+                                <td>{{ payment.get_payment_method_display }}</td>
+                                <td>{{ payment.reference|default:"-" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted">No payments</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

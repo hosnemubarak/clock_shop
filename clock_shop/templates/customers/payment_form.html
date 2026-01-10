@@ -1,0 +1,386 @@
+{% extends 'base.html' %}
+
+{% block title %}Receive Payment | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Receive Payment</h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'payment_list' %}">Payments</a></li>
+                    <li class="breadcrumb-item active">New Payment</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Payment Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="paymentForm">
+                    {% csrf_token %}
+                    
+                    {% if customer %}
+                    {{ form.customer }}
+                    <div class="alert alert-info mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Customer:</strong> {{ customer.name }}<br>
+                                <strong>Phone:</strong> {{ customer.phone|default:"-" }}
+                            </div>
+                            <div class="text-end">
+                                <span class="text-muted">Outstanding Balance</span><br>
+                                <span class="fs-4 fw-bold text-danger">{{ CURRENCY_SYMBOL }}{{ customer.total_due }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="mb-3">
+                        <label class="form-label">Customer <span class="text-danger">*</span></label>
+                        <select name="customer" id="customerSelect" class="form-select" required>
+                            <option value="">-- Select Customer --</option>
+                            {% for c in form.customer.field.queryset %}
+                            <option value="{{ c.id }}" data-due="{{ c.total_due }}">{{ c.name }} {% if c.total_due > 0 %}(Due: {{ CURRENCY_SYMBOL }}{{ c.total_due }}){% endif %}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Customer Info Card (shown when customer selected) -->
+                    <div id="customerInfoCard" class="alert alert-info mb-3 d-none">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Customer:</strong> <span id="selectedCustomerName"></span>
+                            </div>
+                            <div class="text-end">
+                                <span class="text-muted">Outstanding Balance</span><br>
+                                <span class="fs-4 fw-bold text-danger" id="selectedCustomerDue"></span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Invoice Selection Section -->
+                    <div class="mb-3" id="invoiceSection" {% if not customer %}style="display: none;"{% endif %}>
+                        <label class="form-label">Select Invoice</label>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover" id="invoiceTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="40">
+                                            <div class="form-check">
+                                                <input type="radio" name="sale" value="" class="form-check-input" id="noInvoice" checked>
+                                            </div>
+                                        </th>
+                                        <th>Invoice #</th>
+                                        <th>Date</th>
+                                        <th class="text-end">Total</th>
+                                        <th class="text-end">Paid</th>
+                                        <th class="text-end">Due</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoiceTableBody">
+                                    {% if customer %}
+                                    <tr class="table-secondary">
+                                        <td>
+                                            <div class="form-check">
+                                                <input type="radio" name="sale" value="" class="form-check-input" checked>
+                                            </div>
+                                        </td>
+                                        <td colspan="5"><em>General Payment (not linked to specific invoice)</em></td>
+                                    </tr>
+                                    {% for sale in unpaid_invoices %}
+                                    <tr>
+                                        <td>
+                                            <div class="form-check">
+                                                <input type="radio" name="sale" value="{{ sale.id }}" class="form-check-input invoice-radio" data-due="{{ sale.due_amount }}">
+                                            </div>
+                                        </td>
+                                        <td><a href="{% url 'sale_detail' sale.pk %}" target="_blank">{{ sale.invoice_number }}</a></td>
+                                        <td>{{ sale.sale_date|date:"M d, Y" }}</td>
+                                        <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
+                                        <td class="text-end text-success">{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2 }}</td>
+                                        <td class="text-end text-danger fw-bold">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2 }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">No unpaid invoices</td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% else %}
+                                    <tr id="noCustomerRow">
+                                        <td colspan="6" class="text-center text-muted py-3">
+                                            <i class="las la-info-circle me-1"></i> Select a customer to view their invoices
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Amount <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
+                                    <input type="number" name="amount" id="amountInput" class="form-control" step="0.01" min="0.01" required>
+                                </div>
+                                <small class="text-muted" id="amountHint">Enter payment amount</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Payment Method</label>
+                                {{ form.payment_method }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Reference</label>
+                                {{ form.reference }}
+                                <small class="text-muted">Transaction ID, cheque number, etc.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Notes</label>
+                                {{ form.notes }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="las la-check"></i> Record Payment
+                        </button>
+                        <a href="{% url 'payment_list' %}" class="btn btn-light">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Payment Summary</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted">Selected Invoice:</td>
+                        <td class="text-end fw-medium" id="summaryInvoice">General Payment</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Invoice Due:</td>
+                        <td class="text-end text-danger" id="summaryInvoiceDue">-</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Payment Amount:</td>
+                        <td class="text-end text-success fs-5 fw-bold" id="summaryAmount">{{ CURRENCY_SYMBOL }}0.00</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-soft-info">
+                <h6 class="card-title mb-0"><i class="las la-info-circle me-1"></i> Quick Tips</h6>
+            </div>
+            <div class="card-body">
+                <ul class="text-muted small mb-0">
+                    <li>Select a customer to view their unpaid invoices</li>
+                    <li>Choose an invoice to apply payment directly</li>
+                    <li>Or make a general payment against overall balance</li>
+                    <li>Partial payments are supported</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CURRENCY_SYMBOL = '{{ CURRENCY_SYMBOL }}';
+
+{% if not customer %}
+// Customer selection handler
+document.getElementById('customerSelect').addEventListener('change', function() {
+    const customerId = this.value;
+    const invoiceSection = document.getElementById('invoiceSection');
+    const invoiceTableBody = document.getElementById('invoiceTableBody');
+    const customerInfoCard = document.getElementById('customerInfoCard');
+    
+    if (!customerId) {
+        invoiceSection.style.display = 'none';
+        customerInfoCard.classList.add('d-none');
+        invoiceTableBody.innerHTML = `
+            <tr id="noCustomerRow">
+                <td colspan="6" class="text-center text-muted py-3">
+                    <i class="las la-info-circle me-1"></i> Select a customer to view their invoices
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    // Show loading
+    invoiceSection.style.display = 'block';
+    invoiceTableBody.innerHTML = `
+        <tr>
+            <td colspan="6" class="text-center py-3">
+                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div> Loading invoices...
+            </td>
+        </tr>
+    `;
+    
+    // Update customer info card
+    const selectedOption = this.options[this.selectedIndex];
+    const customerDue = parseFloat(selectedOption.dataset.due || 0);
+    document.getElementById('selectedCustomerName').textContent = selectedOption.text.split(' (Due:')[0];
+    document.getElementById('selectedCustomerDue').textContent = CURRENCY_SYMBOL + customerDue.toFixed(2);
+    customerInfoCard.classList.remove('d-none');
+    
+    // Fetch customer invoices
+    fetch(`/customers/api/${customerId}/sales/`)
+        .then(response => response.json())
+        .then(data => {
+            let html = `
+                <tr class="table-secondary">
+                    <td>
+                        <div class="form-check">
+                            <input type="radio" name="sale" value="" class="form-check-input" checked>
+                        </div>
+                    </td>
+                    <td colspan="5"><em>General Payment (not linked to specific invoice)</em></td>
+                </tr>
+            `;
+            
+            if (data.length > 0) {
+                data.forEach(sale => {
+                    html += `
+                        <tr>
+                            <td>
+                                <div class="form-check">
+                                    <input type="radio" name="sale" value="${sale.id}" class="form-check-input invoice-radio" data-due="${sale.due_amount}" data-invoice="${sale.invoice_number}">
+                                </div>
+                            </td>
+                            <td><a href="/sales/${sale.id}/" target="_blank">${sale.invoice_number}</a></td>
+                            <td>${sale.sale_date}</td>
+                            <td class="text-end">${CURRENCY_SYMBOL}${parseFloat(sale.total_amount).toFixed(2)}</td>
+                            <td class="text-end text-success">${CURRENCY_SYMBOL}${parseFloat(sale.paid_amount).toFixed(2)}</td>
+                            <td class="text-end text-danger fw-bold">${CURRENCY_SYMBOL}${parseFloat(sale.due_amount).toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html += `
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">No unpaid invoices for this customer</td>
+                    </tr>
+                `;
+            }
+            
+            invoiceTableBody.innerHTML = html;
+            attachInvoiceRadioHandlers();
+        })
+        .catch(error => {
+            console.error('Error fetching invoices:', error);
+            invoiceTableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-danger">Error loading invoices</td>
+                </tr>
+            `;
+        });
+});
+{% endif %}
+
+// Invoice radio button handler
+function attachInvoiceRadioHandlers() {
+    document.querySelectorAll('input[name="sale"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const summaryInvoice = document.getElementById('summaryInvoice');
+            const summaryInvoiceDue = document.getElementById('summaryInvoiceDue');
+            const amountHint = document.getElementById('amountHint');
+            const amountInput = document.getElementById('amountInput');
+            
+            if (this.value === '') {
+                summaryInvoice.textContent = 'General Payment';
+                summaryInvoiceDue.textContent = '-';
+                amountHint.textContent = 'Enter payment amount';
+            } else {
+                const due = parseFloat(this.dataset.due || 0);
+                const invoiceNum = this.dataset.invoice || this.closest('tr').querySelector('a').textContent;
+                summaryInvoice.textContent = invoiceNum;
+                summaryInvoiceDue.textContent = CURRENCY_SYMBOL + due.toFixed(2);
+                amountHint.innerHTML = `Invoice due: <strong>${CURRENCY_SYMBOL}${due.toFixed(2)}</strong>`;
+                
+                // Suggest due amount
+                if (!amountInput.value || parseFloat(amountInput.value) === 0) {
+                    amountInput.value = due.toFixed(2);
+                    updateSummaryAmount();
+                }
+            }
+        });
+    });
+}
+
+// Amount input handler
+document.getElementById('amountInput').addEventListener('input', updateSummaryAmount);
+
+function updateSummaryAmount() {
+    const amount = parseFloat(document.getElementById('amountInput').value) || 0;
+    document.getElementById('summaryAmount').textContent = CURRENCY_SYMBOL + amount.toFixed(2);
+}
+
+// Form validation
+document.getElementById('paymentForm').addEventListener('submit', function(e) {
+    const customerSelect = document.getElementById('customerSelect');
+    const amountInput = document.getElementById('amountInput');
+    const amount = parseFloat(amountInput.value);
+    
+    {% if not customer %}
+    if (!customerSelect.value) {
+        e.preventDefault();
+        showValidationModal('Please select a customer.', 'Customer Required');
+        return false;
+    }
+    {% endif %}
+    
+    if (!amount || amount <= 0) {
+        e.preventDefault();
+        showValidationModal('Please enter a valid payment amount.', 'Invalid Amount');
+        return false;
+    }
+    
+    // Check if amount exceeds invoice due (if invoice selected)
+    const selectedInvoice = document.querySelector('input[name="sale"]:checked');
+    if (selectedInvoice && selectedInvoice.value !== '') {
+        const invoiceDue = parseFloat(selectedInvoice.dataset.due || 0);
+        if (amount > invoiceDue) {
+            e.preventDefault();
+            showValidationModal(`Payment amount (${CURRENCY_SYMBOL}${amount.toFixed(2)}) exceeds invoice due amount (${CURRENCY_SYMBOL}${invoiceDue.toFixed(2)}). Please reduce the amount or select general payment.`, 'Amount Exceeds Due');
+            return false;
+        }
+    }
+});
+
+// Initialize
+attachInvoiceRadioHandlers();
+</script>
+{% endblock %}

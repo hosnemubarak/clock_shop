@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block title %}New Purchase | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">New Purchase Order</h4>
+        </div>
+    </div>
+</div>
+
+<form method="post" id="purchaseForm">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Purchase Items</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table align-middle" id="itemsTable">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Warehouse</th>
+                                    <th width="100">Qty</th>
+                                    <th width="120">Unit Price</th>
+                                    <th width="120">Total</th>
+                                    <th width="50"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsBody">
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="text-end fw-bold">Grand Total:</td>
+                                    <td class="fw-bold" id="grandTotal">{{ CURRENCY_SYMBOL }}0.00</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    <hr>
+                    <h6>Add Item</h6>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted">Product</label>
+                            <select class="form-select" id="newProduct">
+                                <option value="">Select Product</option>
+                                {% for p in products %}
+                                <option value="{{ p.id }}" data-name="{{ p.name }}" data-sku="{{ p.sku }}">{{ p.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted">Warehouse</label>
+                            <select class="form-select" id="newWarehouse">
+                                {% for w in warehouses %}
+                                <option value="{{ w.id }}" data-name="{{ w.name }}">{{ w.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted">Quantity</label>
+                            <input type="number" class="form-control" id="newQty" placeholder="e.g. 10" min="1" value="1" oninput="updateLinePreview()">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted">Unit Price</label>
+                            <input type="number" class="form-control" id="newPrice" placeholder="e.g. 150.00" step="0.01" min="0" oninput="updateLinePreview()">
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" class="btn btn-primary w-100" onclick="addItem()">
+                                <i class="las la-plus"></i> Add Item
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-end">
+                        <small class="text-muted">Line Total: <strong id="linePreview">{{ CURRENCY_SYMBOL }}0.00</strong></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Purchase Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Supplier <span class="text-danger">*</span></label>
+                        {{ form.supplier }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Purchase Date <span class="text-danger">*</span></label>
+                        {{ form.purchase_date }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        {{ form.notes }}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="las la-save"></i> Save Purchase
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let items = [];
+let itemIndex = 0;
+const CURRENCY = '{{ CURRENCY_SYMBOL }}';
+
+function updateLinePreview() {
+    const qty = parseInt(document.getElementById('newQty').value) || 0;
+    const price = parseFloat(document.getElementById('newPrice').value) || 0;
+    const lineTotal = qty * price;
+    document.getElementById('linePreview').textContent = CURRENCY + lineTotal.toFixed(2);
+}
+
+function addItem() {
+    const productSelect = document.getElementById('newProduct');
+    const warehouseSelect = document.getElementById('newWarehouse');
+    const qty = document.getElementById('newQty').value;
+    const price = document.getElementById('newPrice').value;
+    
+    if (!productSelect.value) {
+        showValidationModal('Please select a product.', 'Product Required');
+        return;
+    }
+    
+    if (!qty || parseInt(qty) < 1) {
+        showValidationModal('Please enter a valid quantity greater than zero.', 'Invalid Quantity');
+        return;
+    }
+    
+    if (!price || parseFloat(price) <= 0) {
+        showValidationModal('Please enter a valid purchase price.', 'Invalid Price');
+        return;
+    }
+    
+    const product = productSelect.options[productSelect.selectedIndex];
+    const warehouse = warehouseSelect.options[warehouseSelect.selectedIndex];
+    
+    const item = {
+        index: itemIndex++,
+        product_id: productSelect.value,
+        product_name: product.dataset.name,
+        warehouse_id: warehouseSelect.value,
+        warehouse_name: warehouse.dataset.name,
+        quantity: parseInt(qty),
+        unit_price: parseFloat(price)
+    };
+    
+    items.push(item);
+    renderItems();
+    
+    // Reset form
+    productSelect.value = '';
+    document.getElementById('newQty').value = '1';
+    document.getElementById('newPrice').value = '';
+}
+
+function removeItem(index) {
+    items = items.filter(i => i.index !== index);
+    renderItems();
+}
+
+function renderItems() {
+    const tbody = document.getElementById('itemsBody');
+    let html = '';
+    let total = 0;
+    
+    items.forEach(item => {
+        const lineTotal = item.quantity * item.unit_price;
+        total += lineTotal;
+        html += `
+            <tr>
+                <td>${item.product_name}</td>
+                <td>${item.warehouse_name}</td>
+                <td>${item.quantity}</td>
+                <td>{{ CURRENCY_SYMBOL }}${item.unit_price.toFixed(2)}</td>
+                <td>{{ CURRENCY_SYMBOL }}${lineTotal.toFixed(2)}</td>
+                <td>
+                    <button type="button" class="btn btn-soft-danger btn-sm" onclick="removeItem(${item.index})">
+                        <i class="las la-times"></i>
+                    </button>
+                </td>
+                <input type="hidden" name="items" value='${JSON.stringify(item)}'>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html || '<tr><td colspan="6" class="text-center text-muted">No items added</td></tr>';
+    document.getElementById('grandTotal').textContent = '{{ CURRENCY_SYMBOL }}' + total.toFixed(2);
+}
+
+document.getElementById('purchaseForm').addEventListener('submit', function(e) {
+    if (items.length === 0) {
+        e.preventDefault();
+        showValidationModal('Please add at least one item to the purchase before saving.', 'No Items Added');
+        return false;
+    }
+    
+    const supplier = document.querySelector('[name="supplier"]').value;
+    if (!supplier.trim()) {
+        e.preventDefault();
+        showValidationModal('Please enter a supplier name.', 'Supplier Required');
+        return false;
+    }
+});
+</script>
+{% endblock %}

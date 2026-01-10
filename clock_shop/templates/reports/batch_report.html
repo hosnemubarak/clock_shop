@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Batch Analysis | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Batch Analysis Report</h4>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <select name="warehouse" class="form-select">
+                            <option value="">All Warehouses</option>
+                            {% for w in warehouses %}
+                            <option value="{{ w.id }}" {% if selected_warehouse == w.id|stringformat:"s" %}selected{% endif %}>{{ w.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="product" class="form-select">
+                            <option value="">All Products</option>
+                            {% for p in products %}
+                            <option value="{{ p.id }}" {% if selected_product == p.id|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Batch</th>
+                                <th>Product</th>
+                                <th>Warehouse</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Unit Cost</th>
+                                <th class="text-end">Value</th>
+                                <th>Purchase Date</th>
+                                <th class="text-center">Age (Days)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in batch_data %}
+                            <tr>
+                                <td><a href="{% url 'batch_detail' item.batch.pk %}">{{ item.batch.batch_number }}</a></td>
+                                <td>{{ item.batch.product.name|truncatechars:25 }}</td>
+                                <td>{{ item.batch.warehouse.code }}</td>
+                                <td class="text-center">{{ item.batch.quantity }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.batch.buy_price|floatformat:2 }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.value|floatformat:2 }}</td>
+                                <td>{{ item.batch.purchase_date|date:"M d, Y" }}</td>
+                                <td class="text-center">
+                                    {% if item.age_days > 180 %}
+                                    <span class="badge bg-danger">{{ item.age_days }}</span>
+                                    {% elif item.age_days > 90 %}
+                                    <span class="badge bg-warning">{{ item.age_days }}</span>
+                                    {% else %}
+                                    <span class="badge bg-success">{{ item.age_days }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="8" class="text-center text-muted">No batches found</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ warehouse.name }} | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{{ warehouse.name }}</h4>
+            <div class="page-title-right">
+                <a href="{% url 'warehouse_edit' warehouse.pk %}" class="btn btn-primary"><i class="las la-pen"></i> Edit</a>
+                <a href="{% url 'transfer_create' %}" class="btn btn-info"><i class="las la-exchange-alt"></i> Transfer Stock</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Total Items</p>
+                <h4 class="fs-22 fw-semibold mt-4">{{ total_items|intcomma }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Stock Value</p>
+                <h4 class="fs-22 fw-semibold mt-4">{{ CURRENCY_SYMBOL }}{{ total_value|floatformat:2|intcomma }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Stock Summary by Product</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>SKU</th>
+                                <th class="text-center">Quantity</th>
+                                <th class="text-end">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in stock_summary %}
+                            <tr>
+                                <td>{{ item.product__name }}</td>
+                                <td><code>{{ item.product__sku }}</code></td>
+                                <td class="text-center">{{ item.total_quantity }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.total_value|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">No stock in this warehouse</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Warehouse Details</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted">Name</td>
+                        <td class="fw-medium">{{ warehouse.name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Code</td>
+                        <td><code>{{ warehouse.code }}</code></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Type</td>
+                        <td>{% if warehouse.is_shop %}<span class="badge bg-info">Shop</span>{% else %}Warehouse{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Phone</td>
+                        <td>{{ warehouse.phone|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Address</td>
+                        <td>{{ warehouse.address|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Status</td>
+                        <td>
+                            {% if warehouse.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">All Batches in Warehouse</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Batch</th>
+                                <th>Product</th>
+                                <th>Buy Price</th>
+                                <th>Qty</th>
+                                <th>Value</th>
+                                <th>Purchase Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for batch in batches %}
+                            <tr>
+                                <td><a href="{% url 'batch_detail' batch.pk %}">{{ batch.batch_number }}</a></td>
+                                <td>{{ batch.product.name }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ batch.buy_price|floatformat:2 }}</td>
+                                <td>{{ batch.quantity }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ batch.total_value|floatformat:2 }}</td>
+                                <td>{{ batch.purchase_date|date:"M d, Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No batches</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

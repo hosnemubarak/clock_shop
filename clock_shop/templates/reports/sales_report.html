@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Sales Report | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Sales Report</h4>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">From</label>
+                        <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">To</label>
+                        <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Group By</label>
+                        <select name="group_by" class="form-select">
+                            <option value="day" {% if group_by == 'day' %}selected{% endif %}>Day</option>
+                            <option value="week" {% if group_by == 'week' %}selected{% endif %}>Week</option>
+                            <option value="month" {% if group_by == 'month' %}selected{% endif %}>Month</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">Generate</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Total Sales</p>
+                <h4 class="fs-22 fw-semibold mt-4">{{ CURRENCY_SYMBOL }}{{ summary.total_sales|floatformat:2|intcomma|default:"0.00" }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Total Cost</p>
+                <h4 class="fs-22 fw-semibold mt-4">{{ CURRENCY_SYMBOL }}{{ summary.total_cost|floatformat:2|intcomma|default:"0.00" }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Total Profit</p>
+                <h4 class="fs-22 fw-semibold mt-4 text-success">{{ CURRENCY_SYMBOL }}{{ summary.total_profit|floatformat:2|intcomma|default:"0.00" }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Invoices</p>
+                <h4 class="fs-22 fw-semibold mt-4">{{ summary.count|default:0 }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Sales by Period</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Period</th>
+                                <th class="text-end">Sales</th>
+                                <th class="text-end">Cost</th>
+                                <th class="text-end">Profit</th>
+                                <th class="text-center">Invoices</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in sales_by_period %}
+                            <tr>
+                                <td>{{ row.period|date:"M d, Y" }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ row.total|floatformat:2 }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ row.cost|floatformat:2 }}</td>
+                                <td class="text-end text-success">{{ CURRENCY_SYMBOL }}{{ row.profit|floatformat:2 }}</td>
+                                <td class="text-center">{{ row.count }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted">No data</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Top Selling Products</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in top_products %}
+                            <tr>
+                                <td>{{ p.product__name|truncatechars:20 }}</td>
+                                <td class="text-center">{{ p.total_quantity }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ p.total_revenue|floatformat:0 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="text-center text-muted">No data</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

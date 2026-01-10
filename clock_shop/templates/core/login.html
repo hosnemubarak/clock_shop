@@ -1,0 +1,117 @@
+{% load static %}
+<!doctype html>
+<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="light">
+<head>
+    <meta charset="utf-8" />
+    <title>Login | {{ SHOP_NAME }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'css/icons.min.css' %}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'css/app.min.css' %}" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+    <div class="auth-page-wrapper pt-5">
+        <div class="auth-one-bg-position auth-one-bg" id="auth-particles">
+            <div class="bg-overlay"></div>
+            <div class="shape">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120">
+                    <path fill="currentColor" d="M0,0 C480,100 960,100 1440,0 L1440,120 L0,120 Z"></path>
+                </svg>
+            </div>
+        </div>
+
+        <div class="auth-page-content">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="text-center mt-sm-5 mb-4 text-white-50">
+                            <div>
+                                <a href="{% url 'login' %}" class="d-inline-block auth-logo">
+                                    <h2 class="text-white">{{ SHOP_NAME }}</h2>
+                                </a>
+                            </div>
+                            <p class="mt-3 fs-15 fw-medium">Inventory & Sales Management System</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row justify-content-center">
+                    <div class="col-md-8 col-lg-6 col-xl-5">
+                        <div class="card mt-4">
+                            <div class="card-body p-4">
+                                <div class="text-center mt-2">
+                                    <h5 class="text-primary">Welcome Back!</h5>
+                                    <p class="text-muted">Sign in to continue to {{ SHOP_NAME }}.</p>
+                                </div>
+                                
+                                {% if form.errors %}
+                                <div class="alert alert-danger">
+                                    Invalid username or password. Please try again.
+                                </div>
+                                {% endif %}
+                                
+                                <div class="p-2 mt-4">
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <div class="mb-3">
+                                            <label for="username" class="form-label">Username</label>
+                                            <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label" for="password">Password</label>
+                                            <div class="position-relative auth-pass-inputgroup mb-3">
+                                                <input type="password" class="form-control pe-5 password-input" name="password" placeholder="Enter password" id="password" required>
+                                                <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" id="password-addon">
+                                                    <i class="ri-eye-fill align-middle"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="" id="auth-remember-check">
+                                            <label class="form-check-label" for="auth-remember-check">Remember me</label>
+                                        </div>
+
+                                        <div class="mt-4">
+                                            <button class="btn btn-primary w-100" type="submit">Sign In</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="text-center">
+                            <p class="mb-0 text-muted">
+                                <script>document.write(new Date().getFullYear())</script> © {{ SHOP_NAME }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="{% static 'libs/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script>
+        document.getElementById('password-addon').addEventListener('click', function() {
+            var passwordInput = document.getElementById('password');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+            } else {
+                passwordInput.type = 'password';
+            }
+        });
+    </script>
+</body>
+</html>

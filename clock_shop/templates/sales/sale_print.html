@@ -1,0 +1,124 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice {{ sale.invoice_number }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; font-size: 14px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .invoice-info { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .invoice-info div { width: 48%; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #f5f5f5; }
+        .text-right { text-align: right; }
+        .totals { margin-top: 20px; }
+        .totals table { width: 300px; margin-left: auto; }
+        .totals td { border: none; padding: 5px 10px; }
+        .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #666; }
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="margin-bottom: 20px;">
+        <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer;">Print Invoice</button>
+        <a href="{% url 'sale_detail' sale.pk %}" style="margin-left: 10px;">Back to Invoice</a>
+    </div>
+
+    <div class="header">
+        <h1>{{ SHOP_NAME }}</h1>
+        <p>Retail Clock Shop</p>
+    </div>
+
+    <div class="invoice-info">
+        <div>
+            <strong>Invoice To:</strong><br>
+            {% if sale.customer %}
+            {{ sale.customer.name }}<br>
+            {% if sale.customer.phone %}{{ sale.customer.phone }}<br>{% endif %}
+            {% if sale.customer.address %}{{ sale.customer.address }}{% endif %}
+            {% else %}
+            Walk-in Customer
+            {% endif %}
+        </div>
+        <div style="text-align: right;">
+            <strong>Invoice #:</strong> {{ sale.invoice_number }}<br>
+            <strong>Date:</strong> {{ sale.sale_date|date:"F d, Y" }}<br>
+            <strong>Status:</strong> 
+            {% if sale.payment_status == 'paid' %}Paid
+            {% elif sale.payment_status == 'partial' %}Partially Paid
+            {% else %}Unpaid{% endif %}
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>SKU</th>
+                <th class="text-right">Qty</th>
+                <th class="text-right">Price</th>
+                <th class="text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in sale.items.all %}
+            <tr>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.product.sku }}</td>
+                <td class="text-right">{{ item.quantity }}</td>
+                <td class="text-right">{{ CURRENCY_SYMBOL }}{{ item.unit_price|floatformat:2 }}</td>
+                <td class="text-right">{{ CURRENCY_SYMBOL }}{{ item.total_price|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="totals">
+        <table>
+            <tr>
+                <td>Subtotal:</td>
+                <td class="text-right">{{ CURRENCY_SYMBOL }}{{ sale.subtotal|floatformat:2 }}</td>
+            </tr>
+            {% if sale.discount_amount > 0 %}
+            <tr>
+                <td>Discount:</td>
+                <td class="text-right">-{{ CURRENCY_SYMBOL }}{{ sale.discount_amount|floatformat:2 }}</td>
+            </tr>
+            {% endif %}
+            {% if sale.tax_amount > 0 %}
+            <tr>
+                <td>Tax:</td>
+                <td class="text-right">{{ CURRENCY_SYMBOL }}{{ sale.tax_amount|floatformat:2 }}</td>
+            </tr>
+            {% endif %}
+            <tr style="font-weight: bold; font-size: 16px;">
+                <td>Total:</td>
+                <td class="text-right">{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
+            </tr>
+            <tr>
+                <td>Paid:</td>
+                <td class="text-right">{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2 }}</td>
+            </tr>
+            {% if sale.due_amount > 0 %}
+            <tr style="color: red;">
+                <td>Balance Due:</td>
+                <td class="text-right">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2 }}</td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+
+    {% if sale.notes %}
+    <div style="margin-top: 30px;">
+        <strong>Notes:</strong> {{ sale.notes }}
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p>Thank you for your business!</p>
+        <p>{{ SHOP_NAME }} - Retail Clock Shop</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+
+{% block title %}New Sale | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">New Sale</h4>
+        </div>
+    </div>
+</div>
+
+<form method="post" id="saleForm">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Sale Items</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table align-middle" id="itemsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Batch</th>
+                                    <th width="80">Qty</th>
+                                    <th width="120">Price</th>
+                                    <th width="120">Total</th>
+                                    <th width="50"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsBody">
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="text-end fw-bold">Subtotal:</td>
+                                    <td class="fw-bold" id="subtotal">{{ CURRENCY_SYMBOL }}0.00</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    <hr>
+                    <h6>Add Item (Select Batch Manually)</h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Product</label>
+                            <select class="form-select" id="newProduct" onchange="loadBatches()">
+                                <option value="">Select Product</option>
+                                {% for p in products %}
+                                <option value="{{ p.id }}" data-name="{{ p.name }}" data-price="{{ p.default_selling_price }}">{{ p.name }} ({{ p.total_stock }} in stock)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Batch</label>
+                            <select class="form-select" id="newBatch" onchange="updateBatchInfo()">
+                                <option value="">Select Batch</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label">Qty</label>
+                            <input type="number" class="form-control" id="newQty" min="1" value="1">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Price</label>
+                            <input type="number" class="form-control" id="newPrice" step="0.01">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="button" class="btn btn-primary w-100" onclick="addItem()">
+                                <i class="las la-plus"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                    <div id="batchInfo" class="mt-2 text-muted small"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Sale Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Customer</label>
+                        {{ form.customer }}
+                        <small class="text-muted">Leave empty for walk-in customer</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sale Date</label>
+                        {{ form.sale_date }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Discount</label>
+                        {{ form.discount_amount }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tax</label>
+                        {{ form.tax_amount }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        {{ form.notes }}
+                    </div>
+                    
+                    <hr>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span id="summarySubtotal">{{ CURRENCY_SYMBOL }}0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Discount:</span>
+                        <span id="summaryDiscount">{{ CURRENCY_SYMBOL }}0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between fw-bold fs-5">
+                        <span>Total:</span>
+                        <span id="summaryTotal">{{ CURRENCY_SYMBOL }}0.00</span>
+                    </div>
+                    
+                    <hr>
+                    <button type="submit" class="btn btn-success w-100 btn-lg">
+                        <i class="las la-check"></i> Complete Sale
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let items = [];
+let itemIndex = 0;
+let batchesData = {};
+
+function loadBatches() {
+    const productId = document.getElementById('newProduct').value;
+    const batchSelect = document.getElementById('newBatch');
+    const priceInput = document.getElementById('newPrice');
+    const productOption = document.getElementById('newProduct').selectedOptions[0];
+    
+    batchSelect.innerHTML = '<option value="">Select Batch</option>';
+    document.getElementById('batchInfo').innerHTML = '';
+    
+    if (!productId) return;
+    
+    // Set default price
+    priceInput.value = productOption.dataset.price;
+    
+    fetch(`/sales/api/products/${productId}/`)
+        .then(response => response.json())
+        .then(data => {
+            batchesData = {};
+            data.batches.forEach(batch => {
+                batchesData[batch.id] = batch;
+                batchSelect.innerHTML += `<option value="${batch.id}">${batch.batch_number} - ${batch.warehouse} (${batch.quantity} avail) @ {{ CURRENCY_SYMBOL }}${batch.buy_price}</option>`;
+            });
+        });
+}
+
+function updateBatchInfo() {
+    const batchId = document.getElementById('newBatch').value;
+    const info = document.getElementById('batchInfo');
+    
+    if (batchId && batchesData[batchId]) {
+        const batch = batchesData[batchId];
+        info.innerHTML = `<i class="las la-info-circle"></i> Available: ${batch.quantity} units | Cost: {{ CURRENCY_SYMBOL }}${batch.buy_price} | Purchased: ${batch.purchase_date}`;
+    } else {
+        info.innerHTML = '';
+    }
+}
+
+function addItem() {
+    const productSelect = document.getElementById('newProduct');
+    const batchSelect = document.getElementById('newBatch');
+    const qty = parseInt(document.getElementById('newQty').value);
+    const price = parseFloat(document.getElementById('newPrice').value);
+    
+    if (!productSelect.value) {
+        showValidationModal('Please select a product first.', 'Product Required');
+        return;
+    }
+    
+    if (!batchSelect.value) {
+        showValidationModal('Please select a batch for this product.', 'Batch Required');
+        return;
+    }
+    
+    if (!qty || qty < 1) {
+        showValidationModal('Please enter a valid quantity greater than zero.', 'Invalid Quantity');
+        return;
+    }
+    
+    if (!price || price <= 0) {
+        showValidationModal('Please enter a valid selling price.', 'Invalid Price');
+        return;
+    }
+    
+    const batch = batchesData[batchSelect.value];
+    if (qty > batch.quantity) {
+        showValidationModal(`Only ${batch.quantity} units available in this batch. Please reduce the quantity.`, 'Insufficient Stock');
+        return;
+    }
+    
+    const product = productSelect.options[productSelect.selectedIndex];
+    
+    const item = {
+        index: itemIndex++,
+        product_id: productSelect.value,
+        product_name: product.dataset.name,
+        batch_id: batchSelect.value,
+        batch_number: batch.batch_number,
+        quantity: qty,
+        unit_price: price,
+        discount: 0
+    };
+    
+    items.push(item);
+    
+    // Update available quantity in batch data
+    batchesData[batchSelect.value].quantity -= qty;
+    
+    renderItems();
+    
+    // Reset
+    productSelect.value = '';
+    document.getElementById('newBatch').innerHTML = '<option value="">Select Batch</option>';
+    document.getElementById('newQty').value = '1';
+    document.getElementById('newPrice').value = '';
+    document.getElementById('batchInfo').innerHTML = '';
+}
+
+function removeItem(index) {
+    const item = items.find(i => i.index === index);
+    if (item && batchesData[item.batch_id]) {
+        batchesData[item.batch_id].quantity += item.quantity;
+    }
+    items = items.filter(i => i.index !== index);
+    renderItems();
+}
+
+function renderItems() {
+    const tbody = document.getElementById('itemsBody');
+    let html = '';
+    let subtotal = 0;
+    
+    items.forEach(item => {
+        const lineTotal = item.quantity * item.unit_price;
+        subtotal += lineTotal;
+        html += `
+            <tr>
+                <td>${item.product_name}</td>
+                <td><code>${item.batch_number}</code></td>
+                <td>${item.quantity}</td>
+                <td>{{ CURRENCY_SYMBOL }}${item.unit_price.toFixed(2)}</td>
+                <td>{{ CURRENCY_SYMBOL }}${lineTotal.toFixed(2)}</td>
+                <td>
+                    <button type="button" class="btn btn-soft-danger btn-sm" onclick="removeItem(${item.index})">
+                        <i class="las la-times"></i>
+                    </button>
+                </td>
+                <input type="hidden" name="items" value='${JSON.stringify(item)}'>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html || '<tr><td colspan="6" class="text-center text-muted">No items added</td></tr>';
+    document.getElementById('subtotal').textContent = '{{ CURRENCY_SYMBOL }}' + subtotal.toFixed(2);
+    document.getElementById('summarySubtotal').textContent = '{{ CURRENCY_SYMBOL }}' + subtotal.toFixed(2);
+    
+    updateTotals();
+}
+
+function updateTotals() {
+    let subtotal = 0;
+    items.forEach(item => {
+        subtotal += item.quantity * item.unit_price;
+    });
+    
+    const discount = parseFloat(document.querySelector('[name="discount_amount"]').value) || 0;
+    const tax = parseFloat(document.querySelector('[name="tax_amount"]').value) || 0;
+    const total = subtotal - discount + tax;
+    
+    document.getElementById('summaryDiscount').textContent = '{{ CURRENCY_SYMBOL }}' + discount.toFixed(2);
+    document.getElementById('summaryTotal').textContent = '{{ CURRENCY_SYMBOL }}' + total.toFixed(2);
+}
+
+document.querySelector('[name="discount_amount"]').addEventListener('input', updateTotals);
+document.querySelector('[name="tax_amount"]').addEventListener('input', updateTotals);
+
+document.getElementById('saleForm').addEventListener('submit', function(e) {
+    if (items.length === 0) {
+        e.preventDefault();
+        showValidationModal('Please add at least one item to the sale before completing.', 'No Items Added');
+        return false;
+    }
+});
+</script>
+{% endblock %}

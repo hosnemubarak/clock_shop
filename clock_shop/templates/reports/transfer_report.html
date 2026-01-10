@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Transfer Report | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Transfer Report</h4>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Total Transfers</p>
+                <h4 class="fs-22 fw-semibold mt-4">{{ transfer_summary.total_transfers|default:0 }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Completed</p>
+                <h4 class="fs-22 fw-semibold mt-4 text-success">{{ transfer_summary.completed|default:0 }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Pending</p>
+                <h4 class="fs-22 fw-semibold mt-4 text-warning">{{ transfer_summary.pending|default:0 }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <form method="get" class="row g-3">
+                    <div class="col-md-2">
+                        <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                    </div>
+                    <div class="col-md-2">
+                        <select name="status" class="form-select">
+                            <option value="">All Status</option>
+                            <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="completed" {% if selected_status == 'completed' %}selected{% endif %}>Completed</option>
+                            <option value="cancelled" {% if selected_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Transfer #</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Items</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Created By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in transfers %}
+                            <tr>
+                                <td><a href="{% url 'transfer_detail' t.pk %}">{{ t.transfer_number }}</a></td>
+                                <td>{{ t.source_warehouse.name }}</td>
+                                <td>{{ t.destination_warehouse.name }}</td>
+                                <td>{{ t.items.count }}</td>
+                                <td>{{ t.transfer_date|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if t.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% elif t.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Cancelled</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ t.created_by.username|default:"-" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="7" class="text-center text-muted">No transfers</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}POS | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <h4 class="mb-0">Point of Sale</h4>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <input type="text" class="form-control" id="searchProduct" placeholder="Search products by name or SKU...">
+            </div>
+            <div class="card-body">
+                <div class="row" id="productGrid">
+                    {% for product in products %}
+                    <div class="col-md-3 col-sm-4 mb-3 product-item" data-name="{{ product.name|lower }}" data-sku="{{ product.sku|lower }}">
+                        <div class="card border h-100 cursor-pointer" onclick="selectProduct({{ product.id }}, '{{ product.name }}', {{ product.default_selling_price }})">
+                            <div class="card-body text-center p-3">
+                                <div class="avatar-sm mx-auto mb-2">
+                                    <div class="avatar-title bg-light rounded">
+                                        <i class="las la-clock fs-3 text-muted"></i>
+                                    </div>
+                                </div>
+                                <h6 class="mb-1 text-truncate">{{ product.name }}</h6>
+                                <small class="text-muted">{{ product.sku }}</small>
+                                <div class="mt-2">
+                                    <span class="badge bg-primary">{{ CURRENCY_SYMBOL }}{{ product.default_selling_price }}</span>
+                                    <span class="badge bg-secondary">{{ product.total_stock }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center text-muted py-5">
+                        No products available
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Current Sale</h5>
+            </div>
+            <div class="card-body">
+                <div id="cartItems" style="min-height: 200px;">
+                    <p class="text-muted text-center">No items added</p>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between fs-5 fw-bold">
+                    <span>Total:</span>
+                    <span id="cartTotal">{{ CURRENCY_SYMBOL }}0.00</span>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'sale_create' %}" class="btn btn-primary btn-lg">
+                        Go to Full Sale Form
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Batch Selection Modal -->
+<div class="modal fade" id="batchModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Batch</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="batchList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('searchProduct').addEventListener('input', function(e) {
+    const search = e.target.value.toLowerCase();
+    document.querySelectorAll('.product-item').forEach(item => {
+        const name = item.dataset.name;
+        const sku = item.dataset.sku;
+        if (name.includes(search) || sku.includes(search)) {
+            item.style.display = '';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+});
+
+function selectProduct(productId, productName, defaultPrice) {
+    fetch(`/sales/api/products/${productId}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.batches.length === 0) {
+                alert('No stock available for this product');
+                return;
+            }
+            
+            let html = '<p>Available batches for <strong>' + productName + '</strong>:</p>';
+            html += '<div class="list-group">';
+            data.batches.forEach(batch => {
+                html += `
+                    <a href="{% url 'sale_create' %}?product=${productId}&batch=${batch.id}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>${batch.batch_number}</strong><br>
+                                <small class="text-muted">${batch.warehouse} | Cost: {{ CURRENCY_SYMBOL }}${batch.buy_price}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-primary">${batch.quantity} avail</span>
+                            </div>
+                        </div>
+                    </a>
+                `;
+            });
+            html += '</div>';
+            
+            document.getElementById('batchList').innerHTML = html;
+            new bootstrap.Modal(document.getElementById('batchModal')).show();
+        });
+}
+</script>
+<style>
+.cursor-pointer { cursor: pointer; }
+.cursor-pointer:hover { border-color: var(--bs-primary) !important; }
+</style>
+{% endblock %}

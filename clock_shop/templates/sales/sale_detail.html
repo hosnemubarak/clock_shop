@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ sale.invoice_number }} | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Invoice: {{ sale.invoice_number }}</h4>
+            <div class="page-title-right">
+                <a href="{% url 'sale_print' sale.pk %}" class="btn btn-primary" target="_blank">
+                    <i class="las la-print"></i> Print
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Invoice Items</h5>
+                <span class="badge bg-{{ sale.status }}{% if sale.status == 'completed' %}-subtle text-success{% elif sale.status == 'cancelled' %}-subtle text-danger{% endif %} fs-12">
+                    {{ sale.get_status_display }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product</th>
+                                <th>Batch</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Price</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in sale.items.all %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'product_detail' item.product.pk %}">{{ item.product.name }}</a>
+                                    <br><small class="text-muted">SKU: {{ item.product.sku }}</small>
+                                </td>
+                                <td><code>{{ item.batch.batch_number }}</code></td>
+                                <td class="text-center">{{ item.quantity }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.unit_price|floatformat:2 }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.total_price|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="4" class="text-end">Subtotal:</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.subtotal|floatformat:2 }}</td>
+                            </tr>
+                            {% if sale.discount_amount > 0 %}
+                            <tr>
+                                <td colspan="4" class="text-end">Discount:</td>
+                                <td class="text-end text-danger">-{{ CURRENCY_SYMBOL }}{{ sale.discount_amount|floatformat:2 }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if sale.tax_amount > 0 %}
+                            <tr>
+                                <td colspan="4" class="text-end">Tax:</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.tax_amount|floatformat:2 }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr class="fw-bold">
+                                <td colspan="4" class="text-end">Total:</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
+                            </tr>
+                            <tr class="text-success">
+                                <td colspan="4" class="text-end">Paid:</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2 }}</td>
+                            </tr>
+                            {% if sale.due_amount > 0 %}
+                            <tr class="text-danger fw-bold">
+                                <td colspan="4" class="text-end">Due:</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2 }}</td>
+                            </tr>
+                            {% endif %}
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {% if payments %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Payment History</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Reference</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.payment_date|date:"M d, Y H:i" }}</td>
+                                <td class="text-success">{{ CURRENCY_SYMBOL }}{{ payment.amount|floatformat:2 }}</td>
+                                <td>{{ payment.get_payment_method_display }}</td>
+                                <td>{{ payment.reference|default:"-" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Invoice Details</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted">Invoice #</td>
+                        <td class="fw-medium">{{ sale.invoice_number }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Date</td>
+                        <td>{{ sale.sale_date|date:"F d, Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Customer</td>
+                        <td>
+                            {% if sale.customer %}
+                            <a href="{% url 'customer_detail' sale.customer.pk %}">{{ sale.customer.name }}</a>
+                            {% else %}
+                            Walk-in Customer
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Payment</td>
+                        <td>
+                            {% if sale.payment_status == 'paid' %}
+                            <span class="badge bg-success">Paid</span>
+                            {% elif sale.payment_status == 'partial' %}
+                            <span class="badge bg-warning">Partial</span>
+                            {% else %}
+                            <span class="badge bg-danger">Unpaid</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Created By</td>
+                        <td>{{ sale.created_by.username|default:"-" }}</td>
+                    </tr>
+                </table>
+                
+                {% if sale.notes %}
+                <hr>
+                <p class="text-muted mb-0"><strong>Notes:</strong> {{ sale.notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if sale.due_amount > 0 and sale.status == 'completed' %}
+        <div class="card" id="payment">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Receive Payment</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'sale_payment' sale.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Amount (Due: {{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2 }})</label>
+                        <input type="number" name="amount" class="form-control" step="0.01" max="{{ sale.due_amount }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method</label>
+                        <select name="payment_method" class="form-select" required>
+                            <option value="cash">Cash</option>
+                            <option value="card">Card</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="mobile_payment">Mobile Payment</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reference</label>
+                        <input type="text" name="reference" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="las la-check"></i> Record Payment
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if sale.status == 'completed' and sale.paid_amount == 0 %}
+        <div class="card border-danger">
+            <div class="card-body">
+                <form method="post" action="{% url 'sale_cancel' sale.pk %}" id="cancelSaleForm">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-outline-danger w-100" onclick="confirmCancelSale()">
+                        <i class="las la-times"></i> Cancel Sale
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmCancelSale() {
+    showConfirmModal(
+        'Are you sure you want to cancel this sale? Stock will be restored to the original batches.',
+        'Cancel Sale',
+        function() {
+            document.getElementById('cancelSaleForm').submit();
+        }
+    );
+}
+
+// Payment form validation
+const paymentForm = document.querySelector('form[action*="payment"]');
+if (paymentForm) {
+    paymentForm.addEventListener('submit', function(e) {
+        const amountInput = this.querySelector('input[name="amount"]');
+        const amount = parseFloat(amountInput.value);
+        const maxAmount = parseFloat(amountInput.getAttribute('max'));
+        
+        if (!amount || amount <= 0) {
+            e.preventDefault();
+            showValidationModal('Please enter a valid payment amount.', 'Invalid Amount');
+            return false;
+        }
+        
+        if (amount > maxAmount) {
+            e.preventDefault();
+            showValidationModal(`Payment amount cannot exceed the due amount ({{ CURRENCY_SYMBOL }}${maxAmount.toFixed(2)}).`, 'Amount Exceeds Due');
+            return false;
+        }
+    });
+}
+</script>
+{% endblock %}

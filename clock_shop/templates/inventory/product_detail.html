@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ product.name }} | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Product Details</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Products</a></li>
+                    <li class="breadcrumb-item active">{{ product.sku }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="max-height: 200px;">
+                    {% else %}
+                    <div class="avatar-xl mx-auto">
+                        <div class="avatar-title bg-light rounded">
+                            <i class="las la-box fs-1 text-muted"></i>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <h5 class="text-center">{{ product.name }}</h5>
+                <p class="text-center text-muted">SKU: <code>{{ product.sku }}</code></p>
+                
+                <div class="table-responsive">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td class="text-muted">Category</td>
+                            <td class="fw-medium">{{ product.category.name }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Brand</td>
+                            <td class="fw-medium">{{ product.brand.name|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Selling Price</td>
+                            <td class="fw-medium">{{ CURRENCY_SYMBOL }}{{ product.default_selling_price|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Total Stock</td>
+                            <td>
+                                {% if product.total_stock == 0 %}
+                                <span class="badge bg-danger">Out of Stock</span>
+                                {% elif product.total_stock <= 10 %}
+                                <span class="badge bg-warning">{{ product.total_stock }} units</span>
+                                {% else %}
+                                <span class="badge bg-success">{{ product.total_stock }} units</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Avg. Cost</td>
+                            <td class="fw-medium">{{ CURRENCY_SYMBOL }}{{ product.get_average_cost|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Status</td>
+                            <td>
+                                {% if product.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                {% if product.description %}
+                <hr>
+                <p class="text-muted mb-0">{{ product.description }}</p>
+                {% endif %}
+                
+                <div class="mt-4 d-flex gap-2">
+                    <a href="{% url 'product_edit' product.pk %}" class="btn btn-primary flex-grow-1">
+                        <i class="las la-pen"></i> Edit
+                    </a>
+                    <a href="{% url 'batch_create' %}?product={{ product.pk }}" class="btn btn-success flex-grow-1">
+                        <i class="las la-plus"></i> Stock In
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Available Stock by Batch</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Batch #</th>
+                                <th>Warehouse</th>
+                                <th>Buy Price</th>
+                                <th>Quantity</th>
+                                <th>Value</th>
+                                <th>Purchase Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for batch in available_batches %}
+                            <tr>
+                                <td><a href="{% url 'batch_detail' batch.pk %}">{{ batch.batch_number }}</a></td>
+                                <td>{{ batch.warehouse.name }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ batch.buy_price|floatformat:2 }}</td>
+                                <td><span class="badge bg-primary">{{ batch.quantity }}</span></td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ batch.total_value|floatformat:2 }}</td>
+                                <td>{{ batch.purchase_date|date:"M d, Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No stock available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Batch History</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Batch #</th>
+                                <th>Warehouse</th>
+                                <th>Initial</th>
+                                <th>Remaining</th>
+                                <th>Sold</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for batch in all_batches %}
+                            <tr>
+                                <td><small>{{ batch.batch_number }}</small></td>
+                                <td><small>{{ batch.warehouse.code }}</small></td>
+                                <td>{{ batch.initial_quantity }}</td>
+                                <td>{{ batch.quantity }}</td>
+                                <td>{{ batch.sold_quantity }}</td>
+                                <td><small>{{ batch.purchase_date|date:"M d, Y" }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

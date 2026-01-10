@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{{ title }}</h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'category_list' %}">Categories</a></li>
+                    <li class="breadcrumb-item active">{{ title }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="las la-tag me-2"></i>Category Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Category Name <span class="text-danger">*</span></label>
+                        {{ form.name }}
+                        <small class="text-muted">Enter a unique category name</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        {{ form.description }}
+                        <small class="text-muted">Optional description for this category</small>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.is_active }}
+                            <label class="form-check-label"><strong>Active Category</strong></label>
+                        </div>
+                        <small class="text-muted">Inactive categories won't appear in product forms</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success"><i class="las la-save me-1"></i> Save Category</button>
+                        <a href="{% url 'category_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-soft-info">
+                <h6 class="card-title mb-0"><i class="las la-info-circle me-1"></i> Tips</h6>
+            </div>
+            <div class="card-body">
+                <ul class="text-muted small mb-0">
+                    <li class="mb-2">Categories help organize your products</li>
+                    <li class="mb-2">Use clear, descriptive names for easy identification</li>
+                    <li>You can filter products by category in the product list</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

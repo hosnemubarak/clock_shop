@@ -1,0 +1,240 @@
+/* Custom CSS for Clock Shop Inventory System */
+
+/* Card animations */
+.card-animate {
+    transition: transform 0.2s ease-in-out;
+}
+.card-animate:hover {
+    transform: translateY(-5px);
+}
+
+/* Table improvements */
+.table > :not(caption) > * > * {
+    padding: 0.75rem;
+}
+
+/* Badge improvements */
+.badge {
+    font-weight: 500;
+}
+
+/* Form controls */
+.form-control:focus,
+.form-select:focus {
+    border-color: #3577f1;
+    box-shadow: 0 0 0 0.15rem rgba(53, 119, 241, 0.1);
+}
+
+/* Button soft variants */
+.btn-soft-primary {
+    color: #3577f1;
+    background-color: rgba(53, 119, 241, 0.1);
+    border-color: transparent;
+}
+.btn-soft-primary:hover {
+    color: #fff;
+    background-color: #3577f1;
+}
+
+.btn-soft-success {
+    color: #0ab39c;
+    background-color: rgba(10, 179, 156, 0.1);
+    border-color: transparent;
+}
+.btn-soft-success:hover {
+    color: #fff;
+    background-color: #0ab39c;
+}
+
+.btn-soft-info {
+    color: #299cdb;
+    background-color: rgba(41, 156, 219, 0.1);
+    border-color: transparent;
+}
+.btn-soft-info:hover {
+    color: #fff;
+    background-color: #299cdb;
+}
+
+.btn-soft-warning {
+    color: #f7b84b;
+    background-color: rgba(247, 184, 75, 0.1);
+    border-color: transparent;
+}
+.btn-soft-warning:hover {
+    color: #fff;
+    background-color: #f7b84b;
+}
+
+.btn-soft-danger {
+    color: #f06548;
+    background-color: rgba(240, 101, 72, 0.1);
+    border-color: transparent;
+}
+.btn-soft-danger:hover {
+    color: #fff;
+    background-color: #f06548;
+}
+
+.btn-soft-secondary {
+    color: #74788d;
+    background-color: rgba(116, 120, 141, 0.1);
+    border-color: transparent;
+}
+.btn-soft-secondary:hover {
+    color: #fff;
+    background-color: #74788d;
+}
+
+/* Subtle backgrounds */
+.bg-primary-subtle { background-color: rgba(53, 119, 241, 0.1) !important; }
+.bg-success-subtle { background-color: rgba(10, 179, 156, 0.1) !important; }
+.bg-info-subtle { background-color: rgba(41, 156, 219, 0.1) !important; }
+.bg-warning-subtle { background-color: rgba(247, 184, 75, 0.1) !important; }
+.bg-danger-subtle { background-color: rgba(240, 101, 72, 0.1) !important; }
+.bg-secondary-subtle { background-color: rgba(116, 120, 141, 0.1) !important; }
+.bg-dark-subtle { background-color: rgba(33, 37, 41, 0.1) !important; }
+.bg-light-subtle { background-color: rgba(248, 249, 250, 0.5) !important; }
+
+/* Text colors for subtle badges */
+.text-primary { color: #3577f1 !important; }
+.text-success { color: #0ab39c !important; }
+.text-info { color: #299cdb !important; }
+.text-warning { color: #f7b84b !important; }
+.text-danger { color: #f06548 !important; }
+
+/* Avatar styles */
+.avatar-xs { width: 1.5rem; height: 1.5rem; }
+.avatar-sm { width: 2rem; height: 2rem; }
+.avatar-md { width: 3rem; height: 3rem; }
+.avatar-lg { width: 4rem; height: 4rem; }
+.avatar-xl { width: 5rem; height: 5rem; }
+
+.avatar-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-weight: 500;
+}
+
+/* Page title */
+.page-title-box {
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+    margin-bottom: 0;
+}
+
+/* Mobile Sidebar Styles */
+.vertical-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.35);
+    z-index: 1002;
+    display: none;
+}
+
+@media (max-width: 1024.98px) {
+    .navbar-menu {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 250px;
+        height: 100vh;
+        z-index: 1003;
+        background-color: #fff;
+        transition: left 0.3s ease-in-out;
+    }
+    
+    .sidebar-enable .navbar-menu {
+        left: 0;
+    }
+    
+    .sidebar-enable .vertical-overlay {
+        display: block;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+    }
+}
+
+@media (min-width: 1025px) {
+    .navbar-menu {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px;
+        height: 100vh;
+        z-index: 1001;
+    }
+    
+    .main-content {
+        margin-left: 250px;
+    }
+    
+    [data-sidebar-size="sm"] .navbar-menu {
+        width: 70px;
+    }
+    
+    [data-sidebar-size="sm"] .main-content {
+        margin-left: 70px;
+    }
+    
+    [data-sidebar-size="sm"] .navbar-menu .menu-title,
+    [data-sidebar-size="sm"] .navbar-menu .nav-link span,
+    [data-sidebar-size="sm"] .navbar-menu .logo-lg {
+        display: none;
+    }
+    
+    [data-sidebar-size="sm"] .navbar-menu .logo-sm {
+        display: inline-block;
+    }
+}
+
+/* Hamburger icon animation */
+.hamburger-icon {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 20px;
+    height: 14px;
+}
+
+.hamburger-icon span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background-color: #495057;
+    transition: all 0.3s ease;
+}
+
+/* Card clickable cursor */
+.card-animate {
+    cursor: pointer;
+}
+
+/* Print styles */
+@media print {
+    .no-print,
+    .navbar-menu,
+    #page-topbar,
+    .footer,
+    .btn {
+        display: none !important;
+    }
+    .main-content {
+        margin-left: 0 !important;
+    }
+    .page-content {
+        padding: 0 !important;
+    }
+}

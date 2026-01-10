@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Server Error | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="text-center mt-5">
+            <div class="mb-4">
+                <i class="las la-server text-danger" style="font-size: 120px;"></i>
+            </div>
+            <h1 class="display-1 fw-bold text-danger">500</h1>
+            <h3 class="text-uppercase mb-3">Internal Server Error</h3>
+            <p class="text-muted mb-4">
+                Something went wrong on our end. Our team has been notified and is working to fix the issue.
+            </p>
+            <div class="d-flex justify-content-center gap-2">
+                <a href="{% url 'dashboard' %}" class="btn btn-primary">
+                    <i class="las la-home me-1"></i> Dashboard
+                </a>
+                <a href="javascript:location.reload()" class="btn btn-outline-secondary">
+                    <i class="las la-redo-alt me-1"></i> Try Again
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Dead Stock Report | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Dead / Slow Moving Stock Report</h4>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <form method="get" class="row g-3 align-items-center">
+                    <div class="col-md-4">
+                        <label class="form-label">No sales in last (days)</label>
+                        <input type="number" name="days" class="form-control" value="{{ days_threshold }}" min="1">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">Analyze</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-4 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Dead Stock Batches</p>
+                <h4 class="fs-22 fw-semibold mt-4">{{ dead_stock_summary.batch_count|default:0 }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Dead Stock Items</p>
+                <h4 class="fs-22 fw-semibold mt-4">{{ dead_stock_summary.total_items|intcomma|default:0 }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Dead Stock Value</p>
+                <h4 class="fs-22 fw-semibold mt-4 text-danger">{{ CURRENCY_SYMBOL }}{{ dead_stock_summary.total_value|floatformat:2|intcomma|default:"0.00" }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Dead Stock (No Sales in {{ days_threshold }} Days)</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Batch</th>
+                                <th>Warehouse</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Value</th>
+                                <th>Purchase Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in dead_stock %}
+                            <tr>
+                                <td><a href="{% url 'product_detail' b.product.pk %}">{{ b.product.name|truncatechars:25 }}</a></td>
+                                <td><code>{{ b.batch_number }}</code></td>
+                                <td>{{ b.warehouse.code }}</td>
+                                <td class="text-center">{{ b.quantity }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ b.total_value|floatformat:2 }}</td>
+                                <td>{{ b.purchase_date|date:"M d, Y" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="text-center text-success py-4">No dead stock found!</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Slow Moving (≤5 sold)</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-center">Sold</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in slow_moving %}
+                            <tr>
+                                <td>{{ p.product__name|truncatechars:20 }}</td>
+                                <td class="text-center"><span class="badge bg-warning">{{ p.quantity_sold }}</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="2" class="text-center text-muted">No slow moving items</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

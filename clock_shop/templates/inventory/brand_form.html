@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{{ title }}</h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'brand_list' %}">Brands</a></li>
+                    <li class="breadcrumb-item active">{{ title }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="las la-copyright me-2"></i>Brand Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Brand Name <span class="text-danger">*</span></label>
+                        {{ form.name }}
+                        <small class="text-muted">Enter the manufacturer or brand name</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        {{ form.description }}
+                        <small class="text-muted">Optional description for this brand</small>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.is_active }}
+                            <label class="form-check-label"><strong>Active Brand</strong></label>
+                        </div>
+                        <small class="text-muted">Inactive brands won't appear in product forms</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success"><i class="las la-save me-1"></i> Save Brand</button>
+                        <a href="{% url 'brand_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-soft-info">
+                <h6 class="card-title mb-0"><i class="las la-info-circle me-1"></i> Tips</h6>
+            </div>
+            <div class="card-body">
+                <ul class="text-muted small mb-0">
+                    <li class="mb-2">Brands help identify product manufacturers</li>
+                    <li class="mb-2">Use official brand names for consistency</li>
+                    <li>You can filter products by brand in the product list</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

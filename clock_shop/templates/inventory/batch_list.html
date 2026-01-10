@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Batches | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Stock Batches</h4>
+            <div class="page-title-right">
+                <a href="{% url 'batch_create' %}" class="btn btn-success">
+                    <i class="las la-plus"></i> Stock In
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" name="search" class="form-control" placeholder="Search batches..." value="{{ search }}">
+                    </div>
+                    <div class="col-md-3">
+                        <select name="warehouse" class="form-select">
+                            <option value="">All Warehouses</option>
+                            {% for wh in warehouses %}
+                            <option value="{{ wh.id }}">{{ wh.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select name="stock" class="form-select">
+                            <option value="">All Stock</option>
+                            <option value="available">Available Only</option>
+                            <option value="depleted">Depleted</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Batch #</th>
+                                <th>Product</th>
+                                <th>Warehouse</th>
+                                <th>Buy Price</th>
+                                <th>Qty</th>
+                                <th>Value</th>
+                                <th>Purchase Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for batch in batches %}
+                            <tr>
+                                <td><a href="{% url 'batch_detail' batch.pk %}">{{ batch.batch_number }}</a></td>
+                                <td>
+                                    <a href="{% url 'product_detail' batch.product.pk %}">{{ batch.product.name|truncatechars:30 }}</a>
+                                </td>
+                                <td>{{ batch.warehouse.code }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ batch.buy_price|floatformat:2 }}</td>
+                                <td>
+                                    {% if batch.quantity == 0 %}
+                                    <span class="badge bg-secondary">0</span>
+                                    {% elif batch.quantity <= 10 %}
+                                    <span class="badge bg-warning">{{ batch.quantity }}</span>
+                                    {% else %}
+                                    <span class="badge bg-success">{{ batch.quantity }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ batch.total_value|floatformat:2 }}</td>
+                                <td>{{ batch.purchase_date|date:"M d, Y" }}</td>
+                                <td>
+                                    <a href="{% url 'batch_detail' batch.pk %}" class="btn btn-soft-info btn-sm">
+                                        <i class="las la-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">No batches found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if batches.has_other_pages %}
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if batches.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ batches.previous_page_number }}">Previous</a></li>
+                        {% endif %}
+                        <li class="page-item active"><span class="page-link">{{ batches.number }} of {{ batches.paginator.num_pages }}</span></li>
+                        {% if batches.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ batches.next_page_number }}">Next</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

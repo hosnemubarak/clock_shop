@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Audit Logs | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Audit Logs</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Audit Logs</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-nowrap align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Model</th>
+                                <th>Description</th>
+                                <th>IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                            <tr>
+                                <td>{{ log.timestamp|date:"M d, Y H:i" }}</td>
+                                <td>{{ log.user.username|default:"-" }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if log.action == 'CREATE' %}bg-success
+                                        {% elif log.action == 'UPDATE' %}bg-info
+                                        {% elif log.action == 'DELETE' %}bg-danger
+                                        {% elif log.action == 'SALE' %}bg-primary
+                                        {% elif log.action == 'PAYMENT' %}bg-success
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ log.action }}
+                                    </span>
+                                </td>
+                                <td>{{ log.model_name }}</td>
+                                <td>{{ log.object_repr|truncatechars:50 }}</td>
+                                <td><small>{{ log.ip_address|default:"-" }}</small></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No audit logs found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

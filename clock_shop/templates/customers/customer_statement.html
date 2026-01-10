@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Statement - {{ customer.name }} | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Customer Statement</h4>
+            <div class="page-title-right">
+                <button onclick="window.print()" class="btn btn-primary"><i class="las la-print"></i> Print</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="mb-0">{{ customer.name }}</h5>
+                        <small class="text-muted">{{ customer.phone }}</small>
+                    </div>
+                    <div class="col-md-6">
+                        <form method="get" class="row g-2">
+                            <div class="col-md-4">
+                                <input type="date" name="date_from" class="form-control form-control-sm" value="{{ date_from }}">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="date" name="date_to" class="form-control form-control-sm" value="{{ date_to }}">
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary btn-sm w-100">Filter</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Reference</th>
+                                <th class="text-end">Debit</th>
+                                <th class="text-end">Credit</th>
+                                <th class="text-end">Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in transactions %}
+                            <tr>
+                                <td>{{ t.date|date:"M d, Y" }}</td>
+                                <td>{{ t.type }}</td>
+                                <td>{{ t.reference }}</td>
+                                <td class="text-end">{% if t.debit > 0 %}{{ CURRENCY_SYMBOL }}{{ t.debit|floatformat:2 }}{% endif %}</td>
+                                <td class="text-end text-success">{% if t.credit > 0 %}{{ CURRENCY_SYMBOL }}{{ t.credit|floatformat:2 }}{% endif %}</td>
+                                <td class="text-end {% if t.balance > 0 %}text-danger{% endif %}">{{ CURRENCY_SYMBOL }}{{ t.balance|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No transactions found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        {% if transactions %}
+                        <tfoot class="table-light">
+                            <tr class="fw-bold">
+                                <td colspan="5" class="text-end">Current Balance:</td>
+                                <td class="text-end {% if customer.total_due > 0 %}text-danger{% endif %}">
+                                    {{ CURRENCY_SYMBOL }}{{ customer.total_due|floatformat:2 }}
+                                </td>
+                            </tr>
+                        </tfoot>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

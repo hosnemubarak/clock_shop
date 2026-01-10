@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ purchase.purchase_number }} | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Purchase Order: {{ purchase.purchase_number }}</h4>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Items</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Batch #</th>
+                                <th>Qty</th>
+                                <th>Unit Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in purchase.items.all %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td><code>{{ item.batch.batch_number }}</code></td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ item.unit_price|floatformat:2 }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ item.total_price|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="4" class="text-end fw-bold">Total:</td>
+                                <td class="fw-bold">{{ CURRENCY_SYMBOL }}{{ purchase.total_amount|floatformat:2 }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Details</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted">PO Number</td>
+                        <td class="fw-medium">{{ purchase.purchase_number }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Supplier</td>
+                        <td>{{ purchase.supplier }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Date</td>
+                        <td>{{ purchase.purchase_date|date:"F d, Y" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Created By</td>
+                        <td>{{ purchase.created_by.username|default:"-" }}</td>
+                    </tr>
+                </table>
+                {% if purchase.notes %}
+                <hr>
+                <p class="text-muted mb-0"><strong>Notes:</strong> {{ purchase.notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

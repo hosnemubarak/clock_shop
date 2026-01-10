@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{{ title }}</h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Products</a></li>
+                    <li class="breadcrumb-item active">{{ title }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" id="productForm">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Basic Information -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="las la-info-circle me-2"></i>Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="id_sku" class="form-label">SKU <span class="text-danger">*</span></label>
+                            {{ form.sku }}
+                            <small class="text-muted">Unique product identifier</small>
+                            {% if form.sku.errors %}<div class="text-danger small">{{ form.sku.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-8 mb-3">
+                            <label for="id_name" class="form-label">Product Name <span class="text-danger">*</span></label>
+                            {{ form.name }}
+                            {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_category" class="form-label">Category <span class="text-danger">*</span></label>
+                            {{ form.category }}
+                            {% if form.category.errors %}<div class="text-danger small">{{ form.category.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_brand" class="form-label">Brand</label>
+                            {{ form.brand }}
+                            <small class="text-muted">Optional</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">Description</label>
+                        {{ form.description }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing & Media -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="las la-tag me-2"></i>Pricing & Media</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_default_selling_price" class="form-label">Selling Price <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
+                                {{ form.default_selling_price }}
+                            </div>
+                            <small class="text-muted">Default retail price</small>
+                            {% if form.default_selling_price.errors %}<div class="text-danger small">{{ form.default_selling_price.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_image" class="form-label">Product Image</label>
+                            {{ form.image }}
+                            <small class="text-muted">JPG, PNG (max 2MB)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Status & Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="las la-cog me-2"></i>Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="id_is_active">
+                                <strong>Active Product</strong>
+                            </label>
+                        </div>
+                        <small class="text-muted">Inactive products won't appear in sales</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="las la-save me-1"></i> Save Product
+                        </button>
+                        <a href="{% url 'product_list' %}" class="btn btn-outline-secondary">
+                            <i class="las la-times me-1"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="card">
+                <div class="card-header bg-soft-info">
+                    <h6 class="card-title mb-0"><i class="las la-link me-1"></i> Quick Links</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <a href="{% url 'category_create' %}" class="text-decoration-none">
+                                <i class="las la-plus me-1"></i> Add New Category
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'brand_create' %}" class="text-decoration-none">
+                                <i class="las la-plus me-1"></i> Add New Brand
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

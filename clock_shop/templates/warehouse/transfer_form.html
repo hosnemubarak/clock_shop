@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+
+{% block title %}New Transfer | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">New Stock Transfer</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'transfer_list' %}">Transfers</a></li>
+                    <li class="breadcrumb-item active">New Transfer</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="post" id="transferForm">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Transfer Items</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table align-middle" id="itemsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Batch</th>
+                                    <th width="100">Qty</th>
+                                    <th width="120">Cost</th>
+                                    <th width="50"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <hr>
+                    <h6>Add Item</h6>
+                    <p class="text-muted small">First select source warehouse to see available batches</p>
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <select class="form-select" id="newBatch">
+                                <option value="">Select Batch</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control" id="newQty" placeholder="Qty" min="1" value="1">
+                        </div>
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-primary w-100" onclick="addItem()">
+                                <i class="las la-plus"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                    <div id="batchInfo" class="mt-2 text-muted small"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Transfer Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Source Warehouse <span class="text-danger">*</span></label>
+                        {{ form.source_warehouse }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Destination Warehouse <span class="text-danger">*</span></label>
+                        {{ form.destination_warehouse }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Transfer Date</label>
+                        {{ form.transfer_date }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        {{ form.notes }}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="las la-exchange-alt"></i> Create Transfer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CURRENCY_SYMBOL = '{{ CURRENCY_SYMBOL }}';
+let items = [];
+let itemIndex = 0;
+let batchesData = {};
+
+// Initialize source warehouse change listener
+const sourceWarehouseSelect = document.querySelector('[name="source_warehouse"]');
+if (sourceWarehouseSelect) {
+    sourceWarehouseSelect.addEventListener('change', function() {
+        loadWarehouseBatches(this.value);
+        // Clear items when source warehouse changes
+        items = [];
+        renderItems();
+    });
+    
+    // Load batches if a source warehouse is already selected
+    if (sourceWarehouseSelect.value) {
+        loadWarehouseBatches(sourceWarehouseSelect.value);
+    }
+}
+
+function loadWarehouseBatches(warehouseId) {
+    const batchSelect = document.getElementById('newBatch');
+    batchSelect.innerHTML = '<option value="">Loading...</option>';
+    batchesData = {};
+    
+    if (!warehouseId) {
+        batchSelect.innerHTML = '<option value="">Select source warehouse first</option>';
+        return;
+    }
+    
+    fetch(`/warehouse/api/${warehouseId}/batches/`)
+        .then(response => response.json())
+        .then(data => {
+            batchSelect.innerHTML = '<option value="">Select Batch</option>';
+            if (data.length === 0) {
+                batchSelect.innerHTML = '<option value="">No batches available</option>';
+                return;
+            }
+            data.forEach(batch => {
+                batchesData[batch.id] = batch;
+                batchSelect.innerHTML += `<option value="${batch.id}">${batch.product_name} - ${batch.batch_number} (${batch.quantity} avail @ ${CURRENCY_SYMBOL}${batch.buy_price})</option>`;
+            });
+        })
+        .catch(error => {
+            console.error('Error loading batches:', error);
+            batchSelect.innerHTML = '<option value="">Error loading batches</option>';
+        });
+}
+
+function addItem() {
+    const batchSelect = document.getElementById('newBatch');
+    const qtyInput = document.getElementById('newQty');
+    const qty = parseInt(qtyInput.value);
+    
+    if (!batchSelect.value) {
+        showValidationModal('Please select a batch before adding.', 'Batch Required');
+        return;
+    }
+    
+    if (!qty || qty < 1) {
+        showValidationModal('Please enter a valid quantity greater than zero.', 'Invalid Quantity');
+        return;
+    }
+    
+    const batch = batchesData[batchSelect.value];
+    if (!batch) {
+        showErrorModal('The selected batch is invalid. Please refresh and try again.', 'Invalid Batch');
+        return;
+    }
+    
+    if (qty > batch.quantity) {
+        showValidationModal(`Only ${batch.quantity} units available in this batch. Please reduce the quantity.`, 'Insufficient Stock');
+        return;
+    }
+    
+    // Check if batch already added
+    const existingItem = items.find(i => i.batch_id === batchSelect.value);
+    if (existingItem) {
+        const newQty = existingItem.quantity + qty;
+        if (newQty > batch.quantity + existingItem.quantity) {
+            showValidationModal(`Only ${batch.quantity + existingItem.quantity} units available in this batch.`, 'Insufficient Stock');
+            return;
+        }
+        existingItem.quantity = newQty;
+    } else {
+        const item = {
+            index: itemIndex++,
+            batch_id: batchSelect.value,
+            batch_number: batch.batch_number,
+            product_name: batch.product_name,
+            product_sku: batch.product_sku,
+            quantity: qty,
+            buy_price: batch.buy_price
+        };
+        items.push(item);
+    }
+    
+    batchesData[batchSelect.value].quantity -= qty;
+    
+    // Update the batch select option to show new available quantity
+    const option = batchSelect.querySelector(`option[value="${batchSelect.value}"]`);
+    if (option && batchesData[batchSelect.value]) {
+        const b = batchesData[batchSelect.value];
+        option.textContent = `${b.product_name} - ${b.batch_number} (${b.quantity} avail @ ${CURRENCY_SYMBOL}${b.buy_price})`;
+    }
+    
+    renderItems();
+    
+    // Reset inputs
+    batchSelect.value = '';
+    qtyInput.value = '1';
+}
+
+function removeItem(index) {
+    const item = items.find(i => i.index === index);
+    if (item && batchesData[item.batch_id]) {
+        batchesData[item.batch_id].quantity += item.quantity;
+        
+        // Update the batch select option
+        const batchSelect = document.getElementById('newBatch');
+        const option = batchSelect.querySelector(`option[value="${item.batch_id}"]`);
+        if (option) {
+            const b = batchesData[item.batch_id];
+            option.textContent = `${b.product_name} - ${b.batch_number} (${b.quantity} avail @ ${CURRENCY_SYMBOL}${b.buy_price})`;
+        }
+    }
+    items = items.filter(i => i.index !== index);
+    renderItems();
+}
+
+function renderItems() {
+    const tbody = document.getElementById('itemsBody');
+    let html = '';
+    let grandTotal = 0;
+    
+    items.forEach(item => {
+        const total = item.quantity * parseFloat(item.buy_price);
+        grandTotal += total;
+        html += `
+            <tr>
+                <td>
+                    <strong>${item.product_name}</strong>
+                    <br><small class="text-muted">${item.product_sku || ''}</small>
+                </td>
+                <td><code>${item.batch_number}</code></td>
+                <td class="text-center">${item.quantity}</td>
+                <td class="text-end">${CURRENCY_SYMBOL}${total.toFixed(2)}</td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-soft-danger btn-sm" onclick="removeItem(${item.index})">
+                        <i class="las la-times"></i>
+                    </button>
+                </td>
+                <input type="hidden" name="items" value='${JSON.stringify(item).replace(/'/g, "&#39;")}'>
+            </tr>
+        `;
+    });
+    
+    if (items.length > 0) {
+        html += `
+            <tr class="table-light">
+                <td colspan="3" class="text-end fw-bold">Total Value:</td>
+                <td class="text-end fw-bold">${CURRENCY_SYMBOL}${grandTotal.toFixed(2)}</td>
+                <td></td>
+            </tr>
+        `;
+    }
+    
+    tbody.innerHTML = html || '<tr><td colspan="5" class="text-center text-muted py-3">No items added yet. Select a batch and quantity above.</td></tr>';
+}
+
+document.getElementById('transferForm').addEventListener('submit', function(e) {
+    if (items.length === 0) {
+        e.preventDefault();
+        showValidationModal('Please add at least one item to the transfer before submitting.', 'No Items Added');
+        return false;
+    }
+    
+    const source = document.querySelector('[name="source_warehouse"]').value;
+    const dest = document.querySelector('[name="destination_warehouse"]').value;
+    
+    if (!source || !dest) {
+        e.preventDefault();
+        showValidationModal('Please select both source and destination warehouses.', 'Warehouse Required');
+        return false;
+    }
+    
+    if (source === dest) {
+        e.preventDefault();
+        showValidationModal('Source and destination warehouses must be different. Please select a different destination.', 'Invalid Selection');
+        return false;
+    }
+});
+
+// Initial render
+renderItems();
+</script>
+{% endblock %}

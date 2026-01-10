@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Batch {{ batch.batch_number }} | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Batch Details</h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'product_detail' batch.product.pk %}">{{ batch.product.name }}</a></li>
+                    <li class="breadcrumb-item active">{{ batch.batch_number }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row">
+    <div class="col-md-3">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="fw-medium text-muted mb-0">Current Stock</p>
+                        <h2 class="mt-2 mb-0 {% if batch.quantity == 0 %}text-danger{% elif batch.quantity <= 10 %}text-warning{% else %}text-success{% endif %}">
+                            {{ batch.quantity }}
+                        </h2>
+                        <small class="text-muted">units available</small>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-primary-subtle text-primary rounded fs-3">
+                            <i class="las la-boxes"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="fw-medium text-muted mb-0">Buy Price</p>
+                        <h2 class="mt-2 mb-0">{{ CURRENCY_SYMBOL }}{{ batch.buy_price|floatformat:2 }}</h2>
+                        <small class="text-muted">per unit</small>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-info-subtle text-info rounded fs-3">
+                            <i class="las la-tag"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="fw-medium text-muted mb-0">Stock Value</p>
+                        <h2 class="mt-2 mb-0 text-success">{{ CURRENCY_SYMBOL }}{{ batch.total_value|floatformat:2 }}</h2>
+                        <small class="text-muted">total value</small>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-success-subtle text-success rounded fs-3">
+                            <i class="las la-dollar-sign"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="fw-medium text-muted mb-0">Units Sold</p>
+                        <h2 class="mt-2 mb-0">{{ batch.sold_quantity }}</h2>
+                        <small class="text-muted">of {{ batch.initial_quantity }} initial</small>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-warning-subtle text-warning rounded fs-3">
+                            <i class="las la-shopping-cart"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <!-- Batch Information -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="las la-barcode me-2"></i>Batch Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted" width="40%">Batch Number</td>
+                                <td class="fw-medium"><code class="fs-6">{{ batch.batch_number }}</code></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Purchase Date</td>
+                                <td>
+                                    <i class="las la-calendar me-1 text-muted"></i>
+                                    {{ batch.purchase_date|date:"F d, Y" }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Supplier</td>
+                                <td>
+                                    {% if batch.supplier %}
+                                    <i class="las la-truck me-1 text-muted"></i>
+                                    {{ batch.supplier }}
+                                    {% else %}
+                                    <span class="text-muted">Not specified</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Initial Quantity</td>
+                                <td>{{ batch.initial_quantity }} units</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if batch.notes %}
+                <hr>
+                <div class="bg-light p-3 rounded">
+                    <h6 class="text-muted mb-2"><i class="las la-sticky-note me-1"></i> Notes</h6>
+                    <p class="mb-0">{{ batch.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <!-- Product & Warehouse -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="las la-box me-2"></i>Product Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                    <div class="avatar-md me-3 flex-shrink-0">
+                        <span class="avatar-title bg-primary-subtle text-primary rounded fs-2">
+                            <i class="las la-clock"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="mb-1">
+                            <a href="{% url 'product_detail' batch.product.pk %}" class="text-reset">
+                                {{ batch.product.name }}
+                            </a>
+                        </h5>
+                        <p class="text-muted mb-0">
+                            <code>{{ batch.product.sku }}</code>
+                            {% if batch.product.category %}
+                            <span class="mx-2">•</span>
+                            {{ batch.product.category.name }}
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center">
+                    <div class="avatar-md me-3 flex-shrink-0">
+                        <span class="avatar-title bg-info-subtle text-info rounded fs-2">
+                            <i class="las la-warehouse"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="mb-1">
+                            <a href="{% url 'warehouse_detail' batch.warehouse.pk %}" class="text-reset">
+                                {{ batch.warehouse.name }}
+                            </a>
+                        </h5>
+                        <p class="text-muted mb-0">
+                            <code>{{ batch.warehouse.code }}</code>
+                            {% if batch.warehouse.is_shop %}
+                            <span class="badge bg-success-subtle text-success ms-2">Retail Shop</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="las la-cog me-2"></i>Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{% url 'product_detail' batch.product.pk %}" class="btn btn-soft-primary">
+                        <i class="las la-eye me-1"></i> View Product
+                    </a>
+                    <a href="{% url 'warehouse_detail' batch.warehouse.pk %}" class="btn btn-soft-info">
+                        <i class="las la-warehouse me-1"></i> View Warehouse
+                    </a>
+                    <a href="{% url 'transfer_create' %}" class="btn btn-soft-warning">
+                        <i class="las la-exchange-alt me-1"></i> Create Transfer
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

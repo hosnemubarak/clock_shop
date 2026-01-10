@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Sales | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Sales</h4>
+            <div class="page-title-right">
+                <a href="{% url 'sale_create' %}" class="btn btn-success"><i class="las la-plus"></i> New Sale</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ search }}">
+                    </div>
+                    <div class="col-md-2">
+                        <select name="payment_status" class="form-select">
+                            <option value="">All Payment Status</option>
+                            <option value="paid">Paid</option>
+                            <option value="partial">Partial</option>
+                            <option value="unpaid">Unpaid</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" name="date_from" class="form-control" placeholder="From">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" name="date_to" class="form-control" placeholder="To">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Total</th>
+                                <th>Paid</th>
+                                <th>Due</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in sales %}
+                            <tr>
+                                <td><a href="{% url 'sale_detail' sale.pk %}" class="fw-medium">{{ sale.invoice_number }}</a></td>
+                                <td>{{ sale.customer.name|default:"Walk-in" }}</td>
+                                <td>{{ sale.sale_date|date:"M d, Y" }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
+                                <td class="text-success">{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2 }}</td>
+                                <td class="{% if sale.due_amount > 0 %}text-danger{% endif %}">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2 }}</td>
+                                <td>
+                                    {% if sale.payment_status == 'paid' %}
+                                    <span class="badge bg-success">Paid</span>
+                                    {% elif sale.payment_status == 'partial' %}
+                                    <span class="badge bg-warning">Partial</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Unpaid</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            <i class="las la-ellipsis-h"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="{% url 'sale_detail' sale.pk %}"><i class="las la-eye me-2"></i>View</a></li>
+                                            <li><a class="dropdown-item" href="{% url 'sale_print' sale.pk %}" target="_blank"><i class="las la-print me-2"></i>Print</a></li>
+                                            {% if sale.due_amount > 0 %}
+                                            <li><a class="dropdown-item" href="{% url 'sale_detail' sale.pk %}#payment"><i class="las la-money-bill me-2"></i>Receive Payment</a></li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">No sales found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if sales.has_other_pages %}
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if sales.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ sales.previous_page_number }}">Previous</a></li>
+                        {% endif %}
+                        <li class="page-item active"><span class="page-link">{{ sales.number }} of {{ sales.paginator.num_pages }}</span></li>
+                        {% if sales.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ sales.next_page_number }}">Next</a></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

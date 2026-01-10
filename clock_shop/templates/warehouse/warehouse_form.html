@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{{ title }}</h4>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse_list' %}">Warehouses</a></li>
+                    <li class="breadcrumb-item active">{{ title }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="las la-warehouse me-2"></i>Warehouse Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Warehouse Name <span class="text-danger">*</span></label>
+                            {{ form.name }}
+                            <small class="text-muted">e.g. Main Store, Downtown Branch</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Code <span class="text-danger">*</span></label>
+                            {{ form.code }}
+                            <small class="text-muted">Unique identifier (e.g. WH001, MAIN)</small>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Phone Number</label>
+                            {{ form.phone }}
+                            <small class="text-muted">Optional contact number</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Address</label>
+                            {{ form.address }}
+                            <small class="text-muted">Optional location address</small>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                {{ form.is_active }}
+                                <label class="form-check-label"><strong>Active Warehouse</strong></label>
+                            </div>
+                            <small class="text-muted">Inactive warehouses won't appear in transfers</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                {{ form.is_shop }}
+                                <label class="form-check-label"><strong>Retail Shop</strong></label>
+                            </div>
+                            <small class="text-muted">Mark if this is a customer-facing retail location</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-success">
+                            <i class="las la-save me-1"></i> Save Warehouse
+                        </button>
+                        <a href="{% url 'warehouse_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-soft-info">
+                <h6 class="card-title mb-0"><i class="las la-info-circle me-1"></i> About Warehouses</h6>
+            </div>
+            <div class="card-body">
+                <ul class="text-muted small mb-0">
+                    <li class="mb-2">Warehouses store your inventory batches</li>
+                    <li class="mb-2">You can transfer stock between warehouses</li>
+                    <li class="mb-2">Mark a warehouse as "Retail Shop" if customers can shop there</li>
+                    <li>Each warehouse has unique stock levels</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0"><i class="las la-link me-1"></i> Quick Links</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <a href="{% url 'warehouse_list' %}" class="text-decoration-none">
+                            <i class="las la-list me-1"></i> View All Warehouses
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'transfer_list' %}" class="text-decoration-none">
+                            <i class="las la-exchange-alt me-1"></i> Stock Transfers
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

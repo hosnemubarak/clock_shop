@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Customer Report | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Customer Report</h4>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Total Customers</p>
+                <h4 class="fs-22 fw-semibold mt-4">{{ customer_summary.total_customers|default:0 }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Total Purchases</p>
+                <h4 class="fs-22 fw-semibold mt-4">{{ CURRENCY_SYMBOL }}{{ customer_summary.total_purchases|floatformat:2|intcomma|default:"0.00" }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Total Outstanding</p>
+                <h4 class="fs-22 fw-semibold mt-4 text-danger">{{ CURRENCY_SYMBOL }}{{ customer_summary.total_dues|floatformat:2|intcomma|default:"0.00" }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Customers with Outstanding Dues</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Phone</th>
+                                <th class="text-end">Due Amount</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in customers_with_dues %}
+                            <tr>
+                                <td><a href="{% url 'customer_detail' c.pk %}">{{ c.name }}</a></td>
+                                <td>{{ c.phone|default:"-" }}</td>
+                                <td class="text-end text-danger fw-bold">{{ CURRENCY_SYMBOL }}{{ c.total_due|floatformat:2 }}</td>
+                                <td>
+                                    <a href="{% url 'payment_create' %}?customer={{ c.pk }}" class="btn btn-soft-success btn-sm">Receive</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted">No outstanding dues</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Top Customers by Purchases</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th class="text-end">Total Purchases</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in top_customers %}
+                            <tr>
+                                <td><a href="{% url 'customer_detail' c.pk %}">{{ c.name }}</a></td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ c.total_purchases|floatformat:2|intcomma }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="2" class="text-center text-muted">No data</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Recent Payments</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Received By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in recent_payments %}
+                            <tr>
+                                <td>{{ p.payment_date|date:"M d, Y H:i" }}</td>
+                                <td><a href="{% url 'customer_detail' p.customer.pk %}">{{ p.customer.name }}</a></td>
+                                <td class="text-success">{{ CURRENCY_SYMBOL }}{{ p.amount|floatformat:2 }}</td>
+                                <td>{{ p.get_payment_method_display }}</td>
+                                <td>{{ p.received_by.username|default:"-" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted">No recent payments</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
