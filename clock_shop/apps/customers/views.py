@@ -41,7 +41,7 @@ def customer_list(request):
     elif status == 'inactive':
         customers = customers.filter(is_active=False)
     
-    paginator = Paginator(customers, 20)
+    paginator = Paginator(customers, 10)
     page = request.GET.get('page')
     customers = paginator.get_page(page)
     
@@ -226,7 +226,7 @@ def payment_list(request):
     if date_to:
         payments = payments.filter(payment_date__date__lte=date_to)
     
-    paginator = Paginator(payments, 20)
+    paginator = Paginator(payments, 10)
     page = request.GET.get('page')
     payments = paginator.get_page(page)
     

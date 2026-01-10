@@ -145,25 +145,9 @@
                     </table>
                 </div>
 
-                {% if transfers.has_other_pages %}
-                <nav class="mt-4">
-                    <ul class="pagination justify-content-center mb-0">
-                        {% if transfers.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ transfers.previous_page_number }}&status={{ request.GET.status }}&source={{ request.GET.source }}&destination={{ request.GET.destination }}">Previous</a>
-                        </li>
-                        {% endif %}
-                        <li class="page-item active">
-                            <span class="page-link">{{ transfers.number }} of {{ transfers.paginator.num_pages }}</span>
-                        </li>
-                        {% if transfers.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ transfers.next_page_number }}&status={{ request.GET.status }}&source={{ request.GET.source }}&destination={{ request.GET.destination }}">Next</a>
-                        </li>
-                        {% endif %}
-                    </ul>
-                </nav>
-                {% endif %}
+                {% with page_obj=transfers %}
+                {% include 'includes/pagination.html' %}
+                {% endwith %}
             </div>
         </div>
     </div>

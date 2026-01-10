@@ -1,682 +1,1406 @@
 [
-  {
-    "model": "warehouse.warehouse",
-    "pk": 1,
-    "fields": {
-      "name": "Main Warehouse",
-      "code": "WH001",
-      "address": "123 Industrial Area, Downtown",
-      "phone": "555-0100",
-      "is_active": true,
-      "is_shop": false,
-      "created_at": "2025-01-01T10:00:00Z",
-      "updated_at": "2025-01-01T10:00:00Z"
+    {
+        "model": "auth.user",
+        "pk": 1,
+        "fields": {
+            "username": "admin",
+            "password": "pbkdf2_sha256$600000$salt$hash",
+            "first_name": "Rahim",
+            "last_name": "Ahmed",
+            "email": "admin@clockshop.com.bd",
+            "is_staff": true,
+            "is_superuser": true,
+            "is_active": true
+        }
+    },
+    {
+        "model": "warehouse.warehouse",
+        "pk": 1,
+        "fields": {
+            "name": "Gulshan Showroom",
+            "code": "GSN-01",
+            "address": "45/A, Gulshan Avenue, Gulshan-1, Dhaka-1212",
+            "phone": "01711-223344",
+            "is_active": true,
+            "is_shop": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "warehouse.warehouse",
+        "pk": 2,
+        "fields": {
+            "name": "Banani Showroom",
+            "code": "BNN-01",
+            "address": "12, Kamal Ataturk Avenue, Banani, Dhaka-1213",
+            "phone": "01811-556677",
+            "is_active": true,
+            "is_shop": true,
+            "created_at": "2024-01-02T10:00:00Z",
+            "updated_at": "2024-01-02T10:00:00Z"
+        }
+    },
+    {
+        "model": "warehouse.warehouse",
+        "pk": 3,
+        "fields": {
+            "name": "Dhanmondi Showroom",
+            "code": "DHN-01",
+            "address": "27/A, Satmasjid Road, Dhanmondi, Dhaka-1209",
+            "phone": "01911-889900",
+            "is_active": true,
+            "is_shop": true,
+            "created_at": "2024-01-03T10:00:00Z",
+            "updated_at": "2024-01-03T10:00:00Z"
+        }
+    },
+    {
+        "model": "warehouse.warehouse",
+        "pk": 4,
+        "fields": {
+            "name": "Uttara Warehouse",
+            "code": "UTR-WH",
+            "address": "Sector-7, Uttara Model Town, Dhaka-1230",
+            "phone": "01611-112233",
+            "is_active": true,
+            "is_shop": false,
+            "created_at": "2024-01-04T10:00:00Z",
+            "updated_at": "2024-01-04T10:00:00Z"
+        }
+    },
+    {
+        "model": "warehouse.warehouse",
+        "pk": 5,
+        "fields": {
+            "name": "Chittagong Showroom",
+            "code": "CTG-01",
+            "address": "156, Agrabad Commercial Area, Chittagong",
+            "phone": "01511-334455",
+            "is_active": true,
+            "is_shop": true,
+            "created_at": "2024-01-05T10:00:00Z",
+            "updated_at": "2024-01-05T10:00:00Z"
+        }
+    },
+    {
+        "model": "warehouse.warehouse",
+        "pk": 6,
+        "fields": {
+            "name": "Sylhet Showroom",
+            "code": "SYL-01",
+            "address": "Zindabazar, Sylhet Sadar, Sylhet",
+            "phone": "01711-667788",
+            "is_active": true,
+            "is_shop": true,
+            "created_at": "2024-01-06T10:00:00Z",
+            "updated_at": "2024-01-06T10:00:00Z"
+        }
+    },
+    {
+        "model": "warehouse.warehouse",
+        "pk": 7,
+        "fields": {
+            "name": "Rajshahi Showroom",
+            "code": "RAJ-01",
+            "address": "Saheb Bazar, Rajshahi Sadar, Rajshahi",
+            "phone": "01811-990011",
+            "is_active": true,
+            "is_shop": true,
+            "created_at": "2024-01-07T10:00:00Z",
+            "updated_at": "2024-01-07T10:00:00Z"
+        }
+    },
+    {
+        "model": "warehouse.warehouse",
+        "pk": 8,
+        "fields": {
+            "name": "Khulna Showroom",
+            "code": "KHL-01",
+            "address": "Shibbari Mor, Khulna Sadar, Khulna",
+            "phone": "01911-223344",
+            "is_active": true,
+            "is_shop": true,
+            "created_at": "2024-01-08T10:00:00Z",
+            "updated_at": "2024-01-08T10:00:00Z"
+        }
+    },
+    {
+        "model": "warehouse.warehouse",
+        "pk": 9,
+        "fields": {
+            "name": "Gazipur Warehouse",
+            "code": "GZP-WH",
+            "address": "Chandna Chowrasta, Gazipur Sadar, Gazipur",
+            "phone": "01611-556677",
+            "is_active": true,
+            "is_shop": false,
+            "created_at": "2024-01-09T10:00:00Z",
+            "updated_at": "2024-01-09T10:00:00Z"
+        }
+    },
+    {
+        "model": "warehouse.warehouse",
+        "pk": 10,
+        "fields": {
+            "name": "Mirpur Showroom",
+            "code": "MRP-01",
+            "address": "Mirpur-10, Dhaka-1216",
+            "phone": "01511-889900",
+            "is_active": true,
+            "is_shop": true,
+            "created_at": "2024-01-10T10:00:00Z",
+            "updated_at": "2024-01-10T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.category",
+        "pk": 1,
+        "fields": {
+            "name": "Wall Clocks",
+            "description": "Various designs of wall clocks - wood, plastic and metal",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.category",
+        "pk": 2,
+        "fields": {
+            "name": "Table Clocks",
+            "description": "Table clocks for office and home",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.category",
+        "pk": 3,
+        "fields": {
+            "name": "Wrist Watches",
+            "description": "Wrist watches for men and women",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.category",
+        "pk": 4,
+        "fields": {
+            "name": "Alarm Clocks",
+            "description": "Digital and analog alarm clocks",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.category",
+        "pk": 5,
+        "fields": {
+            "name": "Smart Watches",
+            "description": "Modern smart watch collection",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.category",
+        "pk": 6,
+        "fields": {
+            "name": "Pendulum Clocks",
+            "description": "Classic pendulum clocks",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.category",
+        "pk": 7,
+        "fields": {
+            "name": "Cuckoo Clocks",
+            "description": "Traditional cuckoo clocks",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.category",
+        "pk": 8,
+        "fields": {
+            "name": "Clock Parts",
+            "description": "Batteries, straps and other parts",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.category",
+        "pk": 9,
+        "fields": {
+            "name": "Digital Clocks",
+            "description": "LED and LCD digital clocks",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.category",
+        "pk": 10,
+        "fields": {
+            "name": "Grandfather Clocks",
+            "description": "Premium grandfather clock collection",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.brand",
+        "pk": 1,
+        "fields": {
+            "name": "Casio",
+            "description": "Famous Japanese watch brand",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.brand",
+        "pk": 2,
+        "fields": {
+            "name": "Seiko",
+            "description": "Premium Japanese watch brand",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.brand",
+        "pk": 3,
+        "fields": {
+            "name": "Citizen",
+            "description": "Eco-Drive technology pioneer",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.brand",
+        "pk": 4,
+        "fields": {
+            "name": "Titan",
+            "description": "Popular Indian watch brand",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.brand",
+        "pk": 5,
+        "fields": {
+            "name": "Xiaomi",
+            "description": "Chinese tech company - Smart watches",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.brand",
+        "pk": 6,
+        "fields": {
+            "name": "Rhythm",
+            "description": "Japanese wall clock specialist",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.brand",
+        "pk": 7,
+        "fields": {
+            "name": "Orient",
+            "description": "Classic Japanese watch brand",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.brand",
+        "pk": 8,
+        "fields": {
+            "name": "Sonata",
+            "description": "Titan Group budget brand",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.brand",
+        "pk": 9,
+        "fields": {
+            "name": "Q&Q",
+            "description": "Citizen's affordable brand",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.brand",
+        "pk": 10,
+        "fields": {
+            "name": "Fastrack",
+            "description": "Youth favorite brand",
+            "is_active": true,
+            "created_at": "2024-01-01T10:00:00Z",
+            "updated_at": "2024-01-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.product",
+        "pk": 1,
+        "fields": {
+            "sku": "CAS-MTP-001",
+            "name": "Casio MTP-1374 Men's Watch",
+            "category": 3,
+            "brand": 1,
+            "description": "Stainless steel case, leather strap, water resistant",
+            "default_selling_price": "4500.00",
+            "is_active": true,
+            "total_stock": 25,
+            "created_at": "2024-01-05T10:00:00Z",
+            "updated_at": "2024-01-05T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.product",
+        "pk": 2,
+        "fields": {
+            "sku": "SEI-WAL-002",
+            "name": "Seiko Premium Wall Clock",
+            "category": 1,
+            "brand": 2,
+            "description": "12 inch, silent movement, wooden frame",
+            "default_selling_price": "3200.00",
+            "is_active": true,
+            "total_stock": 18,
+            "created_at": "2024-01-05T10:00:00Z",
+            "updated_at": "2024-01-05T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.product",
+        "pk": 3,
+        "fields": {
+            "sku": "CIT-ECO-003",
+            "name": "Citizen Eco-Drive Men's Watch",
+            "category": 3,
+            "brand": 3,
+            "description": "Solar powered, sapphire crystal glass",
+            "default_selling_price": "12500.00",
+            "is_active": true,
+            "total_stock": 12,
+            "created_at": "2024-01-06T10:00:00Z",
+            "updated_at": "2024-01-06T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.product",
+        "pk": 4,
+        "fields": {
+            "sku": "TIT-REG-004",
+            "name": "Titan Regalia Men's Watch",
+            "category": 3,
+            "brand": 4,
+            "description": "Gold plated case, premium design",
+            "default_selling_price": "8900.00",
+            "is_active": true,
+            "total_stock": 15,
+            "created_at": "2024-01-07T10:00:00Z",
+            "updated_at": "2024-01-07T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.product",
+        "pk": 5,
+        "fields": {
+            "sku": "XIA-SMT-005",
+            "name": "Xiaomi Mi Band 8 Smart Band",
+            "category": 5,
+            "brand": 5,
+            "description": "AMOLED display, heart rate monitor, 16 day battery",
+            "default_selling_price": "4200.00",
+            "is_active": true,
+            "total_stock": 45,
+            "created_at": "2024-01-09T10:00:00Z",
+            "updated_at": "2024-01-09T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.product",
+        "pk": 6,
+        "fields": {
+            "sku": "CAS-LTP-006",
+            "name": "Casio LTP Ladies Watch",
+            "category": 3,
+            "brand": 1,
+            "description": "Elegant design for women",
+            "default_selling_price": "3800.00",
+            "is_active": true,
+            "total_stock": 30,
+            "created_at": "2024-01-10T10:00:00Z",
+            "updated_at": "2024-01-10T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.product",
+        "pk": 7,
+        "fields": {
+            "sku": "RHY-WAL-007",
+            "name": "Rhythm Sweep Wall Clock",
+            "category": 1,
+            "brand": 6,
+            "description": "14 inch, silent movement, white dial",
+            "default_selling_price": "2400.00",
+            "is_active": true,
+            "total_stock": 22,
+            "created_at": "2024-01-11T10:00:00Z",
+            "updated_at": "2024-01-11T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.product",
+        "pk": 8,
+        "fields": {
+            "sku": "SON-LAD-008",
+            "name": "Sonata Ladies Watch",
+            "category": 3,
+            "brand": 8,
+            "description": "Affordable ladies watch",
+            "default_selling_price": "1800.00",
+            "is_active": true,
+            "total_stock": 40,
+            "created_at": "2024-01-12T10:00:00Z",
+            "updated_at": "2024-01-12T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.product",
+        "pk": 9,
+        "fields": {
+            "sku": "QNQ-ALM-009",
+            "name": "Q&Q Digital Alarm Clock",
+            "category": 4,
+            "brand": 9,
+            "description": "Dual alarm, LED backlight",
+            "default_selling_price": "950.00",
+            "is_active": true,
+            "total_stock": 55,
+            "created_at": "2024-01-13T10:00:00Z",
+            "updated_at": "2024-01-13T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.product",
+        "pk": 10,
+        "fields": {
+            "sku": "FST-YTH-010",
+            "name": "Fastrack Youth Series",
+            "category": 3,
+            "brand": 10,
+            "description": "Trendy design, silicone strap",
+            "default_selling_price": "2800.00",
+            "is_active": true,
+            "total_stock": 35,
+            "created_at": "2024-01-08T10:00:00Z",
+            "updated_at": "2024-01-08T10:00:00Z"
+        }
+    },
+    {
+        "model": "customers.customer",
+        "pk": 1,
+        "fields": {
+            "name": "Md. Karim Uddin",
+            "phone": "01712-345678",
+            "email": "karim.uddin@gmail.com",
+            "address": "House-12, Road-5, Dhanmondi, Dhaka-1205",
+            "total_purchases": "45600.00",
+            "total_paid": "40000.00",
+            "total_due": "5600.00",
+            "credit_limit": "50000.00",
+            "notes": "Regular customer, pays on time",
+            "is_active": true,
+            "created_at": "2024-01-15T10:00:00Z",
+            "updated_at": "2024-06-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "customers.customer",
+        "pk": 2,
+        "fields": {
+            "name": "Fatema Begum",
+            "phone": "01812-456789",
+            "email": "fatema.begum@yahoo.com",
+            "address": "45/B, Mirpur-10, Dhaka-1216",
+            "total_purchases": "28500.00",
+            "total_paid": "28500.00",
+            "total_due": "0.00",
+            "credit_limit": "30000.00",
+            "notes": "Trusted customer",
+            "is_active": true,
+            "created_at": "2024-02-01T10:00:00Z",
+            "updated_at": "2024-06-15T10:00:00Z"
+        }
+    },
+    {
+        "model": "customers.customer",
+        "pk": 3,
+        "fields": {
+            "name": "Abdul Haque",
+            "phone": "01912-567890",
+            "email": "abdul.haq@outlook.com",
+            "address": "House-78, Gulshan-2, Dhaka-1212",
+            "total_purchases": "125000.00",
+            "total_paid": "100000.00",
+            "total_due": "25000.00",
+            "credit_limit": "200000.00",
+            "notes": "Corporate client - bulk orders",
+            "is_active": true,
+            "created_at": "2024-02-15T10:00:00Z",
+            "updated_at": "2024-07-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "customers.customer",
+        "pk": 4,
+        "fields": {
+            "name": "Shamima Akter",
+            "phone": "01612-678901",
+            "email": "shamima@gmail.com",
+            "address": "House-23, Uttara Sector-4, Dhaka-1230",
+            "total_purchases": "18200.00",
+            "total_paid": "18200.00",
+            "total_due": "0.00",
+            "credit_limit": "20000.00",
+            "notes": "",
+            "is_active": true,
+            "created_at": "2024-03-01T10:00:00Z",
+            "updated_at": "2024-05-15T10:00:00Z"
+        }
+    },
+    {
+        "model": "customers.customer",
+        "pk": 5,
+        "fields": {
+            "name": "Md. Rafiqul Islam",
+            "phone": "01512-789012",
+            "email": "rafiqul.islam@gmail.com",
+            "address": "Station Road, Chittagong Sadar, Chittagong",
+            "total_purchases": "67800.00",
+            "total_paid": "60000.00",
+            "total_due": "7800.00",
+            "credit_limit": "100000.00",
+            "notes": "Chittagong retailer",
+            "is_active": true,
+            "created_at": "2024-03-15T10:00:00Z",
+            "updated_at": "2024-08-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "customers.customer",
+        "pk": 6,
+        "fields": {
+            "name": "Nazmul Hasan",
+            "phone": "01711-890123",
+            "email": "nazmul.h@gmail.com",
+            "address": "Ambarkhana, Sylhet Sadar, Sylhet",
+            "total_purchases": "34500.00",
+            "total_paid": "34500.00",
+            "total_due": "0.00",
+            "credit_limit": "50000.00",
+            "notes": "Regular Sylhet customer",
+            "is_active": true,
+            "created_at": "2024-04-01T10:00:00Z",
+            "updated_at": "2024-07-15T10:00:00Z"
+        }
+    },
+    {
+        "model": "customers.customer",
+        "pk": 7,
+        "fields": {
+            "name": "Rumana Khan",
+            "phone": "01811-901234",
+            "email": "rumana.khan@yahoo.com",
+            "address": "12/A, Banani DOHS, Dhaka-1206",
+            "total_purchases": "89500.00",
+            "total_paid": "75000.00",
+            "total_due": "14500.00",
+            "credit_limit": "150000.00",
+            "notes": "Premium customer - prefers high-end watches",
+            "is_active": true,
+            "created_at": "2024-04-15T10:00:00Z",
+            "updated_at": "2024-08-15T10:00:00Z"
+        }
+    },
+    {
+        "model": "customers.customer",
+        "pk": 8,
+        "fields": {
+            "name": "Mahmud Hossain",
+            "phone": "01911-012345",
+            "email": "mahmud.h@gmail.com",
+            "address": "Saheb Bazar, Rajshahi Sadar, Rajshahi",
+            "total_purchases": "22800.00",
+            "total_paid": "22800.00",
+            "total_due": "0.00",
+            "credit_limit": "25000.00",
+            "notes": "",
+            "is_active": true,
+            "created_at": "2024-05-01T10:00:00Z",
+            "updated_at": "2024-06-20T10:00:00Z"
+        }
+    },
+    {
+        "model": "customers.customer",
+        "pk": 9,
+        "fields": {
+            "name": "Sabrina Islam",
+            "phone": "01612-123456",
+            "email": "sabrina.i@outlook.com",
+            "address": "Shibbari Mor, Khulna Sadar, Khulna",
+            "total_purchases": "15600.00",
+            "total_paid": "10000.00",
+            "total_due": "5600.00",
+            "credit_limit": "20000.00",
+            "notes": "Khulna customer",
+            "is_active": true,
+            "created_at": "2024-05-15T10:00:00Z",
+            "updated_at": "2024-07-25T10:00:00Z"
+        }
+    },
+    {
+        "model": "customers.customer",
+        "pk": 10,
+        "fields": {
+            "name": "Tanvir Ahmed",
+            "phone": "01512-234567",
+            "email": "tanvir.a@gmail.com",
+            "address": "Motijheel Commercial Area, Dhaka-1000",
+            "total_purchases": "156000.00",
+            "total_paid": "150000.00",
+            "total_due": "6000.00",
+            "credit_limit": "200000.00",
+            "notes": "Wholesaler - monthly bulk orders",
+            "is_active": true,
+            "created_at": "2024-06-01T10:00:00Z",
+            "updated_at": "2024-09-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.batch",
+        "pk": 1,
+        "fields": {
+            "batch_number": "B202401050001",
+            "product": 1,
+            "warehouse": 1,
+            "buy_price": "3200.00",
+            "initial_quantity": 30,
+            "quantity": 25,
+            "purchase_date": "2024-01-05",
+            "supplier": "Casio Bangladesh Ltd",
+            "notes": "January stock",
+            "created_at": "2024-01-05T10:00:00Z",
+            "updated_at": "2024-09-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.batch",
+        "pk": 2,
+        "fields": {
+            "batch_number": "B202401060001",
+            "product": 2,
+            "warehouse": 1,
+            "buy_price": "2200.00",
+            "initial_quantity": 20,
+            "quantity": 18,
+            "purchase_date": "2024-01-06",
+            "supplier": "Seiko Distributor BD",
+            "notes": "",
+            "created_at": "2024-01-06T10:00:00Z",
+            "updated_at": "2024-08-15T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.batch",
+        "pk": 3,
+        "fields": {
+            "batch_number": "B202401070001",
+            "product": 3,
+            "warehouse": 1,
+            "buy_price": "9500.00",
+            "initial_quantity": 15,
+            "quantity": 12,
+            "purchase_date": "2024-01-07",
+            "supplier": "Citizen Official Distributor",
+            "notes": "Premium stock",
+            "created_at": "2024-01-07T10:00:00Z",
+            "updated_at": "2024-07-20T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.batch",
+        "pk": 4,
+        "fields": {
+            "batch_number": "B202401080001",
+            "product": 4,
+            "warehouse": 2,
+            "buy_price": "6800.00",
+            "initial_quantity": 20,
+            "quantity": 15,
+            "purchase_date": "2024-01-08",
+            "supplier": "Titan India Export",
+            "notes": "",
+            "created_at": "2024-01-08T10:00:00Z",
+            "updated_at": "2024-08-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.batch",
+        "pk": 5,
+        "fields": {
+            "batch_number": "B202401090001",
+            "product": 5,
+            "warehouse": 3,
+            "buy_price": "2800.00",
+            "initial_quantity": 60,
+            "quantity": 45,
+            "purchase_date": "2024-01-09",
+            "supplier": "Xiaomi Official Store",
+            "notes": "Smart band stock",
+            "created_at": "2024-01-09T10:00:00Z",
+            "updated_at": "2024-09-10T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.batch",
+        "pk": 6,
+        "fields": {
+            "batch_number": "B202401100001",
+            "product": 6,
+            "warehouse": 1,
+            "buy_price": "2600.00",
+            "initial_quantity": 35,
+            "quantity": 30,
+            "purchase_date": "2024-01-10",
+            "supplier": "Casio Bangladesh Ltd",
+            "notes": "",
+            "created_at": "2024-01-10T10:00:00Z",
+            "updated_at": "2024-08-20T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.batch",
+        "pk": 7,
+        "fields": {
+            "batch_number": "B202401110001",
+            "product": 7,
+            "warehouse": 2,
+            "buy_price": "1600.00",
+            "initial_quantity": 25,
+            "quantity": 22,
+            "purchase_date": "2024-01-11",
+            "supplier": "Rhythm Japan Import",
+            "notes": "",
+            "created_at": "2024-01-11T10:00:00Z",
+            "updated_at": "2024-07-15T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.batch",
+        "pk": 8,
+        "fields": {
+            "batch_number": "B202401120001",
+            "product": 8,
+            "warehouse": 1,
+            "buy_price": "1200.00",
+            "initial_quantity": 50,
+            "quantity": 40,
+            "purchase_date": "2024-01-12",
+            "supplier": "Sonata India",
+            "notes": "Ladies collection",
+            "created_at": "2024-01-12T10:00:00Z",
+            "updated_at": "2024-09-01T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.batch",
+        "pk": 9,
+        "fields": {
+            "batch_number": "B202401130001",
+            "product": 9,
+            "warehouse": 3,
+            "buy_price": "650.00",
+            "initial_quantity": 70,
+            "quantity": 55,
+            "purchase_date": "2024-01-13",
+            "supplier": "Q&Q Citizen Group",
+            "notes": "Budget alarm clocks",
+            "created_at": "2024-01-13T10:00:00Z",
+            "updated_at": "2024-08-25T10:00:00Z"
+        }
+    },
+    {
+        "model": "inventory.batch",
+        "pk": 10,
+        "fields": {
+            "batch_number": "B202401140001",
+            "product": 10,
+            "warehouse": 1,
+            "buy_price": "1900.00",
+            "initial_quantity": 50,
+            "quantity": 35,
+            "purchase_date": "2024-01-14",
+            "supplier": "Fastrack Bangladesh",
+            "notes": "Youth collection",
+            "created_at": "2024-01-14T10:00:00Z",
+            "updated_at": "2024-09-05T10:00:00Z"
+        }
+    },
+    {
+        "model": "sales.sale",
+        "pk": 1,
+        "fields": {
+            "invoice_number": "INV202402150001",
+            "customer": 1,
+            "sale_date": "2024-02-15T11:30:00Z",
+            "status": "completed",
+            "payment_status": "partial",
+            "subtotal": "9000.00",
+            "discount_amount": "0.00",
+            "tax_amount": "0.00",
+            "total_amount": "9000.00",
+            "paid_amount": "5000.00",
+            "total_cost": "6400.00",
+            "notes": "",
+            "created_by": 1,
+            "created_at": "2024-02-15T11:30:00Z",
+            "updated_at": "2024-02-15T12:00:00Z"
+        }
+    },
+    {
+        "model": "sales.sale",
+        "pk": 2,
+        "fields": {
+            "invoice_number": "INV202402200001",
+            "customer": 2,
+            "sale_date": "2024-02-20T14:00:00Z",
+            "status": "completed",
+            "payment_status": "paid",
+            "subtotal": "12500.00",
+            "discount_amount": "500.00",
+            "tax_amount": "0.00",
+            "total_amount": "12000.00",
+            "paid_amount": "12000.00",
+            "total_cost": "9500.00",
+            "notes": "Cash payment",
+            "created_by": 1,
+            "created_at": "2024-02-20T14:00:00Z",
+            "updated_at": "2024-02-20T14:30:00Z"
+        }
+    },
+    {
+        "model": "sales.sale",
+        "pk": 3,
+        "fields": {
+            "invoice_number": "INV202403050001",
+            "customer": 3,
+            "sale_date": "2024-03-05T10:00:00Z",
+            "status": "completed",
+            "payment_status": "partial",
+            "subtotal": "46500.00",
+            "discount_amount": "1500.00",
+            "tax_amount": "0.00",
+            "total_amount": "45000.00",
+            "paid_amount": "30000.00",
+            "total_cost": "36000.00",
+            "notes": "Corporate order - office decoration",
+            "created_by": 1,
+            "created_at": "2024-03-05T10:00:00Z",
+            "updated_at": "2024-03-10T11:00:00Z"
+        }
+    },
+    {
+        "model": "sales.sale",
+        "pk": 4,
+        "fields": {
+            "invoice_number": "INV202403150001",
+            "customer": 4,
+            "sale_date": "2024-03-15T16:30:00Z",
+            "status": "completed",
+            "payment_status": "paid",
+            "subtotal": "8400.00",
+            "discount_amount": "400.00",
+            "tax_amount": "0.00",
+            "total_amount": "8000.00",
+            "paid_amount": "8000.00",
+            "total_cost": "5600.00",
+            "notes": "",
+            "created_by": 1,
+            "created_at": "2024-03-15T16:30:00Z",
+            "updated_at": "2024-03-15T17:00:00Z"
+        }
+    },
+    {
+        "model": "sales.sale",
+        "pk": 5,
+        "fields": {
+            "invoice_number": "INV202404010001",
+            "customer": 5,
+            "sale_date": "2024-04-01T11:00:00Z",
+            "status": "completed",
+            "payment_status": "partial",
+            "subtotal": "28000.00",
+            "discount_amount": "1000.00",
+            "tax_amount": "0.00",
+            "total_amount": "27000.00",
+            "paid_amount": "20000.00",
+            "total_cost": "19000.00",
+            "notes": "Delivery to Chittagong showroom",
+            "created_by": 1,
+            "created_at": "2024-04-01T11:00:00Z",
+            "updated_at": "2024-04-05T10:00:00Z"
+        }
+    },
+    {
+        "model": "sales.sale",
+        "pk": 6,
+        "fields": {
+            "invoice_number": "INV202404150001",
+            "customer": 6,
+            "sale_date": "2024-04-15T13:00:00Z",
+            "status": "completed",
+            "payment_status": "paid",
+            "subtotal": "15500.00",
+            "discount_amount": "0.00",
+            "tax_amount": "0.00",
+            "total_amount": "15500.00",
+            "paid_amount": "15500.00",
+            "total_cost": "12000.00",
+            "notes": "",
+            "created_by": 1,
+            "created_at": "2024-04-15T13:00:00Z",
+            "updated_at": "2024-04-15T13:30:00Z"
+        }
+    },
+    {
+        "model": "sales.sale",
+        "pk": 7,
+        "fields": {
+            "invoice_number": "INV202405010001",
+            "customer": 7,
+            "sale_date": "2024-05-01T15:00:00Z",
+            "status": "completed",
+            "payment_status": "partial",
+            "subtotal": "31000.00",
+            "discount_amount": "1000.00",
+            "tax_amount": "0.00",
+            "total_amount": "30000.00",
+            "paid_amount": "25000.00",
+            "total_cost": "22000.00",
+            "notes": "Premium customer",
+            "created_by": 1,
+            "created_at": "2024-05-01T15:00:00Z",
+            "updated_at": "2024-05-05T10:00:00Z"
+        }
+    },
+    {
+        "model": "sales.sale",
+        "pk": 8,
+        "fields": {
+            "invoice_number": "INV202405150001",
+            "customer": 8,
+            "sale_date": "2024-05-15T10:00:00Z",
+            "status": "completed",
+            "payment_status": "paid",
+            "subtotal": "22800.00",
+            "discount_amount": "0.00",
+            "tax_amount": "0.00",
+            "total_amount": "22800.00",
+            "paid_amount": "22800.00",
+            "total_cost": "17100.00",
+            "notes": "",
+            "created_by": 1,
+            "created_at": "2024-05-15T10:00:00Z",
+            "updated_at": "2024-05-15T10:30:00Z"
+        }
+    },
+    {
+        "model": "sales.sale",
+        "pk": 9,
+        "fields": {
+            "invoice_number": "INV202406010001",
+            "customer": 9,
+            "sale_date": "2024-06-01T14:00:00Z",
+            "status": "completed",
+            "payment_status": "partial",
+            "subtotal": "15600.00",
+            "discount_amount": "0.00",
+            "tax_amount": "0.00",
+            "total_amount": "15600.00",
+            "paid_amount": "10000.00",
+            "total_cost": "11700.00",
+            "notes": "",
+            "created_by": 1,
+            "created_at": "2024-06-01T14:00:00Z",
+            "updated_at": "2024-06-05T10:00:00Z"
+        }
+    },
+    {
+        "model": "sales.sale",
+        "pk": 10,
+        "fields": {
+            "invoice_number": "INV202406150001",
+            "customer": 10,
+            "sale_date": "2024-06-15T11:00:00Z",
+            "status": "completed",
+            "payment_status": "partial",
+            "subtotal": "78000.00",
+            "discount_amount": "3000.00",
+            "tax_amount": "0.00",
+            "total_amount": "75000.00",
+            "paid_amount": "70000.00",
+            "total_cost": "58500.00",
+            "notes": "Wholesale order",
+            "created_by": 1,
+            "created_at": "2024-06-15T11:00:00Z",
+            "updated_at": "2024-06-20T10:00:00Z"
+        }
+    },
+    {
+        "model": "sales.saleitem",
+        "pk": 1,
+        "fields": {
+            "sale": 1,
+            "product": 1,
+            "batch": 1,
+            "quantity": 2,
+            "unit_price": "4500.00",
+            "cost_price": "3200.00",
+            "discount": "0.00",
+            "created_at": "2024-02-15T11:30:00Z",
+            "updated_at": "2024-02-15T11:30:00Z"
+        }
+    },
+    {
+        "model": "sales.saleitem",
+        "pk": 2,
+        "fields": {
+            "sale": 2,
+            "product": 3,
+            "batch": 3,
+            "quantity": 1,
+            "unit_price": "12500.00",
+            "cost_price": "9500.00",
+            "discount": "500.00",
+            "created_at": "2024-02-20T14:00:00Z",
+            "updated_at": "2024-02-20T14:00:00Z"
+        }
+    },
+    {
+        "model": "sales.saleitem",
+        "pk": 3,
+        "fields": {
+            "sale": 3,
+            "product": 4,
+            "batch": 4,
+            "quantity": 3,
+            "unit_price": "8900.00",
+            "cost_price": "6800.00",
+            "discount": "0.00",
+            "created_at": "2024-03-05T10:00:00Z",
+            "updated_at": "2024-03-05T10:00:00Z"
+        }
+    },
+    {
+        "model": "sales.saleitem",
+        "pk": 4,
+        "fields": {
+            "sale": 4,
+            "product": 5,
+            "batch": 5,
+            "quantity": 2,
+            "unit_price": "4200.00",
+            "cost_price": "2800.00",
+            "discount": "400.00",
+            "created_at": "2024-03-15T16:30:00Z",
+            "updated_at": "2024-03-15T16:30:00Z"
+        }
+    },
+    {
+        "model": "sales.saleitem",
+        "pk": 5,
+        "fields": {
+            "sale": 5,
+            "product": 10,
+            "batch": 10,
+            "quantity": 10,
+            "unit_price": "2800.00",
+            "cost_price": "1900.00",
+            "discount": "1000.00",
+            "created_at": "2024-04-01T11:00:00Z",
+            "updated_at": "2024-04-01T11:00:00Z"
+        }
+    },
+    {
+        "model": "sales.saleitem",
+        "pk": 6,
+        "fields": {
+            "sale": 6,
+            "product": 3,
+            "batch": 3,
+            "quantity": 1,
+            "unit_price": "12500.00",
+            "cost_price": "9500.00",
+            "discount": "0.00",
+            "created_at": "2024-04-15T13:00:00Z",
+            "updated_at": "2024-04-15T13:00:00Z"
+        }
+    },
+    {
+        "model": "sales.saleitem",
+        "pk": 7,
+        "fields": {
+            "sale": 7,
+            "product": 4,
+            "batch": 4,
+            "quantity": 2,
+            "unit_price": "8900.00",
+            "cost_price": "6800.00",
+            "discount": "0.00",
+            "created_at": "2024-05-01T15:00:00Z",
+            "updated_at": "2024-05-01T15:00:00Z"
+        }
+    },
+    {
+        "model": "sales.saleitem",
+        "pk": 8,
+        "fields": {
+            "sale": 8,
+            "product": 7,
+            "batch": 7,
+            "quantity": 3,
+            "unit_price": "2400.00",
+            "cost_price": "1600.00",
+            "discount": "0.00",
+            "created_at": "2024-05-15T10:00:00Z",
+            "updated_at": "2024-05-15T10:00:00Z"
+        }
+    },
+    {
+        "model": "sales.saleitem",
+        "pk": 9,
+        "fields": {
+            "sale": 9,
+            "product": 6,
+            "batch": 6,
+            "quantity": 3,
+            "unit_price": "3800.00",
+            "cost_price": "2600.00",
+            "discount": "0.00",
+            "created_at": "2024-06-01T14:00:00Z",
+            "updated_at": "2024-06-01T14:00:00Z"
+        }
+    },
+    {
+        "model": "sales.saleitem",
+        "pk": 10,
+        "fields": {
+            "sale": 10,
+            "product": 10,
+            "batch": 10,
+            "quantity": 15,
+            "unit_price": "2800.00",
+            "cost_price": "1900.00",
+            "discount": "0.00",
+            "created_at": "2024-06-15T11:00:00Z",
+            "updated_at": "2024-06-15T11:00:00Z"
+        }
+    },
+    {
+        "model": "customers.payment",
+        "pk": 1,
+        "fields": {
+            "customer": 1,
+            "sale": 1,
+            "amount": "5000.00",
+            "payment_date": "2024-02-15T12:00:00Z",
+            "payment_method": "cash",
+            "reference": "",
+            "notes": "Partial payment",
+            "received_by": 1,
+            "created_at": "2024-02-15T12:00:00Z",
+            "updated_at": "2024-02-15T12:00:00Z"
+        }
+    },
+    {
+        "model": "customers.payment",
+        "pk": 2,
+        "fields": {
+            "customer": 2,
+            "sale": 2,
+            "amount": "12000.00",
+            "payment_date": "2024-02-20T14:30:00Z",
+            "payment_method": "mobile_payment",
+            "reference": "bKash-TXN123456",
+            "notes": "bKash payment",
+            "received_by": 1,
+            "created_at": "2024-02-20T14:30:00Z",
+            "updated_at": "2024-02-20T14:30:00Z"
+        }
+    },
+    {
+        "model": "customers.payment",
+        "pk": 3,
+        "fields": {
+            "customer": 3,
+            "sale": 3,
+            "amount": "30000.00",
+            "payment_date": "2024-03-10T11:00:00Z",
+            "payment_method": "bank_transfer",
+            "reference": "DBBL-TRF789012",
+            "notes": "Dutch-Bangla Bank transfer",
+            "received_by": 1,
+            "created_at": "2024-03-10T11:00:00Z",
+            "updated_at": "2024-03-10T11:00:00Z"
+        }
+    },
+    {
+        "model": "customers.payment",
+        "pk": 4,
+        "fields": {
+            "customer": 4,
+            "sale": 4,
+            "amount": "8000.00",
+            "payment_date": "2024-03-15T17:00:00Z",
+            "payment_method": "cash",
+            "reference": "",
+            "notes": "Full payment",
+            "received_by": 1,
+            "created_at": "2024-03-15T17:00:00Z",
+            "updated_at": "2024-03-15T17:00:00Z"
+        }
+    },
+    {
+        "model": "customers.payment",
+        "pk": 5,
+        "fields": {
+            "customer": 5,
+            "sale": 5,
+            "amount": "20000.00",
+            "payment_date": "2024-04-05T10:00:00Z",
+            "payment_method": "bank_transfer",
+            "reference": "BRAC-TRF456789",
+            "notes": "BRAC Bank transfer",
+            "received_by": 1,
+            "created_at": "2024-04-05T10:00:00Z",
+            "updated_at": "2024-04-05T10:00:00Z"
+        }
+    },
+    {
+        "model": "customers.payment",
+        "pk": 6,
+        "fields": {
+            "customer": 6,
+            "sale": 6,
+            "amount": "15500.00",
+            "payment_date": "2024-04-15T13:30:00Z",
+            "payment_method": "cash",
+            "reference": "",
+            "notes": "",
+            "received_by": 1,
+            "created_at": "2024-04-15T13:30:00Z",
+            "updated_at": "2024-04-15T13:30:00Z"
+        }
+    },
+    {
+        "model": "customers.payment",
+        "pk": 7,
+        "fields": {
+            "customer": 7,
+            "sale": 7,
+            "amount": "25000.00",
+            "payment_date": "2024-05-05T10:00:00Z",
+            "payment_method": "mobile_payment",
+            "reference": "Nagad-TXN789012",
+            "notes": "Nagad payment",
+            "received_by": 1,
+            "created_at": "2024-05-05T10:00:00Z",
+            "updated_at": "2024-05-05T10:00:00Z"
+        }
+    },
+    {
+        "model": "customers.payment",
+        "pk": 8,
+        "fields": {
+            "customer": 8,
+            "sale": 8,
+            "amount": "22800.00",
+            "payment_date": "2024-05-15T10:30:00Z",
+            "payment_method": "card",
+            "reference": "VISA-****1234",
+            "notes": "Visa card payment",
+            "received_by": 1,
+            "created_at": "2024-05-15T10:30:00Z",
+            "updated_at": "2024-05-15T10:30:00Z"
+        }
+    },
+    {
+        "model": "customers.payment",
+        "pk": 9,
+        "fields": {
+            "customer": 9,
+            "sale": 9,
+            "amount": "10000.00",
+            "payment_date": "2024-06-05T10:00:00Z",
+            "payment_method": "cash",
+            "reference": "",
+            "notes": "Partial payment",
+            "received_by": 1,
+            "created_at": "2024-06-05T10:00:00Z",
+            "updated_at": "2024-06-05T10:00:00Z"
+        }
+    },
+    {
+        "model": "customers.payment",
+        "pk": 10,
+        "fields": {
+            "customer": 10,
+            "sale": 10,
+            "amount": "70000.00",
+            "payment_date": "2024-06-20T10:00:00Z",
+            "payment_method": "bank_transfer",
+            "reference": "UCB-TRF345678",
+            "notes": "UCB Bank transfer",
+            "received_by": 1,
+            "created_at": "2024-06-20T10:00:00Z",
+            "updated_at": "2024-06-20T10:00:00Z"
+        }
     }
-  },
-  {
-    "model": "warehouse.warehouse",
-    "pk": 2,
-    "fields": {
-      "name": "Clock Shop Retail",
-      "code": "SHOP01",
-      "address": "456 Main Street, City Center",
-      "phone": "555-0200",
-      "is_active": true,
-      "is_shop": true,
-      "created_at": "2025-01-01T10:00:00Z",
-      "updated_at": "2025-01-01T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.category",
-    "pk": 1,
-    "fields": {
-      "name": "Wall Clocks",
-      "description": "Decorative and functional wall clocks",
-      "is_active": true,
-      "created_at": "2025-01-01T10:00:00Z",
-      "updated_at": "2025-01-01T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.category",
-    "pk": 2,
-    "fields": {
-      "name": "Table Clocks",
-      "description": "Desktop and bedside clocks",
-      "is_active": true,
-      "created_at": "2025-01-01T10:00:00Z",
-      "updated_at": "2025-01-01T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.category",
-    "pk": 3,
-    "fields": {
-      "name": "Grandfather Clocks",
-      "description": "Traditional floor-standing clocks",
-      "is_active": true,
-      "created_at": "2025-01-01T10:00:00Z",
-      "updated_at": "2025-01-01T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.category",
-    "pk": 4,
-    "fields": {
-      "name": "Cuckoo Clocks",
-      "description": "Traditional cuckoo clocks",
-      "is_active": true,
-      "created_at": "2025-01-01T10:00:00Z",
-      "updated_at": "2025-01-01T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.brand",
-    "pk": 1,
-    "fields": {
-      "name": "Seiko",
-      "description": "Japanese precision timepieces",
-      "is_active": true,
-      "created_at": "2025-01-01T10:00:00Z",
-      "updated_at": "2025-01-01T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.brand",
-    "pk": 2,
-    "fields": {
-      "name": "Howard Miller",
-      "description": "American clock manufacturer",
-      "is_active": true,
-      "created_at": "2025-01-01T10:00:00Z",
-      "updated_at": "2025-01-01T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.brand",
-    "pk": 3,
-    "fields": {
-      "name": "Rhythm",
-      "description": "Japanese musical clocks",
-      "is_active": true,
-      "created_at": "2025-01-01T10:00:00Z",
-      "updated_at": "2025-01-01T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.product",
-    "pk": 1,
-    "fields": {
-      "sku": "WC-SEI-001",
-      "name": "Seiko Classic Wall Clock",
-      "category": 1,
-      "brand": 1,
-      "description": "Elegant 12-inch wall clock with quiet sweep movement",
-      "default_selling_price": "45.00",
-      "is_active": true,
-      "created_at": "2025-01-01T10:00:00Z",
-      "updated_at": "2025-01-01T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.product",
-    "pk": 2,
-    "fields": {
-      "sku": "WC-SEI-002",
-      "name": "Seiko Pendulum Wall Clock",
-      "category": 1,
-      "brand": 1,
-      "description": "Traditional pendulum wall clock with Westminster chime",
-      "default_selling_price": "120.00",
-      "is_active": true,
-      "created_at": "2025-01-01T10:00:00Z",
-      "updated_at": "2025-01-01T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.product",
-    "pk": 3,
-    "fields": {
-      "sku": "TC-RHY-001",
-      "name": "Rhythm Musical Table Clock",
-      "category": 2,
-      "brand": 3,
-      "description": "Decorative table clock with 18 melodies",
-      "default_selling_price": "85.00",
-      "is_active": true,
-      "created_at": "2025-01-01T10:00:00Z",
-      "updated_at": "2025-01-01T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.product",
-    "pk": 4,
-    "fields": {
-      "sku": "TC-SEI-001",
-      "name": "Seiko Desk Alarm Clock",
-      "category": 2,
-      "brand": 1,
-      "description": "Compact desk clock with alarm and snooze function",
-      "default_selling_price": "35.00",
-      "is_active": true,
-      "created_at": "2025-01-01T10:00:00Z",
-      "updated_at": "2025-01-01T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.product",
-    "pk": 5,
-    "fields": {
-      "sku": "GC-HM-001",
-      "name": "Howard Miller Grandfather Clock",
-      "category": 3,
-      "brand": 2,
-      "description": "Classic grandfather clock with cable-driven movement",
-      "default_selling_price": "2500.00",
-      "is_active": true,
-      "created_at": "2025-01-01T10:00:00Z",
-      "updated_at": "2025-01-01T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.product",
-    "pk": 6,
-    "fields": {
-      "sku": "CC-HM-001",
-      "name": "Black Forest Cuckoo Clock",
-      "category": 4,
-      "brand": 2,
-      "description": "Authentic German cuckoo clock with hand-carved details",
-      "default_selling_price": "450.00",
-      "is_active": true,
-      "created_at": "2025-01-01T10:00:00Z",
-      "updated_at": "2025-01-01T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.batch",
-    "pk": 1,
-    "fields": {
-      "batch_number": "BTH-2025-0001",
-      "product": 1,
-      "warehouse": 2,
-      "buy_price": "25.00",
-      "quantity": 50,
-      "initial_quantity": 50,
-      "purchase_date": "2025-01-05",
-      "supplier": "Seiko Distributors",
-      "notes": "Initial stock",
-      "created_at": "2025-01-05T10:00:00Z",
-      "updated_at": "2025-01-05T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.batch",
-    "pk": 2,
-    "fields": {
-      "batch_number": "BTH-2025-0002",
-      "product": 2,
-      "warehouse": 2,
-      "buy_price": "70.00",
-      "quantity": 20,
-      "initial_quantity": 20,
-      "purchase_date": "2025-01-05",
-      "supplier": "Seiko Distributors",
-      "notes": "Initial stock",
-      "created_at": "2025-01-05T10:00:00Z",
-      "updated_at": "2025-01-05T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.batch",
-    "pk": 3,
-    "fields": {
-      "batch_number": "BTH-2025-0003",
-      "product": 3,
-      "warehouse": 2,
-      "buy_price": "50.00",
-      "quantity": 15,
-      "initial_quantity": 15,
-      "purchase_date": "2025-01-06",
-      "supplier": "Rhythm Japan",
-      "notes": "",
-      "created_at": "2025-01-06T10:00:00Z",
-      "updated_at": "2025-01-06T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.batch",
-    "pk": 4,
-    "fields": {
-      "batch_number": "BTH-2025-0004",
-      "product": 4,
-      "warehouse": 2,
-      "buy_price": "18.00",
-      "quantity": 100,
-      "initial_quantity": 100,
-      "purchase_date": "2025-01-06",
-      "supplier": "Seiko Distributors",
-      "notes": "",
-      "created_at": "2025-01-06T10:00:00Z",
-      "updated_at": "2025-01-06T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.batch",
-    "pk": 5,
-    "fields": {
-      "batch_number": "BTH-2025-0005",
-      "product": 5,
-      "warehouse": 1,
-      "buy_price": "1500.00",
-      "quantity": 3,
-      "initial_quantity": 3,
-      "purchase_date": "2025-01-07",
-      "supplier": "Howard Miller Direct",
-      "notes": "Premium items - handle with care",
-      "created_at": "2025-01-07T10:00:00Z",
-      "updated_at": "2025-01-07T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.batch",
-    "pk": 6,
-    "fields": {
-      "batch_number": "BTH-2025-0006",
-      "product": 6,
-      "warehouse": 2,
-      "buy_price": "280.00",
-      "quantity": 8,
-      "initial_quantity": 8,
-      "purchase_date": "2025-01-08",
-      "supplier": "German Imports LLC",
-      "notes": "Authentic Black Forest",
-      "created_at": "2025-01-08T10:00:00Z",
-      "updated_at": "2025-01-08T10:00:00Z"
-    }
-  },
-  {
-    "model": "inventory.batch",
-    "pk": 7,
-    "fields": {
-      "batch_number": "BTH-2025-0007",
-      "product": 1,
-      "warehouse": 1,
-      "buy_price": "22.00",
-      "quantity": 30,
-      "initial_quantity": 30,
-      "purchase_date": "2025-01-10",
-      "supplier": "Seiko Distributors",
-      "notes": "Discounted bulk order",
-      "created_at": "2025-01-10T10:00:00Z",
-      "updated_at": "2025-01-10T10:00:00Z"
-    }
-  },
-  {
-    "model": "customers.customer",
-    "pk": 1,
-    "fields": {
-      "name": "John Smith",
-      "phone": "555-1001",
-      "email": "john.smith@email.com",
-      "address": "789 Oak Street, Suburbia",
-      "credit_limit": "1000.00",
-      "total_purchases": "165.00",
-      "total_paid": "165.00",
-      "total_due": "0.00",
-      "is_active": true,
-      "notes": "Regular customer",
-      "created_at": "2025-01-05T10:00:00Z",
-      "updated_at": "2025-01-10T10:00:00Z"
-    }
-  },
-  {
-    "model": "customers.customer",
-    "pk": 2,
-    "fields": {
-      "name": "Sarah Johnson",
-      "phone": "555-1002",
-      "email": "sarah.j@email.com",
-      "address": "321 Pine Avenue, Greenville",
-      "credit_limit": "2000.00",
-      "total_purchases": "570.00",
-      "total_paid": "300.00",
-      "total_due": "270.00",
-      "is_active": true,
-      "notes": "Interior designer - bulk orders",
-      "created_at": "2025-01-06T10:00:00Z",
-      "updated_at": "2025-01-10T10:00:00Z"
-    }
-  },
-  {
-    "model": "customers.customer",
-    "pk": 3,
-    "fields": {
-      "name": "Michael Brown",
-      "phone": "555-1003",
-      "email": "mbrown@email.com",
-      "address": "567 Elm Road, Downtown",
-      "credit_limit": "500.00",
-      "total_purchases": "85.00",
-      "total_paid": "85.00",
-      "total_due": "0.00",
-      "is_active": true,
-      "notes": "",
-      "created_at": "2025-01-07T10:00:00Z",
-      "updated_at": "2025-01-10T10:00:00Z"
-    }
-  },
-  {
-    "model": "customers.customer",
-    "pk": 4,
-    "fields": {
-      "name": "Emily Davis",
-      "phone": "555-1004",
-      "email": "emily.d@email.com",
-      "address": "890 Maple Lane, Riverside",
-      "credit_limit": "3000.00",
-      "total_purchases": "2500.00",
-      "total_paid": "2000.00",
-      "total_due": "500.00",
-      "is_active": true,
-      "notes": "VIP customer - antique collector",
-      "created_at": "2025-01-08T10:00:00Z",
-      "updated_at": "2025-01-10T10:00:00Z"
-    }
-  },
-  {
-    "model": "sales.sale",
-    "pk": 1,
-    "fields": {
-      "invoice_number": "INV-2025-0001",
-      "customer": 1,
-      "sale_date": "2025-01-08T14:30:00Z",
-      "subtotal": "165.00",
-      "discount_amount": "0.00",
-      "tax_amount": "0.00",
-      "total_amount": "165.00",
-      "paid_amount": "165.00",
-      "total_cost": "86.00",
-      "payment_status": "paid",
-      "status": "completed",
-      "notes": "",
-      "created_by": 1,
-      "created_at": "2025-01-08T14:30:00Z",
-      "updated_at": "2025-01-08T14:35:00Z"
-    }
-  },
-  {
-    "model": "sales.sale",
-    "pk": 2,
-    "fields": {
-      "invoice_number": "INV-2025-0002",
-      "customer": 2,
-      "sale_date": "2025-01-09T10:15:00Z",
-      "subtotal": "570.00",
-      "discount_amount": "0.00",
-      "tax_amount": "0.00",
-      "total_amount": "570.00",
-      "paid_amount": "300.00",
-      "total_cost": "310.00",
-      "payment_status": "partial",
-      "status": "completed",
-      "notes": "Office decoration project",
-      "created_by": 1,
-      "created_at": "2025-01-09T10:15:00Z",
-      "updated_at": "2025-01-09T10:20:00Z"
-    }
-  },
-  {
-    "model": "sales.sale",
-    "pk": 3,
-    "fields": {
-      "invoice_number": "INV-2025-0003",
-      "customer": 3,
-      "sale_date": "2025-01-09T15:45:00Z",
-      "subtotal": "85.00",
-      "discount_amount": "0.00",
-      "tax_amount": "0.00",
-      "total_amount": "85.00",
-      "paid_amount": "85.00",
-      "total_cost": "50.00",
-      "payment_status": "paid",
-      "status": "completed",
-      "notes": "",
-      "created_by": 1,
-      "created_at": "2025-01-09T15:45:00Z",
-      "updated_at": "2025-01-09T15:50:00Z"
-    }
-  },
-  {
-    "model": "sales.sale",
-    "pk": 4,
-    "fields": {
-      "invoice_number": "INV-2025-0004",
-      "customer": 4,
-      "sale_date": "2025-01-10T11:00:00Z",
-      "subtotal": "2500.00",
-      "discount_amount": "0.00",
-      "tax_amount": "0.00",
-      "total_amount": "2500.00",
-      "paid_amount": "2000.00",
-      "total_cost": "1500.00",
-      "payment_status": "partial",
-      "status": "completed",
-      "notes": "Grandfather clock delivery scheduled",
-      "created_by": 1,
-      "created_at": "2025-01-10T11:00:00Z",
-      "updated_at": "2025-01-10T11:10:00Z"
-    }
-  },
-  {
-    "model": "sales.saleitem",
-    "pk": 1,
-    "fields": {
-      "sale": 1,
-      "product": 1,
-      "batch": 1,
-      "quantity": 2,
-      "unit_price": "45.00",
-      "cost_price": "25.00",
-      "discount": "0.00",
-      "created_at": "2025-01-08T14:30:00Z",
-      "updated_at": "2025-01-08T14:30:00Z"
-    }
-  },
-  {
-    "model": "sales.saleitem",
-    "pk": 2,
-    "fields": {
-      "sale": 1,
-      "product": 4,
-      "batch": 4,
-      "quantity": 2,
-      "unit_price": "35.00",
-      "cost_price": "18.00",
-      "discount": "0.00",
-      "created_at": "2025-01-08T14:30:00Z",
-      "updated_at": "2025-01-08T14:30:00Z"
-    }
-  },
-  {
-    "model": "sales.saleitem",
-    "pk": 3,
-    "fields": {
-      "sale": 2,
-      "product": 2,
-      "batch": 2,
-      "quantity": 3,
-      "unit_price": "120.00",
-      "cost_price": "70.00",
-      "discount": "0.00",
-      "created_at": "2025-01-09T10:15:00Z",
-      "updated_at": "2025-01-09T10:15:00Z"
-    }
-  },
-  {
-    "model": "sales.saleitem",
-    "pk": 4,
-    "fields": {
-      "sale": 2,
-      "product": 1,
-      "batch": 1,
-      "quantity": 4,
-      "unit_price": "45.00",
-      "cost_price": "25.00",
-      "discount": "0.00",
-      "created_at": "2025-01-09T10:15:00Z",
-      "updated_at": "2025-01-09T10:15:00Z"
-    }
-  },
-  {
-    "model": "sales.saleitem",
-    "pk": 5,
-    "fields": {
-      "sale": 3,
-      "product": 3,
-      "batch": 3,
-      "quantity": 1,
-      "unit_price": "85.00",
-      "cost_price": "50.00",
-      "discount": "0.00",
-      "created_at": "2025-01-09T15:45:00Z",
-      "updated_at": "2025-01-09T15:45:00Z"
-    }
-  },
-  {
-    "model": "sales.saleitem",
-    "pk": 6,
-    "fields": {
-      "sale": 4,
-      "product": 5,
-      "batch": 5,
-      "quantity": 1,
-      "unit_price": "2500.00",
-      "cost_price": "1500.00",
-      "discount": "0.00",
-      "created_at": "2025-01-10T11:00:00Z",
-      "updated_at": "2025-01-10T11:00:00Z"
-    }
-  },
-  {
-    "model": "customers.payment",
-    "pk": 1,
-    "fields": {
-      "customer": 1,
-      "sale": 1,
-      "amount": "165.00",
-      "payment_method": "cash",
-      "payment_date": "2025-01-08T14:35:00Z",
-      "reference": "",
-      "notes": "Full payment",
-      "received_by": 1,
-      "created_at": "2025-01-08T14:35:00Z",
-      "updated_at": "2025-01-08T14:35:00Z"
-    }
-  },
-  {
-    "model": "customers.payment",
-    "pk": 2,
-    "fields": {
-      "customer": 2,
-      "sale": 2,
-      "amount": "300.00",
-      "payment_method": "card",
-      "payment_date": "2025-01-09T10:20:00Z",
-      "reference": "CARD-4521",
-      "notes": "Partial payment - balance due",
-      "received_by": 1,
-      "created_at": "2025-01-09T10:20:00Z",
-      "updated_at": "2025-01-09T10:20:00Z"
-    }
-  },
-  {
-    "model": "customers.payment",
-    "pk": 3,
-    "fields": {
-      "customer": 3,
-      "sale": 3,
-      "amount": "85.00",
-      "payment_method": "mobile_payment",
-      "payment_date": "2025-01-09T15:50:00Z",
-      "reference": "MP-78923",
-      "notes": "",
-      "received_by": 1,
-      "created_at": "2025-01-09T15:50:00Z",
-      "updated_at": "2025-01-09T15:50:00Z"
-    }
-  },
-  {
-    "model": "customers.payment",
-    "pk": 4,
-    "fields": {
-      "customer": 4,
-      "sale": 4,
-      "amount": "2000.00",
-      "payment_method": "bank_transfer",
-      "payment_date": "2025-01-10T11:10:00Z",
-      "reference": "BNK-2025-0456",
-      "notes": "Initial payment - balance $500 on delivery",
-      "received_by": 1,
-      "created_at": "2025-01-10T11:10:00Z",
-      "updated_at": "2025-01-10T11:10:00Z"
-    }
-  },
-  {
-    "model": "core.auditlog",
-    "pk": 1,
-    "fields": {
-      "user": 1,
-      "action": "SALE",
-      "model_name": "Sale",
-      "object_id": 1,
-      "object_repr": "INV-2025-0001",
-      "changes": {},
-      "ip_address": "127.0.0.1",
-      "timestamp": "2025-01-08T14:30:00Z"
-    }
-  },
-  {
-    "model": "core.auditlog",
-    "pk": 2,
-    "fields": {
-      "user": 1,
-      "action": "PAYMENT",
-      "model_name": "Payment",
-      "object_id": 1,
-      "object_repr": "Payment $165.00 - John Smith",
-      "changes": {},
-      "ip_address": "127.0.0.1",
-      "timestamp": "2025-01-08T14:35:00Z"
-    }
-  },
-  {
-    "model": "core.auditlog",
-    "pk": 3,
-    "fields": {
-      "user": 1,
-      "action": "SALE",
-      "model_name": "Sale",
-      "object_id": 2,
-      "object_repr": "INV-2025-0002",
-      "changes": {},
-      "ip_address": "127.0.0.1",
-      "timestamp": "2025-01-09T10:15:00Z"
-    }
-  },
-  {
-    "model": "core.auditlog",
-    "pk": 4,
-    "fields": {
-      "user": 1,
-      "action": "SALE",
-      "model_name": "Sale",
-      "object_id": 4,
-      "object_repr": "INV-2025-0004",
-      "changes": {},
-      "ip_address": "127.0.0.1",
-      "timestamp": "2025-01-10T11:00:00Z"
-    }
-  }
 ]

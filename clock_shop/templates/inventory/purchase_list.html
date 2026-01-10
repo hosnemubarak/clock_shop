@@ -55,6 +55,10 @@
                         </tbody>
                     </table>
                 </div>
+
+                {% with page_obj=purchases %}
+                {% include 'includes/pagination.html' %}
+                {% endwith %}
             </div>
         </div>
     </div>

@@ -95,19 +95,9 @@
                     </table>
                 </div>
 
-                {% if batches.has_other_pages %}
-                <nav class="mt-4">
-                    <ul class="pagination justify-content-center mb-0">
-                        {% if batches.has_previous %}
-                        <li class="page-item"><a class="page-link" href="?page={{ batches.previous_page_number }}">Previous</a></li>
-                        {% endif %}
-                        <li class="page-item active"><span class="page-link">{{ batches.number }} of {{ batches.paginator.num_pages }}</span></li>
-                        {% if batches.has_next %}
-                        <li class="page-item"><a class="page-link" href="?page={{ batches.next_page_number }}">Next</a></li>
-                        {% endif %}
-                    </ul>
-                </nav>
-                {% endif %}
+                {% with page_obj=batches %}
+                {% include 'includes/pagination.html' %}
+                {% endwith %}
             </div>
         </div>
     </div>

@@ -154,6 +154,10 @@
                         </tbody>
                     </table>
                 </div>
+
+                {% with page_obj=warehouses %}
+                {% include 'includes/pagination.html' %}
+                {% endwith %}
             </div>
         </div>
     </div>

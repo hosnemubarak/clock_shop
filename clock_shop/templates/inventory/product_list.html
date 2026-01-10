@@ -161,19 +161,9 @@
                     </table>
                 </div>
 
-                {% if products.has_other_pages %}
-                <nav class="mt-4">
-                    <ul class="pagination justify-content-center mb-0">
-                        {% if products.has_previous %}
-                        <li class="page-item"><a class="page-link" href="?page={{ products.previous_page_number }}&search={{ search }}">Previous</a></li>
-                        {% endif %}
-                        <li class="page-item active"><span class="page-link">{{ products.number }} of {{ products.paginator.num_pages }}</span></li>
-                        {% if products.has_next %}
-                        <li class="page-item"><a class="page-link" href="?page={{ products.next_page_number }}&search={{ search }}">Next</a></li>
-                        {% endif %}
-                    </ul>
-                </nav>
-                {% endif %}
+                {% with page_obj=products %}
+                {% include 'includes/pagination.html' %}
+                {% endwith %}
             </div>
         </div>
     </div>

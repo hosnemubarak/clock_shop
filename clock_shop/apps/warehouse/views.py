@@ -18,12 +18,24 @@ def warehouse_list(request):
     """List all warehouses."""
     warehouses = Warehouse.objects.all()
     
+    # Search
+    search = request.GET.get('search', '')
+    if search:
+        warehouses = warehouses.filter(
+            Q(name__icontains=search) | Q(code__icontains=search) | Q(address__icontains=search)
+        )
+    
     # Calculate stock info for each warehouse
-    for warehouse in warehouses:
+    warehouse_list = list(warehouses)
+    for warehouse in warehouse_list:
         warehouse.stock_value = warehouse.get_total_stock_value()
         warehouse.total_items = warehouse.get_total_items()
     
-    return render(request, 'warehouse/warehouse_list.html', {'warehouses': warehouses})
+    paginator = Paginator(warehouse_list, 10)
+    page = request.GET.get('page')
+    warehouses = paginator.get_page(page)
+    
+    return render(request, 'warehouse/warehouse_list.html', {'warehouses': warehouses, 'search': search})
 
 
 @login_required
@@ -115,7 +127,7 @@ def transfer_list(request):
     if destination:
         transfers = transfers.filter(destination_warehouse_id=destination)
     
-    paginator = Paginator(transfers, 20)
+    paginator = Paginator(transfers, 10)
     page = request.GET.get('page')
     transfers = paginator.get_page(page)
     

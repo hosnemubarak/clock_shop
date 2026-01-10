@@ -54,7 +54,7 @@ def product_list(request):
     elif status_filter == 'inactive':
         products = products.filter(is_active=False)
     
-    paginator = Paginator(products, 20)
+    paginator = Paginator(products, 10)
     page = request.GET.get('page')
     products = paginator.get_page(page)
     
@@ -149,7 +149,17 @@ def product_delete(request, pk):
 def category_list(request):
     """List all categories."""
     categories = Category.objects.annotate(product_count=Sum('products__total_stock'))
-    return render(request, 'inventory/category_list.html', {'categories': categories})
+    
+    # Search
+    search = request.GET.get('search', '')
+    if search:
+        categories = categories.filter(Q(name__icontains=search) | Q(description__icontains=search))
+    
+    paginator = Paginator(categories, 10)
+    page = request.GET.get('page')
+    categories = paginator.get_page(page)
+    
+    return render(request, 'inventory/category_list.html', {'categories': categories, 'search': search})
 
 
 @login_required
@@ -194,7 +204,17 @@ def category_edit(request, pk):
 def brand_list(request):
     """List all brands."""
     brands = Brand.objects.all()
-    return render(request, 'inventory/brand_list.html', {'brands': brands})
+    
+    # Search
+    search = request.GET.get('search', '')
+    if search:
+        brands = brands.filter(Q(name__icontains=search) | Q(description__icontains=search))
+    
+    paginator = Paginator(brands, 10)
+    page = request.GET.get('page')
+    brands = paginator.get_page(page)
+    
+    return render(request, 'inventory/brand_list.html', {'brands': brands, 'search': search})
 
 
 @login_required
@@ -261,7 +281,7 @@ def batch_list(request):
     elif stock_filter == 'depleted':
         batches = batches.filter(quantity=0)
     
-    paginator = Paginator(batches, 20)
+    paginator = Paginator(batches, 10)
     page = request.GET.get('page')
     batches = paginator.get_page(page)
     
@@ -307,7 +327,7 @@ def purchase_list(request):
     """List all purchases."""
     purchases = Purchase.objects.select_related('created_by').prefetch_related('items')
     
-    paginator = Paginator(purchases, 20)
+    paginator = Paginator(purchases, 10)
     page = request.GET.get('page')
     purchases = paginator.get_page(page)
     

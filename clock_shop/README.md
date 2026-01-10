@@ -1,6 +1,6 @@
 # Clock Shop - Inventory & Sales Management System
 
-A production-ready Inventory and Sales Management System for a retail clock shop built with Django and SQLite, using the Invoika HTML template.
+A production-ready Inventory and Sales Management System for a retail clock shop built with Django and SQLite, using the Invoika HTML template. Designed for the Bangladesh market with BDT (৳) currency support.
 
 ![Django](https://img.shields.io/badge/Django-4.2-green.svg)
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
@@ -89,19 +89,42 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-8. **Run development server:**
+8. **Load demo data (optional):**
+```bash
+python manage.py loaddata fixtures\demo_data.json
+```
+
+9. **Run development server:**
 ```bash
 python manage.py runserver
 ```
 
-9. **Access the application:**
+10. **Access the application:**
 - Main app: http://127.0.0.1:8000/
 - Admin panel: http://127.0.0.1:8000/admin/
 
 ## Initial Setup
 
-After installation, you should:
+After installation, you can either:
 
+### Option 1: Load Demo Data (Recommended for Testing)
+```bash
+python manage.py loaddata fixtures\demo_data.json
+```
+
+This loads realistic Bangladesh-based sample data including:
+- **10 Warehouses** - Gulshan, Banani, Dhanmondi, Uttara, Chittagong, Sylhet, Rajshahi, Khulna, Gazipur, Mirpur
+- **10 Categories** - Wall Clocks, Table Clocks, Wrist Watches, Alarm Clocks, Smart Watches, etc.
+- **10 Brands** - Casio, Seiko, Citizen, Titan, Xiaomi, Rhythm, Orient, Sonata, Q&Q, Fastrack
+- **10 Products** - With realistic BDT prices (৳950 - ৳12,500)
+- **10 Customers** - Bangladesh addresses and phone numbers (01XXX-XXXXXX format)
+- **10 Batches** - Stock with buy prices
+- **10 Sales** - Sample invoices with various payment statuses
+- **10 Payments** - Cash, bKash, Nagad, Bank Transfer (DBBL, BRAC, UCB)
+
+**Note:** Demo data includes a default admin user. Create your own superuser after loading.
+
+### Option 2: Start Fresh
 1. **Create Warehouses** - Add at least one warehouse/shop location
 2. **Create Categories** - Add product categories (e.g., Wall Clocks, Table Clocks, etc.)
 3. **Create Brands** - Add clock brands (optional)
@@ -298,7 +321,7 @@ server {
 | `DEBUG` | `True` | Enable debug mode |
 | `ALLOWED_HOSTS` | `*` | Comma-separated allowed hosts |
 | `SHOP_NAME` | `Clock Shop` | Business name |
-| `CURRENCY_SYMBOL` | `$` | Currency symbol |
+| `CURRENCY_SYMBOL` | `৳` | Currency symbol (BDT) |
 | `LOW_STOCK_THRESHOLD` | `10` | Low stock alert threshold |
 
 ## Customization
@@ -307,12 +330,38 @@ server {
 Configure via environment variables or edit `clock_shop/settings.py`:
 ```python
 SHOP_NAME = "Your Clock Shop Name"
-CURRENCY_SYMBOL = "$"
+CURRENCY_SYMBOL = "৳"  # BDT - Bangladeshi Taka
 LOW_STOCK_THRESHOLD = 10
 ```
 
+### Demo Data
+The `fixtures/demo_data.json` file contains sample data for testing. You can:
+- Modify it to match your business needs
+- Use it as a template to create your own fixture
+- Export your data using: `python manage.py dumpdata > backup.json`
+
 ### Adding Custom Reports
 Add new views in `apps/reports/views.py` and register URLs in `apps/reports/urls.py`
+
+## Demo Data Details
+
+| Model | Records | Description |
+|-------|---------|-------------|
+| Warehouse | 10 | Major cities across Bangladesh |
+| Category | 10 | Clock and watch categories |
+| Brand | 10 | Popular watch brands |
+| Product | 10 | Watches and clocks with SKUs |
+| Customer | 10 | BD phone numbers and addresses |
+| Batch | 10 | Stock batches with suppliers |
+| Sale | 10 | Sample invoices |
+| SaleItem | 10 | Line items for sales |
+| Payment | 10 | Various payment methods |
+
+### Payment Methods Supported
+- **Cash** - Direct cash payments
+- **Mobile Payment** - bKash, Nagad
+- **Bank Transfer** - DBBL, BRAC, UCB, and other banks
+- **Card** - Visa, Mastercard
 
 ## Dependencies
 

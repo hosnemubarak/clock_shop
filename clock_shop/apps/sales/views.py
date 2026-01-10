@@ -47,7 +47,7 @@ def sale_list(request):
     if date_to:
         sales = sales.filter(sale_date__date__lte=date_to)
     
-    paginator = Paginator(sales, 20)
+    paginator = Paginator(sales, 10)
     page = request.GET.get('page')
     sales = paginator.get_page(page)
     

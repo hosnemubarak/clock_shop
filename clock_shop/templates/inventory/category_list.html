@@ -154,6 +154,10 @@
                         </tbody>
                     </table>
                 </div>
+
+                {% with page_obj=categories %}
+                {% include 'includes/pagination.html' %}
+                {% endwith %}
             </div>
         </div>
     </div>

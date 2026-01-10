@@ -86,5 +86,27 @@ def dashboard(request):
 @login_required
 def audit_logs(request):
     """View audit logs."""
-    logs = AuditLog.objects.select_related('user').all()[:100]
-    return render(request, 'core/audit_logs.html', {'logs': logs})
+    from django.core.paginator import Paginator
+    from django.db.models import Q
+    
+    logs = AuditLog.objects.select_related('user').all()
+    
+    # Search
+    search = request.GET.get('search', '')
+    if search:
+        logs = logs.filter(
+            Q(action__icontains=search) |
+            Q(model_name__icontains=search) |
+            Q(object_repr__icontains=search)
+        )
+    
+    # Action filter
+    action_filter = request.GET.get('action')
+    if action_filter:
+        logs = logs.filter(action=action_filter)
+    
+    paginator = Paginator(logs, 10)
+    page = request.GET.get('page')
+    logs = paginator.get_page(page)
+    
+    return render(request, 'core/audit_logs.html', {'logs': logs, 'search': search})
