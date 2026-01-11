@@ -7,9 +7,9 @@ from django.http import JsonResponse
 from decimal import Decimal
 from datetime import date
 
-from .models import Product, Category, Brand, Batch, Purchase, PurchaseItem
+from .models import Product, Category, Brand, Batch, Purchase, PurchaseItem, StockOut, StockOutItem
 from .forms import (ProductForm, CategoryForm, BrandForm, BatchForm, 
-                    PurchaseForm, PurchaseItemForm)
+                    PurchaseForm, PurchaseItemForm, StockOutForm)
 from apps.warehouse.models import Warehouse
 from apps.core.utils import create_audit_log
 
@@ -424,6 +424,166 @@ def api_product_batches(request, product_id):
         'quantity': b.quantity,
         'buy_price': str(b.buy_price),
         'warehouse': b.warehouse.name,
+        'purchase_date': b.purchase_date.strftime('%Y-%m-%d'),
+    } for b in batches]
+    
+    return JsonResponse(data, safe=False)
+
+
+# Stock Out Views
+@login_required
+def stockout_list(request):
+    """List all stock out records."""
+    stockouts = StockOut.objects.select_related('warehouse', 'created_by').all()
+    
+    # Search
+    search = request.GET.get('search', '')
+    if search:
+        stockouts = stockouts.filter(
+            Q(stockout_number__icontains=search) |
+            Q(notes__icontains=search)
+        )
+    
+    # Warehouse filter
+    warehouse_id = request.GET.get('warehouse')
+    if warehouse_id:
+        stockouts = stockouts.filter(warehouse_id=warehouse_id)
+    
+    # Reason filter
+    reason = request.GET.get('reason')
+    if reason:
+        stockouts = stockouts.filter(reason=reason)
+    
+    # Status filter
+    status = request.GET.get('status')
+    if status:
+        stockouts = stockouts.filter(status=status)
+    
+    paginator = Paginator(stockouts, 10)
+    page = request.GET.get('page')
+    stockouts = paginator.get_page(page)
+    
+    warehouses = Warehouse.objects.filter(is_active=True)
+    
+    context = {
+        'stockouts': stockouts,
+        'warehouses': warehouses,
+        'reason_choices': StockOut.REASON_CHOICES,
+        'status_choices': StockOut.STATUS_CHOICES,
+        'search': search,
+    }
+    return render(request, 'inventory/stockout_list.html', context)
+
+
+@login_required
+def stockout_create(request):
+    """Create a new stock out record."""
+    from django.utils import timezone
+    import json
+    
+    warehouses = Warehouse.objects.filter(is_active=True)
+    products = Product.objects.filter(is_active=True, total_stock__gt=0)
+    
+    if request.method == 'POST':
+        form = StockOutForm(request.POST)
+        items_data = request.POST.get('items_data', '[]')
+        
+        try:
+            items_list = json.loads(items_data)
+        except json.JSONDecodeError:
+            items_list = []
+        
+        if form.is_valid() and items_list:
+            stockout = form.save(commit=False)
+            stockout.created_by = request.user
+            stockout.save()
+            
+            # Create stock out items
+            for item in items_list:
+                batch = Batch.objects.get(pk=item['batch_id'])
+                StockOutItem.objects.create(
+                    stockout=stockout,
+                    batch=batch,
+                    quantity=int(item['quantity']),
+                    cost_price=batch.buy_price
+                )
+            
+            # Complete the stock out immediately
+            try:
+                stockout.complete_stockout()
+                create_audit_log(request, 'STOCK_OUT', stockout, {
+                    'reason': stockout.get_reason_display(),
+                    'total_value': str(stockout.total_value),
+                    'items_count': len(items_list)
+                })
+                messages.success(request, f'Stock out "{stockout.stockout_number}" completed successfully.')
+            except ValueError as e:
+                messages.error(request, str(e))
+                stockout.delete()
+                return redirect('stockout_create')
+            
+            return redirect('stockout_detail', pk=stockout.pk)
+        else:
+            if not items_list:
+                messages.error(request, 'Please add at least one item.')
+    else:
+        form = StockOutForm(initial={'stockout_date': timezone.now()})
+    
+    context = {
+        'form': form,
+        'warehouses': warehouses,
+        'products': products,
+        'reason_choices': StockOut.REASON_CHOICES,
+    }
+    return render(request, 'inventory/stockout_form.html', context)
+
+
+@login_required
+def stockout_detail(request, pk):
+    """View stock out details."""
+    stockout = get_object_or_404(
+        StockOut.objects.select_related('warehouse', 'created_by').prefetch_related(
+            'items__batch__product', 'items__batch__warehouse'
+        ),
+        pk=pk
+    )
+    return render(request, 'inventory/stockout_detail.html', {'stockout': stockout})
+
+
+@login_required
+def stockout_cancel(request, pk):
+    """Cancel a stock out record."""
+    stockout = get_object_or_404(StockOut, pk=pk)
+    
+    if request.method == 'POST':
+        try:
+            stockout.cancel_stockout()
+            create_audit_log(request, 'STOCK_OUT_CANCEL', stockout, {
+                'reason': stockout.get_reason_display(),
+            })
+            messages.success(request, f'Stock out "{stockout.stockout_number}" cancelled. Stock restored.')
+        except ValueError as e:
+            messages.error(request, str(e))
+    
+    return redirect('stockout_detail', pk=pk)
+
+
+@login_required
+def api_warehouse_batches(request, warehouse_id):
+    """API endpoint to get available batches for a warehouse."""
+    product_id = request.GET.get('product')
+    batches = Batch.objects.filter(warehouse_id=warehouse_id, quantity__gt=0).select_related('product')
+    
+    if product_id:
+        batches = batches.filter(product_id=product_id)
+    
+    data = [{
+        'id': b.id,
+        'batch_number': b.batch_number,
+        'product_id': b.product_id,
+        'product_name': b.product.name,
+        'quantity': b.quantity,
+        'buy_price': str(b.buy_price),
         'purchase_date': b.purchase_date.strftime('%Y-%m-%d'),
     } for b in batches]
     

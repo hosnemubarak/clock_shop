@@ -1,5 +1,5 @@
 from django import forms
-from .models import Product, Category, Brand, Batch, Purchase, PurchaseItem
+from .models import Product, Category, Brand, Batch, Purchase, PurchaseItem, StockOut
 from apps.warehouse.models import Warehouse
 
 
@@ -120,3 +120,23 @@ class StockAdjustmentForm(forms.Form):
     reason = forms.CharField(
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
     )
+
+
+class StockOutForm(forms.ModelForm):
+    """Form for creating stock out records."""
+    class Meta:
+        model = StockOut
+        fields = ['warehouse', 'reason', 'stockout_date', 'notes']
+        widgets = {
+            'warehouse': forms.Select(attrs={'class': 'form-select'}),
+            'reason': forms.Select(attrs={'class': 'form-select'}),
+            'stockout_date': forms.DateTimeInput(attrs={
+                'class': 'form-control', 
+                'type': 'datetime-local'
+            }),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'rows': 3, 
+                'placeholder': 'Additional details about this stock out...'
+            }),
+        }

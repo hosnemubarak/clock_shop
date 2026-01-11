@@ -189,3 +189,153 @@ class PurchaseItem(TimeStampedModel):
     @property
     def total_price(self):
         return self.quantity * self.unit_price
+
+
+class StockOut(TimeStampedModel):
+    """
+    Stock Out record for non-sale inventory reductions.
+    Used for damage, loss, expired goods, internal use, adjustments, etc.
+    """
+    REASON_CHOICES = [
+        ('damage', 'Damaged'),
+        ('loss', 'Lost/Theft'),
+        ('expired', 'Expired'),
+        ('internal', 'Internal Use'),
+        ('adjustment', 'Stock Adjustment'),
+        ('return_supplier', 'Return to Supplier'),
+        ('sample', 'Sample/Display'),
+        ('other', 'Other'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    stockout_number = models.CharField(max_length=50, unique=True)
+    warehouse = models.ForeignKey(
+        'warehouse.Warehouse', on_delete=models.PROTECT,
+        related_name='stock_outs'
+    )
+    reason = models.CharField(max_length=20, choices=REASON_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    stockout_date = models.DateTimeField()
+    completed_date = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True, help_text='Additional details about the stock out')
+    total_value = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        default=Decimal('0.00'),
+        help_text='Total value of stock removed (at cost price)'
+    )
+    created_by = models.ForeignKey(
+        'auth.User', on_delete=models.SET_NULL,
+        null=True, related_name='stock_outs'
+    )
+    
+    class Meta:
+        ordering = ['-stockout_date', '-created_at']
+        verbose_name = 'Stock Out'
+        verbose_name_plural = 'Stock Outs'
+    
+    def __str__(self):
+        return f"{self.stockout_number} - {self.get_reason_display()}"
+    
+    def save(self, *args, **kwargs):
+        if not self.stockout_number:
+            import datetime
+            prefix = f"OUT{datetime.date.today().strftime('%Y%m%d')}"
+            last = StockOut.objects.filter(
+                stockout_number__startswith=prefix
+            ).order_by('-stockout_number').first()
+            if last:
+                last_num = int(last.stockout_number[-4:])
+                self.stockout_number = f"{prefix}{last_num + 1:04d}"
+            else:
+                self.stockout_number = f"{prefix}0001"
+        super().save(*args, **kwargs)
+    
+    def complete_stockout(self):
+        """Complete the stock out and reduce inventory."""
+        from django.utils import timezone
+        from django.db import transaction
+        
+        if self.status != 'pending':
+            raise ValueError('Stock out is not pending')
+        
+        with transaction.atomic():
+            total_value = Decimal('0.00')
+            
+            for item in self.items.select_for_update():
+                batch = Batch.objects.select_for_update().get(pk=item.batch_id)
+                
+                if batch.quantity < item.quantity:
+                    raise ValueError(f'Insufficient stock in batch {batch.batch_number}')
+                
+                # Reduce batch quantity
+                batch.quantity -= item.quantity
+                batch.save()
+                
+                # Calculate value
+                item.cost_price = batch.buy_price
+                item.save()
+                total_value += item.quantity * batch.buy_price
+                
+                # Update product total stock
+                batch.product.update_total_stock()
+            
+            self.total_value = total_value
+            self.status = 'completed'
+            self.completed_date = timezone.now()
+            self.save()
+    
+    def cancel_stockout(self):
+        """Cancel the stock out. If completed, restore stock."""
+        from django.utils import timezone
+        from django.db import transaction
+        
+        if self.status == 'cancelled':
+            raise ValueError('Stock out is already cancelled')
+        
+        with transaction.atomic():
+            if self.status == 'completed':
+                # Restore stock for completed stock outs
+                for item in self.items.all():
+                    batch = Batch.objects.select_for_update().get(pk=item.batch_id)
+                    batch.quantity += item.quantity
+                    batch.save()
+                    batch.product.update_total_stock()
+            
+            self.status = 'cancelled'
+            self.save()
+    
+    @property
+    def total_quantity(self):
+        """Total quantity of items in this stock out."""
+        return self.items.aggregate(total=models.Sum('quantity'))['total'] or 0
+
+
+class StockOutItem(TimeStampedModel):
+    """Individual items in a stock out operation."""
+    stockout = models.ForeignKey(StockOut, on_delete=models.CASCADE, related_name='items')
+    batch = models.ForeignKey(Batch, on_delete=models.PROTECT, related_name='stockout_items')
+    quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    cost_price = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        default=Decimal('0.00'),
+        help_text='Cost price per unit at time of stock out'
+    )
+    
+    class Meta:
+        ordering = ['id']
+    
+    def __str__(self):
+        return f"{self.batch.product.name} x {self.quantity}"
+    
+    @property
+    def product(self):
+        return self.batch.product
+    
+    @property
+    def total_cost(self):
+        return self.quantity * self.cost_price

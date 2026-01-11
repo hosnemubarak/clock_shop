@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ stockout.stockout_number }} | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Stock Out Details</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'stockout_list' %}">Stock Out</a></li>
+                    <li class="breadcrumb-item active">{{ stockout.stockout_number }}</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Stock Out Info -->
+        <div class="card">
+            <div class="card-header d-flex align-items-center">
+                <h5 class="card-title mb-0 flex-grow-1">
+                    <i class="las la-minus-circle text-danger me-1"></i>
+                    {{ stockout.stockout_number }}
+                </h5>
+                <div>
+                    {% if stockout.status == 'completed' %}
+                    <span class="badge bg-success fs-6">Completed</span>
+                    {% elif stockout.status == 'pending' %}
+                    <span class="badge bg-warning fs-6">Pending</span>
+                    {% else %}
+                    <span class="badge bg-danger fs-6">Cancelled</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless mb-0">
+                            <tr>
+                                <td class="text-muted" style="width: 140px;">Reference:</td>
+                                <td class="fw-medium">{{ stockout.stockout_number }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Date:</td>
+                                <td>{{ stockout.stockout_date|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Warehouse:</td>
+                                <td>{{ stockout.warehouse.name }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Reason:</td>
+                                <td>
+                                    <span class="badge bg-secondary-subtle text-secondary">
+                                        {{ stockout.get_reason_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless mb-0">
+                            <tr>
+                                <td class="text-muted" style="width: 140px;">Created By:</td>
+                                <td>{{ stockout.created_by.username|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Created At:</td>
+                                <td>{{ stockout.created_at|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            {% if stockout.completed_date %}
+                            <tr>
+                                <td class="text-muted">Completed At:</td>
+                                <td>{{ stockout.completed_date|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+                
+                {% if stockout.notes %}
+                <div class="mt-3 p-3 bg-light rounded">
+                    <strong>Notes:</strong>
+                    <p class="mb-0 mt-1">{{ stockout.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Items Table -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="las la-list me-1"></i> Items Removed</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Product</th>
+                                <th>Batch</th>
+                                <th class="text-center">Quantity</th>
+                                <th class="text-end">Unit Cost</th>
+                                <th class="text-end">Total Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in stockout.items.all %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <a href="{% url 'product_detail' item.batch.product.pk %}">
+                                        {{ item.batch.product.name }}
+                                    </a>
+                                    <br><small class="text-muted">{{ item.batch.product.sku }}</small>
+                                </td>
+                                <td><code>{{ item.batch.batch_number }}</code></td>
+                                <td class="text-center">{{ item.quantity }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.cost_price|floatformat:2 }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.total_cost|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No items</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <th colspan="3">Total</th>
+                                <th class="text-center">{{ stockout.total_quantity }}</th>
+                                <th></th>
+                                <th class="text-end">{{ CURRENCY_SYMBOL }}{{ stockout.total_value|floatformat:2|intcomma }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Summary Card -->
+        <div class="card {% if stockout.status == 'cancelled' %}border-danger{% endif %}">
+            <div class="card-header {% if stockout.status == 'cancelled' %}bg-danger-subtle{% else %}bg-danger-subtle{% endif %}">
+                <h5 class="card-title mb-0 text-danger">
+                    <i class="las la-chart-pie me-1"></i> Summary
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Total Items:</span>
+                    <span class="fw-medium">{{ stockout.items.count }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Total Quantity:</span>
+                    <span class="fw-medium">{{ stockout.total_quantity }}</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <span class="fw-medium">Total Value:</span>
+                    <span class="fw-bold text-danger fs-5">{{ CURRENCY_SYMBOL }}{{ stockout.total_value|floatformat:2|intcomma }}</span>
+                </div>
+                
+                {% if stockout.status == 'cancelled' %}
+                <div class="alert alert-danger mt-3 mb-0">
+                    <i class="las la-exclamation-triangle me-1"></i>
+                    This stock out has been cancelled. Stock has been restored.
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if stockout.status == 'completed' %}
+            <div class="card-footer">
+                <form method="post" action="{% url 'stockout_cancel' stockout.pk %}" 
+                      onsubmit="return confirm('Are you sure you want to cancel this stock out? Stock will be restored to inventory.')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger w-100">
+                        <i class="las la-undo me-1"></i> Cancel & Restore Stock
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="las la-cog me-1"></i> Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'stockout_list' %}" class="btn btn-soft-primary">
+                        <i class="las la-list me-1"></i> Back to List
+                    </a>
+                    <a href="{% url 'stockout_create' %}" class="btn btn-danger">
+                        <i class="las la-plus me-1"></i> New Stock Out
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Audit Info -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="las la-history me-1"></i> Audit Trail</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="las la-plus-circle text-success me-1"></i>
+                        Created by <strong>{{ stockout.created_by.username|default:"System" }}</strong>
+                        <br><small class="text-muted">{{ stockout.created_at|date:"M d, Y H:i" }}</small>
+                    </li>
+                    {% if stockout.status == 'completed' and stockout.completed_date %}
+                    <li class="mb-2">
+                        <i class="las la-check-circle text-primary me-1"></i>
+                        Stock out completed
+                        <br><small class="text-muted">{{ stockout.completed_date|date:"M d, Y H:i" }}</small>
+                    </li>
+                    {% endif %}
+                    {% if stockout.status == 'cancelled' %}
+                    <li>
+                        <i class="las la-times-circle text-danger me-1"></i>
+                        Cancelled and stock restored
+                        <br><small class="text-muted">{{ stockout.updated_at|date:"M d, Y H:i" }}</small>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

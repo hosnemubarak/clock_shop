@@ -1,0 +1,375 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}New Stock Out | {{ SHOP_NAME }}{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">New Stock Out</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'stockout_list' %}">Stock Out</a></li>
+                    <li class="breadcrumb-item active">New</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="post" id="stockoutForm">
+    {% csrf_token %}
+    <input type="hidden" name="items_data" id="items_data" value="[]">
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Stock Out Info -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="las la-info-circle me-1"></i> Stock Out Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Warehouse <span class="text-danger">*</span></label>
+                            {{ form.warehouse }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Reason <span class="text-danger">*</span></label>
+                            {{ form.reason }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Date & Time <span class="text-danger">*</span></label>
+                            {{ form.stockout_date }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Notes</label>
+                            {{ form.notes }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add Items -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="las la-boxes me-1"></i> Add Items</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-soft-warning border-0 mb-3">
+                        <i class="las la-exclamation-triangle me-2"></i>
+                        Select a warehouse first, then choose products and batches to remove from stock.
+                    </div>
+                    
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">Product</label>
+                            <select class="form-select" id="productSelect">
+                                <option value="">Select Product...</option>
+                                {% for p in products %}
+                                <option value="{{ p.id }}" data-name="{{ p.name }}">{{ p.name }} ({{ p.total_stock }} in stock)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Batch</label>
+                            <select class="form-select" id="batchSelect" disabled>
+                                <option value="">Select Batch</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Available</label>
+                            <input type="text" class="form-control" id="availableQty" readonly placeholder="-">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="quantityInput" min="1" value="1">
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-danger w-100" onclick="addItem()">
+                                <i class="las la-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="batchInfo" class="mt-2 small text-muted"></div>
+                </div>
+            </div>
+            
+            <!-- Items Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="las la-list me-1"></i> Items to Remove</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Batch</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-end">Unit Cost</th>
+                                    <th class="text-end">Total</th>
+                                    <th class="text-center" style="width: 60px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsTableBody">
+                                <tr id="emptyRow">
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        No items added yet
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th colspan="4" class="text-end">Total Value:</th>
+                                    <th class="text-end" id="totalValue">{{ CURRENCY_SYMBOL }}0.00</th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Summary Card -->
+            <div class="card">
+                <div class="card-header bg-danger-subtle">
+                    <h5 class="card-title mb-0 text-danger"><i class="las la-minus-circle me-1"></i> Stock Out Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Total Items:</span>
+                        <span class="fw-medium" id="summaryItems">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Total Quantity:</span>
+                        <span class="fw-medium" id="summaryQty">0</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-medium">Total Value:</span>
+                        <span class="fw-bold text-danger fs-5" id="summaryValue">{{ CURRENCY_SYMBOL }}0.00</span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger" id="submitBtn" disabled>
+                            <i class="las la-check me-1"></i> Complete Stock Out
+                        </button>
+                        <a href="{% url 'stockout_list' %}" class="btn btn-light">
+                            <i class="las la-times me-1"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reason Info -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="las la-question-circle me-1"></i> Stock Out Reasons</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><span class="badge bg-secondary me-2">Damaged</span> Items damaged during storage/handling</li>
+                        <li class="mb-2"><span class="badge bg-secondary me-2">Lost/Theft</span> Missing inventory</li>
+                        <li class="mb-2"><span class="badge bg-secondary me-2">Expired</span> Products past expiration</li>
+                        <li class="mb-2"><span class="badge bg-secondary me-2">Internal Use</span> Used within business</li>
+                        <li class="mb-2"><span class="badge bg-secondary me-2">Adjustment</span> Stock count correction</li>
+                        <li class="mb-2"><span class="badge bg-secondary me-2">Return to Supplier</span> Sent back to vendor</li>
+                        <li><span class="badge bg-secondary me-2">Sample</span> Display or demo items</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<script>
+let items = [];
+let productSelect, batchSelect;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Tom Select for product
+    productSelect = new TomSelect('#productSelect', {
+        placeholder: 'Search products...',
+        onChange: function(value) {
+            loadBatches(value);
+        }
+    });
+    
+    // Warehouse change handler
+    document.getElementById('id_warehouse').addEventListener('change', function() {
+        productSelect.clear();
+        document.getElementById('batchSelect').innerHTML = '<option value="">Select Batch</option>';
+        document.getElementById('batchSelect').disabled = true;
+        document.getElementById('availableQty').value = '';
+        document.getElementById('batchInfo').innerHTML = '';
+    });
+});
+
+function loadBatches(productId) {
+    const warehouseId = document.getElementById('id_warehouse').value;
+    const batchSelect = document.getElementById('batchSelect');
+    
+    if (!productId || !warehouseId) {
+        batchSelect.innerHTML = '<option value="">Select warehouse first</option>';
+        batchSelect.disabled = true;
+        return;
+    }
+    
+    fetch(`/inventory/api/warehouses/${warehouseId}/batches/?product=${productId}`)
+        .then(response => response.json())
+        .then(data => {
+            batchSelect.innerHTML = '<option value="">Select Batch</option>';
+            data.forEach(batch => {
+                batchSelect.innerHTML += `<option value="${batch.id}" 
+                    data-qty="${batch.quantity}" 
+                    data-price="${batch.buy_price}"
+                    data-number="${batch.batch_number}">
+                    ${batch.batch_number} (${batch.quantity} units @ {{ CURRENCY_SYMBOL }}${batch.buy_price})
+                </option>`;
+            });
+            batchSelect.disabled = data.length === 0;
+            
+            if (data.length === 0) {
+                document.getElementById('batchInfo').innerHTML = '<span class="text-warning">No stock available for this product in selected warehouse</span>';
+            } else {
+                document.getElementById('batchInfo').innerHTML = '';
+            }
+        });
+}
+
+document.getElementById('batchSelect').addEventListener('change', function() {
+    const selected = this.options[this.selectedIndex];
+    if (selected.value) {
+        document.getElementById('availableQty').value = selected.dataset.qty;
+        document.getElementById('quantityInput').max = selected.dataset.qty;
+    } else {
+        document.getElementById('availableQty').value = '';
+    }
+});
+
+function addItem() {
+    const productEl = document.getElementById('productSelect');
+    const batchEl = document.getElementById('batchSelect');
+    const qtyEl = document.getElementById('quantityInput');
+    
+    const productId = productEl.value;
+    const batchId = batchEl.value;
+    const quantity = parseInt(qtyEl.value);
+    
+    if (!productId || !batchId || !quantity) {
+        alert('Please select product, batch and enter quantity');
+        return;
+    }
+    
+    const batchOption = batchEl.options[batchEl.selectedIndex];
+    const availableQty = parseInt(batchOption.dataset.qty);
+    
+    if (quantity > availableQty) {
+        alert(`Cannot remove more than available quantity (${availableQty})`);
+        return;
+    }
+    
+    // Check if batch already added
+    const existingIndex = items.findIndex(i => i.batch_id == batchId);
+    if (existingIndex >= 0) {
+        const newQty = items[existingIndex].quantity + quantity;
+        if (newQty > availableQty) {
+            alert(`Total quantity would exceed available (${availableQty})`);
+            return;
+        }
+        items[existingIndex].quantity = newQty;
+    } else {
+        items.push({
+            batch_id: batchId,
+            product_id: productId,
+            product_name: productEl.options[productEl.selectedIndex].dataset.name,
+            batch_number: batchOption.dataset.number,
+            quantity: quantity,
+            unit_cost: parseFloat(batchOption.dataset.price),
+            available: availableQty
+        });
+    }
+    
+    renderItems();
+    
+    // Reset form
+    productSelect.clear();
+    batchEl.innerHTML = '<option value="">Select Batch</option>';
+    batchEl.disabled = true;
+    qtyEl.value = 1;
+    document.getElementById('availableQty').value = '';
+}
+
+function removeItem(index) {
+    items.splice(index, 1);
+    renderItems();
+}
+
+function renderItems() {
+    const tbody = document.getElementById('itemsTableBody');
+    const emptyRow = document.getElementById('emptyRow');
+    
+    if (items.length === 0) {
+        tbody.innerHTML = `<tr id="emptyRow">
+            <td colspan="6" class="text-center text-muted py-4">No items added yet</td>
+        </tr>`;
+        document.getElementById('submitBtn').disabled = true;
+    } else {
+        tbody.innerHTML = '';
+        items.forEach((item, index) => {
+            const total = item.quantity * item.unit_cost;
+            tbody.innerHTML += `<tr>
+                <td>${item.product_name}</td>
+                <td><code>${item.batch_number}</code></td>
+                <td class="text-center">${item.quantity}</td>
+                <td class="text-end">{{ CURRENCY_SYMBOL }}${item.unit_cost.toFixed(2)}</td>
+                <td class="text-end">{{ CURRENCY_SYMBOL }}${total.toFixed(2)}</td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-soft-danger" onclick="removeItem(${index})">
+                        <i class="las la-trash"></i>
+                    </button>
+                </td>
+            </tr>`;
+        });
+        document.getElementById('submitBtn').disabled = false;
+    }
+    
+    updateSummary();
+    document.getElementById('items_data').value = JSON.stringify(items);
+}
+
+function updateSummary() {
+    const totalItems = items.length;
+    const totalQty = items.reduce((sum, i) => sum + i.quantity, 0);
+    const totalValue = items.reduce((sum, i) => sum + (i.quantity * i.unit_cost), 0);
+    
+    document.getElementById('summaryItems').textContent = totalItems;
+    document.getElementById('summaryQty').textContent = totalQty;
+    document.getElementById('summaryValue').textContent = '{{ CURRENCY_SYMBOL }}' + totalValue.toFixed(2);
+    document.getElementById('totalValue').textContent = '{{ CURRENCY_SYMBOL }}' + totalValue.toFixed(2);
+}
+
+// Form validation
+document.getElementById('stockoutForm').addEventListener('submit', function(e) {
+    if (items.length === 0) {
+        e.preventDefault();
+        alert('Please add at least one item');
+        return false;
+    }
+});
+</script>
+{% endblock %}
