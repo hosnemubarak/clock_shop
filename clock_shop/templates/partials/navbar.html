@@ -1,0 +1,126 @@
+{% load static %}
+<header id="page-topbar">
+    <div class="layout-width">
+        <div class="navbar-header">
+            <div class="d-flex">
+                <!-- LOGO -->
+                <div class="navbar-brand-box horizontal-logo">
+                    <a href="{% url 'dashboard' %}" class="logo logo-dark">
+                        <span class="logo-sm">
+                            <img src="{% static 'images/logo-sm.png' %}" alt="" height="22">
+                        </span>
+                        <span class="logo-lg">
+                            <img src="{% static 'images/logo-dark.png' %}" alt="" height="21">
+                        </span>
+                    </a>
+
+                    <a href="{% url 'dashboard' %}" class="logo logo-light">
+                        <span class="logo-sm">
+                            <img src="{% static 'images/logo-sm.png' %}" alt="" height="22">
+                        </span>
+                        <span class="logo-lg">
+                            <img src="{% static 'images/logo-light.png' %}" alt="" height="21">
+                        </span>
+                    </a>
+                </div>
+
+                <button type="button" class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger" id="topnav-hamburger-icon">
+                    <span class="hamburger-icon">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                </button>
+
+                <!-- App Search-->
+                <form class="app-search d-none d-md-block me-2">
+                    <div class="position-relative">
+                        <input type="text" class="form-control" placeholder="Search..." autocomplete="off" id="search-options" value="">
+                        <span class="las la-search search-widget-icon"></span>
+                        <span class="mdi mdi-close-circle search-widget-icon search-widget-icon-close d-none" id="search-close-options"></span>
+                    </div>
+                </form>
+            </div>
+
+            <div class="d-flex align-items-center">
+                <!-- Search Dropdown for Mobile -->
+                <div class="dropdown d-md-none topbar-head-dropdown header-item">
+                    <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" id="page-header-search-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="bx bx-search fs-22"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0" aria-labelledby="page-header-search-dropdown">
+                        <form class="p-3">
+                            <div class="form-group m-0">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="Search ..." aria-label="Search">
+                                    <button class="btn btn-primary" type="submit"><i class="mdi mdi-magnify"></i></button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Fullscreen Button -->
+                <div class="ms-1 header-item d-none d-sm-flex">
+                    <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" data-toggle="fullscreen">
+                        <i class='las la-expand fs-24'></i>
+                    </button>
+                </div>
+
+                <!-- Dark/Light Mode -->
+                <div class="ms-1 header-item d-none d-sm-flex">
+                    <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle light-dark-mode">
+                        <i class='las la-moon fs-24'></i>
+                    </button>
+                </div>
+
+                <!-- User Dropdown -->
+                <div class="dropdown header-item">
+                    <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="d-flex align-items-center">
+                            <span class="rounded-circle header-profile-user bg-primary text-white d-flex align-items-center justify-content-center"
+                                style="width: 32px; height: 32px; font-size: 14px;">
+                                {% if user.first_name %}
+                                    {{ user.first_name|slice:":1"|upper }}
+                                {% else %}
+                                    {{ user.username|slice:":1"|upper }}
+                                {% endif %}
+                            </span>
+                            <span class="text-start ms-xl-2">
+                                <span class="d-none d-xl-inline-block fw-medium user-name-text fs-16">
+                                    {{ user.first_name|default:user.username }}
+                                    <i class="las la-angle-down fs-12 ms-1"></i>
+                                </span>
+                            </span>
+                        </span>
+                    </button>
+
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <!-- Profile -->
+                        <a class="dropdown-item" href="#">
+                            <i class="bx bx-user fs-15 align-middle me-1"></i>
+                            <span>Profile</span>
+                        </a>
+
+                        <!-- Admin Panel -->
+                        {% if user.is_staff or user.is_superuser %}
+                        <a class="dropdown-item" href="{% url 'admin:index' %}">
+                            <i class="bx bx-cog fs-15 align-middle me-1"></i>
+                            <span>Admin Panel</span>
+                        </a>
+                        {% endif %}
+
+                        <div class="dropdown-divider"></div>
+
+                        <!-- Logout -->
+                        <a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                            <i class="bx bx-power-off fs-15 align-middle me-1 text-danger"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</header>
