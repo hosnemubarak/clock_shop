@@ -215,11 +215,25 @@
 {% block extra_js %}
 <script>
 const CURRENCY_SYMBOL = '{{ CURRENCY_SYMBOL }}';
+let customerTomSelect = null;
+
+// Initialize Tom Select for customer dropdown
+document.addEventListener('DOMContentLoaded', function() {
+    const customerEl = document.getElementById('customerSelect');
+    if (customerEl) {
+        customerTomSelect = new TomSelect(customerEl, {
+            placeholder: 'Search customer...',
+            allowEmptyOption: true,
+            onChange: function(value) {
+                handleCustomerChange(value);
+            }
+        });
+    }
+});
 
 {% if not customer %}
 // Customer selection handler
-document.getElementById('customerSelect').addEventListener('change', function() {
-    const customerId = this.value;
+function handleCustomerChange(customerId) {
     const invoiceSection = document.getElementById('invoiceSection');
     const invoiceTableBody = document.getElementById('invoiceTableBody');
     const customerInfoCard = document.getElementById('customerInfoCard');
@@ -249,12 +263,15 @@ document.getElementById('customerSelect').addEventListener('change', function() 
         </tr>
     `;
     
-    // Update customer info card
-    const selectedOption = this.options[this.selectedIndex];
-    const customerDue = parseFloat(selectedOption.dataset.due || 0);
-    document.getElementById('selectedCustomerName').textContent = selectedOption.text.split(' (Due:')[0];
-    document.getElementById('selectedCustomerDue').textContent = CURRENCY_SYMBOL + customerDue.toFixed(2);
-    customerInfoCard.classList.remove('d-none');
+    // Update customer info card - get option from the original select element
+    const selectEl = document.getElementById('customerSelect');
+    const selectedOption = selectEl.querySelector(`option[value="${customerId}"]`);
+    if (selectedOption) {
+        const customerDue = parseFloat(selectedOption.dataset.due || 0);
+        document.getElementById('selectedCustomerName').textContent = selectedOption.text.split(' (Due:')[0];
+        document.getElementById('selectedCustomerDue').textContent = CURRENCY_SYMBOL + customerDue.toFixed(2);
+        customerInfoCard.classList.remove('d-none');
+    }
     
     // Fetch customer invoices
     fetch(`/customers/api/${customerId}/sales/`)
@@ -307,7 +324,7 @@ document.getElementById('customerSelect').addEventListener('change', function() 
                 </tr>
             `;
         });
-});
+}
 {% endif %}
 
 // Invoice radio button handler

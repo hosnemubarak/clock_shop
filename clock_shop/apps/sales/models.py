@@ -131,16 +131,19 @@ class SaleItem(TimeStampedModel):
     """
     Individual items in a sale.
     Links directly to a batch for COGS tracking.
+    Supports custom entries for old dues, legacy items, etc.
     """
     sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(
         'inventory.Product', on_delete=models.PROTECT,
-        related_name='sale_items'
+        related_name='sale_items',
+        null=True, blank=True  # Null for custom items
     )
     batch = models.ForeignKey(
         'inventory.Batch', on_delete=models.PROTECT,
         related_name='sale_items',
-        help_text='Specific batch this item was sold from'
+        help_text='Specific batch this item was sold from',
+        null=True, blank=True  # Null for custom items
     )
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     unit_price = models.DecimalField(
@@ -158,12 +161,20 @@ class SaleItem(TimeStampedModel):
         validators=[MinValueValidator(Decimal('0.00'))],
         default=Decimal('0.00')
     )
+    # Custom item fields
+    is_custom = models.BooleanField(default=False, help_text='True for custom/manual entries')
+    custom_description = models.CharField(
+        max_length=255, blank=True,
+        help_text='Description for custom items (old dues, legacy items, etc.)'
+    )
     
     class Meta:
         ordering = ['id']
     
     def __str__(self):
-        return f"{self.product.name} x {self.quantity}"
+        if self.is_custom:
+            return f"{self.custom_description} x {self.quantity}"
+        return f"{self.product.name} x {self.quantity}" if self.product else f"Item x {self.quantity}"
     
     @property
     def total_price(self):

@@ -40,12 +40,23 @@
                         </thead>
                         <tbody>
                             {% for item in sale.items.all %}
-                            <tr>
+                            <tr {% if item.is_custom %}class="table-warning"{% endif %}>
                                 <td>
-                                    <a href="{% url 'product_detail' item.product.pk %}">{{ item.product.name }}</a>
-                                    <br><small class="text-muted">SKU: {{ item.product.sku }}</small>
+                                    {% if item.is_custom %}
+                                        {{ item.custom_description }}
+                                        <br><small class="text-muted">Custom Entry</small>
+                                    {% else %}
+                                        <a href="{% url 'product_detail' item.product.pk %}">{{ item.product.name }}</a>
+                                        <br><small class="text-muted">SKU: {{ item.product.sku }}</small>
+                                    {% endif %}
                                 </td>
-                                <td><code>{{ item.batch.batch_number }}</code></td>
+                                <td>
+                                    {% if item.is_custom %}
+                                        <span class="badge bg-warning-subtle text-warning">CUSTOM</span>
+                                    {% else %}
+                                        <code>{{ item.batch.batch_number }}</code>
+                                    {% endif %}
+                                </td>
                                 <td class="text-center">{{ item.quantity }}</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.unit_price|floatformat:2 }}</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.total_price|floatformat:2 }}</td>

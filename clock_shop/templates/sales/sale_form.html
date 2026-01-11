@@ -45,39 +45,102 @@
                     </div>
                     
                     <hr>
-                    <h6>Add Item (Select Batch Manually)</h6>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Product</label>
-                            <select class="form-select" id="newProduct" onchange="loadBatches()">
-                                <option value="">Select Product</option>
-                                {% for p in products %}
-                                <option value="{{ p.id }}" data-name="{{ p.name }}" data-price="{{ p.default_selling_price }}">{{ p.name }} ({{ p.total_stock }} in stock)</option>
-                                {% endfor %}
-                            </select>
+                    
+                    <!-- Toggle between inventory and custom product -->
+                    <div class="card bg-light-subtle border">
+                        <div class="card-header border-bottom-0 pb-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="card-title mb-0"><i class="las la-plus-circle me-1"></i> Add Item</h6>
+                                <ul class="nav nav-pills nav-sm" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" data-bs-toggle="tab" href="#inventoryTab" role="tab" onclick="toggleItemType('inventory')">
+                                            <i class="las la-boxes me-1"></i> From Inventory
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-bs-toggle="tab" href="#customTab" role="tab" onclick="toggleItemType('custom')">
+                                            <i class="las la-edit me-1"></i> Custom Entry
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Batch</label>
-                            <select class="form-select" id="newBatch" onchange="updateBatchInfo()">
-                                <option value="">Select Batch</option>
-                            </select>
-                        </div>
-                        <div class="col-md-1">
-                            <label class="form-label">Qty</label>
-                            <input type="number" class="form-control" id="newQty" min="1" value="1">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Price</label>
-                            <input type="number" class="form-control" id="newPrice" step="0.01">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">&nbsp;</label>
-                            <button type="button" class="btn btn-primary w-100" onclick="addItem()">
-                                <i class="las la-plus"></i> Add
-                            </button>
+                        <div class="card-body pt-3">
+                            <div class="tab-content">
+                                <!-- Inventory Item Form -->
+                                <div class="tab-pane active" id="inventoryTab" role="tabpanel">
+                                    <div id="inventoryItemForm">
+                                        <div class="row g-3 align-items-end">
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-medium">Product <span class="text-danger">*</span></label>
+                                                <select class="form-select" id="newProduct">
+                                                    <option value="">Search or select product...</option>
+                                                    {% for p in products %}
+                                                    <option value="{{ p.id }}" data-name="{{ p.name }}" data-price="{{ p.default_selling_price }}">{{ p.name }} ({{ p.total_stock }} in stock)</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label fw-medium">Batch <span class="text-danger">*</span></label>
+                                                <select class="form-select" id="newBatch">
+                                                    <option value="">Select Batch</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2 col-6">
+                                                <label class="form-label fw-medium">Qty</label>
+                                                <input type="number" class="form-control" id="newQty" min="1" value="1">
+                                            </div>
+                                            <div class="col-md-2 col-6">
+                                                <label class="form-label fw-medium">Price</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
+                                                    <input type="number" class="form-control" id="newPrice" step="0.01">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-1">
+                                                <button type="button" class="btn btn-primary w-100" onclick="addItem()">
+                                                    <i class="las la-plus fs-18"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div id="batchInfo" class="mt-2 small"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Custom Item Form -->
+                                <div class="tab-pane" id="customTab" role="tabpanel">
+                                    <div id="customItemForm">
+                                        <div class="alert alert-soft-info border-0 mb-3" role="alert">
+                                            <i class="las la-info-circle me-2"></i>
+                                            Use this for <strong>old dues</strong>, <strong>legacy items</strong>, or <strong>one-time entries</strong> not in inventory.
+                                        </div>
+                                        <div class="row g-3 align-items-end">
+                                            <div class="col-md-5">
+                                                <label class="form-label fw-medium">Description <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" id="customDescription" placeholder="e.g., Old dues, Previous balance...">
+                                            </div>
+                                            <div class="col-md-2 col-4">
+                                                <label class="form-label fw-medium">Qty</label>
+                                                <input type="number" class="form-control" id="customQty" min="1" value="1">
+                                            </div>
+                                            <div class="col-md-3 col-8">
+                                                <label class="form-label fw-medium">Price <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
+                                                    <input type="number" class="form-control" id="customPrice" step="0.01" placeholder="0.00">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <button type="button" class="btn btn-warning w-100" onclick="addCustomItem()">
+                                                    <i class="las la-plus me-1"></i> Add
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div id="batchInfo" class="mt-2 text-muted small"></div>
                 </div>
             </div>
         </div>
@@ -140,20 +203,62 @@
 let items = [];
 let itemIndex = 0;
 let batchesData = {};
+let productSelect = null;
+let batchSelect = null;
+let customerSelect = null;
 
-function loadBatches() {
-    const productId = document.getElementById('newProduct').value;
-    const batchSelect = document.getElementById('newBatch');
-    const priceInput = document.getElementById('newPrice');
-    const productOption = document.getElementById('newProduct').selectedOptions[0];
+// Initialize Tom Select for searchable dropdowns
+document.addEventListener('DOMContentLoaded', function() {
+    // Product dropdown
+    productSelect = new TomSelect('#newProduct', {
+        placeholder: 'Search or select product...',
+        allowEmptyOption: true,
+        onChange: function(value) {
+            loadBatches(value);
+        }
+    });
     
-    batchSelect.innerHTML = '<option value="">Select Batch</option>';
+    // Batch dropdown
+    batchSelect = new TomSelect('#newBatch', {
+        placeholder: 'Select batch...',
+        allowEmptyOption: true,
+        onChange: function(value) {
+            updateBatchInfo(value);
+        }
+    });
+    
+    // Customer dropdown (if exists)
+    const customerEl = document.querySelector('[name="customer"]');
+    if (customerEl && customerEl.tagName === 'SELECT') {
+        customerSelect = new TomSelect(customerEl, {
+            placeholder: 'Search customer...',
+            allowEmptyOption: true
+        });
+    }
+});
+
+// Toggle between inventory and custom item forms (Bootstrap tabs handle visibility)
+function toggleItemType(type) {
+    // Additional logic can be added here if needed
+    // Bootstrap tabs handle the visibility automatically
+}
+
+function loadBatches(productId) {
+    const priceInput = document.getElementById('newPrice');
+    
+    // Clear batch dropdown
+    batchSelect.clear();
+    batchSelect.clearOptions();
+    batchSelect.addOption({value: '', text: 'Select Batch'});
     document.getElementById('batchInfo').innerHTML = '';
     
     if (!productId) return;
     
-    // Set default price
-    priceInput.value = productOption.dataset.price;
+    // Get product option data
+    const productOption = document.querySelector(`#newProduct option[value="${productId}"]`);
+    if (productOption) {
+        priceInput.value = productOption.dataset.price;
+    }
     
     fetch(`/sales/api/products/${productId}/`)
         .then(response => response.json())
@@ -161,13 +266,16 @@ function loadBatches() {
             batchesData = {};
             data.batches.forEach(batch => {
                 batchesData[batch.id] = batch;
-                batchSelect.innerHTML += `<option value="${batch.id}">${batch.batch_number} - ${batch.warehouse} (${batch.quantity} avail) @ {{ CURRENCY_SYMBOL }}${batch.buy_price}</option>`;
+                batchSelect.addOption({
+                    value: batch.id,
+                    text: `${batch.batch_number} - ${batch.warehouse} (${batch.quantity} avail) @ {{ CURRENCY_SYMBOL }}${batch.buy_price}`
+                });
             });
+            batchSelect.refreshOptions(false);
         });
 }
 
-function updateBatchInfo() {
-    const batchId = document.getElementById('newBatch').value;
+function updateBatchInfo(batchId) {
     const info = document.getElementById('batchInfo');
     
     if (batchId && batchesData[batchId]) {
@@ -179,17 +287,17 @@ function updateBatchInfo() {
 }
 
 function addItem() {
-    const productSelect = document.getElementById('newProduct');
-    const batchSelect = document.getElementById('newBatch');
+    const productId = productSelect.getValue();
+    const batchId = batchSelect.getValue();
     const qty = parseInt(document.getElementById('newQty').value);
     const price = parseFloat(document.getElementById('newPrice').value);
     
-    if (!productSelect.value) {
+    if (!productId) {
         showValidationModal('Please select a product first.', 'Product Required');
         return;
     }
     
-    if (!batchSelect.value) {
+    if (!batchId) {
         showValidationModal('Please select a batch for this product.', 'Batch Required');
         return;
     }
@@ -204,43 +312,87 @@ function addItem() {
         return;
     }
     
-    const batch = batchesData[batchSelect.value];
+    const batch = batchesData[batchId];
     if (qty > batch.quantity) {
         showValidationModal(`Only ${batch.quantity} units available in this batch. Please reduce the quantity.`, 'Insufficient Stock');
         return;
     }
     
-    const product = productSelect.options[productSelect.selectedIndex];
+    const productOption = document.querySelector(`#newProduct option[value="${productId}"]`);
     
     const item = {
         index: itemIndex++,
-        product_id: productSelect.value,
-        product_name: product.dataset.name,
-        batch_id: batchSelect.value,
+        product_id: productId,
+        product_name: productOption.dataset.name,
+        batch_id: batchId,
         batch_number: batch.batch_number,
         quantity: qty,
         unit_price: price,
-        discount: 0
+        discount: 0,
+        is_custom: false
     };
     
     items.push(item);
     
     // Update available quantity in batch data
-    batchesData[batchSelect.value].quantity -= qty;
+    batchesData[batchId].quantity -= qty;
     
     renderItems();
     
-    // Reset
-    productSelect.value = '';
-    document.getElementById('newBatch').innerHTML = '<option value="">Select Batch</option>';
+    // Reset using Tom Select
+    productSelect.clear();
+    batchSelect.clear();
+    batchSelect.clearOptions();
+    batchSelect.addOption({value: '', text: 'Select Batch'});
     document.getElementById('newQty').value = '1';
     document.getElementById('newPrice').value = '';
     document.getElementById('batchInfo').innerHTML = '';
 }
 
+function addCustomItem() {
+    const description = document.getElementById('customDescription').value.trim();
+    const qty = parseInt(document.getElementById('customQty').value);
+    const price = parseFloat(document.getElementById('customPrice').value);
+    
+    if (!description) {
+        showValidationModal('Please enter a description for the custom item.', 'Description Required');
+        return;
+    }
+    
+    if (!qty || qty < 1) {
+        showValidationModal('Please enter a valid quantity.', 'Invalid Quantity');
+        return;
+    }
+    
+    if (!price || price <= 0) {
+        showValidationModal('Please enter a valid price.', 'Invalid Price');
+        return;
+    }
+    
+    const item = {
+        index: itemIndex++,
+        product_id: null,
+        product_name: description,
+        batch_id: null,
+        batch_number: 'CUSTOM',
+        quantity: qty,
+        unit_price: price,
+        discount: 0,
+        is_custom: true
+    };
+    
+    items.push(item);
+    renderItems();
+    
+    // Reset custom form
+    document.getElementById('customDescription').value = '';
+    document.getElementById('customQty').value = '1';
+    document.getElementById('customPrice').value = '';
+}
+
 function removeItem(index) {
     const item = items.find(i => i.index === index);
-    if (item && batchesData[item.batch_id]) {
+    if (item && !item.is_custom && item.batch_id && batchesData[item.batch_id]) {
         batchesData[item.batch_id].quantity += item.quantity;
     }
     items = items.filter(i => i.index !== index);
@@ -255,10 +407,16 @@ function renderItems() {
     items.forEach(item => {
         const lineTotal = item.quantity * item.unit_price;
         subtotal += lineTotal;
+        const batchBadge = item.is_custom 
+            ? '<span class="badge bg-warning-subtle text-warning">CUSTOM</span>' 
+            : `<code>${escapeHtml(item.batch_number)}</code>`;
+        const rowClass = item.is_custom ? 'table-warning' : '';
+        // Properly escape JSON for HTML attribute
+        const itemJson = JSON.stringify(item).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
         html += `
-            <tr>
-                <td>${item.product_name}</td>
-                <td><code>${item.batch_number}</code></td>
+            <tr class="${rowClass}">
+                <td>${escapeHtml(item.product_name)}</td>
+                <td>${batchBadge}</td>
                 <td>${item.quantity}</td>
                 <td>{{ CURRENCY_SYMBOL }}${item.unit_price.toFixed(2)}</td>
                 <td>{{ CURRENCY_SYMBOL }}${lineTotal.toFixed(2)}</td>
@@ -267,7 +425,7 @@ function renderItems() {
                         <i class="las la-times"></i>
                     </button>
                 </td>
-                <input type="hidden" name="items" value='${JSON.stringify(item)}'>
+                <input type="hidden" name="items" value="${itemJson}">
             </tr>
         `;
     });
@@ -277,6 +435,14 @@ function renderItems() {
     document.getElementById('summarySubtotal').textContent = '{{ CURRENCY_SYMBOL }}' + subtotal.toFixed(2);
     
     updateTotals();
+}
+
+// Helper function to escape HTML entities
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 function updateTotals() {

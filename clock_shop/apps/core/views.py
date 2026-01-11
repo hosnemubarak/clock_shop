@@ -1,5 +1,8 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.contrib.auth import login
+from django.contrib import messages
 from django.db.models import Sum, Count, F
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
@@ -68,6 +71,29 @@ def dashboard(request):
         total=Sum('total_amount')
     ).order_by('month')
     
+    # Payment status counts for chart
+    payment_status_counts = Sale.objects.values('payment_status').annotate(
+        count=Count('id')
+    )
+    paid_count = 0
+    partial_count = 0
+    unpaid_count = 0
+    for status in payment_status_counts:
+        if status['payment_status'] == 'paid':
+            paid_count = status['count']
+        elif status['payment_status'] == 'partial':
+            partial_count = status['count']
+        elif status['payment_status'] == 'unpaid':
+            unpaid_count = status['count']
+    
+    # Convert monthly_sales to JSON-safe format
+    monthly_sales_data = []
+    for item in monthly_sales:
+        monthly_sales_data.append({
+            'month': item['month'].isoformat() if item['month'] else None,
+            'total': float(item['total']) if item['total'] else 0
+        })
+    
     context = {
         'total_sales_today': total_sales_today,
         'total_sales_month': total_sales_month,
@@ -78,7 +104,10 @@ def dashboard(request):
         'total_dues': total_dues,
         'recent_sales': recent_sales,
         'low_stock_batches': low_stock_batches,
-        'monthly_sales': list(monthly_sales),
+        'monthly_sales': monthly_sales_data,
+        'paid_count': paid_count,
+        'partial_count': partial_count,
+        'unpaid_count': unpaid_count,
     }
     return render(request, 'core/dashboard.html', context)
 
@@ -110,3 +139,65 @@ def audit_logs(request):
     logs = paginator.get_page(page)
     
     return render(request, 'core/audit_logs.html', {'logs': logs, 'search': search})
+
+
+def register(request):
+    """User registration view."""
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        email = request.POST.get('email', '').strip()
+        password1 = request.POST.get('password1', '')
+        password2 = request.POST.get('password2', '')
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        
+        errors = []
+        
+        # Validation
+        if not username:
+            errors.append('Username is required.')
+        elif User.objects.filter(username=username).exists():
+            errors.append('Username already exists.')
+        
+        if not email:
+            errors.append('Email is required.')
+        elif User.objects.filter(email=email).exists():
+            errors.append('Email already registered.')
+        
+        if not password1:
+            errors.append('Password is required.')
+        elif len(password1) < 8:
+            errors.append('Password must be at least 8 characters.')
+        elif password1 != password2:
+            errors.append('Passwords do not match.')
+        
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+            return render(request, 'core/register.html', {
+                'form': {
+                    'username': {'value': username},
+                    'email': {'value': email},
+                    'first_name': {'value': first_name},
+                    'last_name': {'value': last_name},
+                }
+            })
+        
+        # Create user (inactive until admin approves)
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password1,
+            first_name=first_name,
+            last_name=last_name
+        )
+        user.is_active = False
+        user.save()
+        
+        messages.success(request, 'Your account has been created successfully! Please wait for admin approval before you can login.')
+        return redirect('login')
+    
+    return render(request, 'core/register.html')

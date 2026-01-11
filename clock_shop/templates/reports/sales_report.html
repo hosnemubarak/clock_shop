@@ -78,6 +78,20 @@
     </div>
 </div>
 
+<!-- Sales Chart -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header border-0">
+                <h5 class="card-title mb-0">Sales & Profit Trend</h5>
+            </div>
+            <div class="card-body pt-0">
+                <div id="sales-period-chart" data-colors='["--in-primary", "--in-success"]' class="apex-charts" dir="ltr"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-lg-8">
         <div class="card">
@@ -121,6 +135,7 @@
                 <h5 class="card-title mb-0">Top Selling Products</h5>
             </div>
             <div class="card-body">
+                <div id="top-products-chart" data-colors='["--in-primary"]' class="apex-charts mb-3" dir="ltr"></div>
                 <div class="table-responsive">
                     <table class="table table-sm mb-0">
                         <thead>
@@ -147,4 +162,111 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+function getChartColorsArray(id) {
+    if (document.getElementById(id)) {
+        var colors = document.getElementById(id).getAttribute("data-colors");
+        if (colors) {
+            colors = JSON.parse(colors);
+            return colors.map(function(color) {
+                var c = color.replace(" ", "");
+                if (c.indexOf(",") === -1) {
+                    var style = getComputedStyle(document.documentElement);
+                    return style.getPropertyValue(c) || c;
+                }
+                return c;
+            });
+        }
+    }
+    return ["#405189", "#0ab39c"];
+}
+
+// Sales Period Data
+var salesPeriodLabels = [{% for row in sales_by_period %}"{{ row.period|date:'M d' }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+var salesPeriodValues = [{% for row in sales_by_period %}{{ row.total|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}];
+var profitPeriodValues = [{% for row in sales_by_period %}{{ row.profit|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+// Sales Period Bar Chart
+var salesChartColors = getChartColorsArray("sales-period-chart");
+if (document.getElementById("sales-period-chart") && salesPeriodLabels.length > 0) {
+    var options = {
+        chart: {
+            height: 350,
+            type: 'bar',
+            toolbar: { show: false }
+        },
+        plotOptions: {
+            bar: {
+                horizontal: false,
+                columnWidth: '55%',
+                borderRadius: 4
+            }
+        },
+        dataLabels: { enabled: false },
+        stroke: { show: true, width: 2, colors: ['transparent'] },
+        series: [{
+            name: 'Sales',
+            data: salesPeriodValues
+        }, {
+            name: 'Profit',
+            data: profitPeriodValues
+        }],
+        xaxis: { categories: salesPeriodLabels },
+        colors: salesChartColors,
+        fill: { opacity: 1 },
+        tooltip: {
+            y: {
+                formatter: function(val) {
+                    return '{{ CURRENCY_SYMBOL }}' + val.toLocaleString();
+                }
+            }
+        }
+    };
+    var chart = new ApexCharts(document.querySelector("#sales-period-chart"), options);
+    chart.render();
+}
+
+// Top Products Data
+var topProductLabels = [{% for p in top_products %}"{{ p.product__name|truncatechars:15 }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+var topProductValues = [{% for p in top_products %}{{ p.total_revenue|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+// Top Products Horizontal Bar Chart
+var topProductsColors = getChartColorsArray("top-products-chart");
+if (document.getElementById("top-products-chart") && topProductLabels.length > 0) {
+    var options2 = {
+        chart: {
+            height: 200,
+            type: 'bar',
+            toolbar: { show: false }
+        },
+        plotOptions: {
+            bar: {
+                horizontal: true,
+                borderRadius: 4,
+                barHeight: '70%'
+            }
+        },
+        dataLabels: { enabled: false },
+        series: [{
+            name: 'Revenue',
+            data: topProductValues.slice(0, 5)
+        }],
+        xaxis: { categories: topProductLabels.slice(0, 5) },
+        colors: topProductsColors,
+        tooltip: {
+            y: {
+                formatter: function(val) {
+                    return '{{ CURRENCY_SYMBOL }}' + val.toLocaleString();
+                }
+            }
+        }
+    };
+    var chart2 = new ApexCharts(document.querySelector("#top-products-chart"), options2);
+    chart2.render();
+}
+</script>
 {% endblock %}

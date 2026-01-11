@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from decimal import Decimal
 import json
+import html
 
 from .models import Sale, SaleItem
 from .forms import SaleForm, SaleItemForm, PaymentForm
@@ -103,37 +104,56 @@ def sale_create(request):
             subtotal = Decimal('0')
             
             for item_json in items_data:
-                item = json.loads(item_json)
-                product = Product.objects.get(pk=item['product_id'])
-                batch = Batch.objects.select_for_update().get(pk=item['batch_id'])
+                # Unescape HTML entities before parsing JSON
+                item = json.loads(html.unescape(item_json))
                 quantity = int(item['quantity'])
                 unit_price = Decimal(item['unit_price'])
                 discount = Decimal(item.get('discount', '0'))
+                is_custom = item.get('is_custom', False)
                 
-                # Validate stock
-                if quantity > batch.quantity:
-                    messages.error(request, f'Insufficient stock in batch {batch.batch_number}')
-                    sale.delete()
-                    return redirect('sale_create')
-                
-                # Create sale item
-                sale_item = SaleItem.objects.create(
-                    sale=sale,
-                    product=product,
-                    batch=batch,
-                    quantity=quantity,
-                    unit_price=unit_price,
-                    cost_price=batch.buy_price,
-                    discount=discount,
-                )
-                
-                # Update batch quantity
-                batch.quantity -= quantity
-                batch.save()
-                product.update_total_stock()
-                
-                subtotal += sale_item.total_price
-                total_cost += sale_item.total_cost
+                if is_custom:
+                    # Custom item - no product/batch, just description
+                    sale_item = SaleItem.objects.create(
+                        sale=sale,
+                        product=None,
+                        batch=None,
+                        quantity=quantity,
+                        unit_price=unit_price,
+                        cost_price=Decimal('0'),  # No cost for custom items
+                        discount=discount,
+                        custom_description=item.get('product_name', 'Custom Item'),
+                        is_custom=True,
+                    )
+                    subtotal += sale_item.total_price
+                else:
+                    # Regular inventory item
+                    product = Product.objects.get(pk=item['product_id'])
+                    batch = Batch.objects.select_for_update().get(pk=item['batch_id'])
+                    
+                    # Validate stock
+                    if quantity > batch.quantity:
+                        messages.error(request, f'Insufficient stock in batch {batch.batch_number}')
+                        sale.delete()
+                        return redirect('sale_create')
+                    
+                    # Create sale item
+                    sale_item = SaleItem.objects.create(
+                        sale=sale,
+                        product=product,
+                        batch=batch,
+                        quantity=quantity,
+                        unit_price=unit_price,
+                        cost_price=batch.buy_price,
+                        discount=discount,
+                    )
+                    
+                    # Update batch quantity
+                    batch.quantity -= quantity
+                    batch.save()
+                    product.update_total_stock()
+                    
+                    subtotal += sale_item.total_price
+                    total_cost += sale_item.total_cost
             
             # Update sale totals
             sale.subtotal = subtotal
@@ -181,12 +201,13 @@ def sale_cancel(request, pk):
             messages.error(request, 'Cannot cancel a sale with payments. Process refund first.')
         else:
             with transaction.atomic():
-                # Restore stock to batches
+                # Restore stock to batches (skip custom items)
                 for item in sale.items.all():
-                    batch = item.batch
-                    batch.quantity += item.quantity
-                    batch.save()
-                    item.product.update_total_stock()
+                    if not item.is_custom and item.batch and item.product:
+                        batch = item.batch
+                        batch.quantity += item.quantity
+                        batch.save()
+                        item.product.update_total_stock()
                 
                 # Update customer balance
                 if sale.customer:

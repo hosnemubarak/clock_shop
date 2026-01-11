@@ -99,3 +99,26 @@
     </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+// Initialize Tom Select for product and warehouse dropdowns
+document.addEventListener('DOMContentLoaded', function() {
+    const productEl = document.querySelector('[name="product"]');
+    if (productEl && productEl.tagName === 'SELECT') {
+        new TomSelect(productEl, {
+            placeholder: 'Search product...',
+            allowEmptyOption: true
+        });
+    }
+    
+    const warehouseEl = document.querySelector('[name="warehouse"]');
+    if (warehouseEl && warehouseEl.tagName === 'SELECT') {
+        new TomSelect(warehouseEl, {
+            placeholder: 'Select warehouse...',
+            allowEmptyOption: true
+        });
+    }
+});
+</script>
+{% endblock extra_js %}

@@ -31,7 +31,7 @@
                     </div>
                     <div class="d-flex align-items-end justify-content-between mt-4">
                         <div>
-                            <h4 class="fs-22 fw-semibold mb-4 text-dark">{{ CURRENCY_SYMBOL }}{{ total_sales_today|floatformat:2|intcomma }}</h4>
+                            <h4 class="fs-22 fw-semibold mb-4"><span class="counter-value" data-target="{{ total_sales_today }}">{{ CURRENCY_SYMBOL }}{{ total_sales_today|floatformat:2|intcomma }}</span></h4>
                             <span class="text-primary">View Sales <i class="las la-arrow-right"></i></span>
                         </div>
                         <div class="avatar-sm flex-shrink-0">
@@ -56,7 +56,7 @@
                     </div>
                     <div class="d-flex align-items-end justify-content-between mt-4">
                         <div>
-                            <h4 class="fs-22 fw-semibold mb-4 text-dark">{{ CURRENCY_SYMBOL }}{{ total_sales_month|floatformat:2|intcomma }}</h4>
+                            <h4 class="fs-22 fw-semibold mb-4"><span class="counter-value" data-target="{{ total_sales_month }}">{{ CURRENCY_SYMBOL }}{{ total_sales_month|floatformat:2|intcomma }}</span></h4>
                             <span class="text-success">View Report <i class="las la-arrow-right"></i></span>
                         </div>
                         <div class="avatar-sm flex-shrink-0">
@@ -81,7 +81,7 @@
                     </div>
                     <div class="d-flex align-items-end justify-content-between mt-4">
                         <div>
-                            <h4 class="fs-22 fw-semibold mb-4 text-dark">{{ CURRENCY_SYMBOL }}{{ profit_month|floatformat:2|intcomma }}</h4>
+                            <h4 class="fs-22 fw-semibold mb-4"><span class="counter-value" data-target="{{ profit_month }}">{{ CURRENCY_SYMBOL }}{{ profit_month|floatformat:2|intcomma }}</span></h4>
                             <span class="text-info">View Report <i class="las la-arrow-right"></i></span>
                         </div>
                         <div class="avatar-sm flex-shrink-0">
@@ -130,7 +130,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <p class="fw-medium text-muted mb-0">Total Products</p>
-                            <h2 class="mt-4 ff-secondary fw-semibold text-dark">{{ total_products }}</h2>
+                            <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ total_products }}">{{ total_products }}</span></h2>
                         </div>
                         <div>
                             <div class="avatar-sm flex-shrink-0">
@@ -152,7 +152,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <p class="fw-medium text-muted mb-0">Low Stock Items</p>
-                            <h2 class="mt-4 ff-secondary fw-semibold {% if low_stock_products > 0 %}text-warning{% else %}text-dark{% endif %}">{{ low_stock_products }}</h2>
+                            <h2 class="mt-4 ff-secondary fw-semibold {% if low_stock_products > 0 %}text-warning{% endif %}"><span class="counter-value" data-target="{{ low_stock_products }}">{{ low_stock_products }}</span></h2>
                         </div>
                         <div>
                             <div class="avatar-sm flex-shrink-0">
@@ -174,7 +174,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <p class="fw-medium text-muted mb-0">Total Customers</p>
-                            <h2 class="mt-4 ff-secondary fw-semibold text-dark">{{ total_customers }}</h2>
+                            <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ total_customers }}">{{ total_customers }}</span></h2>
                         </div>
                         <div>
                             <div class="avatar-sm flex-shrink-0">
@@ -199,6 +199,48 @@
                     <a href="{% url 'batch_create' %}" class="btn btn-success flex-grow-1">
                         <i class="las la-plus"></i> Stock In
                     </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sales Chart Row -->
+<div class="row">
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-header border-0 align-items-center d-flex">
+                <h4 class="card-title mb-0 flex-grow-1">Sales & Profit Trend</h4>
+                <div class="flex-shrink-0">
+                    <a href="{% url 'sales_report' %}" class="btn btn-soft-primary btn-sm">View Report</a>
+                </div>
+            </div>
+            <div class="card-body pt-0">
+                <div id="sales-chart" data-colors='["--in-primary", "--in-success"]' class="apex-charts" dir="ltr"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-4">
+        <div class="card">
+            <div class="card-header border-0">
+                <h4 class="card-title mb-0">Payment Status</h4>
+            </div>
+            <div class="card-body pt-0">
+                <div id="payment-status-chart" data-colors='["--in-success", "--in-warning", "--in-danger"]' class="apex-charts" dir="ltr"></div>
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                        <span><i class="las la-circle text-success me-1"></i> Paid</span>
+                        <span class="fw-medium" id="paid-count">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                        <span><i class="las la-circle text-warning me-1"></i> Partial</span>
+                        <span class="fw-medium" id="partial-count">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span><i class="las la-circle text-danger me-1"></i> Unpaid</span>
+                        <span class="fw-medium" id="unpaid-count">0</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -298,4 +340,123 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+// Chart color helper
+function getChartColorsArray(id) {
+    if (document.getElementById(id)) {
+        var colors = document.getElementById(id).getAttribute("data-colors");
+        if (colors) {
+            colors = JSON.parse(colors);
+            return colors.map(function(color) {
+                var c = color.replace(" ", "");
+                if (c.indexOf(",") === -1) {
+                    var style = getComputedStyle(document.documentElement);
+                    return style.getPropertyValue(c) || c;
+                }
+                return c;
+            });
+        }
+    }
+    return ["#405189", "#0ab39c", "#f7b84b"];
+}
+
+// Monthly Sales Data from Django
+var monthlySalesData = {{ monthly_sales|safe }};
+var salesLabels = monthlySalesData.map(function(item) {
+    var date = new Date(item.month);
+    return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+});
+var salesValues = monthlySalesData.map(function(item) {
+    return parseFloat(item.total) || 0;
+});
+
+// Sales Chart
+var salesChartColors = getChartColorsArray("sales-chart");
+if (document.getElementById("sales-chart")) {
+    var salesOptions = {
+        chart: {
+            height: 350,
+            type: 'area',
+            toolbar: { show: false },
+            zoom: { enabled: false }
+        },
+        dataLabels: { enabled: false },
+        stroke: { curve: 'smooth', width: 2 },
+        series: [{
+            name: 'Sales',
+            data: salesValues.length ? salesValues : [0, 0, 0, 0, 0, 0]
+        }],
+        xaxis: {
+            categories: salesLabels.length ? salesLabels : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
+        },
+        colors: salesChartColors,
+        fill: {
+            type: 'gradient',
+            gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.4,
+                opacityTo: 0.1,
+                stops: [0, 90, 100]
+            }
+        },
+        tooltip: {
+            y: {
+                formatter: function(val) {
+                    return '{{ CURRENCY_SYMBOL }}' + val.toLocaleString();
+                }
+            }
+        }
+    };
+    var salesChart = new ApexCharts(document.querySelector("#sales-chart"), salesOptions);
+    salesChart.render();
+}
+
+// Payment Status Data
+var paidCount = {{ paid_count|default:0 }};
+var partialCount = {{ partial_count|default:0 }};
+var unpaidCount = {{ unpaid_count|default:0 }};
+
+document.getElementById('paid-count').textContent = paidCount;
+document.getElementById('partial-count').textContent = partialCount;
+document.getElementById('unpaid-count').textContent = unpaidCount;
+
+// Payment Status Donut Chart
+var paymentColors = getChartColorsArray("payment-status-chart");
+if (document.getElementById("payment-status-chart")) {
+    var paymentOptions = {
+        chart: {
+            height: 250,
+            type: 'donut'
+        },
+        series: [paidCount || 1, partialCount || 0, unpaidCount || 0],
+        labels: ['Paid', 'Partial', 'Unpaid'],
+        colors: paymentColors,
+        legend: { show: false },
+        dataLabels: { enabled: false },
+        plotOptions: {
+            pie: {
+                donut: {
+                    size: '70%',
+                    labels: {
+                        show: true,
+                        total: {
+                            show: true,
+                            label: 'Total',
+                            formatter: function(w) {
+                                return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+    var paymentChart = new ApexCharts(document.querySelector("#payment-status-chart"), paymentOptions);
+    paymentChart.render();
+}
+</script>
 {% endblock %}

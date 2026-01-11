@@ -315,14 +315,40 @@ server {
 
 ## Environment Variables
 
+Copy `.env.example` to `.env` and configure:
+
+```bash
+cp .env.example .env
+```
+
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `SECRET_KEY` | (insecure default) | Django secret key |
-| `DEBUG` | `True` | Enable debug mode |
+| `SECRET_KEY` | (insecure default) | Django secret key - **MUST change in production** |
+| `DEBUG` | `True` | Enable debug mode - Set to `False` in production |
 | `ALLOWED_HOSTS` | `*` | Comma-separated allowed hosts |
+| `CSRF_TRUSTED_ORIGINS` | `http://127.0.0.1:*,http://localhost:*` | Comma-separated CSRF trusted origins |
 | `SHOP_NAME` | `Clock Shop` | Business name |
 | `CURRENCY_SYMBOL` | `৳` | Currency symbol (BDT) |
-| `LOW_STOCK_THRESHOLD` | `10` | Low stock alert threshold |
+| `LOW_STOCK_THRESHOLD` | `5` | Low stock alert threshold |
+
+### CSRF Configuration
+
+The `CSRF_TRUSTED_ORIGINS` setting is crucial for forms to work correctly:
+
+**Local Development:**
+```env
+CSRF_TRUSTED_ORIGINS=http://127.0.0.1:*,http://localhost:*
+```
+
+**Production (HTTPS):**
+```env
+CSRF_TRUSTED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+```
+
+**Multiple Origins:**
+```env
+CSRF_TRUSTED_ORIGINS=https://yourdomain.com,https://api.yourdomain.com,https://admin.yourdomain.com
+```
 
 ## Customization
 

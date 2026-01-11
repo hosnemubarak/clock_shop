@@ -73,11 +73,13 @@ def sales_report(request):
         s['profit'] = (s['total'] or Decimal('0')) - (s['cost'] or Decimal('0'))
         sales_data.append(s)
     
-    # Top selling products
+    # Top selling products (exclude custom items)
     top_products = SaleItem.objects.filter(
         sale__status='completed',
         sale__sale_date__date__gte=date_from,
-        sale__sale_date__date__lte=date_to
+        sale__sale_date__date__lte=date_to,
+        is_custom=False,
+        product__isnull=False
     ).values(
         'product__name', 'product__sku'
     ).annotate(
@@ -104,11 +106,13 @@ def profit_report(request):
     date_from = request.GET.get('date_from', (today - timedelta(days=30)).strftime('%Y-%m-%d'))
     date_to = request.GET.get('date_to', today.strftime('%Y-%m-%d'))
     
-    # Profit by product
+    # Profit by product (exclude custom items)
     profit_by_product = SaleItem.objects.filter(
         sale__status='completed',
         sale__sale_date__date__gte=date_from,
-        sale__sale_date__date__lte=date_to
+        sale__sale_date__date__lte=date_to,
+        is_custom=False,
+        product__isnull=False
     ).values(
         'product__name', 'product__sku', 'product__category__name'
     ).annotate(
@@ -128,11 +132,13 @@ def profit_report(request):
             p['margin'] = 0
         profit_data.append(p)
     
-    # Profit by category
+    # Profit by category (exclude custom items)
     profit_by_category = SaleItem.objects.filter(
         sale__status='completed',
         sale__sale_date__date__gte=date_from,
-        sale__sale_date__date__lte=date_to
+        sale__sale_date__date__lte=date_to,
+        is_custom=False,
+        product__isnull=False
     ).values(
         'product__category__name'
     ).annotate(
@@ -142,11 +148,13 @@ def profit_report(request):
         profit=F('revenue') - F('cost'),
     ).order_by('-profit')
     
-    # Profit by warehouse (based on batch)
+    # Profit by warehouse (exclude custom items)
     profit_by_warehouse = SaleItem.objects.filter(
         sale__status='completed',
         sale__sale_date__date__gte=date_from,
-        sale__sale_date__date__lte=date_to
+        sale__sale_date__date__lte=date_to,
+        is_custom=False,
+        batch__isnull=False
     ).values(
         'batch__warehouse__name'
     ).annotate(
@@ -156,11 +164,12 @@ def profit_report(request):
         profit=F('revenue') - F('cost'),
     ).order_by('-profit')
     
-    # Total summary
+    # Total summary (exclude custom items for accurate profit calc)
     totals = SaleItem.objects.filter(
         sale__status='completed',
         sale__sale_date__date__gte=date_from,
-        sale__sale_date__date__lte=date_to
+        sale__sale_date__date__lte=date_to,
+        is_custom=False
     ).aggregate(
         total_revenue=Sum(F('quantity') * F('unit_price')),
         total_cost=Sum(F('quantity') * F('cost_price')),
@@ -341,10 +350,12 @@ def dead_stock_report(request):
     threshold_date = timezone.now().date() - timedelta(days=days_threshold)
     
     # Get batches that haven't been sold recently
-    # First, get products that have been sold recently
+    # First, get products that have been sold recently (exclude custom items)
     recently_sold = SaleItem.objects.filter(
         sale__sale_date__date__gte=threshold_date,
-        sale__status='completed'
+        sale__status='completed',
+        is_custom=False,
+        product__isnull=False
     ).values_list('product_id', flat=True).distinct()
     
     # Batches of products not sold recently
@@ -361,10 +372,12 @@ def dead_stock_report(request):
         batch_count=Count('id'),
     )
     
-    # Slow moving products (sold but low quantity)
+    # Slow moving products (sold but low quantity, exclude custom items)
     slow_moving = SaleItem.objects.filter(
         sale__sale_date__date__gte=threshold_date,
-        sale__status='completed'
+        sale__status='completed',
+        is_custom=False,
+        product__isnull=False
     ).values(
         'product__id', 'product__name', 'product__sku'
     ).annotate(
