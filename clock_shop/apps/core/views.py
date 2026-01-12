@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 from django.contrib.auth import login
 from django.contrib import messages
 from django.db.models import Sum, Count, F
-from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
@@ -50,7 +49,10 @@ def dashboard(request):
     total_customers = Customer.objects.count()
     total_dues = Customer.objects.aggregate(
         total=Sum('total_due')
-    )['total'] or Decimal('0')
+    )['total'] or Decimal('0.00')
+    
+    # Warehouse metrics
+    total_warehouses = Warehouse.objects.filter(is_active=True).count()
     
     # Recent sales
     recent_sales = Sale.objects.select_related('customer').order_by('-sale_date')[:10]
@@ -60,16 +62,6 @@ def dashboard(request):
         quantity__gt=0,
         quantity__lte=10
     ).select_related('product', 'warehouse').order_by('quantity')[:10]
-    
-    # Monthly sales chart data
-    six_months_ago = today - timedelta(days=180)
-    monthly_sales = Sale.objects.filter(
-        sale_date__date__gte=six_months_ago
-    ).annotate(
-        month=TruncMonth('sale_date')
-    ).values('month').annotate(
-        total=Sum('total_amount')
-    ).order_by('month')
     
     # Payment status counts for chart
     payment_status_counts = Sale.objects.values('payment_status').annotate(
@@ -86,14 +78,6 @@ def dashboard(request):
         elif status['payment_status'] == 'unpaid':
             unpaid_count = status['count']
     
-    # Convert monthly_sales to JSON-safe format
-    monthly_sales_data = []
-    for item in monthly_sales:
-        monthly_sales_data.append({
-            'month': item['month'].isoformat() if item['month'] else None,
-            'total': float(item['total']) if item['total'] else 0
-        })
-    
     context = {
         'total_sales_today': total_sales_today,
         'total_sales_month': total_sales_month,
@@ -102,9 +86,9 @@ def dashboard(request):
         'low_stock_products': low_stock_products,
         'total_customers': total_customers,
         'total_dues': total_dues,
+        'total_warehouses': total_warehouses,
         'recent_sales': recent_sales,
         'low_stock_batches': low_stock_batches,
-        'monthly_sales': monthly_sales_data,
         'paid_count': paid_count,
         'partial_count': partial_count,
         'unpaid_count': unpaid_count,

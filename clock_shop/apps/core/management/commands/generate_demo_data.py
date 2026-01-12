@@ -171,6 +171,7 @@ class Command(BaseCommand):
             warehouse_id = random.randint(1, 20)
             buy_price = random.randint(500, 20000)
             quantity = random.randint(5, 100)
+            initial_quantity = quantity + random.randint(0, 20)
             purchase_date = (datetime.now() - timedelta(days=random.randint(1, 180))).date()
             
             fixtures.append({
@@ -181,9 +182,10 @@ class Command(BaseCommand):
                     "warehouse": warehouse_id,
                     "batch_number": f"BTH-{purchase_date.strftime('%Y%m')}-{i:04d}",
                     "quantity": quantity,
+                    "initial_quantity": initial_quantity,
                     "buy_price": str(buy_price),
                     "purchase_date": purchase_date.isoformat(),
-                    "supplier_name": f"Supplier {random.choice(['A', 'B', 'C', 'D', 'E'])}{random.randint(1,20)}",
+                    "supplier": f"Supplier {random.choice(['A', 'B', 'C', 'D', 'E'])}{random.randint(1,20)}",
                     "notes": ""
                 }
             })
@@ -295,8 +297,8 @@ class Command(BaseCommand):
                 "model": "warehouse.stocktransfer",
                 "pk": i,
                 "fields": {
-                    "from_warehouse": from_wh,
-                    "to_warehouse": to_wh,
+                    "source_warehouse": from_wh,
+                    "destination_warehouse": to_wh,
                     "transfer_date": transfer_date,
                     "status": random.choice(['completed', 'completed', 'pending']),
                     "notes": f"Transfer #{i}",
@@ -311,11 +313,11 @@ class Command(BaseCommand):
                 transfer_id = random.randint(1, 50)
             
             fixtures.append({
-                "model": "warehouse.transferitem",
+                "model": "warehouse.stocktransferitem",
                 "pk": i,
                 "fields": {
                     "transfer": transfer_id,
-                    "batch": random.randint(1, 100),
+                    "source_batch": random.randint(1, 100),
                     "quantity": random.randint(1, 20)
                 }
             })

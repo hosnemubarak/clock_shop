@@ -1,10 +1,38 @@
 # Clock Shop - Inventory & Sales Management System
 
-A production-ready Inventory and Sales Management System for a retail clock shop built with Django and SQLite, using the Invoika HTML template. Designed for the Bangladesh market with BDT (৳) currency support.
+A comprehensive, production-ready Inventory and Sales Management System for retail clock/watch shops. Built with Django 4.2 and Bootstrap 5 (Invoika template), designed specifically for the Bangladesh market with BDT (৳) currency support.
 
 ![Django](https://img.shields.io/badge/Django-4.2-green.svg)
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Installation](#installation)
+- [Environment Variables](#environment-variables)
+- [Running the Project](#running-the-project)
+- [Project Structure](#project-structure)
+- [Key Workflows](#key-workflows)
+- [Admin Panel](#admin-panel)
+- [Demo Data](#demo-data)
+- [API Endpoints](#api-endpoints)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+
+## Overview
+
+Clock Shop is a full-featured business management solution that handles:
+- **Inventory tracking** with batch-based stock management
+- **Point of Sale (POS)** with invoice generation
+- **Customer relationship management** with credit tracking
+- **Multi-warehouse operations** with stock transfers
+- **Comprehensive reporting** with visual charts
+- **Stock out management** for damaged/lost/expired items
+- **Complete audit trail** for all operations
 
 ## Features
 
@@ -12,34 +40,58 @@ A production-ready Inventory and Sales Management System for a retail clock shop
 - **Multi-warehouse support** - Manage stock across multiple warehouses and shop locations
 - **Batch-based tracking** - Each purchase creates a separate batch with its own buy price
 - **Multiple purchase prices** - Same product can have different costs from different batches
-- **Low stock alerts** - Automatic alerts for products below threshold
+- **Low stock alerts** - Automatic alerts for products below configurable threshold
+- **Stock Out** - Track damaged, lost, expired, or internally used inventory
 
 ### Sales Management
 - **Manual batch selection** - User selects specific batch when selling
+- **Custom items** - Add non-inventory items (old dues, services, etc.)
 - **Stock validation** - Prevents overselling beyond batch quantity
 - **Automatic COGS calculation** - Cost of Goods Sold tracked per sale
 - **Profit tracking** - Per sale, product, and warehouse profit reports
-- **Invoice generation** - Print-ready invoices
+- **Invoice generation** - Print-ready invoices with thermal printer support
 
 ### Customer Management
-- **Customer profiles** - Name, phone, address, purchase history
-- **Credit tracking** - Outstanding dues per customer
+- **Customer profiles** - Name, phone, email, address, purchase history
+- **Credit tracking** - Outstanding dues per customer with credit limits
 - **Payment management** - Partial and multiple payments per invoice
 - **Customer statements** - Detailed transaction history
+- **Customer notes** - Internal notes and communication tracking
 
 ### Warehouse & Stock Transfer
 - **Multiple warehouses** - Support for warehouses and retail shop locations
 - **Batch-level transfers** - Transfer specific batches between locations
 - **Price preservation** - Original buy price maintained during transfers
-- **Full audit trail** - Complete transfer history
+- **Full audit trail** - Complete transfer history with status tracking
 
 ### Reporting & Analytics
-- **Sales reports** - Daily, weekly, monthly sales analysis
-- **Profit reports** - By product, category, and warehouse
-- **Stock reports** - Current inventory levels and valuation
-- **Customer reports** - Outstanding dues, top customers
+- **Dashboard** - Real-time KPIs with interactive charts (ApexCharts)
+- **Sales reports** - Daily, weekly, monthly sales analysis with visualizations
+- **Profit reports** - By product, category, warehouse, and time period
+- **Stock reports** - Current inventory levels, valuation, and aging
+- **Customer reports** - Outstanding dues, top customers, payment history
 - **Dead stock analysis** - Identify slow-moving inventory
-- **Batch analysis** - Stock age and batch tracking
+- **Batch analysis** - Stock age and batch-level tracking
+- **Transfer history** - Complete inter-warehouse movement records
+
+### Security & Audit
+- **Login required** - All views protected by authentication
+- **User registration** - With admin approval workflow
+- **Audit logging** - Track all create, update, delete operations
+- **CSRF protection** - Django's built-in CSRF with configurable trusted origins
+
+## Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| Backend | Django 4.2 (Python 3.10+) |
+| Database | SQLite (dev) / PostgreSQL (prod) |
+| Frontend | Bootstrap 5.3, Invoika Template |
+| Charts | ApexCharts |
+| Icons | Line Awesome, Remix Icons |
+| CSS | Custom + Bootstrap |
+| Static Files | WhiteNoise |
+| Server | Gunicorn (production) |
 
 ## Installation
 
@@ -373,15 +425,17 @@ Add new views in `apps/reports/views.py` and register URLs in `apps/reports/urls
 
 | Model | Records | Description |
 |-------|---------|-------------|
-| Warehouse | 10 | Major cities across Bangladesh |
-| Category | 10 | Clock and watch categories |
-| Brand | 10 | Popular watch brands |
-| Product | 10 | Watches and clocks with SKUs |
-| Customer | 10 | BD phone numbers and addresses |
-| Batch | 10 | Stock batches with suppliers |
-| Sale | 10 | Sample invoices |
-| SaleItem | 10 | Line items for sales |
-| Payment | 10 | Various payment methods |
+| Warehouse | 20 | Major cities across Bangladesh |
+| Category | 15 | Clock and watch categories |
+| Brand | 20 | Popular watch/clock brands |
+| Product | 100 | Watches and clocks with SKUs |
+| Customer | 100 | BD phone numbers and addresses |
+| Batch | 100 | Stock batches with suppliers |
+| Sale | 100 | Sample invoices |
+| SaleItem | 200 | Line items for sales |
+| Payment | 100 | Various payment methods |
+| StockTransfer | 50 | Inter-warehouse transfers |
+| TransferItem | 100 | Transfer line items |
 
 ### Payment Methods Supported
 - **Cash** - Direct cash payments
@@ -389,17 +443,78 @@ Add new views in `apps/reports/views.py` and register URLs in `apps/reports/urls
 - **Bank Transfer** - DBBL, BRAC, UCB, and other banks
 - **Card** - Visa, Mastercard
 
+## Admin Panel
+
+The Django admin panel is fully configured with:
+
+- **List displays** - Key fields visible at a glance
+- **Search fields** - Quick search across relevant fields
+- **Filters** - Filter by status, date, warehouse, etc.
+- **Date hierarchy** - Navigate by date for time-based models
+- **Inline editing** - View related items directly
+- **Status badges** - Color-coded status indicators
+- **Fieldsets** - Organized field groupings
+
+Access at: `http://localhost:8000/admin/`
+
+## API Endpoints
+
+Internal API endpoints for AJAX operations:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/inventory/api/products/<id>/batches/` | GET | Get batches for a product |
+| `/inventory/api/warehouses/<id>/batches/` | GET | Get batches in a warehouse |
+| `/sales/api/batch/<id>/` | GET | Get batch details |
+| `/customers/api/<id>/invoices/` | GET | Get customer's unpaid invoices |
+
+## Screenshots
+
+### Dashboard
+- Real-time statistics cards
+- Sales trend chart (6 months)
+- Payment status donut chart
+- Recent sales and low stock alerts
+
+### Sales
+- POS-style sale creation
+- Batch selection with stock info
+- Invoice printing
+- Payment tracking
+
+### Reports
+- Interactive charts
+- Date range filtering
+- Export capabilities
+
 ## Dependencies
 
-- **Django 4.2** - Web framework
-- **Pillow** - Image processing
-- **Whitenoise** - Static file serving
-- **Gunicorn** - WSGI HTTP server
+```
+Django>=4.2,<5.0
+Pillow>=10.0.0
+whitenoise>=6.5.0
+gunicorn>=21.0.0
+python-dotenv>=1.0.0
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
 This project uses the Invoika HTML template. Ensure you have a valid license for the template.
 
+The application code is provided under the MIT License.
+
 ## Support
 
 For issues and questions, please create an issue in the repository.
+
+---
+
+**Built with ❤️ for Bangladesh retail businesses**
