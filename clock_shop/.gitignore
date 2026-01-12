@@ -1,38 +1,235 @@
-# Byte-compiled / optimized / DLL files
+# =============================================================================
+# Django Project .gitignore
+# =============================================================================
+
+# =============================================================================
+# Python
+# =============================================================================
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# Virtual environment
-venv/
-.venv/
-ENV/
+# =============================================================================
+# Virtual Environment
+# =============================================================================
+.env
+.venv
 env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+Pipfile.lock
 
-# IDE
-.idea/
+# =============================================================================
+# Django
+# =============================================================================
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+*.pot
+*.pyc
+staticfiles/
+static_collected/
+mediafiles/
+media/
+
+# =============================================================================
+# Django Migrations (uncomment if you want to ignore)
+# =============================================================================
+# **/migrations/*.py
+# !**/migrations/__init__.py
+
+# =============================================================================
+# Compiled Translation Files
+# =============================================================================
+*.mo
+
+# =============================================================================
+# Environment Variables
+# =============================================================================
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+*.env
+secrets.json
+secrets.yaml
+
+# =============================================================================
+# IDE / Editor
+# =============================================================================
+# VS Code
 .vscode/
-*.swp
-*.swo
+*.code-workspace
+
+# PyCharm / JetBrains
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
 *.sublime-project
 *.sublime-workspace
 
-# Static files (collected)
-staticfiles/
+# Vim
+*.swp
+*.swo
+*~
 
-# Environment variables
-.env
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
 
-# Logs
-logs/
-*.log
-
-# OS files
+# =============================================================================
+# OS Generated Files
+# =============================================================================
+# macOS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# Media files (user uploads) - uncomment if you want to exclude
-# media/
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
 
-# Keep SQLite database (don't ignore)
-# db.sqlite3
+# Linux
+*~
+
+# =============================================================================
+# Testing
+# =============================================================================
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# =============================================================================
+# Jupyter Notebook
+# =============================================================================
+.ipynb_checkpoints
+*.ipynb
+
+# =============================================================================
+# Celery
+# =============================================================================
+celerybeat-schedule
+celerybeat.pid
+
+# =============================================================================
+# Docker
+# =============================================================================
+*.log
+docker-compose.override.yml
+
+# =============================================================================
+# Node.js (if using for frontend assets)
+# =============================================================================
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# =============================================================================
+# Temporary Files
+# =============================================================================
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+tmp/
+temp/
+cache/
+.cache/
+
+# =============================================================================
+# Logs
+# =============================================================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =============================================================================
+# Build Output
+# =============================================================================
+build/
+dist/
+*.manifest
+*.spec
+
+# =============================================================================
+# Documentation Build
+# =============================================================================
+docs/_build/
+site/
+
+# =============================================================================
+# Secrets & Credentials
+# =============================================================================
+*.pem
+*.key
+*.crt
+*.p12
+credentials.json
+service-account.json
+
+# =============================================================================
+# Backup Files
+# =============================================================================
+*.sql
+*.dump
+backups/
+
+# Ignore invoika template project
+invoika_project/
+
+# Ignore theme directory
+theme/

@@ -1,3 +1,7 @@
+# =============================================================================
+# Docker Ignore - Clock Shop
+# =============================================================================
+
 # Git
 .git
 .gitignore
@@ -18,26 +22,48 @@ ENV/
 .vscode/
 *.swp
 *.swo
+*.sublime-*
 
-# Django
+# Environment files (secrets)
+.env
+.env.local
+.env.*.local
+
+# Database (SQLite - not needed in Docker)
+db.sqlite3
+*.sqlite3
+
+# Logs (mounted as volume)
+logs/
 *.log
-local_settings.py
+
+# Media (mounted as volume)
+media/
+
+# Static files (collected in container)
 staticfiles/
 
-# Docker
+# Docker files (not needed inside container)
 Dockerfile
 docker-compose*.yml
-.docker
+.dockerignore
 
 # Documentation
-*.md
 docs/
 
 # Testing
 .coverage
 htmlcov/
 .pytest_cache/
+.tox/
 
 # OS
 .DS_Store
 Thumbs.db
+Desktop.ini
+
+# Temp/Backup
+*.bak
+*.tmp
+*.temp
+backups/

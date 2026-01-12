@@ -1,24 +1,67 @@
+# =============================================================================
+# Clock Shop - Docker Compose Configuration
+# =============================================================================
+# Usage:
+#   1. Copy .env.example to .env and configure
+#   2. Run: docker-compose up -d --build
+#   3. Create superuser: docker-compose exec web python manage.py createsuperuser
+#   4. Access: http://localhost:8090
+# =============================================================================
+
 version: '3.8'
 
 services:
+  # ==========================================================================
+  # PostgreSQL Database
+  # ==========================================================================
+  db:
+    image: postgres:15-alpine
+    container_name: clock_shop_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-clock_shop}
+      POSTGRES_USER: ${POSTGRES_USER:-clock_shop}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-clock_shop_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-clock_shop} -d ${POSTGRES_DB:-clock_shop}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================================================
+  # Django Web Application
+  # ==========================================================================
   web:
     build: .
-    ports:
-      - "8090:8090"
-    environment:
-      - DEBUG=False
-      - SECRET_KEY=your-production-secret-key-change-this
-      - ALLOWED_HOSTS=localhost,127.0.0.1
-      - CSRF_TRUSTED_ORIGINS=http://localhost:8090,http://127.0.0.1:8090
-      - SHOP_NAME=Clock Shop
-      - CURRENCY_SYMBOL=৳
-      - LOW_STOCK_THRESHOLD=10
-    volumes:
-      - ./db.sqlite3:/app/db.sqlite3
-      - ./media:/app/media
-      - ./logs:/app/logs
+    container_name: clock_shop_web
     restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8090}:8000"
+    environment:
+      # Database
+      DATABASE_URL: postgres://${POSTGRES_USER:-clock_shop}:${POSTGRES_PASSWORD:-clock_shop_password}@db:5432/${POSTGRES_DB:-clock_shop}
+      # Security
+      SECRET_KEY: ${SECRET_KEY:-change-this-secret-key-in-production}
+      DEBUG: ${DEBUG:-False}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://localhost:8090,http://127.0.0.1:8090}
+      # Business
+      SHOP_NAME: ${SHOP_NAME:-Clock Shop}
+      CURRENCY_SYMBOL: ${CURRENCY_SYMBOL:-৳}
+      LOW_STOCK_THRESHOLD: ${LOW_STOCK_THRESHOLD:-5}
+    volumes:
+      - media_data:/app/media
+      - logs_data:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
-  sqlite_data:
+  postgres_data:
+    driver: local
   media_data:
+    driver: local
+  logs_data:
+    driver: local

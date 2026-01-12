@@ -4,6 +4,8 @@ A comprehensive, production-ready Inventory and Sales Management System for reta
 
 ![Django](https://img.shields.io/badge/Django-4.2-green.svg)
 ![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg)
+![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
@@ -12,15 +14,17 @@ A comprehensive, production-ready Inventory and Sales Management System for reta
 - [Overview](#overview)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
-- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Deployment Options](#deployment-options)
+  - [Option 1: Local Development (SQLite)](#option-1-local-development-sqlite)
+  - [Option 2: Docker Deployment (PostgreSQL)](#option-2-docker-deployment-postgresql)
+  - [Option 3: Linux Server (Production)](#option-3-linux-server-production)
 - [Environment Variables](#environment-variables)
-- [Running the Project](#running-the-project)
 - [Project Structure](#project-structure)
 - [Key Workflows](#key-workflows)
 - [Admin Panel](#admin-panel)
 - [Demo Data](#demo-data)
 - [API Endpoints](#api-endpoints)
-- [Deployment](#deployment)
 - [Contributing](#contributing)
 
 ## Overview
@@ -93,78 +97,265 @@ Clock Shop is a full-featured business management solution that handles:
 | Static Files | WhiteNoise |
 | Server | Gunicorn (production) |
 
-## Installation
+## Quick Start
 
-### Prerequisites
-- Python 3.10+
-- pip
+Choose your deployment method:
 
-### Setup
+| Method | Database | Best For |
+|--------|----------|----------|
+| **Local Development** | SQLite | Development, testing |
+| **Docker** | PostgreSQL | Production, easy deployment |
+| **Linux Server** | PostgreSQL/SQLite | Custom production setup |
 
-1. **Navigate to project directory:**
+---
+
+## Deployment Options
+
+### Option 1: Local Development (SQLite)
+
+Simple setup for development and testing. Uses SQLite database (no external database required).
+
 ```bash
+# 1. Clone and navigate to project
 cd clock_shop
-```
 
-2. **Create virtual environment:**
-```bash
+# 2. Create virtual environment
 python -m venv venv
-```
 
-3. **Activate virtual environment:**
-```bash
-# Windows
+# 3. Activate virtual environment
+# Windows:
 venv\Scripts\activate
-
-# Linux/Mac
+# Linux/Mac:
 source venv/bin/activate
-```
 
-4. **Install dependencies:**
-```bash
+# 4. Install dependencies
 pip install -r requirements.txt
-```
 
-5. **Copy static files from Invoika template:**
-```bash
-# Copy the assets folder from invoika/layouts/assets to clock_shop/static/
-# This includes CSS, JS, images, and fonts
-```
+# 5. Copy environment file
+cp .env.example .env
 
-6. **Run migrations:**
-```bash
+# 6. Run migrations
 python manage.py migrate
-```
 
-7. **Create superuser:**
-```bash
+# 7. Create admin user
 python manage.py createsuperuser
-```
 
-8. **Load demo data (optional):**
-```bash
-python manage.py loaddata fixtures\demo_data.json
-```
+# 8. (Optional) Load demo data
+python manage.py loaddata fixtures/demo_data.json
 
-9. **Run development server:**
-```bash
+# 9. Start development server
 python manage.py runserver
 ```
 
-10. **Access the application:**
-- Main app: http://127.0.0.1:8000/
-- Admin panel: http://127.0.0.1:8000/admin/
+**Access:** http://127.0.0.1:8000
 
-## Initial Setup
+---
 
-After installation, you can either:
+### Option 2: Docker Deployment (PostgreSQL)
 
-### Option 1: Load Demo Data (Recommended for Testing)
+Production-ready deployment using Docker with PostgreSQL database. **Recommended for production.**
+
+#### Prerequisites
+- Docker & Docker Compose installed
+
+#### Quick Deploy
+
 ```bash
-python manage.py loaddata fixtures\demo_data.json
+# 1. Clone and navigate to project
+cd clock_shop
+
+# 2. Copy and configure environment
+cp .env.example .env
+
+# 3. Edit .env file (IMPORTANT: Change SECRET_KEY!)
+nano .env
 ```
 
-This loads minimal sample data to get you started:
+**Minimum .env configuration for Docker:**
+```env
+SECRET_KEY=your-super-secure-secret-key-here
+DEBUG=False
+ALLOWED_HOSTS=localhost,127.0.0.1,your-domain.com
+CSRF_TRUSTED_ORIGINS=http://localhost:8090,https://your-domain.com
+SHOP_NAME=Your Shop Name
+POSTGRES_PASSWORD=strong-database-password
+```
+
+```bash
+# 4. Build and start containers
+docker-compose up -d --build
+
+# 5. Create admin user
+docker-compose exec web python manage.py createsuperuser
+
+# 6. (Optional) Load demo data
+docker-compose exec web python manage.py loaddata fixtures/demo_data.json
+```
+
+**Access:** http://localhost:8090
+
+#### Docker Commands
+
+```bash
+# View logs
+docker-compose logs -f web
+
+# Stop services
+docker-compose down
+
+# Stop and remove volumes (WARNING: deletes data)
+docker-compose down -v
+
+# Restart services
+docker-compose restart
+
+# Enter container shell
+docker-compose exec web bash
+
+# Database backup
+docker-compose exec db pg_dump -U clock_shop clock_shop > backup.sql
+```
+
+---
+
+### Option 3: Linux Server (Production)
+
+Manual deployment on a Linux server with Gunicorn. Suitable for VPS/Cloud deployment.
+
+#### Prerequisites
+- Ubuntu 20.04+ / Debian 11+
+- Python 3.10+
+- PostgreSQL (optional, SQLite works too)
+
+#### Step 1: System Setup
+
+```bash
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install dependencies
+sudo apt install -y python3 python3-pip python3-venv git
+
+# (Optional) Install PostgreSQL
+sudo apt install -y postgresql postgresql-contrib libpq-dev
+```
+
+#### Step 2: PostgreSQL Setup (Optional)
+
+```bash
+# Create database and user
+sudo -u postgres psql << EOF
+CREATE DATABASE clock_shop;
+CREATE USER clock_shop WITH PASSWORD 'your-secure-password';
+ALTER ROLE clock_shop SET client_encoding TO 'utf8';
+ALTER ROLE clock_shop SET default_transaction_isolation TO 'read committed';
+ALTER ROLE clock_shop SET timezone TO 'UTC';
+GRANT ALL PRIVILEGES ON DATABASE clock_shop TO clock_shop;
+EOF
+```
+
+#### Step 3: Application Setup
+
+```bash
+# Clone repository
+git clone <your-repo-url> /opt/clock_shop
+cd /opt/clock_shop
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Create environment file
+cp .env.example .env
+nano .env
+```
+
+**Production .env configuration:**
+```env
+SECRET_KEY=your-very-long-and-secure-secret-key
+DEBUG=False
+ALLOWED_HOSTS=your-domain.com,www.your-domain.com
+
+# For PostgreSQL:
+DATABASE_URL=postgres://clock_shop:your-secure-password@localhost:5432/clock_shop
+
+# Or leave empty for SQLite (simpler)
+
+CSRF_TRUSTED_ORIGINS=https://your-domain.com
+SHOP_NAME=Your Clock Shop
+CURRENCY_SYMBOL=৳
+```
+
+```bash
+# Run migrations
+python manage.py migrate
+
+# Collect static files
+python manage.py collectstatic --noinput
+
+# Create admin user
+python manage.py createsuperuser
+```
+
+#### Step 4: Systemd Service
+
+```bash
+# Create service file
+sudo nano /etc/systemd/system/clockshop.service
+```
+
+```ini
+[Unit]
+Description=Clock Shop Django Application
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/clock_shop
+EnvironmentFile=/opt/clock_shop/.env
+ExecStart=/opt/clock_shop/venv/bin/gunicorn clock_shop.wsgi:application --bind 0.0.0.0:8000 --workers 3
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+# Set permissions
+sudo chown -R www-data:www-data /opt/clock_shop
+
+# Enable and start service
+sudo systemctl daemon-reload
+sudo systemctl enable clockshop
+sudo systemctl start clockshop
+
+# Check status
+sudo systemctl status clockshop
+```
+
+**Access:** http://your-server-ip:8000
+
+---
+
+## Initial Data Setup
+
+After deployment, you can:
+
+### Load Demo Data (Recommended for Testing)
+```bash
+# Local
+python manage.py loaddata fixtures/demo_data.json
+
+# Docker
+docker-compose exec web python manage.py loaddata fixtures/demo_data.json
+```
+
+Demo data includes:
 - **1 Category** - Clocks
 - **1 Brand** - Seiko
 - **1 Warehouse** - Main Warehouse (WH001)
@@ -172,14 +363,12 @@ This loads minimal sample data to get you started:
 - **1 Product** - Classic Wall Clock (CLK-001)
 - **1 Customer** - Sample Customer
 
-**Note:** Create your own superuser after loading demo data.
-
-### Option 2: Start Fresh
-1. **Create Warehouses** - Add at least one warehouse/shop location
-2. **Create Categories** - Add product categories (e.g., Wall Clocks, Table Clocks, etc.)
-3. **Create Brands** - Add clock brands (optional)
-4. **Add Products** - Create your product catalog
-5. **Stock In** - Add initial inventory using the "Stock In" feature
+### Start Fresh
+1. Create Warehouses/Shop locations
+2. Add Product Categories
+3. Add Brands (optional)
+4. Create Products
+5. Stock In - Add initial inventory
 
 ## Project Structure
 
@@ -237,109 +426,6 @@ clock_shop/
 - Audit logging for all major actions
 - Permission-based access (extensible)
 
-## Deployment
-
-### Using Docker (Recommended)
-
-1. **Build and run with Docker Compose:**
-```bash
-docker-compose up -d --build
-```
-
-2. **Create superuser (first time only):**
-```bash
-docker-compose exec web python manage.py createsuperuser
-```
-
-3. **Access the application:**
-- Main app: http://localhost:8090/
-- Admin panel: http://localhost:8090/admin/
-
-### Linux/Server Deployment (Manual)
-
-1. **Update system and install dependencies:**
-```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install python3 python3-pip python3-venv git -y
-```
-
-2. **Clone the repository:**
-```bash
-git clone <your-repo-url> clock_shop
-cd clock_shop
-```
-
-3. **Create and activate virtual environment:**
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
-4. **Install Python dependencies:**
-```bash
-pip install -r requirements.txt
-```
-
-5. **Set environment variables:**
-```bash
-export SECRET_KEY='your-secure-secret-key-here'
-export DEBUG=False
-export ALLOWED_HOSTS='127.0.0.1,localhost'
-export SHOP_NAME='Your Shop Name'
-export CURRENCY_SYMBOL='৳'
-export LOW_STOCK_THRESHOLD=10
-```
-
-6. **Run migrations and collect static files:**
-```bash
-python manage.py migrate
-python manage.py collectstatic --noinput
-```
-
-7. **Create superuser:**
-```bash
-python manage.py createsuperuser
-```
-
-8. **Run the server:**
-```bash
-python manage.py runserver 0.0.0.0:8090
-```
-
-### Using Systemd Service
-
-1. **Create service file:**
-```bash
-sudo nano /etc/systemd/system/clockshop.service
-```
-
-2. **Add service configuration:**
-```ini
-[Unit]
-Description=Clock Shop Django Application
-After=network.target
-
-[Service]
-User=www-data
-Group=www-data
-WorkingDirectory=/path/to/clock_shop
-Environment="SECRET_KEY=your-secret-key"
-Environment="DEBUG=False"
-Environment="ALLOWED_HOSTS=your-domain.com"
-ExecStart=/path/to/clock_shop/venv/bin/python manage.py runserver 0.0.0.0:8090
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-```
-
-3. **Enable and start service:**
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable clockshop
-sudo systemctl start clockshop
-```
-
 ## Environment Variables
 
 Copy `.env.example` to `.env` and configure:
@@ -348,64 +434,78 @@ Copy `.env.example` to `.env` and configure:
 cp .env.example .env
 ```
 
+### All Variables
+
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `SECRET_KEY` | (insecure default) | Django secret key - **MUST change in production** |
-| `DEBUG` | `True` | Enable debug mode - Set to `False` in production |
-| `ALLOWED_HOSTS` | `*` | Comma-separated allowed hosts |
-| `CSRF_TRUSTED_ORIGINS` | `http://127.0.0.1:*,http://localhost:*` | Comma-separated CSRF trusted origins |
+| `SECRET_KEY` | (insecure) | Django secret key - **MUST change in production** |
+| `DEBUG` | `True` | Debug mode - Set to `False` in production |
+| `ALLOWED_HOSTS` | `localhost,127.0.0.1` | Comma-separated allowed hosts |
+| `CSRF_TRUSTED_ORIGINS` | `http://localhost:8090` | CSRF trusted origins with protocol |
+| `DATABASE_URL` | (empty) | PostgreSQL URL (if empty, uses SQLite) |
+| `DB_ENGINE` | (empty) | Set to `postgresql` for PostgreSQL |
+| `DB_NAME` | `clock_shop` | Database name |
+| `DB_USER` | `clock_shop` | Database user |
+| `DB_PASSWORD` | (empty) | Database password |
+| `DB_HOST` | `localhost` | Database host |
+| `DB_PORT` | `5432` | Database port |
 | `SHOP_NAME` | `Clock Shop` | Business name |
-| `CURRENCY_SYMBOL` | `৳` | Currency symbol (BDT) |
+| `CURRENCY_SYMBOL` | `৳` | Currency symbol |
 | `LOW_STOCK_THRESHOLD` | `5` | Low stock alert threshold |
+| `POSTGRES_DB` | `clock_shop` | Docker PostgreSQL database |
+| `POSTGRES_USER` | `clock_shop` | Docker PostgreSQL user |
+| `POSTGRES_PASSWORD` | (required) | Docker PostgreSQL password |
+| `APP_PORT` | `8090` | Application port (Docker) |
 
-### CSRF Configuration
+### Database Configuration
 
-The `CSRF_TRUSTED_ORIGINS` setting is crucial for forms to work correctly:
-
-**Local Development:**
+**SQLite (Default - Local Development):**
 ```env
-CSRF_TRUSTED_ORIGINS=http://127.0.0.1:*,http://localhost:*
+# Leave DATABASE_URL and DB_* variables empty
 ```
 
-**Production (HTTPS):**
+**PostgreSQL (Docker/Production):**
 ```env
-CSRF_TRUSTED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
-```
+# Option 1: DATABASE_URL
+DATABASE_URL=postgres://user:password@host:5432/dbname
 
-**Multiple Origins:**
-```env
-CSRF_TRUSTED_ORIGINS=https://yourdomain.com,https://api.yourdomain.com,https://admin.yourdomain.com
+# Option 2: Individual variables
+DB_ENGINE=postgresql
+DB_NAME=clock_shop
+DB_USER=clock_shop
+DB_PASSWORD=your-password
+DB_HOST=localhost
+DB_PORT=5432
 ```
 
 ## Customization
 
 ### Shop Settings
-Configure via environment variables or edit `clock_shop/settings.py`:
-```python
-SHOP_NAME = "Your Clock Shop Name"
-CURRENCY_SYMBOL = "৳"  # BDT - Bangladeshi Taka
-LOW_STOCK_THRESHOLD = 10
+Configure via `.env` file:
+```env
+SHOP_NAME=Your Clock Shop Name
+CURRENCY_SYMBOL=৳
+LOW_STOCK_THRESHOLD=10
 ```
 
-### Demo Data
-The `fixtures/demo_data.json` file contains sample data for testing. You can:
-- Modify it to match your business needs
-- Use it as a template to create your own fixture
-- Export your data using: `python manage.py dumpdata > backup.json`
+### Backup & Restore
 
-### Adding Custom Reports
-Add new views in `apps/reports/views.py` and register URLs in `apps/reports/urls.py`
+```bash
+# SQLite backup
+cp db.sqlite3 backup_$(date +%Y%m%d).sqlite3
 
-## Demo Data Details
+# PostgreSQL backup (Docker)
+docker-compose exec db pg_dump -U clock_shop clock_shop > backup.sql
 
-| Model | Records | Description |
-|-------|---------|-------------|
-| Category | 1 | Clocks |
-| Brand | 1 | Seiko |
-| Warehouse | 1 | Main Warehouse |
-| Retail Shop | 1 | Retail Shop (is_shop=true) |
-| Product | 1 | Classic Wall Clock |
-| Customer | 1 | Sample Customer |
+# PostgreSQL restore (Docker)
+cat backup.sql | docker-compose exec -T db psql -U clock_shop clock_shop
+
+# Export data as JSON
+python manage.py dumpdata > backup.json
+
+# Import data from JSON
+python manage.py loaddata backup.json
+```
 
 ### Payment Methods Supported
 - **Cash** - Direct cash payments
