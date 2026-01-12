@@ -1,0 +1,1413 @@
+# Bengali (Bangla) translations for Clock Shop
+# Copyright (C) 2026
+# This file is distributed under the same license as the Clock Shop package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Clock Shop 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-12 16:30+0600\n"
+"PO-Revision-Date: 2026-01-12 16:30+0600\n"
+"Last-Translator: \n"
+"Language-Team: Bengali\n"
+"Language: bn\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: Navigation & Menu
+msgid "Menu"
+msgstr "মেনু"
+
+msgid "Dashboard"
+msgstr "ড্যাশবোর্ড"
+
+msgid "Management"
+msgstr "ব্যবস্থাপনা"
+
+msgid "Inventory"
+msgstr "ইনভেন্টরি"
+
+msgid "Products"
+msgstr "পণ্যসমূহ"
+
+msgid "Add Product"
+msgstr "নতুন পণ্য"
+
+msgid "Batches"
+msgstr "ব্যাচসমূহ"
+
+msgid "Stock In"
+msgstr "স্টক ইন"
+
+msgid "Categories"
+msgstr "ক্যাটাগরি"
+
+msgid "Brands"
+msgstr "ব্র্যান্ড"
+
+msgid "Purchases"
+msgstr "ক্রয়সমূহ"
+
+msgid "Stock Out"
+msgstr "স্টক আউট"
+
+msgid "Sales"
+msgstr "বিক্রয়"
+
+msgid "All Sales"
+msgstr "সকল বিক্রয়"
+
+msgid "New Sale"
+msgstr "নতুন বিক্রয়"
+
+msgid "Customers"
+msgstr "গ্রাহক"
+
+msgid "All Customers"
+msgstr "সকল গ্রাহক"
+
+msgid "Add Customer"
+msgstr "নতুন গ্রাহক"
+
+msgid "Payments"
+msgstr "পেমেন্টসমূহ"
+
+msgid "Receive Payment"
+msgstr "পেমেন্ট গ্রহণ"
+
+msgid "Warehouse"
+msgstr "গুদাম"
+
+msgid "Warehouses"
+msgstr "গুদামসমূহ"
+
+msgid "Add Warehouse"
+msgstr "নতুন গুদাম"
+
+msgid "Transfers"
+msgstr "ট্রান্সফার"
+
+msgid "New Transfer"
+msgstr "নতুন ট্রান্সফার"
+
+msgid "Analytics"
+msgstr "বিশ্লেষণ"
+
+msgid "Reports"
+msgstr "রিপোর্ট"
+
+msgid "Sales Report"
+msgstr "বিক্রয় রিপোর্ট"
+
+msgid "Profit Report"
+msgstr "মুনাফা রিপোর্ট"
+
+msgid "Stock Report"
+msgstr "স্টক রিপোর্ট"
+
+msgid "Customer Report"
+msgstr "গ্রাহক রিপোর্ট"
+
+msgid "Transfer History"
+msgstr "ট্রান্সফার ইতিহাস"
+
+msgid "Dead Stock"
+msgstr "ডেড স্টক"
+
+msgid "Batch Analysis"
+msgstr "ব্যাচ বিশ্লেষণ"
+
+msgid "Audit Logs"
+msgstr "অডিট লগ"
+
+msgid "System Settings"
+msgstr "সিস্টেম সেটিংস"
+
+msgid "Select Language"
+msgstr "ভাষা নির্বাচন করুন"
+
+#: Common Actions
+msgid "Save"
+msgstr "সংরক্ষণ"
+
+msgid "Cancel"
+msgstr "বাতিল"
+
+msgid "Edit"
+msgstr "সম্পাদনা"
+
+msgid "Delete"
+msgstr "মুছে ফেলুন"
+
+msgid "View"
+msgstr "দেখুন"
+
+msgid "Add"
+msgstr "যোগ করুন"
+
+msgid "Create"
+msgstr "তৈরি করুন"
+
+msgid "Update"
+msgstr "আপডেট"
+
+msgid "Search"
+msgstr "অনুসন্ধান"
+
+msgid "Filter"
+msgstr "ফিল্টার"
+
+msgid "Reset"
+msgstr "রিসেট"
+
+msgid "Submit"
+msgstr "জমা দিন"
+
+msgid "Back"
+msgstr "পিছনে"
+
+msgid "Next"
+msgstr "পরবর্তী"
+
+msgid "Previous"
+msgstr "পূর্ববর্তী"
+
+msgid "Actions"
+msgstr "অ্যাকশন"
+
+msgid "Details"
+msgstr "বিস্তারিত"
+
+msgid "Print"
+msgstr "প্রিন্ট"
+
+msgid "Export"
+msgstr "এক্সপোর্ট"
+
+msgid "Download"
+msgstr "ডাউনলোড"
+
+#: Common Labels
+msgid "Name"
+msgstr "নাম"
+
+msgid "Email"
+msgstr "ইমেইল"
+
+msgid "Phone"
+msgstr "ফোন"
+
+msgid "Address"
+msgstr "ঠিকানা"
+
+msgid "Date"
+msgstr "তারিখ"
+
+msgid "Time"
+msgstr "সময়"
+
+msgid "Status"
+msgstr "স্ট্যাটাস"
+
+msgid "Description"
+msgstr "বিবরণ"
+
+msgid "Notes"
+msgstr "নোট"
+
+msgid "Amount"
+msgstr "পরিমাণ"
+
+msgid "Total"
+msgstr "মোট"
+
+msgid "Subtotal"
+msgstr "সাবটোটাল"
+
+msgid "Quantity"
+msgstr "পরিমাণ"
+
+msgid "Price"
+msgstr "মূল্য"
+
+msgid "Discount"
+msgstr "ছাড়"
+
+msgid "Tax"
+msgstr "ট্যাক্স"
+
+msgid "Active"
+msgstr "সক্রিয়"
+
+msgid "Inactive"
+msgstr "নিষ্ক্রিয়"
+
+#: Dashboard
+msgid "Today's Sales"
+msgstr "আজকের বিক্রয়"
+
+msgid "Monthly Sales"
+msgstr "মাসিক বিক্রয়"
+
+msgid "Monthly Profit"
+msgstr "মাসিক মুনাফা"
+
+msgid "Total Products"
+msgstr "মোট পণ্য"
+
+msgid "Low Stock"
+msgstr "কম স্টক"
+
+msgid "Total Customers"
+msgstr "মোট গ্রাহক"
+
+msgid "Total Due"
+msgstr "মোট বকেয়া"
+
+msgid "Recent Sales"
+msgstr "সাম্প্রতিক বিক্রয়"
+
+msgid "Low Stock Alerts"
+msgstr "কম স্টক সতর্কতা"
+
+#: Products
+msgid "Product Name"
+msgstr "পণ্যের নাম"
+
+msgid "SKU"
+msgstr "এসকেইউ"
+
+msgid "Category"
+msgstr "ক্যাটাগরি"
+
+msgid "Brand"
+msgstr "ব্র্যান্ড"
+
+msgid "Unit"
+msgstr "একক"
+
+msgid "Buy Price"
+msgstr "ক্রয় মূল্য"
+
+msgid "Sell Price"
+msgstr "বিক্রয় মূল্য"
+
+msgid "Stock"
+msgstr "স্টক"
+
+msgid "Reorder Level"
+msgstr "রিঅর্ডার লেভেল"
+
+#: Sales
+msgid "Invoice"
+msgstr "ইনভয়েস"
+
+msgid "Invoice Number"
+msgstr "ইনভয়েস নম্বর"
+
+msgid "Customer"
+msgstr "গ্রাহক"
+
+msgid "Sale Date"
+msgstr "বিক্রয় তারিখ"
+
+msgid "Payment Status"
+msgstr "পেমেন্ট স্ট্যাটাস"
+
+msgid "Paid"
+msgstr "পরিশোধিত"
+
+msgid "Unpaid"
+msgstr "অপরিশোধিত"
+
+msgid "Partial"
+msgstr "আংশিক"
+
+msgid "Walk-in Customer"
+msgstr "ওয়াক-ইন গ্রাহক"
+
+msgid "Add Item"
+msgstr "আইটেম যোগ করুন"
+
+msgid "Remove"
+msgstr "সরান"
+
+msgid "Complete Sale"
+msgstr "বিক্রয় সম্পন্ন"
+
+#: Warehouse
+msgid "Warehouse Name"
+msgstr "গুদামের নাম"
+
+msgid "Location"
+msgstr "অবস্থান"
+
+msgid "Is Shop"
+msgstr "দোকান"
+
+msgid "Transfer"
+msgstr "ট্রান্সফার"
+
+msgid "From Warehouse"
+msgstr "উৎস গুদাম"
+
+msgid "To Warehouse"
+msgstr "গন্তব্য গুদাম"
+
+msgid "Transfer Date"
+msgstr "ট্রান্সফার তারিখ"
+
+#: Reports
+msgid "From"
+msgstr "থেকে"
+
+msgid "To"
+msgstr "পর্যন্ত"
+
+msgid "Generate"
+msgstr "জেনারেট"
+
+msgid "Total Sales"
+msgstr "মোট বিক্রয়"
+
+msgid "Total Cost"
+msgstr "মোট খরচ"
+
+msgid "Total Profit"
+msgstr "মোট মুনাফা"
+
+msgid "Profit Margin"
+msgstr "মুনাফা মার্জিন"
+
+msgid "Revenue"
+msgstr "রাজস্ব"
+
+msgid "Cost"
+msgstr "খরচ"
+
+msgid "Profit"
+msgstr "মুনাফা"
+
+#: Settings
+msgid "Shop Name"
+msgstr "দোকানের নাম"
+
+msgid "Currency Symbol"
+msgstr "মুদ্রা চিহ্ন"
+
+msgid "Low Stock Threshold"
+msgstr "কম স্টক সীমা"
+
+msgid "License/Server Expiry Date"
+msgstr "লাইসেন্স/সার্ভার মেয়াদ"
+
+msgid "Alert Days Before Expiry"
+msgstr "মেয়াদ শেষের আগে সতর্কতা দিন"
+
+msgid "Save Settings"
+msgstr "সেটিংস সংরক্ষণ"
+
+msgid "Configuration"
+msgstr "কনফিগারেশন"
+
+msgid "Environment Fallbacks"
+msgstr "পরিবেশ ফলব্যাক"
+
+msgid "Last Updated"
+msgstr "সর্বশেষ আপডেট"
+
+#: Auth
+msgid "Login"
+msgstr "লগইন"
+
+msgid "Logout"
+msgstr "লগআউট"
+
+msgid "Register"
+msgstr "রেজিস্টার"
+
+msgid "Username"
+msgstr "ইউজারনেম"
+
+msgid "Password"
+msgstr "পাসওয়ার্ড"
+
+msgid "Confirm Password"
+msgstr "পাসওয়ার্ড নিশ্চিত করুন"
+
+msgid "First Name"
+msgstr "নামের প্রথম অংশ"
+
+msgid "Last Name"
+msgstr "নামের শেষ অংশ"
+
+msgid "Remember Me"
+msgstr "আমাকে মনে রাখুন"
+
+msgid "Forgot Password?"
+msgstr "পাসওয়ার্ড ভুলে গেছেন?"
+
+msgid "Admin Panel"
+msgstr "অ্যাডমিন প্যানেল"
+
+#: Messages
+msgid "Success"
+msgstr "সফল"
+
+msgid "Error"
+msgstr "ত্রুটি"
+
+msgid "Warning"
+msgstr "সতর্কতা"
+
+msgid "Info"
+msgstr "তথ্য"
+
+msgid "Are you sure?"
+msgstr "আপনি কি নিশ্চিত?"
+
+msgid "This action cannot be undone."
+msgstr "এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।"
+
+msgid "No data available"
+msgstr "কোনো তথ্য নেই"
+
+msgid "Loading..."
+msgstr "লোড হচ্ছে..."
+
+#: Validation
+msgid "This field is required."
+msgstr "এই ক্ষেত্রটি আবশ্যক।"
+
+msgid "Please enter a valid email."
+msgstr "অনুগ্রহ করে একটি বৈধ ইমেইল দিন।"
+
+msgid "Please enter a valid phone number."
+msgstr "অনুগ্রহ করে একটি বৈধ ফোন নম্বর দিন।"
+
+msgid "Passwords do not match."
+msgstr "পাসওয়ার্ড মিলছে না।"
+
+msgid "Insufficient stock."
+msgstr "পর্যাপ্ত স্টক নেই।"
+
+#: Pagination
+msgid "Page"
+msgstr "পৃষ্ঠা"
+
+msgid "of"
+msgstr "এর"
+
+msgid "Showing"
+msgstr "দেখানো হচ্ছে"
+
+msgid "entries"
+msgstr "এন্ট্রি"
+
+#: Table Headers
+msgid "S/N"
+msgstr "ক্রমিক"
+
+msgid "Action"
+msgstr "অ্যাকশন"
+
+msgid "Created At"
+msgstr "তৈরির তারিখ"
+
+msgid "Updated At"
+msgstr "আপডেটের তারিখ"
+
+msgid "Created By"
+msgstr "তৈরি করেছেন"
+
+#: Shop specific
+msgid "Shop"
+msgstr "দোকান"
+
+msgid "All Shops"
+msgstr "সকল দোকান"
+
+msgid "Select Batch"
+msgstr "ব্যাচ নির্বাচন"
+
+msgid "Select Product"
+msgstr "পণ্য নির্বাচন"
+
+msgid "Select Customer"
+msgstr "গ্রাহক নির্বাচন"
+
+msgid "Select Warehouse"
+msgstr "গুদাম নির্বাচন"
+
+msgid "Select Category"
+msgstr "ক্যাটাগরি নির্বাচন"
+
+msgid "All Categories"
+msgstr "সকল ক্যাটাগরি"
+
+msgid "All Products"
+msgstr "সকল পণ্য"
+
+#: Stock Out specific
+msgid "Cancel & Restore Stock"
+msgstr "বাতিল করুন ও স্টক পুনরুদ্ধার করুন"
+
+msgid "Restock"
+msgstr "পুনরায় স্টক"
+
+msgid "Cancel Stock Out"
+msgstr "স্টক আউট বাতিল"
+
+msgid "Reason"
+msgstr "কারণ"
+
+msgid "Damaged"
+msgstr "ক্ষতিগ্রস্ত"
+
+msgid "Expired"
+msgstr "মেয়াদ উত্তীর্ণ"
+
+msgid "Lost"
+msgstr "হারিয়ে গেছে"
+
+msgid "Other"
+msgstr "অন্যান্য"
+
+#: Batch
+msgid "Batch Number"
+msgstr "ব্যাচ নম্বর"
+
+msgid "Purchase Date"
+msgstr "ক্রয় তারিখ"
+
+msgid "Expiry Date"
+msgstr "মেয়াদ শেষের তারিখ"
+
+msgid "Available"
+msgstr "উপলব্ধ"
+
+#: Customer
+msgid "Credit Limit"
+msgstr "ক্রেডিট সীমা"
+
+msgid "Total Purchases"
+msgstr "মোট ক্রয়"
+
+msgid "Balance"
+msgstr "ব্যালেন্স"
+
+msgid "Payment History"
+msgstr "পেমেন্ট ইতিহাস"
+
+#: English language name
+msgid "English"
+msgstr "English"
+
+msgid "বাংলা"
+msgstr "বাংলা"
+
+#: Home breadcrumb
+msgid "Home"
+msgstr "হোম"
+
+#: Navbar dropdown
+msgid "View Sales"
+msgstr "বিক্রয় দেখুন"
+
+msgid "View Report"
+msgstr "রিপোর্ট দেখুন"
+
+#: Units
+msgid "units"
+msgstr "ইউনিট"
+
+msgid "Invoices"
+msgstr "ইনভয়েস"
+
+#: Dashboard additional
+msgid "Update Settings"
+msgstr "সেটিংস আপডেট"
+
+msgid "Outstanding Dues"
+msgstr "বকেয়া পাওনা"
+
+msgid "View Dues"
+msgstr "বকেয়া দেখুন"
+
+msgid "Low Stock Items"
+msgstr "কম স্টক আইটেম"
+
+msgid "Quick Actions"
+msgstr "দ্রুত অ্যাকশন"
+
+msgid "View All"
+msgstr "সব দেখুন"
+
+msgid "No recent sales"
+msgstr "সাম্প্রতিক কোনো বিক্রয় নেই"
+
+msgid "No low stock alerts"
+msgstr "কম স্টক সতর্কতা নেই"
+
+msgid "Qty"
+msgstr "পরিমাণ"
+
+msgid "Walk-in"
+msgstr "ওয়াক-ইন"
+
+msgid "Today's Sales"
+msgstr "আজকের বিক্রয়"
+
+#: Form labels
+msgid "Select"
+msgstr "নির্বাচন করুন"
+
+msgid "All"
+msgstr "সব"
+
+msgid "Group By"
+msgstr "গ্রুপ করুন"
+
+msgid "Day"
+msgstr "দিন"
+
+msgid "Week"
+msgstr "সপ্তাহ"
+
+msgid "Month"
+msgstr "মাস"
+
+msgid "Year"
+msgstr "বছর"
+
+#: Reports
+msgid "Period"
+msgstr "সময়কাল"
+
+msgid "Sales by Period"
+msgstr "সময়কাল অনুযায়ী বিক্রয়"
+
+msgid "Top Selling Products"
+msgstr "সর্বাধিক বিক্রিত পণ্য"
+
+msgid "Profit by Product"
+msgstr "পণ্য অনুযায়ী মুনাফা"
+
+msgid "Profit by Category"
+msgstr "ক্যাটাগরি অনুযায়ী মুনাফা"
+
+msgid "Profit by Warehouse"
+msgstr "গুদাম অনুযায়ী মুনাফা"
+
+msgid "Sales by Shop"
+msgstr "দোকান অনুযায়ী বিক্রয়"
+
+msgid "Margin"
+msgstr "মার্জিন"
+
+msgid "Total Revenue"
+msgstr "মোট রাজস্ব"
+
+msgid "Total Cost (COGS)"
+msgstr "মোট খরচ (সিওজিএস)"
+
+msgid "Gross Profit"
+msgstr "মোট মুনাফা"
+
+#: Inventory
+msgid "Product Details"
+msgstr "পণ্যের বিস্তারিত"
+
+msgid "Batch Details"
+msgstr "ব্যাচের বিস্তারিত"
+
+msgid "Stock Information"
+msgstr "স্টক তথ্য"
+
+msgid "Add to Cart"
+msgstr "কার্টে যোগ করুন"
+
+msgid "Out of Stock"
+msgstr "স্টক শেষ"
+
+msgid "In Stock"
+msgstr "স্টকে আছে"
+
+msgid "Supplier"
+msgstr "সরবরাহকারী"
+
+#: Sales Form
+msgid "Sale Information"
+msgstr "বিক্রয় তথ্য"
+
+msgid "Items"
+msgstr "আইটেম"
+
+msgid "Unit Price"
+msgstr "একক মূল্য"
+
+msgid "Line Total"
+msgstr "লাইন মোট"
+
+msgid "Grand Total"
+msgstr "সর্বমোট"
+
+msgid "Payment Method"
+msgstr "পেমেন্ট পদ্ধতি"
+
+msgid "Cash"
+msgstr "নগদ"
+
+msgid "Card"
+msgstr "কার্ড"
+
+msgid "Mobile Banking"
+msgstr "মোবাইল ব্যাংকিং"
+
+msgid "Bank Transfer"
+msgstr "ব্যাংক ট্রান্সফার"
+
+msgid "Credit"
+msgstr "বাকি"
+
+msgid "Discount Amount"
+msgstr "ছাড়ের পরিমাণ"
+
+msgid "Tax Amount"
+msgstr "ট্যাক্সের পরিমাণ"
+
+msgid "Paid Amount"
+msgstr "পরিশোধিত পরিমাণ"
+
+msgid "Due Amount"
+msgstr "বকেয়া পরিমাণ"
+
+msgid "Change Amount"
+msgstr "ফেরত পরিমাণ"
+
+#: Customer
+msgid "Customer Details"
+msgstr "গ্রাহকের বিস্তারিত"
+
+msgid "Customer Information"
+msgstr "গ্রাহক তথ্য"
+
+msgid "Transaction History"
+msgstr "লেনদেনের ইতিহাস"
+
+msgid "Outstanding Balance"
+msgstr "বকেয়া ব্যালেন্স"
+
+#: Warehouse
+msgid "Warehouse Details"
+msgstr "গুদামের বিস্তারিত"
+
+msgid "Transfer Details"
+msgstr "ট্রান্সফারের বিস্তারিত"
+
+msgid "Stock Movement"
+msgstr "স্টক মুভমেন্ট"
+
+msgid "Source"
+msgstr "উৎস"
+
+msgid "Destination"
+msgstr "গন্তব্য"
+
+#: Stock Out
+msgid "Stock Out Details"
+msgstr "স্টক আউটের বিস্তারিত"
+
+msgid "Confirm"
+msgstr "নিশ্চিত করুন"
+
+msgid "Confirm Cancel & Restore"
+msgstr "বাতিল ও পুনরুদ্ধার নিশ্চিত করুন"
+
+msgid "This action will restore stock to inventory."
+msgstr "এই কাজটি স্টক ইনভেন্টরিতে পুনরুদ্ধার করবে।"
+
+msgid "Stock Out Details:"
+msgstr "স্টক আউটের বিস্তারিত:"
+
+msgid "Reference:"
+msgstr "রেফারেন্স:"
+
+msgid "Total Items:"
+msgstr "মোট আইটেম:"
+
+msgid "Total Value:"
+msgstr "মোট মূল্য:"
+
+msgid "Close"
+msgstr "বন্ধ করুন"
+
+#: Pagination
+msgid "First"
+msgstr "প্রথম"
+
+msgid "Last"
+msgstr "শেষ"
+
+#: Forms general
+msgid "Please select"
+msgstr "অনুগ্রহ করে নির্বাচন করুন"
+
+msgid "Optional"
+msgstr "ঐচ্ছিক"
+
+msgid "Required"
+msgstr "আবশ্যক"
+
+#: Login/Auth
+msgid "Sign In"
+msgstr "সাইন ইন"
+
+msgid "Sign Up"
+msgstr "সাইন আপ"
+
+msgid "Sign Out"
+msgstr "সাইন আউট"
+
+msgid "Welcome back!"
+msgstr "স্বাগতম!"
+
+msgid "Create Account"
+msgstr "অ্যাকাউন্ট তৈরি করুন"
+
+msgid "Already have an account?"
+msgstr "ইতিমধ্যে অ্যাকাউন্ট আছে?"
+
+msgid "Don't have an account?"
+msgstr "অ্যাকাউন্ট নেই?"
+
+#: Messages
+msgid "created successfully"
+msgstr "সফলভাবে তৈরি হয়েছে"
+
+msgid "updated successfully"
+msgstr "সফলভাবে আপডেট হয়েছে"
+
+msgid "deleted successfully"
+msgstr "সফলভাবে মুছে ফেলা হয়েছে"
+
+msgid "Operation completed successfully"
+msgstr "অপারেশন সফলভাবে সম্পন্ন হয়েছে"
+
+msgid "An error occurred"
+msgstr "একটি ত্রুটি ঘটেছে"
+
+msgid "Please try again"
+msgstr "অনুগ্রহ করে আবার চেষ্টা করুন"
+
+#: Additional common
+msgid "Yes"
+msgstr "হ্যাঁ"
+
+msgid "No"
+msgstr "না"
+
+msgid "OK"
+msgstr "ঠিক আছে"
+
+msgid "Done"
+msgstr "সম্পন্ন"
+
+msgid "Loading"
+msgstr "লোড হচ্ছে"
+
+msgid "Please wait"
+msgstr "অনুগ্রহ করে অপেক্ষা করুন"
+
+msgid "Processing"
+msgstr "প্রক্রিয়াকরণ হচ্ছে"
+
+msgid "Completed"
+msgstr "সম্পন্ন"
+
+msgid "Pending"
+msgstr "অপেক্ষমান"
+
+msgid "Cancelled"
+msgstr "বাতিল"
+
+msgid "Failed"
+msgstr "ব্যর্থ"
+
+#: Settings page
+msgid "Inventory Settings"
+msgstr "ইনভেন্টরি সেটিংস"
+
+msgid "License / Server Expiry"
+msgstr "লাইসেন্স / সার্ভার মেয়াদ"
+
+msgid "Back to Dashboard"
+msgstr "ড্যাশবোর্ডে ফিরুন"
+
+msgid "Never updated"
+msgstr "কখনো আপডেট করা হয়নি"
+
+#: Sale creation specific
+msgid "Not available in shops!"
+msgstr "দোকানে পাওয়া যাচ্ছে না!"
+
+msgid "Stock Availability:"
+msgstr "স্টক উপলব্ধতা:"
+
+msgid "units available for sale"
+msgstr "ইউনিট বিক্রয়ের জন্য উপলব্ধ"
+
+msgid "more in warehouses"
+msgstr "গুদামে আরো আছে"
+
+msgid "Transfer stock to a shop first"
+msgstr "প্রথমে দোকানে স্টক ট্রান্সফার করুন"
+
+msgid "No stock available for this product."
+msgstr "এই পণ্যের জন্য কোনো স্টক নেই।"
+
+msgid "Product Required"
+msgstr "পণ্য প্রয়োজন"
+
+msgid "Batch Required"
+msgstr "ব্যাচ প্রয়োজন"
+
+msgid "Invalid Quantity"
+msgstr "অবৈধ পরিমাণ"
+
+msgid "Invalid Price"
+msgstr "অবৈধ মূল্য"
+
+msgid "Insufficient Stock"
+msgstr "অপর্যাপ্ত স্টক"
+
+msgid "Please select a product first."
+msgstr "প্রথমে একটি পণ্য নির্বাচন করুন।"
+
+msgid "Please select a batch for this product."
+msgstr "এই পণ্যের জন্য একটি ব্যাচ নির্বাচন করুন।"
+
+msgid "Please enter a valid quantity greater than zero."
+msgstr "শূন্যের বেশি একটি বৈধ পরিমাণ দিন।"
+
+msgid "Please enter a valid selling price."
+msgstr "একটি বৈধ বিক্রয় মূল্য দিন।"
+
+msgid "Only"
+msgstr "শুধুমাত্র"
+
+msgid "units available in this batch. Please reduce the quantity."
+msgstr "ইউনিট এই ব্যাচে উপলব্ধ। পরিমাণ কমান।"
+
+msgid "Please add at least one item to the sale."
+msgstr "বিক্রয়ে অন্তত একটি আইটেম যোগ করুন।"
+
+#: Login page
+msgid "Sign in to continue to"
+msgstr "লগইন করে চালিয়ে যান"
+
+msgid "Invalid username or password. Please try again."
+msgstr "ভুল ইউজারনেম বা পাসওয়ার্ড। আবার চেষ্টা করুন।"
+
+msgid "Enter username"
+msgstr "ইউজারনেম দিন"
+
+msgid "Enter password"
+msgstr "পাসওয়ার্ড দিন"
+
+msgid "Inventory & Sales Management"
+msgstr "ইনভেন্টরি ও বিক্রয় ব্যবস্থাপনা"
+
+#: Filters and lists
+msgid "Filters"
+msgstr "ফিল্টার"
+
+msgid "All Brands"
+msgstr "সকল ব্র্যান্ড"
+
+msgid "All Stock"
+msgstr "সকল স্টক"
+
+msgid "All Status"
+msgstr "সকল স্ট্যাটাস"
+
+msgid "Clear Filters"
+msgstr "ফিল্টার মুছুন"
+
+msgid "No products found"
+msgstr "কোনো পণ্য পাওয়া যায়নি"
+
+msgid "No data found"
+msgstr "কোনো তথ্য পাওয়া যায়নি"
+
+msgid "Image"
+msgstr "ছবি"
+
+msgid "Code"
+msgstr "কোড"
+
+#: Table actions
+msgid "Edit"
+msgstr "সম্পাদনা"
+
+msgid "View Details"
+msgstr "বিস্তারিত দেখুন"
+
+#: Form placeholders
+msgid "Enter name"
+msgstr "নাম দিন"
+
+msgid "Enter description"
+msgstr "বিবরণ দিন"
+
+msgid "Enter price"
+msgstr "মূল্য দিন"
+
+msgid "Enter quantity"
+msgstr "পরিমাণ দিন"
+
+#: Confirmations
+msgid "Are you sure you want to delete this?"
+msgstr "আপনি কি এটি মুছে ফেলতে চান?"
+
+msgid "This action cannot be undone"
+msgstr "এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না"
+
+#: Empty states
+msgid "No items to display"
+msgstr "দেখানোর মতো কোনো আইটেম নেই"
+
+msgid "No results found"
+msgstr "কোনো ফলাফল পাওয়া যায়নি"
+
+msgid "Try adjusting your search or filter"
+msgstr "অনুসন্ধান বা ফিল্টার পরিবর্তন করুন"
+
+#: Pagination
+msgid "to"
+msgstr "থেকে"
+
+msgid "No records found"
+msgstr "কোনো রেকর্ড পাওয়া যায়নি"
+
+#: Categories
+msgid "Product Categories"
+msgstr "পণ্য ক্যাটাগরি"
+
+msgid "Total Categories"
+msgstr "মোট ক্যাটাগরি"
+
+msgid "Active Categories"
+msgstr "সক্রিয় ক্যাটাগরি"
+
+msgid "Add Category"
+msgstr "নতুন ক্যাটাগরি"
+
+#: Brands
+msgid "Total Brands"
+msgstr "মোট ব্র্যান্ড"
+
+msgid "Active Brands"
+msgstr "সক্রিয় ব্র্যান্ড"
+
+msgid "Add Brand"
+msgstr "নতুন ব্র্যান্ড"
+
+#: Warehouse
+msgid "Active Shops"
+msgstr "সক্রিয় দোকান"
+
+msgid "View Transfers"
+msgstr "ট্রান্সফার দেখুন"
+
+msgid "All Warehouses"
+msgstr "সকল গুদাম"
+
+#: Stock Report
+msgid "Total Items"
+msgstr "মোট আইটেম"
+
+msgid "Stock Value"
+msgstr "স্টক মূল্য"
+
+msgid "Avg Cost"
+msgstr "গড় খরচ"
+
+msgid "Value"
+msgstr "মূল্য"
+
+#: Customer
+msgid "Total Outstanding"
+msgstr "মোট বকেয়া"
+
+msgid "With Outstanding"
+msgstr "বকেয়াসহ"
+
+msgid "No Outstanding"
+msgstr "বকেয়া নেই"
+
+msgid "Search customers..."
+msgstr "গ্রাহক অনুসন্ধান..."
+
+#: Sales
+msgid "All Payment Status"
+msgstr "সকল পেমেন্ট স্ট্যাটাস"
+
+msgid "Search..."
+msgstr "অনুসন্ধান..."
+
+msgid "Search logs..."
+msgstr "লগ অনুসন্ধান..."
+
+#: Audit Logs
+msgid "All Actions"
+msgstr "সকল অ্যাকশন"
+
+msgid "All Users"
+msgstr "সকল ব্যবহারকারী"
+
+msgid "Clear"
+msgstr "মুছুন"
+
+msgid "Timestamp"
+msgstr "সময়"
+
+msgid "User"
+msgstr "ব্যবহারকারী"
+
+msgid "Model"
+msgstr "মডেল"
+
+msgid "IP Address"
+msgstr "আইপি ঠিকানা"
+
+msgid "No audit logs found"
+msgstr "কোনো অডিট লগ পাওয়া যায়নি"
+
+msgid "Sale"
+msgstr "বিক্রয়"
+
+#: Settings
+msgid "Settings"
+msgstr "সেটিংস"
+
+msgid "Get your account now"
+msgstr "এখনই আপনার অ্যাকাউন্ট নিন"
+
+msgid "Enter first name"
+msgstr "নামের প্রথম অংশ দিন"
+
+msgid "Enter last name"
+msgstr "নামের শেষ অংশ দিন"
+
+msgid "Enter email"
+msgstr "ইমেইল দিন"
+
+msgid "Confirm password"
+msgstr "পাসওয়ার্ড নিশ্চিত করুন"
+
+#: View actions
+msgid "View"
+msgstr "দেখুন"
+
+msgid "Print"
+msgstr "প্রিন্ট"
+
+msgid "Due"
+msgstr "বকেয়া"
+
+#: Stock Batches
+msgid "Stock Batches"
+msgstr "স্টক ব্যাচ"
+
+msgid "Search batches..."
+msgstr "ব্যাচ অনুসন্ধান..."
+
+msgid "Available Only"
+msgstr "শুধু উপলব্ধ"
+
+msgid "Depleted"
+msgstr "নিঃশেষ"
+
+msgid "Batch"
+msgstr "ব্যাচ"
+
+msgid "Buy Price"
+msgstr "ক্রয় মূল্য"
+
+msgid "Purchase Date"
+msgstr "ক্রয় তারিখ"
+
+#: Brands
+msgid "Product Brands"
+msgstr "পণ্য ব্র্যান্ড"
+
+#: Stock Out
+msgid "Stock Out Records"
+msgstr "স্টক আউট রেকর্ড"
+
+msgid "All Reasons"
+msgstr "সকল কারণ"
+
+msgid "New Stock Out"
+msgstr "নতুন স্টক আউট"
+
+#: Purchase
+msgid "Purchase Orders"
+msgstr "ক্রয় আদেশ"
+
+msgid "New Purchase"
+msgstr "নতুন ক্রয়"
+
+msgid "PO Number"
+msgstr "পিও নম্বর"
+
+msgid "Created By"
+msgstr "তৈরি করেছেন"
+
+msgid "No purchases found"
+msgstr "কোনো ক্রয় পাওয়া যায়নি"
+
+#: Transfers
+msgid "Stock Transfers"
+msgstr "স্টক ট্রান্সফার"
+
+msgid "All Sources"
+msgstr "সকল উৎস"
+
+msgid "All Destinations"
+msgstr "সকল গন্তব্য"
+
+#: Payments
+msgid "Receive Payment"
+msgstr "পেমেন্ট গ্রহণ"
+
+msgid "Method"
+msgstr "পদ্ধতি"
+
+msgid "Reference"
+msgstr "রেফারেন্স"
+
+msgid "Received By"
+msgstr "গ্রহণ করেছেন"
+
+msgid "No payments found"
+msgstr "কোনো পেমেন্ট পাওয়া যায়নি"
+
+#: Reports
+msgid "Generate"
+msgstr "তৈরি করুন"
+
+msgid "All Products"
+msgstr "সকল পণ্য"
+
+msgid "No sales found"
+msgstr "কোনো বিক্রয় পাওয়া যায়নি"
+
+msgid "Total Purchases"
+msgstr "মোট ক্রয়"
+
+#: Other common
+msgid "Showing"
+msgstr "দেখাচ্ছে"
+
+msgid "of"
+msgstr "এর মধ্যে"
+
+msgid "entries"
+msgstr "এন্ট্রি"
+
+#: Sale detail
+msgid "Invoice Items"
+msgstr "ইনভয়েস আইটেম"
+
+msgid "Subtotal"
+msgstr "সাবটোটাল"
+
+msgid "Tax"
+msgstr "ট্যাক্স"
+
+#: Customer detail
+msgid "Statement"
+msgstr "স্টেটমেন্ট"
+
+msgid "Financial Summary"
+msgstr "আর্থিক সারাংশ"
+
+msgid "Total Paid"
+msgstr "মোট পরিশোধ"
+
+msgid "Outstanding Due"
+msgstr "বকেয়া"
+
+#: Reports
+msgid "Customer Report"
+msgstr "গ্রাহক রিপোর্ট"
+
+msgid "Transfer Report"
+msgstr "ট্রান্সফার রিপোর্ট"
+
+msgid "Total Transfers"
+msgstr "মোট ট্রান্সফার"
+
+msgid "Customers with Outstanding Dues"
+msgstr "বকেয়াসহ গ্রাহক"
+
+msgid "Due Amount"
+msgstr "বকেয়া পরিমাণ"
+
+msgid "Receive"
+msgstr "গ্রহণ"
+
+#: Dead Stock Report
+msgid "Dead / Slow Moving Stock Report"
+msgstr "মৃত / ধীরগতির স্টক রিপোর্ট"
+
+msgid "No sales in last (days)"
+msgstr "শেষ (দিন) এ কোনো বিক্রয় নেই"
+
+msgid "Analyze"
+msgstr "বিশ্লেষণ"
+
+msgid "Dead Stock Batches"
+msgstr "মৃত স্টক ব্যাচ"
+
+msgid "Dead Stock Items"
+msgstr "মৃত স্টক আইটেম"
+
+msgid "Dead Stock Value"
+msgstr "মৃত স্টক মূল্য"
+
+#: Batch Report
+msgid "Batch Analysis Report"
+msgstr "ব্যাচ বিশ্লেষণ রিপোর্ট"
+
+msgid "Unit Cost"
+msgstr "একক খরচ"
+
+msgid "Age (Days)"
+msgstr "বয়স (দিন)"
+
+#: Product detail/form
+msgid "Selling Price"
+msgstr "বিক্রয় মূল্য"
+
+msgid "Total Stock"
+msgstr "মোট স্টক"
+
+msgid "Basic Information"
+msgstr "মৌলিক তথ্য"
+
+msgid "Product Name"
+msgstr "পণ্যের নাম"
+
+msgid "Unique product identifier"
+msgstr "অনন্য পণ্য শনাক্তকারী"
+
+msgid "Pricing & Media"
+msgstr "মূল্য ও মিডিয়া"
+
+msgid "units"
+msgstr "ইউনিট"

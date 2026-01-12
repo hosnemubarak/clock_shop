@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize i18n %}
 
 {% block title %}Stock Report | {{ SHOP_NAME }}{% endblock %}
 
@@ -7,7 +7,7 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Stock Report</h4>
+            <h4 class="mb-sm-0">{% trans "Stock Report" %}</h4>
         </div>
     </div>
 </div>
@@ -16,7 +16,7 @@
     <div class="col-xl-3 col-md-6">
         <div class="card card-animate">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Total Items</p>
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Total Items" %}</p>
                 <h4 class="fs-22 fw-semibold mt-4">{{ totals.total_items|intcomma|default:0 }}</h4>
             </div>
         </div>
@@ -24,7 +24,7 @@
     <div class="col-xl-3 col-md-6">
         <div class="card card-animate">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Stock Value</p>
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Stock Value" %}</p>
                 <h4 class="fs-22 fw-semibold mt-4">{{ CURRENCY_SYMBOL }}{{ totals.total_value|floatformat:2|intcomma|default:"0.00" }}</h4>
             </div>
         </div>
@@ -38,7 +38,7 @@
                 <form method="get" class="row g-3">
                     <div class="col-md-3">
                         <select name="warehouse" class="form-select">
-                            <option value="">All Warehouses</option>
+                            <option value="">{% trans "All Warehouses" %}</option>
                             {% for w in warehouses %}
                             <option value="{{ w.id }}" {% if selected_warehouse == w.id|stringformat:"s" %}selected{% endif %}>{{ w.name }}</option>
                             {% endfor %}
@@ -46,7 +46,7 @@
                     </div>
                     <div class="col-md-3">
                         <select name="category" class="form-select">
-                            <option value="">All Categories</option>
+                            <option value="">{% trans "All Categories" %}</option>
                             {% for c in categories %}
                             <option value="{{ c.id }}" {% if selected_category == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
                             {% endfor %}
@@ -54,13 +54,13 @@
                     </div>
                     <div class="col-md-3">
                         <select name="stock_filter" class="form-select">
-                            <option value="all">All Stock</option>
-                            <option value="low" {% if stock_filter == 'low' %}selected{% endif %}>Low Stock (≤10)</option>
-                            <option value="out" {% if stock_filter == 'out' %}selected{% endif %}>Out of Stock</option>
+                            <option value="all">{% trans "All Stock" %}</option>
+                            <option value="low" {% if stock_filter == 'low' %}selected{% endif %}>{% trans "Low Stock" %} (≤10)</option>
+                            <option value="out" {% if stock_filter == 'out' %}selected{% endif %}>{% trans "Out of Stock" %}</option>
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        <button type="submit" class="btn btn-primary w-100">{% trans "Filter" %}</button>
                     </div>
                 </form>
             </div>
@@ -69,12 +69,12 @@
                     <table class="table table-striped mb-0">
                         <thead>
                             <tr>
-                                <th>Product</th>
-                                <th>SKU</th>
-                                <th>Category</th>
-                                <th class="text-center">Quantity</th>
-                                <th class="text-end">Avg Cost</th>
-                                <th class="text-end">Value</th>
+                                <th>{% trans "Product" %}</th>
+                                <th>{% trans "SKU" %}</th>
+                                <th>{% trans "Category" %}</th>
+                                <th class="text-center">{% trans "Quantity" %}</th>
+                                <th class="text-end">{% trans "Avg Cost" %}</th>
+                                <th class="text-end">{% trans "Value" %}</th>
                             </tr>
                         </thead>
                         <tbody>

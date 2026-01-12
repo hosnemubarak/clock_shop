@@ -1,10 +1,10 @@
-{% load static %}
+{% load static i18n %}
 <!doctype html>
-<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="light" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable">
+<html lang="{{ LANGUAGE_CODE }}" data-layout="vertical" data-topbar="light" data-sidebar="light" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable">
 
 <head>
     <meta charset="utf-8" />
-    <title>Sign In | {{ SHOP_NAME }}</title>
+    <title>{% trans "Sign In" %} | {{ SHOP_NAME }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="Inventory & Sales Management System" name="description" />
     <meta content="{{ SHOP_NAME }}" name="author" />
@@ -45,8 +45,8 @@
                                         <div class="col-lg-6">
                                             <div class="p-lg-5 p-4">
                                                 <div class="text-center">
-                                                    <h5 class="mb-0">Welcome Back!</h5>
-                                                    <p class="text-muted mt-2">Sign in to continue to {{ SHOP_NAME }}.</p>
+                                                    <h5 class="mb-0">{% trans "Welcome back!" %}</h5>
+                                                    <p class="text-muted mt-2">{% trans "Sign in to continue to" %} {{ SHOP_NAME }}.</p>
                                                 </div>
 
                                                 {% if messages %}
@@ -62,7 +62,7 @@
                                                 {% if form.errors %}
                                                 <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
                                                     <i class="ri-error-warning-line me-2"></i>
-                                                    Invalid username or password. Please try again.
+                                                    {% trans "Invalid username or password. Please try again." %}
                                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                                 </div>
                                                 {% endif %}
@@ -71,14 +71,14 @@
                                                     <form method="post" class="auth-input">
                                                         {% csrf_token %}
                                                         <div class="mb-3">
-                                                            <label for="username" class="form-label">Username</label>
-                                                            <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required>
+                                                            <label for="username" class="form-label">{% trans "Username" %}</label>
+                                                            <input type="text" class="form-control" id="username" name="username" placeholder="{% trans 'Enter username' %}" required>
                                                         </div>
 
                                                         <div class="mb-2">
-                                                            <label for="password" class="form-label">Password</label>
+                                                            <label for="password" class="form-label">{% trans "Password" %}</label>
                                                             <div class="position-relative auth-pass-inputgroup mb-3">
-                                                                <input type="password" class="form-control pe-5 password-input" placeholder="Enter password" id="password" name="password" required>
+                                                                <input type="password" class="form-control pe-5 password-input" placeholder="{% trans 'Enter password' %}" id="password" name="password" required>
                                                                 <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" id="password-addon">
                                                                     <i class="las la-eye align-middle fs-18"></i>
                                                                 </button>
@@ -88,16 +88,16 @@
                                                         <div class="form-check form-check-primary fs-16 py-2">
                                                             <input class="form-check-input" type="checkbox" id="remember-check" name="remember">
                                                             <label class="form-check-label fs-14" for="remember-check">
-                                                                Remember me
+                                                                {% trans "Remember Me" %}
                                                             </label>
                                                         </div>
 
                                                         <div class="mt-2">
-                                                            <button class="btn btn-primary w-100" type="submit">Log In</button>
+                                                            <button class="btn btn-primary w-100" type="submit">{% trans "Login" %}</button>
                                                         </div>
 
                                                         <div class="mt-4 text-center">
-                                                            <p class="mb-0">Don't have an account? <a href="{% url 'register' %}" class="fw-medium text-primary text-decoration-underline">Sign up now</a></p>
+                                                            <p class="mb-0">{% trans "Don't have an account?" %} <a href="{% url 'register' %}" class="fw-medium text-primary text-decoration-underline">{% trans "Sign Up" %}</a></p>
                                                         </div>
                                                     </form>
                                                 </div>

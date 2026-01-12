@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize i18n %}
 
 {% block title %}Stock Out | {{ SHOP_NAME }}{% endblock %}
 
@@ -7,12 +7,12 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Stock Out Records</h4>
+            <h4 class="mb-sm-0">{% trans "Stock Out Records" %}</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'batch_list' %}">Inventory</a></li>
-                    <li class="breadcrumb-item active">Stock Out</li>
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{% trans "Home" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'batch_list' %}">{% trans "Inventory" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Stock Out" %}</li>
                 </ol>
             </div>
         </div>
@@ -28,14 +28,14 @@
                         <div class="search-box">
                             <form method="get">
                                 <input type="text" class="form-control search" name="search" 
-                                       placeholder="Search..." value="{{ search }}">
+                                       placeholder="{% trans 'Search...' %}" value="{{ search }}">
                                 <i class="las la-search search-icon"></i>
                             </form>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <select class="form-select" onchange="filterByParam('warehouse', this.value)">
-                            <option value="">All Warehouses</option>
+                            <option value="">{% trans "All Warehouses" %}</option>
                             {% for wh in warehouses %}
                             <option value="{{ wh.id }}" {% if request.GET.warehouse == wh.id|stringformat:"i" %}selected{% endif %}>{{ wh.name }}</option>
                             {% endfor %}
@@ -43,7 +43,7 @@
                     </div>
                     <div class="col-md-2">
                         <select class="form-select" onchange="filterByParam('reason', this.value)">
-                            <option value="">All Reasons</option>
+                            <option value="">{% trans "All Reasons" %}</option>
                             {% for value, label in reason_choices %}
                             <option value="{{ value }}" {% if request.GET.reason == value %}selected{% endif %}>{{ label }}</option>
                             {% endfor %}
@@ -51,7 +51,7 @@
                     </div>
                     <div class="col-md-2">
                         <select class="form-select" onchange="filterByParam('status', this.value)">
-                            <option value="">All Status</option>
+                            <option value="">{% trans "All Status" %}</option>
                             {% for value, label in status_choices %}
                             <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
                             {% endfor %}

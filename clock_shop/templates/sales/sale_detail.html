@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize i18n %}
 
 {% block title %}{{ sale.invoice_number }} | {{ SHOP_NAME }}{% endblock %}
 
@@ -10,7 +10,7 @@
             <h4 class="mb-sm-0">Invoice: {{ sale.invoice_number }}</h4>
             <div class="page-title-right">
                 <a href="{% url 'sale_print' sale.pk %}" class="btn btn-primary" target="_blank">
-                    <i class="las la-print"></i> Print
+                    <i class="las la-print"></i> {% trans "Print" %}
                 </a>
             </div>
         </div>
@@ -21,7 +21,7 @@
     <div class="col-lg-8">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">Invoice Items</h5>
+                <h5 class="card-title mb-0">{% trans "Invoice Items" %}</h5>
                 <span class="badge bg-{{ sale.status }}{% if sale.status == 'completed' %}-subtle text-success{% elif sale.status == 'cancelled' %}-subtle text-danger{% endif %} fs-12">
                     {{ sale.get_status_display }}
                 </span>
@@ -31,11 +31,11 @@
                     <table class="table align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Product</th>
-                                <th>Batch</th>
-                                <th class="text-center">Qty</th>
-                                <th class="text-end">Price</th>
-                                <th class="text-end">Total</th>
+                                <th>{% trans "Product" %}</th>
+                                <th>{% trans "Batch" %}</th>
+                                <th class="text-center">{% trans "Qty" %}</th>
+                                <th class="text-end">{% trans "Price" %}</th>
+                                <th class="text-end">{% trans "Total" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -65,18 +65,18 @@
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="4" class="text-end">Subtotal:</td>
+                                <td colspan="4" class="text-end">{% trans "Subtotal" %}:</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.subtotal|floatformat:2 }}</td>
                             </tr>
                             {% if sale.discount_amount > 0 %}
                             <tr>
-                                <td colspan="4" class="text-end">Discount:</td>
+                                <td colspan="4" class="text-end">{% trans "Discount" %}:</td>
                                 <td class="text-end text-danger">-{{ CURRENCY_SYMBOL }}{{ sale.discount_amount|floatformat:2 }}</td>
                             </tr>
                             {% endif %}
                             {% if sale.tax_amount > 0 %}
                             <tr>
-                                <td colspan="4" class="text-end">Tax:</td>
+                                <td colspan="4" class="text-end">{% trans "Tax" %}:</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.tax_amount|floatformat:2 }}</td>
                             </tr>
                             {% endif %}

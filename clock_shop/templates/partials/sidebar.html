@@ -1,4 +1,4 @@
-{% load static %}
+{% load static i18n %}
 <!-- ========== App Menu ========== -->
 <div class="app-menu navbar-menu">
     <!-- LOGO -->
@@ -32,48 +32,48 @@
             <div id="two-column-menu">
             </div>
             <ul class="navbar-nav" id="navbar-nav">
-                <li class="menu-title"><span data-key="t-menu">Menu</span></li>
+                <li class="menu-title"><span data-key="t-menu">{% trans "Menu" %}</span></li>
                 
                 <!-- Dashboard -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{% url 'dashboard' %}">
-                        <i class="las la-tachometer-alt"></i> <span data-key="t-dashboard">Dashboard</span>
+                        <i class="las la-tachometer-alt"></i> <span data-key="t-dashboard">{% trans "Dashboard" %}</span>
                     </a>
                 </li>
 
-                <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-pages">Management</span></li>
+                <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-pages">{% trans "Management" %}</span></li>
 
                 <!-- Inventory -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarInventory" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarInventory">
-                        <i class="las la-boxes"></i> <span data-key="t-inventory">Inventory</span>
+                        <i class="las la-boxes"></i> <span data-key="t-inventory">{% trans "Inventory" %}</span>
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarInventory">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="{% url 'product_list' %}" class="nav-link" data-key="t-products">Products</a>
+                                <a href="{% url 'product_list' %}" class="nav-link" data-key="t-products">{% trans "Products" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'product_create' %}" class="nav-link" data-key="t-add-product">Add Product</a>
+                                <a href="{% url 'product_create' %}" class="nav-link" data-key="t-add-product">{% trans "Add Product" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'batch_list' %}" class="nav-link" data-key="t-batches">Batches</a>
+                                <a href="{% url 'batch_list' %}" class="nav-link" data-key="t-batches">{% trans "Batches" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'batch_create' %}" class="nav-link" data-key="t-stock-in">Stock In</a>
+                                <a href="{% url 'batch_create' %}" class="nav-link" data-key="t-stock-in">{% trans "Stock In" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'category_list' %}" class="nav-link" data-key="t-categories">Categories</a>
+                                <a href="{% url 'category_list' %}" class="nav-link" data-key="t-categories">{% trans "Categories" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'brand_list' %}" class="nav-link" data-key="t-brands">Brands</a>
+                                <a href="{% url 'brand_list' %}" class="nav-link" data-key="t-brands">{% trans "Brands" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'purchase_list' %}" class="nav-link" data-key="t-purchases">Purchases</a>
+                                <a href="{% url 'purchase_list' %}" class="nav-link" data-key="t-purchases">{% trans "Purchases" %}</a>
                             </li>
                             <li class="nav-item">
                                 <a href="{% url 'stockout_list' %}" class="nav-link text-danger" data-key="t-stock-out">
-                                    <i class="las la-minus-circle me-1"></i> Stock Out
+                                    <i class="las la-minus-circle me-1"></i> {% trans "Stock Out" %}
                                 </a>
                             </li>
                         </ul>
@@ -83,15 +83,15 @@
                 <!-- Sales -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarSales" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarSales">
-                        <i class="las la-shopping-cart"></i> <span data-key="t-sales">Sales</span>
+                        <i class="las la-shopping-cart"></i> <span data-key="t-sales">{% trans "Sales" %}</span>
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarSales">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="{% url 'sale_list' %}" class="nav-link" data-key="t-all-sales">All Sales</a>
+                                <a href="{% url 'sale_list' %}" class="nav-link" data-key="t-all-sales">{% trans "All Sales" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'sale_create' %}" class="nav-link" data-key="t-new-sale">New Sale</a>
+                                <a href="{% url 'sale_create' %}" class="nav-link" data-key="t-new-sale">{% trans "New Sale" %}</a>
                             </li>
                         </ul>
                     </div>
@@ -100,21 +100,21 @@
                 <!-- Customers -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarCustomers" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarCustomers">
-                        <i class="las la-users"></i> <span data-key="t-customers">Customers</span>
+                        <i class="las la-users"></i> <span data-key="t-customers">{% trans "Customers" %}</span>
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarCustomers">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="{% url 'customer_list' %}" class="nav-link" data-key="t-all-customers">All Customers</a>
+                                <a href="{% url 'customer_list' %}" class="nav-link" data-key="t-all-customers">{% trans "All Customers" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'customer_create' %}" class="nav-link" data-key="t-add-customer">Add Customer</a>
+                                <a href="{% url 'customer_create' %}" class="nav-link" data-key="t-add-customer">{% trans "Add Customer" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'payment_list' %}" class="nav-link" data-key="t-payments">Payments</a>
+                                <a href="{% url 'payment_list' %}" class="nav-link" data-key="t-payments">{% trans "Payments" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'payment_create' %}" class="nav-link" data-key="t-receive-payment">Receive Payment</a>
+                                <a href="{% url 'payment_create' %}" class="nav-link" data-key="t-receive-payment">{% trans "Receive Payment" %}</a>
                             </li>
                         </ul>
                     </div>
@@ -123,55 +123,55 @@
                 <!-- Warehouse -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarWarehouse" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarWarehouse">
-                        <i class="las la-warehouse"></i> <span data-key="t-warehouse">Warehouse</span>
+                        <i class="las la-warehouse"></i> <span data-key="t-warehouse">{% trans "Warehouse" %}</span>
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarWarehouse">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="{% url 'warehouse_list' %}" class="nav-link" data-key="t-warehouses">Warehouses</a>
+                                <a href="{% url 'warehouse_list' %}" class="nav-link" data-key="t-warehouses">{% trans "Warehouses" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'warehouse_create' %}" class="nav-link" data-key="t-add-warehouse">Add Warehouse</a>
+                                <a href="{% url 'warehouse_create' %}" class="nav-link" data-key="t-add-warehouse">{% trans "Add Warehouse" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'transfer_list' %}" class="nav-link" data-key="t-transfers">Transfers</a>
+                                <a href="{% url 'transfer_list' %}" class="nav-link" data-key="t-transfers">{% trans "Transfers" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'transfer_create' %}" class="nav-link" data-key="t-new-transfer">New Transfer</a>
+                                <a href="{% url 'transfer_create' %}" class="nav-link" data-key="t-new-transfer">{% trans "New Transfer" %}</a>
                             </li>
                         </ul>
                     </div>
                 </li>
 
-                <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-analytics">Analytics</span></li>
+                <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-analytics">{% trans "Analytics" %}</span></li>
 
                 <!-- Reports -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarReports" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarReports">
-                        <i class="las la-chart-bar"></i> <span data-key="t-reports">Reports</span>
+                        <i class="las la-chart-bar"></i> <span data-key="t-reports">{% trans "Reports" %}</span>
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarReports">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="{% url 'sales_report' %}" class="nav-link" data-key="t-sales-report">Sales Report</a>
+                                <a href="{% url 'sales_report' %}" class="nav-link" data-key="t-sales-report">{% trans "Sales Report" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'profit_report' %}" class="nav-link" data-key="t-profit-report">Profit Report</a>
+                                <a href="{% url 'profit_report' %}" class="nav-link" data-key="t-profit-report">{% trans "Profit Report" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'stock_report' %}" class="nav-link" data-key="t-stock-report">Stock Report</a>
+                                <a href="{% url 'stock_report' %}" class="nav-link" data-key="t-stock-report">{% trans "Stock Report" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'customer_report' %}" class="nav-link" data-key="t-customer-report">Customer Report</a>
+                                <a href="{% url 'customer_report' %}" class="nav-link" data-key="t-customer-report">{% trans "Customer Report" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'transfer_report' %}" class="nav-link" data-key="t-transfer-history">Transfer History</a>
+                                <a href="{% url 'transfer_report' %}" class="nav-link" data-key="t-transfer-history">{% trans "Transfer History" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'dead_stock_report' %}" class="nav-link" data-key="t-dead-stock">Dead Stock</a>
+                                <a href="{% url 'dead_stock_report' %}" class="nav-link" data-key="t-dead-stock">{% trans "Dead Stock" %}</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'batch_report' %}" class="nav-link" data-key="t-batch-analysis">Batch Analysis</a>
+                                <a href="{% url 'batch_report' %}" class="nav-link" data-key="t-batch-analysis">{% trans "Batch Analysis" %}</a>
                             </li>
                         </ul>
                     </div>
@@ -180,7 +180,7 @@
                 <!-- Audit Logs -->
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{% url 'audit_logs' %}">
-                        <i class="las la-history"></i> <span data-key="t-audit-logs">Audit Logs</span>
+                        <i class="las la-history"></i> <span data-key="t-audit-logs">{% trans "Audit Logs" %}</span>
                     </a>
                 </li>
 
@@ -188,7 +188,7 @@
                 {% if request.user.is_superuser %}
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{% url 'system_settings' %}">
-                        <i class="las la-cog"></i> <span data-key="t-settings">System Settings</span>
+                        <i class="las la-cog"></i> <span data-key="t-settings">{% trans "System Settings" %}</span>
                     </a>
                 </li>
                 {% endif %}

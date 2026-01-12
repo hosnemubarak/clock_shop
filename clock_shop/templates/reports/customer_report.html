@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize i18n %}
 
 {% block title %}Customer Report | {{ SHOP_NAME }}{% endblock %}
 
@@ -7,7 +7,7 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Customer Report</h4>
+            <h4 class="mb-sm-0">{% trans "Customer Report" %}</h4>
         </div>
     </div>
 </div>
@@ -16,7 +16,7 @@
     <div class="col-xl-3 col-md-6">
         <div class="card card-animate">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Total Customers</p>
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Total Customers" %}</p>
                 <h4 class="fs-22 fw-semibold mt-4">{{ customer_summary.total_customers|default:0 }}</h4>
             </div>
         </div>
@@ -24,7 +24,7 @@
     <div class="col-xl-3 col-md-6">
         <div class="card card-animate">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Total Purchases</p>
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Total Purchases" %}</p>
                 <h4 class="fs-22 fw-semibold mt-4">{{ CURRENCY_SYMBOL }}{{ customer_summary.total_purchases|floatformat:2|intcomma|default:"0.00" }}</h4>
             </div>
         </div>
@@ -32,7 +32,7 @@
     <div class="col-xl-3 col-md-6">
         <div class="card card-animate">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Total Outstanding</p>
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Total Outstanding" %}</p>
                 <h4 class="fs-22 fw-semibold mt-4 text-danger">{{ CURRENCY_SYMBOL }}{{ customer_summary.total_dues|floatformat:2|intcomma|default:"0.00" }}</h4>
             </div>
         </div>
@@ -43,17 +43,17 @@
     <div class="col-lg-6">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">Customers with Outstanding Dues</h5>
+                <h5 class="card-title mb-0">{% trans "Customers with Outstanding Dues" %}</h5>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-striped mb-0">
                         <thead>
                             <tr>
-                                <th>Customer</th>
-                                <th>Phone</th>
-                                <th class="text-end">Due Amount</th>
-                                <th>Action</th>
+                                <th>{% trans "Customer" %}</th>
+                                <th>{% trans "Phone" %}</th>
+                                <th class="text-end">{% trans "Due Amount" %}</th>
+                                <th>{% trans "Action" %}</th>
                             </tr>
                         </thead>
                         <tbody>

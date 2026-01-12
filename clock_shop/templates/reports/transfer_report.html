@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% block title %}Transfer Report | {{ SHOP_NAME }}{% endblock %}
 
@@ -6,7 +7,7 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Transfer Report</h4>
+            <h4 class="mb-sm-0">{% trans "Transfer Report" %}</h4>
         </div>
     </div>
 </div>
@@ -15,7 +16,7 @@
     <div class="col-xl-3 col-md-6">
         <div class="card card-animate">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Total Transfers</p>
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Total Transfers" %}</p>
                 <h4 class="fs-22 fw-semibold mt-4">{{ transfer_summary.total_transfers|default:0 }}</h4>
             </div>
         </div>
@@ -23,7 +24,7 @@
     <div class="col-xl-3 col-md-6">
         <div class="card card-animate">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Completed</p>
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Completed" %}</p>
                 <h4 class="fs-22 fw-semibold mt-4 text-success">{{ transfer_summary.completed|default:0 }}</h4>
             </div>
         </div>
@@ -31,7 +32,7 @@
     <div class="col-xl-3 col-md-6">
         <div class="card card-animate">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Pending</p>
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Pending" %}</p>
                 <h4 class="fs-22 fw-semibold mt-4 text-warning">{{ transfer_summary.pending|default:0 }}</h4>
             </div>
         </div>
@@ -51,10 +52,10 @@
                     </div>
                     <div class="col-md-2">
                         <select name="status" class="form-select">
-                            <option value="">All Status</option>
-                            <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending</option>
-                            <option value="completed" {% if selected_status == 'completed' %}selected{% endif %}>Completed</option>
-                            <option value="cancelled" {% if selected_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                            <option value="">{% trans "All Status" %}</option>
+                            <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>{% trans "Pending" %}</option>
+                            <option value="completed" {% if selected_status == 'completed' %}selected{% endif %}>{% trans "Completed" %}</option>
+                            <option value="cancelled" {% if selected_status == 'cancelled' %}selected{% endif %}>{% trans "Cancelled" %}</option>
                         </select>
                     </div>
                     <div class="col-md-2">

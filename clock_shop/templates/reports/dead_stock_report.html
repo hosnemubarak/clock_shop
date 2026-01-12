@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize i18n %}
 
 {% block title %}Dead Stock Report | {{ SHOP_NAME }}{% endblock %}
 
@@ -7,7 +7,7 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Dead / Slow Moving Stock Report</h4>
+            <h4 class="mb-sm-0">{% trans "Dead / Slow Moving Stock Report" %}</h4>
         </div>
     </div>
 </div>
@@ -18,12 +18,12 @@
             <div class="card-header">
                 <form method="get" class="row g-3 align-items-center">
                     <div class="col-md-4">
-                        <label class="form-label">No sales in last (days)</label>
+                        <label class="form-label">{% trans "No sales in last (days)" %}</label>
                         <input type="number" name="days" class="form-control" value="{{ days_threshold }}" min="1">
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">&nbsp;</label>
-                        <button type="submit" class="btn btn-primary w-100">Analyze</button>
+                        <button type="submit" class="btn btn-primary w-100">{% trans "Analyze" %}</button>
                     </div>
                 </form>
             </div>
@@ -35,7 +35,7 @@
     <div class="col-xl-4 col-md-6">
         <div class="card card-animate">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Dead Stock Batches</p>
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Dead Stock Batches" %}</p>
                 <h4 class="fs-22 fw-semibold mt-4">{{ dead_stock_summary.batch_count|default:0 }}</h4>
             </div>
         </div>
@@ -43,7 +43,7 @@
     <div class="col-xl-4 col-md-6">
         <div class="card card-animate">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Dead Stock Items</p>
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Dead Stock Items" %}</p>
                 <h4 class="fs-22 fw-semibold mt-4">{{ dead_stock_summary.total_items|intcomma|default:0 }}</h4>
             </div>
         </div>
@@ -51,7 +51,7 @@
     <div class="col-xl-4 col-md-6">
         <div class="card card-animate">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Dead Stock Value</p>
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Dead Stock Value" %}</p>
                 <h4 class="fs-22 fw-semibold mt-4 text-danger">{{ CURRENCY_SYMBOL }}{{ dead_stock_summary.total_value|floatformat:2|intcomma|default:"0.00" }}</h4>
             </div>
         </div>

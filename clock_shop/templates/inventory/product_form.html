@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% block title %}{{ title }} | {{ SHOP_NAME }}{% endblock %}
 
@@ -9,8 +10,8 @@
             <h4 class="mb-sm-0">{{ title }}</h4>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Products</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{% trans "Dashboard" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'product_list' %}">{% trans "Products" %}</a></li>
                     <li class="breadcrumb-item active">{{ title }}</li>
                 </ol>
             </nav>
@@ -25,18 +26,18 @@
             <!-- Basic Information -->
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title mb-0"><i class="las la-info-circle me-2"></i>Basic Information</h5>
+                    <h5 class="card-title mb-0"><i class="las la-info-circle me-2"></i>{% trans "Basic Information" %}</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label for="id_sku" class="form-label">SKU <span class="text-danger">*</span></label>
+                            <label for="id_sku" class="form-label">{% trans "SKU" %} <span class="text-danger">*</span></label>
                             {{ form.sku }}
-                            <small class="text-muted">Unique product identifier</small>
+                            <small class="text-muted">{% trans "Unique product identifier" %}</small>
                             {% if form.sku.errors %}<div class="text-danger small">{{ form.sku.errors.0 }}</div>{% endif %}
                         </div>
                         <div class="col-md-8 mb-3">
-                            <label for="id_name" class="form-label">Product Name <span class="text-danger">*</span></label>
+                            <label for="id_name" class="form-label">{% trans "Product Name" %} <span class="text-danger">*</span></label>
                             {{ form.name }}
                             {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors.0 }}</div>{% endif %}
                         </div>
@@ -44,19 +45,19 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="id_category" class="form-label">Category <span class="text-danger">*</span></label>
+                            <label for="id_category" class="form-label">{% trans "Category" %} <span class="text-danger">*</span></label>
                             {{ form.category }}
                             {% if form.category.errors %}<div class="text-danger small">{{ form.category.errors.0 }}</div>{% endif %}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="id_brand" class="form-label">Brand</label>
+                            <label for="id_brand" class="form-label">{% trans "Brand" %}</label>
                             {{ form.brand }}
-                            <small class="text-muted">Optional</small>
+                            <small class="text-muted">{% trans "Optional" %}</small>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label for="id_description" class="form-label">Description</label>
+                        <label for="id_description" class="form-label">{% trans "Description" %}</label>
                         {{ form.description }}
                     </div>
                 </div>

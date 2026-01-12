@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize i18n %}
 
 {% block title %}Sales Report | {{ SHOP_NAME }}{% endblock %}
 
@@ -7,7 +7,7 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Sales Report</h4>
+            <h4 class="mb-sm-0">{% trans "Sales Report" %}</h4>
         </div>
     </div>
 </div>
@@ -18,37 +18,37 @@
             <div class="card-header">
                 <form method="get" class="row g-3">
                     <div class="col-md-2">
-                        <label class="form-label">From</label>
+                        <label class="form-label">{% trans "From" %}</label>
                         <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">To</label>
+                        <label class="form-label">{% trans "To" %}</label>
                         <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">Shop</label>
+                        <label class="form-label">{% trans "Shop" %}</label>
                         <select name="shop" class="form-select">
-                            <option value="">All Shops</option>
+                            <option value="">{% trans "All Shops" %}</option>
                             {% for shop in shops %}
                             <option value="{{ shop.id }}" {% if selected_shop == shop.id|stringformat:"s" %}selected{% endif %}>{{ shop.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">Group By</label>
+                        <label class="form-label">{% trans "Group By" %}</label>
                         <select name="group_by" class="form-select">
-                            <option value="day" {% if group_by == 'day' %}selected{% endif %}>Day</option>
-                            <option value="week" {% if group_by == 'week' %}selected{% endif %}>Week</option>
-                            <option value="month" {% if group_by == 'month' %}selected{% endif %}>Month</option>
+                            <option value="day" {% if group_by == 'day' %}selected{% endif %}>{% trans "Day" %}</option>
+                            <option value="week" {% if group_by == 'week' %}selected{% endif %}>{% trans "Week" %}</option>
+                            <option value="month" {% if group_by == 'month' %}selected{% endif %}>{% trans "Month" %}</option>
                         </select>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">&nbsp;</label>
-                        <button type="submit" class="btn btn-primary w-100">Generate</button>
+                        <button type="submit" class="btn btn-primary w-100">{% trans "Generate" %}</button>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">&nbsp;</label>
-                        <a href="{% url 'sales_report' %}" class="btn btn-outline-secondary w-100">Reset</a>
+                        <a href="{% url 'sales_report' %}" class="btn btn-outline-secondary w-100">{% trans "Reset" %}</a>
                     </div>
                 </form>
             </div>
@@ -60,7 +60,7 @@
     <div class="col-xl-3 col-md-6">
         <div class="card card-animate">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Total Sales</p>
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Total Sales" %}</p>
                 <h4 class="fs-22 fw-semibold mt-4">{{ CURRENCY_SYMBOL }}{{ summary.total_sales|floatformat:2|intcomma|default:"0.00" }}</h4>
             </div>
         </div>
@@ -68,7 +68,7 @@
     <div class="col-xl-3 col-md-6">
         <div class="card card-animate">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Total Cost</p>
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Total Cost" %}</p>
                 <h4 class="fs-22 fw-semibold mt-4">{{ CURRENCY_SYMBOL }}{{ summary.total_cost|floatformat:2|intcomma|default:"0.00" }}</h4>
             </div>
         </div>
@@ -76,7 +76,7 @@
     <div class="col-xl-3 col-md-6">
         <div class="card card-animate">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Total Profit</p>
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Total Profit" %}</p>
                 <h4 class="fs-22 fw-semibold mt-4 text-success">{{ CURRENCY_SYMBOL }}{{ summary.total_profit|floatformat:2|intcomma|default:"0.00" }}</h4>
             </div>
         </div>

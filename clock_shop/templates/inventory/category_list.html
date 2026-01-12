@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% block title %}Categories | {{ SHOP_NAME }}{% endblock %}
 
@@ -6,12 +7,12 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Product Categories</h4>
+            <h4 class="mb-sm-0">{% trans "Product Categories" %}</h4>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Inventory</a></li>
-                    <li class="breadcrumb-item active">Categories</li>
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{% trans "Dashboard" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'product_list' %}">{% trans "Inventory" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Categories" %}</li>
                 </ol>
             </nav>
         </div>
@@ -25,7 +26,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <p class="fw-medium text-muted mb-0">Total Categories</p>
+                        <p class="fw-medium text-muted mb-0">{% trans "Total Categories" %}</p>
                         <h2 class="mt-2 mb-0">{{ categories|length }}</h2>
                     </div>
                     <div class="avatar-sm flex-shrink-0">
@@ -42,7 +43,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <p class="fw-medium text-muted mb-0">Active Categories</p>
+                        <p class="fw-medium text-muted mb-0">{% trans "Active Categories" %}</p>
                         <h2 class="mt-2 mb-0 text-success">{{ active_count|default:categories|length }}</h2>
                     </div>
                     <div class="avatar-sm flex-shrink-0">

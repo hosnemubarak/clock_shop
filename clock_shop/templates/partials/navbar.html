@@ -1,4 +1,4 @@
-{% load static %}
+{% load static i18n %}
 <header id="page-topbar">
     <div class="layout-width">
         <div class="navbar-header">
@@ -72,6 +72,26 @@
                     <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle light-dark-mode">
                         <i class='las la-moon fs-24'></i>
                     </button>
+                </div>
+
+                <!-- Language Switcher -->
+                <div class="dropdown ms-1 header-item">
+                    <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" id="language-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="las la-globe fs-24"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="language-dropdown">
+                        <h6 class="dropdown-header">{% trans "Select Language" %}</h6>
+                        <form action="{% url 'set_language' %}" method="post" id="language-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button type="submit" name="language" value="en" class="dropdown-item {% if LANGUAGE_CODE == 'en' %}active{% endif %}">
+                                <span class="me-2">🇬🇧</span> English
+                            </button>
+                            <button type="submit" name="language" value="bn" class="dropdown-item {% if LANGUAGE_CODE == 'bn' %}active{% endif %}">
+                                <span class="me-2">🇧🇩</span> বাংলা
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
                 <!-- User Dropdown -->

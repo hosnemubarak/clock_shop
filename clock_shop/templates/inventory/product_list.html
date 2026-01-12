@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize i18n %}
 
 {% block title %}Products | {{ SHOP_NAME }}{% endblock %}
 
@@ -7,12 +7,12 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Products</h4>
+            <h4 class="mb-sm-0">{% trans "Products" %}</h4>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'category_list' %}">Inventory</a></li>
-                    <li class="breadcrumb-item active">Products</li>
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{% trans "Dashboard" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'category_list' %}">{% trans "Inventory" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Products" %}</li>
                 </ol>
             </nav>
         </div>
@@ -25,9 +25,9 @@
         <div class="card">
             <div class="card-header border-0 pb-0">
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                    <h5 class="card-title mb-0"><i class="las la-filter me-1"></i> Filters</h5>
+                    <h5 class="card-title mb-0"><i class="las la-filter me-1"></i> {% trans "Filters" %}</h5>
                     <a href="{% url 'product_create' %}" class="btn btn-success">
-                        <i class="las la-plus me-1"></i> Add Product
+                        <i class="las la-plus me-1"></i> {% trans "Add Product" %}
                     </a>
                 </div>
             </div>
@@ -35,45 +35,45 @@
                 <form method="get" id="filterForm">
                     <div class="row g-3">
                         <div class="col-md-3">
-                            <label class="form-label small text-muted">Search</label>
+                            <label class="form-label small text-muted">{% trans "Search" %}</label>
                             <div class="input-group">
                                 <input type="text" name="search" class="form-control" placeholder="SKU, name, brand..." value="{{ search }}">
                                 <button type="submit" class="btn btn-primary"><i class="las la-search"></i></button>
                             </div>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label small text-muted">Category</label>
+                            <label class="form-label small text-muted">{% trans "Category" %}</label>
                             <select name="category" class="form-select" onchange="document.getElementById('filterForm').submit()">
-                                <option value="">All Categories</option>
+                                <option value="">{% trans "All Categories" %}</option>
                                 {% for cat in categories %}
                                 <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label small text-muted">Brand</label>
+                            <label class="form-label small text-muted">{% trans "Brand" %}</label>
                             <select name="brand" class="form-select" onchange="document.getElementById('filterForm').submit()">
-                                <option value="">All Brands</option>
+                                <option value="">{% trans "All Brands" %}</option>
                                 {% for brand in brands %}
                                 <option value="{{ brand.id }}" {% if selected_brand == brand.id|stringformat:"s" %}selected{% endif %}>{{ brand.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label small text-muted">Stock</label>
+                            <label class="form-label small text-muted">{% trans "Stock" %}</label>
                             <select name="stock" class="form-select" onchange="document.getElementById('filterForm').submit()">
-                                <option value="">All Stock</option>
-                                <option value="in" {% if selected_stock == 'in' %}selected{% endif %}>In Stock</option>
-                                <option value="low" {% if selected_stock == 'low' %}selected{% endif %}>Low Stock</option>
-                                <option value="out" {% if selected_stock == 'out' %}selected{% endif %}>Out of Stock</option>
+                                <option value="">{% trans "All Stock" %}</option>
+                                <option value="in" {% if selected_stock == 'in' %}selected{% endif %}>{% trans "In Stock" %}</option>
+                                <option value="low" {% if selected_stock == 'low' %}selected{% endif %}>{% trans "Low Stock" %}</option>
+                                <option value="out" {% if selected_stock == 'out' %}selected{% endif %}>{% trans "Out of Stock" %}</option>
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label small text-muted">Status</label>
+                            <label class="form-label small text-muted">{% trans "Status" %}</label>
                             <select name="status" class="form-select" onchange="document.getElementById('filterForm').submit()">
-                                <option value="">All Status</option>
-                                <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active</option>
-                                <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                                <option value="">{% trans "All Status" %}</option>
+                                <option value="active" {% if selected_status == 'active' %}selected{% endif %}>{% trans "Active" %}</option>
+                                <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>{% trans "Inactive" %}</option>
                             </select>
                         </div>
                         <div class="col-md-1 d-flex align-items-end">

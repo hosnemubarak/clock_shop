@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize i18n %}
 
 {% block title %}{{ product.name }} | {{ SHOP_NAME }}{% endblock %}
 
@@ -7,11 +7,11 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Product Details</h4>
+            <h4 class="mb-sm-0">{% trans "Product Details" %}</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Products</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{% trans "Dashboard" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'product_list' %}">{% trans "Products" %}</a></li>
                     <li class="breadcrumb-item active">{{ product.sku }}</li>
                 </ol>
             </div>
@@ -40,22 +40,22 @@
                 <div class="table-responsive">
                     <table class="table table-borderless mb-0">
                         <tr>
-                            <td class="text-muted">Category</td>
+                            <td class="text-muted">{% trans "Category" %}</td>
                             <td class="fw-medium">{{ product.category.name }}</td>
                         </tr>
                         <tr>
-                            <td class="text-muted">Brand</td>
+                            <td class="text-muted">{% trans "Brand" %}</td>
                             <td class="fw-medium">{{ product.brand.name|default:"-" }}</td>
                         </tr>
                         <tr>
-                            <td class="text-muted">Selling Price</td>
+                            <td class="text-muted">{% trans "Selling Price" %}</td>
                             <td class="fw-medium">{{ CURRENCY_SYMBOL }}{{ product.default_selling_price|floatformat:2 }}</td>
                         </tr>
                         <tr>
-                            <td class="text-muted">Total Stock</td>
+                            <td class="text-muted">{% trans "Total Stock" %}</td>
                             <td>
                                 {% if product.total_stock == 0 %}
-                                <span class="badge bg-danger">Out of Stock</span>
+                                <span class="badge bg-danger">{% trans "Out of Stock" %}</span>
                                 {% elif product.total_stock <= 10 %}
                                 <span class="badge bg-warning">{{ product.total_stock }} units</span>
                                 {% else %}

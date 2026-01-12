@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize i18n %}
 
 {% block title %}Dashboard | {{ SHOP_NAME }}{% endblock %}
 
@@ -13,7 +13,7 @@
             <strong>{{ EXPIRY_ALERT.message }}</strong>
             {% if request.user.is_superuser %}
             <a href="{% url 'system_settings' %}" class="alert-link ms-2">
-                <i class="las la-cog"></i> Update Settings
+                <i class="las la-cog"></i> {% trans "Update Settings" %}
             </a>
             {% endif %}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -25,11 +25,11 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Dashboard</h4>
+            <h4 class="mb-sm-0">{% trans "Dashboard" %}</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
-                    <li class="breadcrumb-item active">Dashboard</li>
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{% trans "Home" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "Dashboard" %}</li>
                 </ol>
             </div>
         </div>
@@ -44,13 +44,13 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-grow-1">
-                            <p class="text-uppercase fw-medium text-muted mb-0">Today's Sales</p>
+                            <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Today's Sales" %}</p>
                         </div>
                     </div>
                     <div class="d-flex align-items-end justify-content-between mt-4">
                         <div>
                             <h4 class="fs-22 fw-semibold mb-4"><span class="counter-value" data-target="{{ total_sales_today }}">{{ CURRENCY_SYMBOL }}{{ total_sales_today|floatformat:2|intcomma }}</span></h4>
-                            <span class="text-primary">View Sales <i class="las la-arrow-right"></i></span>
+                            <span class="text-primary">{% trans "View Sales" %} <i class="las la-arrow-right"></i></span>
                         </div>
                         <div class="avatar-sm flex-shrink-0">
                             <span class="avatar-title bg-primary-subtle rounded fs-3">
@@ -69,13 +69,13 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-grow-1">
-                            <p class="text-uppercase fw-medium text-muted mb-0">Monthly Sales</p>
+                            <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Monthly Sales" %}</p>
                         </div>
                     </div>
                     <div class="d-flex align-items-end justify-content-between mt-4">
                         <div>
                             <h4 class="fs-22 fw-semibold mb-4"><span class="counter-value" data-target="{{ total_sales_month }}">{{ CURRENCY_SYMBOL }}{{ total_sales_month|floatformat:2|intcomma }}</span></h4>
-                            <span class="text-success">View Report <i class="las la-arrow-right"></i></span>
+                            <span class="text-success">{% trans "View Report" %} <i class="las la-arrow-right"></i></span>
                         </div>
                         <div class="avatar-sm flex-shrink-0">
                             <span class="avatar-title bg-success-subtle rounded fs-3">
@@ -94,13 +94,13 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-grow-1">
-                            <p class="text-uppercase fw-medium text-muted mb-0">Monthly Profit</p>
+                            <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Monthly Profit" %}</p>
                         </div>
                     </div>
                     <div class="d-flex align-items-end justify-content-between mt-4">
                         <div>
                             <h4 class="fs-22 fw-semibold mb-4"><span class="counter-value" data-target="{{ profit_month }}">{{ CURRENCY_SYMBOL }}{{ profit_month|floatformat:2|intcomma }}</span></h4>
-                            <span class="text-info">View Report <i class="las la-arrow-right"></i></span>
+                            <span class="text-info">{% trans "View Report" %} <i class="las la-arrow-right"></i></span>
                         </div>
                         <div class="avatar-sm flex-shrink-0">
                             <span class="avatar-title bg-info-subtle rounded fs-3">
@@ -119,13 +119,13 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-grow-1">
-                            <p class="text-uppercase fw-medium text-muted mb-0">Outstanding Dues</p>
+                            <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Outstanding Dues" %}</p>
                         </div>
                     </div>
                     <div class="d-flex align-items-end justify-content-between mt-4">
                         <div>
                             <h4 class="fs-22 fw-semibold mb-4 text-danger">{{ CURRENCY_SYMBOL }}{{ total_dues|floatformat:2|intcomma }}</h4>
-                            <span class="text-danger">View Dues <i class="las la-arrow-right"></i></span>
+                            <span class="text-danger">{% trans "View Dues" %} <i class="las la-arrow-right"></i></span>
                         </div>
                         <div class="avatar-sm flex-shrink-0">
                             <span class="avatar-title bg-danger-subtle rounded fs-3">
@@ -147,7 +147,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <p class="fw-medium text-muted mb-0">Total Products</p>
+                            <p class="fw-medium text-muted mb-0">{% trans "Total Products" %}</p>
                             <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ total_products }}">{{ total_products }}</span></h2>
                         </div>
                         <div>
@@ -169,7 +169,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <p class="fw-medium text-muted mb-0">Low Stock Items</p>
+                            <p class="fw-medium text-muted mb-0">{% trans "Low Stock Items" %}</p>
                             <h2 class="mt-4 ff-secondary fw-semibold {% if low_stock_products > 0 %}text-warning{% endif %}"><span class="counter-value" data-target="{{ low_stock_products }}">{{ low_stock_products }}</span></h2>
                         </div>
                         <div>
@@ -191,7 +191,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <p class="fw-medium text-muted mb-0">Total Customers</p>
+                            <p class="fw-medium text-muted mb-0">{% trans "Total Customers" %}</p>
                             <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ total_customers }}">{{ total_customers }}</span></h2>
                         </div>
                         <div>
@@ -213,7 +213,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <p class="fw-medium text-muted mb-0">Total Warehouses</p>
+                            <p class="fw-medium text-muted mb-0">{% trans "Total Warehouses" %}</p>
                             <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ total_warehouses }}">{{ total_warehouses }}</span></h2>
                         </div>
                         <div>
@@ -235,9 +235,9 @@
     <div class="col-xl-8">
         <div class="card">
             <div class="card-header align-items-center d-flex">
-                <h4 class="card-title mb-0 flex-grow-1">Recent Sales</h4>
+                <h4 class="card-title mb-0 flex-grow-1">{% trans "Recent Sales" %}</h4>
                 <div class="flex-shrink-0">
-                    <a href="{% url 'sale_list' %}" class="btn btn-soft-primary btn-sm">View All</a>
+                    <a href="{% url 'sale_list' %}" class="btn btn-soft-primary btn-sm">{% trans "View All" %}</a>
                 </div>
             </div>
             <div class="card-body">
@@ -245,11 +245,11 @@
                     <table class="table table-borderless table-centered align-middle mb-0">
                         <thead class="text-muted table-light">
                             <tr>
-                                <th>Invoice</th>
-                                <th>Customer</th>
-                                <th>Date</th>
-                                <th>Amount</th>
-                                <th>Status</th>
+                                <th>{% trans "Invoice" %}</th>
+                                <th>{% trans "Customer" %}</th>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "Amount" %}</th>
+                                <th>{% trans "Status" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -261,17 +261,17 @@
                                 <td>{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
                                 <td>
                                     {% if sale.payment_status == 'paid' %}
-                                    <span class="badge bg-success-subtle text-success">Paid</span>
+                                    <span class="badge bg-success-subtle text-success">{% trans "Paid" %}</span>
                                     {% elif sale.payment_status == 'partial' %}
-                                    <span class="badge bg-warning-subtle text-warning">Partial</span>
+                                    <span class="badge bg-warning-subtle text-warning">{% trans "Partial" %}</span>
                                     {% else %}
-                                    <span class="badge bg-danger-subtle text-danger">Unpaid</span>
+                                    <span class="badge bg-danger-subtle text-danger">{% trans "Unpaid" %}</span>
                                     {% endif %}
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center text-muted">No recent sales</td>
+                                <td colspan="5" class="text-center text-muted">{% trans "No recent sales" %}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -286,24 +286,24 @@
         <!-- Quick Actions -->
         <div class="card">
             <div class="card-header">
-                <h4 class="card-title mb-0">Quick Actions</h4>
+                <h4 class="card-title mb-0">{% trans "Quick Actions" %}</h4>
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
                     <div class="d-flex gap-2">
                         <a href="{% url 'sale_create' %}" class="btn btn-primary flex-grow-1">
-                            <i class="las la-plus"></i> New Sale
+                            <i class="las la-plus"></i> {% trans "New Sale" %}
                         </a>
                         <a href="{% url 'batch_create' %}" class="btn btn-success flex-grow-1">
-                            <i class="las la-plus"></i> Stock In
+                            <i class="las la-plus"></i> {% trans "Stock In" %}
                         </a>
                     </div>
                     <div class="d-flex gap-2">
                         <a href="{% url 'payment_create' %}" class="btn btn-info flex-grow-1">
-                            <i class="las la-money-bill"></i> Payment
+                            <i class="las la-money-bill"></i> {% trans "Payment" %}
                         </a>
                         <a href="{% url 'customer_create' %}" class="btn btn-secondary flex-grow-1">
-                            <i class="las la-user-plus"></i> Customer
+                            <i class="las la-user-plus"></i> {% trans "Customer" %}
                         </a>
                     </div>
                 </div>
@@ -313,7 +313,7 @@
         <!-- Low Stock Alerts -->
         <div class="card">
             <div class="card-header align-items-center d-flex">
-                <h4 class="card-title mb-0 flex-grow-1">Low Stock Alerts</h4>
+                <h4 class="card-title mb-0 flex-grow-1">{% trans "Low Stock Alerts" %}</h4>
                 <div class="flex-shrink-0">
                     <a href="{% url 'stock_report' %}?stock_filter=low" class="btn btn-soft-warning btn-sm">View All</a>
                 </div>
@@ -323,9 +323,9 @@
                     <table class="table table-borderless table-sm align-middle mb-0">
                         <thead class="text-muted table-light">
                             <tr>
-                                <th>Product</th>
-                                <th>Warehouse</th>
-                                <th>Qty</th>
+                                <th>{% trans "Product" %}</th>
+                                <th>{% trans "Warehouse" %}</th>
+                                <th>{% trans "Qty" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -341,7 +341,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="3" class="text-center text-muted">No low stock alerts</td>
+                                <td colspan="3" class="text-center text-muted">{% trans "No low stock alerts" %}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

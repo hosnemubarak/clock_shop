@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize i18n %}
 
 {% block title %}Batches | {{ SHOP_NAME }}{% endblock %}
 
@@ -7,10 +7,10 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Stock Batches</h4>
+            <h4 class="mb-sm-0">{% trans "Stock Batches" %}</h4>
             <div class="page-title-right">
                 <a href="{% url 'batch_create' %}" class="btn btn-success">
-                    <i class="las la-plus"></i> Stock In
+                    <i class="las la-plus"></i> {% trans "Stock In" %}
                 </a>
             </div>
         </div>
@@ -23,11 +23,11 @@
             <div class="card-header">
                 <form method="get" class="row g-3">
                     <div class="col-md-4">
-                        <input type="text" name="search" class="form-control" placeholder="Search batches..." value="{{ search }}">
+                        <input type="text" name="search" class="form-control" placeholder="{% trans 'Search batches...' %}" value="{{ search }}">
                     </div>
                     <div class="col-md-3">
                         <select name="warehouse" class="form-select">
-                            <option value="">All Warehouses</option>
+                            <option value="">{% trans "All Warehouses" %}</option>
                             {% for wh in warehouses %}
                             <option value="{{ wh.id }}">{{ wh.name }}</option>
                             {% endfor %}
@@ -35,13 +35,13 @@
                     </div>
                     <div class="col-md-3">
                         <select name="stock" class="form-select">
-                            <option value="">All Stock</option>
-                            <option value="available">Available Only</option>
-                            <option value="depleted">Depleted</option>
+                            <option value="">{% trans "All Stock" %}</option>
+                            <option value="available">{% trans "Available Only" %}</option>
+                            <option value="depleted">{% trans "Depleted" %}</option>
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        <button type="submit" class="btn btn-primary w-100">{% trans "Filter" %}</button>
                     </div>
                 </form>
             </div>
@@ -50,14 +50,14 @@
                     <table class="table table-striped align-middle mb-0">
                         <thead>
                             <tr>
-                                <th>Batch #</th>
-                                <th>Product</th>
-                                <th>Warehouse</th>
-                                <th>Buy Price</th>
-                                <th>Qty</th>
-                                <th>Value</th>
-                                <th>Purchase Date</th>
-                                <th>Actions</th>
+                                <th>{% trans "Batch" %} #</th>
+                                <th>{% trans "Product" %}</th>
+                                <th>{% trans "Warehouse" %}</th>
+                                <th>{% trans "Buy Price" %}</th>
+                                <th>{% trans "Qty" %}</th>
+                                <th>{% trans "Value" %}</th>
+                                <th>{% trans "Purchase Date" %}</th>
+                                <th>{% trans "Actions" %}</th>
                             </tr>
                         </thead>
                         <tbody>

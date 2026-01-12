@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize i18n %}
 
 {% block title %}Sales | {{ SHOP_NAME }}{% endblock %}
 
@@ -7,9 +7,9 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Sales</h4>
+            <h4 class="mb-sm-0">{% trans "Sales" %}</h4>
             <div class="page-title-right">
-                <a href="{% url 'sale_create' %}" class="btn btn-success"><i class="las la-plus"></i> New Sale</a>
+                <a href="{% url 'sale_create' %}" class="btn btn-success"><i class="las la-plus"></i> {% trans "New Sale" %}</a>
             </div>
         </div>
     </div>
@@ -21,14 +21,14 @@
             <div class="card-header">
                 <form method="get" class="row g-3">
                     <div class="col-md-3">
-                        <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ search }}">
+                        <input type="text" name="search" class="form-control" placeholder="{% trans 'Search...' %}" value="{{ search }}">
                     </div>
                     <div class="col-md-2">
                         <select name="payment_status" class="form-select">
-                            <option value="">All Payment Status</option>
-                            <option value="paid">Paid</option>
-                            <option value="partial">Partial</option>
-                            <option value="unpaid">Unpaid</option>
+                            <option value="">{% trans "All Payment Status" %}</option>
+                            <option value="paid">{% trans "Paid" %}</option>
+                            <option value="partial">{% trans "Partial" %}</option>
+                            <option value="unpaid">{% trans "Unpaid" %}</option>
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -38,7 +38,7 @@
                         <input type="date" name="date_to" class="form-control" placeholder="To">
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        <button type="submit" class="btn btn-primary w-100">{% trans "Filter" %}</button>
                     </div>
                 </form>
             </div>
@@ -47,14 +47,14 @@
                     <table class="table table-striped align-middle mb-0">
                         <thead>
                             <tr>
-                                <th>Invoice #</th>
-                                <th>Customer</th>
-                                <th>Date</th>
-                                <th>Total</th>
-                                <th>Paid</th>
-                                <th>Due</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th>{% trans "Invoice" %} #</th>
+                                <th>{% trans "Customer" %}</th>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "Total" %}</th>
+                                <th>{% trans "Paid" %}</th>
+                                <th>{% trans "Due" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Actions" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -68,11 +68,11 @@
                                 <td class="{% if sale.due_amount > 0 %}text-danger{% endif %}">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2 }}</td>
                                 <td>
                                     {% if sale.payment_status == 'paid' %}
-                                    <span class="badge bg-success">Paid</span>
+                                    <span class="badge bg-success">{% trans "Paid" %}</span>
                                     {% elif sale.payment_status == 'partial' %}
-                                    <span class="badge bg-warning">Partial</span>
+                                    <span class="badge bg-warning">{% trans "Partial" %}</span>
                                     {% else %}
-                                    <span class="badge bg-danger">Unpaid</span>
+                                    <span class="badge bg-danger">{% trans "Unpaid" %}</span>
                                     {% endif %}
                                 </td>
                                 <td>

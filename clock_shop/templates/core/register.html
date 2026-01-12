@@ -1,10 +1,10 @@
-{% load static %}
+{% load static i18n %}
 <!doctype html>
-<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="light" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable">
+<html lang="{{ LANGUAGE_CODE }}" data-layout="vertical" data-topbar="light" data-sidebar="light" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable">
 
 <head>
     <meta charset="utf-8" />
-    <title>Sign Up | {{ SHOP_NAME }}</title>
+    <title>{% trans "Sign Up" %} | {{ SHOP_NAME }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="Inventory & Sales Management System" name="description" />
     <meta content="{{ SHOP_NAME }}" name="author" />
@@ -45,8 +45,8 @@
                                         <div class="col-lg-6">
                                             <div class="p-lg-5 p-4">
                                                 <div class="text-center">
-                                                    <h5 class="mb-0">Create New Account</h5>
-                                                    <p class="text-muted mt-2">Get your {{ SHOP_NAME }} account now</p>
+                                                    <h5 class="mb-0">{% trans "Create Account" %}</h5>
+                                                    <p class="text-muted mt-2">{% trans "Get your account now" %}</p>
                                                 </div>
 
                                                 {% if form.errors %}
@@ -78,29 +78,29 @@
                                                     <form method="post" class="auth-input">
                                                         {% csrf_token %}
                                                         <div class="mb-3">
-                                                            <label for="first_name" class="form-label">First Name</label>
-                                                            <input type="text" class="form-control" id="first_name" name="first_name" placeholder="Enter first name" value="{{ form.first_name.value|default:'' }}">
+                                                            <label for="first_name" class="form-label">{% trans "First Name" %}</label>
+                                                            <input type="text" class="form-control" id="first_name" name="first_name" placeholder="{% trans 'Enter first name' %}" value="{{ form.first_name.value|default:'' }}">
                                                         </div>
 
                                                         <div class="mb-3">
-                                                            <label for="last_name" class="form-label">Last Name</label>
-                                                            <input type="text" class="form-control" id="last_name" name="last_name" placeholder="Enter last name" value="{{ form.last_name.value|default:'' }}">
+                                                            <label for="last_name" class="form-label">{% trans "Last Name" %}</label>
+                                                            <input type="text" class="form-control" id="last_name" name="last_name" placeholder="{% trans 'Enter last name' %}" value="{{ form.last_name.value|default:'' }}">
                                                         </div>
 
                                                         <div class="mb-3">
-                                                            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-                                                            <input type="email" class="form-control" id="email" name="email" placeholder="Enter email" required value="{{ form.email.value|default:'' }}">
+                                                            <label for="email" class="form-label">{% trans "Email" %} <span class="text-danger">*</span></label>
+                                                            <input type="email" class="form-control" id="email" name="email" placeholder="{% trans 'Enter email' %}" required value="{{ form.email.value|default:'' }}">
                                                         </div>
 
                                                         <div class="mb-3">
-                                                            <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                                                            <label for="username" class="form-label">{% trans "Username" %} <span class="text-danger">*</span></label>
                                                             <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required value="{{ form.username.value|default:'' }}">
                                                         </div>
 
                                                         <div class="mb-3">
-                                                            <label for="password1" class="form-label">Password <span class="text-danger">*</span></label>
+                                                            <label for="password1" class="form-label">{% trans "Password" %} <span class="text-danger">*</span></label>
                                                             <div class="position-relative auth-pass-inputgroup">
-                                                                <input type="password" class="form-control pe-5 password-input" placeholder="Enter password" id="password1" name="password1" required>
+                                                                <input type="password" class="form-control pe-5 password-input" placeholder="{% trans 'Enter password' %}" id="password1" name="password1" required>
                                                                 <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" data-target="password1">
                                                                     <i class="las la-eye align-middle fs-18"></i>
                                                                 </button>
@@ -108,9 +108,9 @@
                                                         </div>
 
                                                         <div class="mb-3">
-                                                            <label for="password2" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                                                            <label for="password2" class="form-label">{% trans "Confirm Password" %} <span class="text-danger">*</span></label>
                                                             <div class="position-relative auth-pass-inputgroup">
-                                                                <input type="password" class="form-control pe-5 password-input" placeholder="Confirm password" id="password2" name="password2" required>
+                                                                <input type="password" class="form-control pe-5 password-input" placeholder="{% trans 'Confirm password' %}" id="password2" name="password2" required>
                                                                 <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" data-target="password2">
                                                                     <i class="las la-eye align-middle fs-18"></i>
                                                                 </button>
@@ -122,11 +122,11 @@
                                                         </div>
 
                                                         <div class="mt-2">
-                                                            <button class="btn btn-primary w-100" type="submit">Sign Up</button>
+                                                            <button class="btn btn-primary w-100" type="submit">{% trans "Sign Up" %}</button>
                                                         </div>
 
                                                         <div class="mt-4 text-center">
-                                                            <p class="mb-0">Already have an account? <a href="{% url 'login' %}" class="fw-medium text-primary text-decoration-underline">Sign in</a></p>
+                                                            <p class="mb-0">{% trans "Already have an account?" %} <a href="{% url 'login' %}" class="fw-medium text-primary text-decoration-underline">{% trans "Sign In" %}</a></p>
                                                         </div>
                                                     </form>
                                                 </div>

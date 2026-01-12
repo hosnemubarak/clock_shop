@@ -1,17 +1,19 @@
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.utils.translation import gettext_lazy as _
 from decimal import Decimal
 from apps.core.models import TimeStampedModel
 
 
 class Category(TimeStampedModel):
     """Product category for clocks."""
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True)
-    is_active = models.BooleanField(default=True)
+    name = models.CharField(_('Name'), max_length=100, unique=True)
+    description = models.TextField(_('Description'), blank=True)
+    is_active = models.BooleanField(_('Active'), default=True)
     
     class Meta:
-        verbose_name_plural = 'Categories'
+        verbose_name = _('Category')
+        verbose_name_plural = _('Categories')
         ordering = ['name']
     
     def __str__(self):

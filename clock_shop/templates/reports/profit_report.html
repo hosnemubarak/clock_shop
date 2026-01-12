@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize i18n %}
 
 {% block title %}Profit Report | {{ SHOP_NAME }}{% endblock %}
 
@@ -7,7 +7,7 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Profit Report</h4>
+            <h4 class="mb-sm-0">{% trans "Profit Report" %}</h4>
         </div>
     </div>
 </div>
@@ -18,35 +18,35 @@
             <div class="card-header">
                 <form method="get" class="row g-3 align-items-end">
                     <div class="col-md-2">
-                        <label class="form-label">From</label>
+                        <label class="form-label">{% trans "From" %}</label>
                         <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">To</label>
+                        <label class="form-label">{% trans "To" %}</label>
                         <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">Shop</label>
+                        <label class="form-label">{% trans "Shop" %}</label>
                         <select name="shop" class="form-select">
-                            <option value="">All Shops</option>
+                            <option value="">{% trans "All Shops" %}</option>
                             {% for shop in shops %}
                             <option value="{{ shop.id }}" {% if selected_shop == shop.id|stringformat:"s" %}selected{% endif %}>{{ shop.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">Category</label>
+                        <label class="form-label">{% trans "Category" %}</label>
                         <select name="category" class="form-select">
-                            <option value="">All Categories</option>
+                            <option value="">{% trans "All Categories" %}</option>
                             {% for cat in categories %}
                             <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label">Product</label>
+                        <label class="form-label">{% trans "Product" %}</label>
                         <select name="product" class="form-select">
-                            <option value="">All Products</option>
+                            <option value="">{% trans "All Products" %}</option>
                             {% for prod in products %}
                             <option value="{{ prod.id }}" {% if selected_product == prod.id|stringformat:"s" %}selected{% endif %}>{{ prod.name|truncatechars:25 }}</option>
                             {% endfor %}
@@ -72,7 +72,7 @@
     <div class="col-xl-3 col-md-6">
         <div class="card card-animate">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Total Revenue</p>
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Total Revenue" %}</p>
                 <h4 class="fs-22 fw-semibold mt-4">{{ CURRENCY_SYMBOL }}{{ totals.total_revenue|floatformat:2|intcomma|default:"0.00" }}</h4>
             </div>
         </div>

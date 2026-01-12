@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize i18n %}
 
 {% block title %}Batch Analysis | {{ SHOP_NAME }}{% endblock %}
 
@@ -7,7 +7,7 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Batch Analysis Report</h4>
+            <h4 class="mb-sm-0">{% trans "Batch Analysis Report" %}</h4>
         </div>
     </div>
 </div>
@@ -19,7 +19,7 @@
                 <form method="get" class="row g-3">
                     <div class="col-md-3">
                         <select name="warehouse" class="form-select">
-                            <option value="">All Warehouses</option>
+                            <option value="">{% trans "All Warehouses" %}</option>
                             {% for w in warehouses %}
                             <option value="{{ w.id }}" {% if selected_warehouse == w.id|stringformat:"s" %}selected{% endif %}>{{ w.name }}</option>
                             {% endfor %}
@@ -27,14 +27,14 @@
                     </div>
                     <div class="col-md-3">
                         <select name="product" class="form-select">
-                            <option value="">All Products</option>
+                            <option value="">{% trans "All Products" %}</option>
                             {% for p in products %}
                             <option value="{{ p.id }}" {% if selected_product == p.id|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        <button type="submit" class="btn btn-primary w-100">{% trans "Filter" %}</button>
                     </div>
                 </form>
             </div>
@@ -43,14 +43,14 @@
                     <table class="table table-striped mb-0">
                         <thead>
                             <tr>
-                                <th>Batch</th>
-                                <th>Product</th>
-                                <th>Warehouse</th>
-                                <th class="text-center">Qty</th>
-                                <th class="text-end">Unit Cost</th>
-                                <th class="text-end">Value</th>
-                                <th>Purchase Date</th>
-                                <th class="text-center">Age (Days)</th>
+                                <th>{% trans "Batch" %}</th>
+                                <th>{% trans "Product" %}</th>
+                                <th>{% trans "Warehouse" %}</th>
+                                <th class="text-center">{% trans "Qty" %}</th>
+                                <th class="text-end">{% trans "Unit Cost" %}</th>
+                                <th class="text-end">{% trans "Value" %}</th>
+                                <th>{% trans "Purchase Date" %}</th>
+                                <th class="text-center">{% trans "Age (Days)" %}</th>
                             </tr>
                         </thead>
                         <tbody>

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize i18n %}
 
 {% block title %}Customers | {{ SHOP_NAME }}{% endblock %}
 
@@ -7,9 +7,9 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Customers</h4>
+            <h4 class="mb-sm-0">{% trans "Customers" %}</h4>
             <div class="page-title-right">
-                <a href="{% url 'customer_create' %}" class="btn btn-success"><i class="las la-plus"></i> Add Customer</a>
+                <a href="{% url 'customer_create' %}" class="btn btn-success"><i class="las la-plus"></i> {% trans "Add Customer" %}</a>
             </div>
         </div>
     </div>
@@ -19,7 +19,7 @@
     <div class="col-xl-3 col-md-6">
         <div class="card card-animate">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Total Outstanding</p>
+                <p class="text-uppercase fw-medium text-muted mb-0">{% trans "Total Outstanding" %}</p>
                 <h4 class="fs-22 fw-semibold mt-4 text-danger">{{ CURRENCY_SYMBOL }}{{ total_due|floatformat:2|intcomma }}</h4>
             </div>
         </div>
@@ -32,17 +32,17 @@
             <div class="card-header">
                 <form method="get" class="row g-3">
                     <div class="col-md-4">
-                        <input type="text" name="search" class="form-control" placeholder="Search customers..." value="{{ search }}">
+                        <input type="text" name="search" class="form-control" placeholder="{% trans 'Search customers...' %}" value="{{ search }}">
                     </div>
                     <div class="col-md-3">
                         <select name="due" class="form-select">
-                            <option value="">All Customers</option>
-                            <option value="has_due">With Outstanding</option>
-                            <option value="no_due">No Outstanding</option>
+                            <option value="">{% trans "All Customers" %}</option>
+                            <option value="has_due">{% trans "With Outstanding" %}</option>
+                            <option value="no_due">{% trans "No Outstanding" %}</option>
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        <button type="submit" class="btn btn-primary w-100">{% trans "Filter" %}</button>
                     </div>
                 </form>
             </div>
@@ -51,13 +51,13 @@
                     <table class="table table-striped align-middle mb-0">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Phone</th>
-                                <th>Total Purchases</th>
-                                <th>Paid</th>
-                                <th>Due</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th>{% trans "Name" %}</th>
+                                <th>{% trans "Phone" %}</th>
+                                <th>{% trans "Total Purchases" %}</th>
+                                <th>{% trans "Paid" %}</th>
+                                <th>{% trans "Due" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Actions" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -74,9 +74,9 @@
                                 </td>
                                 <td>
                                     {% if customer.is_active %}
-                                    <span class="badge bg-success-subtle text-success">Active</span>
+                                    <span class="badge bg-success-subtle text-success">{% trans "Active" %}</span>
                                     {% else %}
-                                    <span class="badge bg-danger-subtle text-danger">Inactive</span>
+                                    <span class="badge bg-danger-subtle text-danger">{% trans "Inactive" %}</span>
                                     {% endif %}
                                 </td>
                                 <td>

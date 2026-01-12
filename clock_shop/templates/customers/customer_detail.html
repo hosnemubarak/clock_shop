@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize i18n %}
 
 {% block title %}{{ customer.name }} | {{ SHOP_NAME }}{% endblock %}
 
@@ -7,10 +7,10 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Customer Details</h4>
+            <h4 class="mb-sm-0">{% trans "Customer Details" %}</h4>
             <div class="page-title-right">
-                <a href="{% url 'customer_edit' customer.pk %}" class="btn btn-primary"><i class="las la-pen"></i> Edit</a>
-                <a href="{% url 'customer_statement' customer.pk %}" class="btn btn-info"><i class="las la-file-alt"></i> Statement</a>
+                <a href="{% url 'customer_edit' customer.pk %}" class="btn btn-primary"><i class="las la-pen"></i> {% trans "Edit" %}</a>
+                <a href="{% url 'customer_statement' customer.pk %}" class="btn btn-info"><i class="las la-file-alt"></i> {% trans "Statement" %}</a>
             </div>
         </div>
     </div>
@@ -31,15 +31,15 @@
                 
                 <table class="table table-borderless mt-4">
                     <tr>
-                        <td class="text-muted"><i class="las la-phone me-2"></i>Phone</td>
+                        <td class="text-muted"><i class="las la-phone me-2"></i>{% trans "Phone" %}</td>
                         <td>{{ customer.phone|default:"-" }}</td>
                     </tr>
                     <tr>
-                        <td class="text-muted"><i class="las la-envelope me-2"></i>Email</td>
+                        <td class="text-muted"><i class="las la-envelope me-2"></i>{% trans "Email" %}</td>
                         <td>{{ customer.email|default:"-" }}</td>
                     </tr>
                     <tr>
-                        <td class="text-muted"><i class="las la-map-marker me-2"></i>Address</td>
+                        <td class="text-muted"><i class="las la-map-marker me-2"></i>{% trans "Address" %}</td>
                         <td>{{ customer.address|default:"-" }}</td>
                     </tr>
                 </table>
@@ -48,20 +48,20 @@
 
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">Financial Summary</h5>
+                <h5 class="card-title mb-0">{% trans "Financial Summary" %}</h5>
             </div>
             <div class="card-body">
                 <div class="d-flex justify-content-between mb-3">
-                    <span class="text-muted">Total Purchases</span>
+                    <span class="text-muted">{% trans "Total Purchases" %}</span>
                     <span class="fw-medium">{{ CURRENCY_SYMBOL }}{{ customer.total_purchases|floatformat:2|intcomma }}</span>
                 </div>
                 <div class="d-flex justify-content-between mb-3">
-                    <span class="text-muted">Total Paid</span>
+                    <span class="text-muted">{% trans "Total Paid" %}</span>
                     <span class="fw-medium text-success">{{ CURRENCY_SYMBOL }}{{ customer.total_paid|floatformat:2|intcomma }}</span>
                 </div>
                 <hr>
                 <div class="d-flex justify-content-between">
-                    <span class="fw-bold">Outstanding Due</span>
+                    <span class="fw-bold">{% trans "Outstanding Due" %}</span>
                     <span class="fw-bold {% if customer.total_due > 0 %}text-danger{% else %}text-success{% endif %}">
                         {{ CURRENCY_SYMBOL }}{{ customer.total_due|floatformat:2|intcomma }}
                     </span>
@@ -70,7 +70,7 @@
                 {% if customer.total_due > 0 %}
                 <hr>
                 <a href="{% url 'payment_create' %}?customer={{ customer.pk }}" class="btn btn-success w-100">
-                    <i class="las la-money-bill"></i> Receive Payment
+                    <i class="las la-money-bill"></i> {% trans "Receive Payment" %}
                 </a>
                 {% endif %}
             </div>
