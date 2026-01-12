@@ -25,7 +25,7 @@ class SaleForm(forms.ModelForm):
                 'step': '0.01',
                 'min': '0'
             }),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'e.g. Special instructions, customer notes...'}),
         }
     
     def __init__(self, *args, **kwargs):
@@ -117,5 +117,5 @@ class PaymentForm(forms.Form):
     )
     notes = forms.CharField(
         required=False,
-        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Any additional notes...'})
     )

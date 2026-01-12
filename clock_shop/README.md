@@ -164,17 +164,15 @@ After installation, you can either:
 python manage.py loaddata fixtures\demo_data.json
 ```
 
-This loads realistic Bangladesh-based sample data including:
-- **10 Warehouses** - Gulshan, Banani, Dhanmondi, Uttara, Chittagong, Sylhet, Rajshahi, Khulna, Gazipur, Mirpur
-- **10 Categories** - Wall Clocks, Table Clocks, Wrist Watches, Alarm Clocks, Smart Watches, etc.
-- **10 Brands** - Casio, Seiko, Citizen, Titan, Xiaomi, Rhythm, Orient, Sonata, Q&Q, Fastrack
-- **10 Products** - With realistic BDT prices (৳950 - ৳12,500)
-- **10 Customers** - Bangladesh addresses and phone numbers (01XXX-XXXXXX format)
-- **10 Batches** - Stock with buy prices
-- **10 Sales** - Sample invoices with various payment statuses
-- **10 Payments** - Cash, bKash, Nagad, Bank Transfer (DBBL, BRAC, UCB)
+This loads minimal sample data to get you started:
+- **1 Category** - Clocks
+- **1 Brand** - Seiko
+- **1 Warehouse** - Main Warehouse (WH001)
+- **1 Retail Shop** - Retail Shop (RS001)
+- **1 Product** - Classic Wall Clock (CLK-001)
+- **1 Customer** - Sample Customer
 
-**Note:** Demo data includes a default admin user. Create your own superuser after loading.
+**Note:** Create your own superuser after loading demo data.
 
 ### Option 2: Start Fresh
 1. **Create Warehouses** - Add at least one warehouse/shop location
@@ -239,7 +237,7 @@ clock_shop/
 - Audit logging for all major actions
 - Permission-based access (extensible)
 
-## Production Deployment
+## Deployment
 
 ### Using Docker (Recommended)
 
@@ -254,10 +252,10 @@ docker-compose exec web python manage.py createsuperuser
 ```
 
 3. **Access the application:**
-- Main app: http://localhost:8000/
-- Admin panel: http://localhost:8000/admin/
+- Main app: http://localhost:8090/
+- Admin panel: http://localhost:8090/admin/
 
-### Linux Deployment (Manual)
+### Linux/Server Deployment (Manual)
 
 1. **Update system and install dependencies:**
 ```bash
@@ -303,12 +301,12 @@ python manage.py collectstatic --noinput
 python manage.py createsuperuser
 ```
 
-8. **Run with Gunicorn:**
+8. **Run the server:**
 ```bash
-gunicorn clock_shop.wsgi:application --bind 0.0.0.0:8000 --workers 2
+python manage.py runserver 0.0.0.0:8090
 ```
 
-### Using Systemd Service (Production)
+### Using Systemd Service
 
 1. **Create service file:**
 ```bash
@@ -328,7 +326,7 @@ WorkingDirectory=/path/to/clock_shop
 Environment="SECRET_KEY=your-secret-key"
 Environment="DEBUG=False"
 Environment="ALLOWED_HOSTS=your-domain.com"
-ExecStart=/path/to/clock_shop/venv/bin/gunicorn clock_shop.wsgi:application --bind 127.0.0.1:8000 --workers 2
+ExecStart=/path/to/clock_shop/venv/bin/python manage.py runserver 0.0.0.0:8090
 Restart=always
 
 [Install]
@@ -340,29 +338,6 @@ WantedBy=multi-user.target
 sudo systemctl daemon-reload
 sudo systemctl enable clockshop
 sudo systemctl start clockshop
-```
-
-### Nginx Configuration (Optional)
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location /static/ {
-        alias /path/to/clock_shop/staticfiles/;
-    }
-
-    location /media/ {
-        alias /path/to/clock_shop/media/;
-    }
-
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
 ```
 
 ## Environment Variables
@@ -425,17 +400,12 @@ Add new views in `apps/reports/views.py` and register URLs in `apps/reports/urls
 
 | Model | Records | Description |
 |-------|---------|-------------|
-| Warehouse | 20 | Major cities across Bangladesh |
-| Category | 15 | Clock and watch categories |
-| Brand | 20 | Popular watch/clock brands |
-| Product | 100 | Watches and clocks with SKUs |
-| Customer | 100 | BD phone numbers and addresses |
-| Batch | 100 | Stock batches with suppliers |
-| Sale | 100 | Sample invoices |
-| SaleItem | 200 | Line items for sales |
-| Payment | 100 | Various payment methods |
-| StockTransfer | 50 | Inter-warehouse transfers |
-| TransferItem | 100 | Transfer line items |
+| Category | 1 | Clocks |
+| Brand | 1 | Seiko |
+| Warehouse | 1 | Main Warehouse |
+| Retail Shop | 1 | Retail Shop (is_shop=true) |
+| Product | 1 | Classic Wall Clock |
+| Customer | 1 | Sample Customer |
 
 ### Payment Methods Supported
 - **Cash** - Direct cash payments
@@ -487,13 +457,29 @@ Internal API endpoints for AJAX operations:
 - Date range filtering
 - Export capabilities
 
+## Logging
+
+The application includes a professional logging system with:
+
+| Log File | Description |
+|----------|-------------|
+| `logs/app.log` | General application logs |
+| `logs/error.log` | Errors and exceptions only |
+| `logs/security.log` | Authentication and security events |
+| `logs/db.log` | Database queries (DEBUG mode only) |
+
+**Features:**
+- Rotating file handlers (5MB max, 5 backups)
+- Structured log formatting with timestamps
+- Separate loggers for each app module
+- Console output in development, file-based in production
+
 ## Dependencies
 
 ```
 Django>=4.2,<5.0
 Pillow>=10.0.0
-whitenoise>=6.5.0
-gunicorn>=21.0.0
+whitenoise>=6.6.0
 python-dotenv>=1.0.0
 ```
 

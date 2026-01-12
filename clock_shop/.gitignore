@@ -24,6 +24,7 @@ staticfiles/
 .env
 
 # Logs
+logs/
 *.log
 
 # OS files

@@ -27,8 +27,8 @@ class PaymentForm(forms.ModelForm):
             'sale': forms.Select(attrs={'class': 'form-select'}),
             'amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0.01'}),
             'payment_method': forms.Select(attrs={'class': 'form-select'}),
-            'reference': forms.TextInput(attrs={'class': 'form-control'}),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'reference': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. TXN-12345, CHQ-001'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Any additional notes...'}),
         }
     
     def __init__(self, *args, customer=None, **kwargs):
@@ -52,7 +52,7 @@ class CustomerNoteForm(forms.ModelForm):
         model = CustomerNote
         fields = ['note']
         widgets = {
-            'note': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'note': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'e.g. Customer preference, follow-up notes...'}),
         }
 
 
@@ -74,5 +74,5 @@ class QuickPaymentForm(forms.Form):
     reference = forms.CharField(
         max_length=100,
         required=False,
-        widget=forms.TextInput(attrs={'class': 'form-control'})
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. TXN-12345'})
     )

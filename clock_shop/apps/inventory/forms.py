@@ -89,12 +89,12 @@ class PurchaseItemForm(forms.Form):
     )
     quantity = forms.IntegerField(
         min_value=1,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': '1'})
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': '1', 'placeholder': 'e.g. 10'})
     )
     unit_price = forms.DecimalField(
         min_value=0,
         decimal_places=2,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'e.g. 150.00'})
     )
 
 
@@ -115,10 +115,10 @@ class StockAdjustmentForm(forms.Form):
     )
     quantity = forms.IntegerField(
         min_value=1,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': '1'})
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': '1', 'placeholder': 'e.g. 5'})
     )
     reason = forms.CharField(
-        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'e.g. Damaged goods, inventory correction...'})
     )
 
 

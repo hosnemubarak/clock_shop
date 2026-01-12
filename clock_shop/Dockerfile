@@ -25,18 +25,18 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create directories for static and media files
-RUN mkdir -p /app/staticfiles /app/media
+RUN mkdir -p /app/staticfiles /app/media /app/logs
 
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8090
 
 # Create entrypoint script
 RUN echo '#!/bin/bash\n\
 python manage.py migrate --noinput\n\
-exec gunicorn clock_shop.wsgi:application --bind 0.0.0.0:8000 --workers 2\n\
+exec python manage.py runserver 0.0.0.0:8090\n\
 ' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Run entrypoint

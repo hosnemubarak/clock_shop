@@ -116,3 +116,156 @@ LOGOUT_REDIRECT_URL = 'login'
 SHOP_NAME = os.environ.get('SHOP_NAME', "Clock Shop")
 CURRENCY_SYMBOL = os.environ.get('CURRENCY_SYMBOL', "৳")
 LOW_STOCK_THRESHOLD = int(os.environ.get('LOW_STOCK_THRESHOLD', 5))
+
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+# Create logs directory if it doesn't exist
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    
+    # Formatters define how log messages are displayed
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} [{name}:{lineno}] {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+        'simple': {
+            'format': '[{asctime}] {levelname} {message}',
+            'style': '{',
+            'datefmt': '%H:%M:%S',
+        },
+        'request': {
+            'format': '[{asctime}] {levelname} {status_code} {request.method} {request.path} {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+    },
+    
+    # Handlers determine where logs are sent
+    'handlers': {
+        # Console handler - for development
+        'console': {
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        
+        # File handler - general application logs
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'app.log',
+            'maxBytes': 5 * 1024 * 1024,  # 5 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+        
+        # Error file handler - errors and exceptions only
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'error.log',
+            'maxBytes': 5 * 1024 * 1024,  # 5 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+        
+        # Security file handler - authentication and security events
+        'security_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'security.log',
+            'maxBytes': 5 * 1024 * 1024,  # 5 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+        
+        # Database file handler - SQL queries (debug only)
+        'db_file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'db.log',
+            'maxBytes': 5 * 1024 * 1024,  # 5 MB
+            'backupCount': 2,
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
+    },
+    
+    # Loggers define which logs go where
+    'loggers': {
+        # Django core loggers
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console', 'file', 'error_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.security': {
+            'handlers': ['console', 'security_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.db.backends': {
+            'handlers': ['db_file'] if DEBUG else [],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+        
+        # Application loggers
+        'apps': {
+            'handlers': ['console', 'file', 'error_file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+        'apps.core': {
+            'handlers': ['console', 'file', 'error_file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+        'apps.inventory': {
+            'handlers': ['console', 'file', 'error_file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+        'apps.sales': {
+            'handlers': ['console', 'file', 'error_file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+        'apps.customers': {
+            'handlers': ['console', 'file', 'error_file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+        'apps.warehouse': {
+            'handlers': ['console', 'file', 'error_file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+        'apps.reports': {
+            'handlers': ['console', 'file', 'error_file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+    },
+    
+    # Root logger - catch-all for unconfigured loggers
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+}

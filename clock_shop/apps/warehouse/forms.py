@@ -9,10 +9,10 @@ class WarehouseForm(forms.ModelForm):
         model = Warehouse
         fields = ['name', 'code', 'address', 'phone', 'is_active', 'is_shop']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'code': forms.TextInput(attrs={'class': 'form-control'}),
-            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Main Store'}),
+            'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. WH001'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'e.g. 123 Main Street, City'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. +1 555-123-4567'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_shop': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
@@ -29,7 +29,7 @@ class StockTransferForm(forms.ModelForm):
                 'class': 'form-control',
                 'type': 'datetime-local'
             }),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'e.g. Reason for transfer...'}),
         }
     
     def __init__(self, *args, **kwargs):
@@ -56,7 +56,7 @@ class StockTransferItemForm(forms.Form):
     )
     quantity = forms.IntegerField(
         min_value=1,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': '1'})
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': '1', 'placeholder': 'e.g. 10'})
     )
     
     def __init__(self, *args, source_warehouse=None, **kwargs):
