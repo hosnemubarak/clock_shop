@@ -1,5 +1,7 @@
 from django.db import models
+from django.db.models import Q
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 from decimal import Decimal
 from apps.core.models import TimeStampedModel
 
@@ -42,9 +44,35 @@ class Customer(TimeStampedModel):
     
     class Meta:
         ordering = ['name']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['phone'],
+                name='unique_customer_phone',
+                condition=~Q(phone=''),
+                violation_error_message='A customer with this phone number already exists.'
+            ),
+            models.UniqueConstraint(
+                fields=['email'],
+                name='unique_customer_email',
+                condition=~Q(email=''),
+                violation_error_message='A customer with this email already exists.'
+            ),
+        ]
     
     def __str__(self):
         return self.name
+    
+    def clean(self):
+        """Validate uniqueness of phone and email."""
+        super().clean()
+        if self.phone:
+            existing = Customer.objects.filter(phone=self.phone).exclude(pk=self.pk)
+            if existing.exists():
+                raise ValidationError({'phone': 'A customer with this phone number already exists.'})
+        if self.email:
+            existing = Customer.objects.filter(email=self.email).exclude(pk=self.pk)
+            if existing.exists():
+                raise ValidationError({'email': 'A customer with this email already exists.'})
     
     def recalculate_balance(self):
         """Recalculate customer balance from sales and payments."""

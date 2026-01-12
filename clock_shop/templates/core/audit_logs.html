@@ -22,19 +22,28 @@
         <div class="card">
             <div class="card-header">
                 <form method="get" class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <input type="text" name="search" class="form-control" placeholder="Search logs..." value="{{ search }}">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <select name="action" class="form-select">
                             <option value="">All Actions</option>
-                            <option value="CREATE">Create</option>
-                            <option value="UPDATE">Update</option>
-                            <option value="DELETE">Delete</option>
-                            <option value="SALE">Sale</option>
-                            <option value="PAYMENT">Payment</option>
-                            <option value="STOCK_IN">Stock In</option>
-                            <option value="TRANSFER">Transfer</option>
+                            <option value="CREATE" {% if selected_action == 'CREATE' %}selected{% endif %}>Create</option>
+                            <option value="UPDATE" {% if selected_action == 'UPDATE' %}selected{% endif %}>Update</option>
+                            <option value="DELETE" {% if selected_action == 'DELETE' %}selected{% endif %}>Delete</option>
+                            <option value="SALE" {% if selected_action == 'SALE' %}selected{% endif %}>Sale</option>
+                            <option value="PAYMENT" {% if selected_action == 'PAYMENT' %}selected{% endif %}>Payment</option>
+                            <option value="STOCK_IN" {% if selected_action == 'STOCK_IN' %}selected{% endif %}>Stock In</option>
+                            <option value="STOCK_OUT" {% if selected_action == 'STOCK_OUT' %}selected{% endif %}>Stock Out</option>
+                            <option value="TRANSFER" {% if selected_action == 'TRANSFER' %}selected{% endif %}>Transfer</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="user" class="form-select">
+                            <option value="">All Users</option>
+                            {% for user in users %}
+                            <option value="{{ user.id }}" {% if selected_user == user.id|stringformat:"s" %}selected{% endif %}>{{ user.username }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                     <div class="col-md-2">

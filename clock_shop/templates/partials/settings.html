@@ -490,3 +490,23 @@
         </div>
     </div>
 </div>
+
+<!-- Ensure theme customizer is closed by default on page load -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var themeOffcanvas = document.getElementById('theme-settings-offcanvas');
+    if (themeOffcanvas) {
+        // Remove show class if present
+        themeOffcanvas.classList.remove('show');
+        // Remove backdrop if present
+        var backdrop = document.querySelector('.offcanvas-backdrop');
+        if (backdrop) {
+            backdrop.remove();
+        }
+        // Ensure body doesn't have offcanvas-open class
+        document.body.classList.remove('offcanvas-backdrop');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }
+});
+</script>

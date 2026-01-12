@@ -118,11 +118,26 @@ def audit_logs(request):
     if action_filter:
         logs = logs.filter(action=action_filter)
     
-    paginator = Paginator(logs, 10)
+    # User filter
+    user_filter = request.GET.get('user')
+    if user_filter:
+        logs = logs.filter(user_id=user_filter)
+    
+    # Get all users for filter dropdown
+    users = User.objects.filter(auditlog__isnull=False).distinct().order_by('username')
+    
+    paginator = Paginator(logs, 20)
     page = request.GET.get('page')
     logs = paginator.get_page(page)
     
-    return render(request, 'core/audit_logs.html', {'logs': logs, 'search': search})
+    context = {
+        'logs': logs,
+        'search': search,
+        'users': users,
+        'selected_action': action_filter or '',
+        'selected_user': user_filter or '',
+    }
+    return render(request, 'core/audit_logs.html', context)
 
 
 def register(request):

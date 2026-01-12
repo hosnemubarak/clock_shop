@@ -79,6 +79,10 @@
                         </tbody>
                     </table>
                 </div>
+                
+                {% with page_obj=batch_data %}
+                {% include 'includes/pagination.html' %}
+                {% endwith %}
             </div>
         </div>
     </div>

@@ -99,6 +99,10 @@
                         </tbody>
                     </table>
                 </div>
+                
+                {% with page_obj=stock_summary %}
+                {% include 'includes/pagination.html' %}
+                {% endwith %}
             </div>
         </div>
     </div>

@@ -101,6 +101,10 @@
                         </tbody>
                     </table>
                 </div>
+                
+                {% with page_obj=transfers %}
+                {% include 'includes/pagination.html' %}
+                {% endwith %}
             </div>
         </div>
     </div>

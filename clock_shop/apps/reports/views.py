@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.db.models import Sum, Count, F, Q, Avg
 from django.db.models.functions import TruncDate, TruncMonth, TruncWeek
 from django.utils import timezone
@@ -132,6 +133,11 @@ def profit_report(request):
             p['margin'] = 0
         profit_data.append(p)
     
+    # Paginate profit by product
+    paginator = Paginator(profit_data, 20)
+    page = request.GET.get('page')
+    profit_by_product_page = paginator.get_page(page)
+    
     # Profit by category (exclude custom items)
     profit_by_category = SaleItem.objects.filter(
         sale__status='completed',
@@ -183,7 +189,7 @@ def profit_report(request):
     context = {
         'date_from': date_from,
         'date_to': date_to,
-        'profit_by_product': profit_data[:20],
+        'profit_by_product': profit_by_product_page,
         'profit_by_category': profit_by_category,
         'profit_by_warehouse': profit_by_warehouse,
         'totals': totals,
@@ -257,8 +263,13 @@ def stock_report(request):
     warehouses = Warehouse.objects.filter(is_active=True)
     categories = Category.objects.filter(is_active=True)
     
+    # Paginate stock summary
+    paginator = Paginator(list(stock_summary), 20)
+    page = request.GET.get('page')
+    stock_summary_page = paginator.get_page(page)
+    
     context = {
-        'stock_summary': stock_summary,
+        'stock_summary': stock_summary_page,
         'stock_by_warehouse': stock_by_warehouse,
         'stock_by_category': stock_by_category,
         'low_stock': low_stock,
@@ -280,6 +291,11 @@ def customer_report(request):
         total_due__gt=0
     ).order_by('-total_due')
     
+    # Paginate customers with dues
+    paginator = Paginator(customers_with_dues, 20)
+    page = request.GET.get('page')
+    customers_with_dues_page = paginator.get_page(page)
+    
     # Top customers by purchases
     top_customers = Customer.objects.filter(
         total_purchases__gt=0
@@ -299,7 +315,7 @@ def customer_report(request):
     ).order_by('-payment_date')[:20]
     
     context = {
-        'customers_with_dues': customers_with_dues,
+        'customers_with_dues': customers_with_dues_page,
         'top_customers': top_customers,
         'customer_summary': customer_summary,
         'recent_payments': recent_payments,
@@ -333,8 +349,13 @@ def transfer_report(request):
         cancelled=Count('id', filter=Q(status='cancelled')),
     )
     
+    # Paginate transfers
+    paginator = Paginator(transfers, 20)
+    page = request.GET.get('page')
+    transfers_page = paginator.get_page(page)
+    
     context = {
-        'transfers': transfers[:50],
+        'transfers': transfers_page,
         'transfer_summary': transfer_summary,
         'date_from': date_from,
         'date_to': date_to,
@@ -384,8 +405,13 @@ def dead_stock_report(request):
         quantity_sold=Sum('quantity')
     ).filter(quantity_sold__lte=5).order_by('quantity_sold')
     
+    # Paginate dead stock
+    paginator = Paginator(dead_stock, 20)
+    page = request.GET.get('page')
+    dead_stock_page = paginator.get_page(page)
+    
     context = {
-        'dead_stock': dead_stock[:50],
+        'dead_stock': dead_stock_page,
         'dead_stock_summary': dead_stock_summary,
         'slow_moving': slow_moving[:30],
         'days_threshold': days_threshold,
@@ -421,11 +447,16 @@ def batch_report(request):
     # Sort by age
     batch_data.sort(key=lambda x: -x['age_days'])
     
+    # Paginate batch data
+    paginator = Paginator(batch_data, 20)
+    page = request.GET.get('page')
+    batch_data_page = paginator.get_page(page)
+    
     warehouses = Warehouse.objects.filter(is_active=True)
     products = Product.objects.filter(is_active=True)
     
     context = {
-        'batch_data': batch_data,
+        'batch_data': batch_data_page,
         'warehouses': warehouses,
         'products': products,
         'selected_warehouse': warehouse_id,

@@ -93,6 +93,10 @@
                         </tbody>
                     </table>
                 </div>
+                
+                {% with page_obj=dead_stock %}
+                {% include 'includes/pagination.html' %}
+                {% endwith %}
             </div>
         </div>
     </div>

@@ -104,6 +104,10 @@
                         </tbody>
                     </table>
                 </div>
+                
+                {% with page_obj=profit_by_product %}
+                {% include 'includes/pagination.html' %}
+                {% endwith %}
             </div>
         </div>
     </div>
