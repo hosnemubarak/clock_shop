@@ -249,12 +249,14 @@ function toggleItemType(type) {
 
 function loadBatches(productId) {
     const priceInput = document.getElementById('newPrice');
+    const batchInfo = document.getElementById('batchInfo');
     
     // Clear batch dropdown
     batchSelect.clear();
     batchSelect.clearOptions();
     batchSelect.addOption({value: '', text: 'Select Batch'});
-    document.getElementById('batchInfo').innerHTML = '';
+    batchInfo.innerHTML = '';
+    batchSelect.enable();  // Re-enable batch select
     
     if (!productId) return;
     
@@ -268,6 +270,45 @@ function loadBatches(productId) {
         .then(response => response.json())
         .then(data => {
             batchesData = {};
+            
+            // Build warehouse availability display
+            let warehouseHtml = '';
+            if (data.warehouse_availability && data.warehouse_availability.length > 0) {
+                warehouseHtml = '<div class="mt-2 mb-2"><strong class="small text-muted">Stock Availability:</strong><div class="d-flex flex-wrap gap-1 mt-1">';
+                data.warehouse_availability.forEach(w => {
+                    const badgeClass = w.is_shop ? 'bg-success' : 'bg-secondary';
+                    const icon = w.is_shop ? 'la-store' : 'la-warehouse';
+                    warehouseHtml += `<span class="badge ${badgeClass}"><i class="las ${icon} me-1"></i>${w.warehouse_name}: ${w.quantity}</span>`;
+                });
+                warehouseHtml += '</div></div>';
+            }
+            
+            // Check if product has no shop stock but has warehouse stock
+            if (data.batches.length === 0 && data.warehouse_stock > 0) {
+                batchSelect.disable();  // Disable batch selection
+                batchInfo.innerHTML = `
+                    ${warehouseHtml}
+                    <div class="alert alert-warning mb-0 mt-2">
+                        <i class="las la-exclamation-triangle me-1"></i>
+                        <strong>Not available in shops!</strong><br>
+                        This product has <strong>${data.warehouse_stock} units</strong> in warehouses but none in shop locations.<br>
+                        <a href="/warehouse/transfers/create/" class="alert-link">
+                            <i class="las la-exchange-alt me-1"></i>Transfer stock to a shop first
+                        </a>
+                    </div>`;
+                return;
+            }
+            
+            if (data.batches.length === 0) {
+                batchSelect.disable();  // Disable batch selection
+                batchInfo.innerHTML = `
+                    <div class="alert alert-danger mb-0 mt-2">
+                        <i class="las la-times-circle me-1"></i>
+                        No stock available for this product.
+                    </div>`;
+                return;
+            }
+            
             data.batches.forEach(batch => {
                 batchesData[batch.id] = batch;
                 batchSelect.addOption({
@@ -276,6 +317,17 @@ function loadBatches(productId) {
                 });
             });
             batchSelect.refreshOptions(false);
+            
+            // Show warehouse availability and shop stock info
+            let infoHtml = warehouseHtml;
+            if (data.warehouse_stock > 0) {
+                infoHtml += `
+                    <div class="text-info small">
+                        <i class="las la-info-circle me-1"></i>
+                        ${data.shop_stock} units available for sale (${data.warehouse_stock} more in warehouses)
+                    </div>`;
+            }
+            batchInfo.innerHTML = infoHtml;
         });
 }
 

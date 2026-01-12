@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}System Settings | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">System Settings</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li class="breadcrumb-item active">Settings</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="las la-cog me-1"></i> Configuration
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">{{ form.shop_name.label }}</label>
+                            {{ form.shop_name }}
+                            <small class="text-muted">{{ form.shop_name.help_text }}</small>
+                            {% if form.shop_name.errors %}
+                            <div class="text-danger small">{{ form.shop_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">{{ form.currency_symbol.label }}</label>
+                            {{ form.currency_symbol }}
+                            <small class="text-muted">{{ form.currency_symbol.help_text }}</small>
+                            {% if form.currency_symbol.errors %}
+                            <div class="text-danger small">{{ form.currency_symbol.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    <h6 class="text-primary mb-3"><i class="las la-box me-1"></i> Inventory Settings</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">{{ form.low_stock_threshold.label }}</label>
+                            {{ form.low_stock_threshold }}
+                            <small class="text-muted">{{ form.low_stock_threshold.help_text }}</small>
+                            {% if form.low_stock_threshold.errors %}
+                            <div class="text-danger small">{{ form.low_stock_threshold.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    <h6 class="text-danger mb-3"><i class="las la-calendar-times me-1"></i> License / Server Expiry</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">{{ form.license_expiry_date.label }}</label>
+                            {{ form.license_expiry_date }}
+                            <small class="text-muted">{{ form.license_expiry_date.help_text }}</small>
+                            {% if form.license_expiry_date.errors %}
+                            <div class="text-danger small">{{ form.license_expiry_date.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">{{ form.alert_days_before_expiry.label }}</label>
+                            {{ form.alert_days_before_expiry }}
+                            <small class="text-muted">{{ form.alert_days_before_expiry.help_text }}</small>
+                            {% if form.alert_days_before_expiry.errors %}
+                            <div class="text-danger small">{{ form.alert_days_before_expiry.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'dashboard' %}" class="btn btn-light">
+                            <i class="las la-arrow-left me-1"></i> Back to Dashboard
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="las la-save me-1"></i> Save Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Environment Fallback Info -->
+        <div class="card">
+            <div class="card-header bg-info-subtle">
+                <h5 class="card-title mb-0 text-info">
+                    <i class="las la-info-circle me-1"></i> Environment Fallbacks
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    If a setting is left blank, the system will use the corresponding environment variable.
+                </p>
+                <table class="table table-sm table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted">SHOP_NAME:</td>
+                        <td><code>{{ env_shop_name|default:"Clock Shop" }}</code></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">CURRENCY_SYMBOL:</td>
+                        <td><code>{{ env_currency|default:"৳" }}</code></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">LOW_STOCK_THRESHOLD:</td>
+                        <td><code>{{ env_low_stock|default:"5" }}</code></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Last Updated -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="las la-history me-1"></i> Last Updated
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if settings.updated_at %}
+                <p class="mb-1">
+                    <i class="las la-clock text-muted me-1"></i>
+                    {{ settings.updated_at|date:"M d, Y H:i" }}
+                </p>
+                {% if settings.updated_by %}
+                <p class="mb-0">
+                    <i class="las la-user text-muted me-1"></i>
+                    {{ settings.updated_by.username }}
+                </p>
+                {% endif %}
+                {% else %}
+                <p class="text-muted mb-0">Never updated</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -183,6 +183,15 @@
                         <i class="las la-history"></i> <span data-key="t-audit-logs">Audit Logs</span>
                     </a>
                 </li>
+
+                <!-- System Settings (Superuser only) -->
+                {% if request.user.is_superuser %}
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="{% url 'system_settings' %}">
+                        <i class="las la-cog"></i> <span data-key="t-settings">System Settings</span>
+                    </a>
+                </li>
+                {% endif %}
             </ul>
         </div>
         <!-- Sidebar -->

@@ -30,11 +30,15 @@ def report_dashboard(request):
 
 @login_required
 def sales_report(request):
-    """Sales report with date filtering."""
+    """Sales report with date and shop filtering."""
     today = timezone.now().date()
     date_from = request.GET.get('date_from', (today - timedelta(days=30)).strftime('%Y-%m-%d'))
     date_to = request.GET.get('date_to', today.strftime('%Y-%m-%d'))
     group_by = request.GET.get('group_by', 'day')
+    shop_id = request.GET.get('shop', '')
+    
+    # Get all shops for filter dropdown
+    shops = Warehouse.objects.filter(is_shop=True, is_active=True).order_by('name')
     
     # Base queryset
     sales = Sale.objects.filter(
@@ -42,6 +46,13 @@ def sales_report(request):
         sale_date__date__gte=date_from,
         sale_date__date__lte=date_to
     )
+    
+    # Filter by shop if selected (based on sale items' batch warehouse)
+    if shop_id:
+        sales = sales.filter(
+            items__batch__warehouse_id=shop_id,
+            items__is_custom=False
+        ).distinct()
     
     # Summary stats
     summary = sales.aggregate(
@@ -89,6 +100,30 @@ def sales_report(request):
         total_profit=Sum(F('quantity') * (F('unit_price') - F('cost_price')))
     ).order_by('-total_revenue')[:10]
     
+    # Shop-wise sales breakdown (for comparison)
+    shop_sales = []
+    if not shop_id:  # Only show breakdown when viewing all shops
+        for shop in shops:
+            shop_total = Sale.objects.filter(
+                status='completed',
+                sale_date__date__gte=date_from,
+                sale_date__date__lte=date_to,
+                items__batch__warehouse=shop,
+                items__is_custom=False
+            ).distinct().aggregate(
+                total=Sum('total_amount'),
+                cost=Sum('total_cost'),
+                count=Count('id')
+            )
+            if shop_total['total']:
+                shop_sales.append({
+                    'shop': shop,
+                    'total': shop_total['total'] or Decimal('0'),
+                    'cost': shop_total['cost'] or Decimal('0'),
+                    'profit': (shop_total['total'] or Decimal('0')) - (shop_total['cost'] or Decimal('0')),
+                    'count': shop_total['count'] or 0
+                })
+    
     context = {
         'date_from': date_from,
         'date_to': date_to,
@@ -96,24 +131,53 @@ def sales_report(request):
         'summary': summary,
         'sales_by_period': sales_data,
         'top_products': top_products,
+        'shops': shops,
+        'selected_shop': shop_id,
+        'shop_sales': shop_sales,
     }
     return render(request, 'reports/sales_report.html', context)
 
 
 @login_required
 def profit_report(request):
-    """Profit analysis report."""
+    """Profit analysis report with product and shop filters."""
     today = timezone.now().date()
     date_from = request.GET.get('date_from', (today - timedelta(days=30)).strftime('%Y-%m-%d'))
     date_to = request.GET.get('date_to', today.strftime('%Y-%m-%d'))
+    product_id = request.GET.get('product', '')
+    shop_id = request.GET.get('shop', '')
+    category_id = request.GET.get('category', '')
+    
+    # Get filter options
+    from apps.inventory.models import Product, Category
+    products = Product.objects.filter(is_active=True).order_by('name')
+    shops = Warehouse.objects.filter(is_shop=True, is_active=True).order_by('name')
+    categories = Category.objects.filter(is_active=True).order_by('name')
+    
+    # Base filter for all queries
+    base_filter = {
+        'sale__status': 'completed',
+        'sale__sale_date__date__gte': date_from,
+        'sale__sale_date__date__lte': date_to,
+        'is_custom': False,
+        'product__isnull': False,
+    }
+    
+    # Apply product filter
+    if product_id:
+        base_filter['product_id'] = product_id
+    
+    # Apply shop filter
+    if shop_id:
+        base_filter['batch__warehouse_id'] = shop_id
+    
+    # Apply category filter
+    if category_id:
+        base_filter['product__category_id'] = category_id
     
     # Profit by product (exclude custom items)
     profit_by_product = SaleItem.objects.filter(
-        sale__status='completed',
-        sale__sale_date__date__gte=date_from,
-        sale__sale_date__date__lte=date_to,
-        is_custom=False,
-        product__isnull=False
+        **base_filter
     ).values(
         'product__name', 'product__sku', 'product__category__name'
     ).annotate(
@@ -140,11 +204,7 @@ def profit_report(request):
     
     # Profit by category (exclude custom items)
     profit_by_category = SaleItem.objects.filter(
-        sale__status='completed',
-        sale__sale_date__date__gte=date_from,
-        sale__sale_date__date__lte=date_to,
-        is_custom=False,
-        product__isnull=False
+        **base_filter
     ).values(
         'product__category__name'
     ).annotate(
@@ -154,15 +214,16 @@ def profit_report(request):
         profit=F('revenue') - F('cost'),
     ).order_by('-profit')
     
-    # Profit by warehouse (exclude custom items)
+    # Profit by warehouse/shop (exclude custom items)
+    warehouse_filter = base_filter.copy()
+    warehouse_filter['batch__isnull'] = False
+    if 'product__isnull' in warehouse_filter:
+        del warehouse_filter['product__isnull']
+    
     profit_by_warehouse = SaleItem.objects.filter(
-        sale__status='completed',
-        sale__sale_date__date__gte=date_from,
-        sale__sale_date__date__lte=date_to,
-        is_custom=False,
-        batch__isnull=False
+        **warehouse_filter
     ).values(
-        'batch__warehouse__name'
+        'batch__warehouse__name', 'batch__warehouse__is_shop'
     ).annotate(
         revenue=Sum(F('quantity') * F('unit_price')),
         cost=Sum(F('quantity') * F('cost_price')),
@@ -172,10 +233,7 @@ def profit_report(request):
     
     # Total summary (exclude custom items for accurate profit calc)
     totals = SaleItem.objects.filter(
-        sale__status='completed',
-        sale__sale_date__date__gte=date_from,
-        sale__sale_date__date__lte=date_to,
-        is_custom=False
+        **base_filter
     ).aggregate(
         total_revenue=Sum(F('quantity') * F('unit_price')),
         total_cost=Sum(F('quantity') * F('cost_price')),
@@ -193,6 +251,12 @@ def profit_report(request):
         'profit_by_category': profit_by_category,
         'profit_by_warehouse': profit_by_warehouse,
         'totals': totals,
+        'products': products,
+        'shops': shops,
+        'categories': categories,
+        'selected_product': product_id,
+        'selected_shop': shop_id,
+        'selected_category': category_id,
     }
     return render(request, 'reports/profit_report.html', context)
 

@@ -179,13 +179,9 @@
             
             {% if stockout.status == 'completed' %}
             <div class="card-footer">
-                <form method="post" action="{% url 'stockout_cancel' stockout.pk %}" 
-                      onsubmit="return confirm('Are you sure you want to cancel this stock out? Stock will be restored to inventory.')">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-outline-danger w-100">
-                        <i class="las la-undo me-1"></i> Cancel & Restore Stock
-                    </button>
-                </form>
+                <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#cancelStockoutModal">
+                    <i class="las la-undo me-1"></i> Cancel & Restore Stock
+                </button>
             </div>
             {% endif %}
         </div>
@@ -238,4 +234,84 @@
         </div>
     </div>
 </div>
+
+<!-- Cancel Stock Out Modal -->
+{% if stockout.status == 'completed' %}
+<div class="modal fade" id="cancelStockoutModal" tabindex="-1" aria-labelledby="cancelStockoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger-subtle">
+                <h5 class="modal-title text-danger" id="cancelStockoutModalLabel">
+                    <i class="las la-exclamation-triangle me-1"></i> Cancel Stock Out
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="las la-info-circle me-1"></i>
+                    <strong>This action will restore stock to inventory.</strong>
+                </div>
+                
+                <h6 class="mb-3">Stock Out Details:</h6>
+                <table class="table table-sm table-borderless">
+                    <tr>
+                        <td class="text-muted" width="120">Reference:</td>
+                        <td><strong>{{ stockout.stockout_number }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Warehouse:</td>
+                        <td>{{ stockout.warehouse.name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Reason:</td>
+                        <td>{{ stockout.get_reason_display }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Total Items:</td>
+                        <td>{{ stockout.total_quantity }} units</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Total Value:</td>
+                        <td class="text-danger fw-bold">{{ CURRENCY_SYMBOL }}{{ stockout.total_value|floatformat:2 }}</td>
+                    </tr>
+                </table>
+                
+                <div class="bg-light p-3 rounded mt-3">
+                    <p class="mb-0 text-muted small">
+                        <i class="las la-undo me-1"></i>
+                        All {{ stockout.total_quantity }} units will be restored to their original batches in <strong>{{ stockout.warehouse.name }}</strong>.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    <i class="las la-times me-1"></i> Close
+                </button>
+                <form method="post" action="{% url 'stockout_cancel' stockout.pk %}" id="cancelStockoutForm">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger" id="confirmCancelBtn">
+                        <i class="las la-undo me-1"></i> Confirm Cancel & Restore
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Handle form submission with loading state
+document.addEventListener('DOMContentLoaded', function() {
+    const cancelForm = document.getElementById('cancelStockoutForm');
+    if (cancelForm) {
+        cancelForm.addEventListener('submit', function() {
+            const btn = document.getElementById('confirmCancelBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...';
+        });
+    }
+});
+</script>
 {% endblock %}

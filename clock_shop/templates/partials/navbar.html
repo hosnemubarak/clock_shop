@@ -96,11 +96,13 @@
                     </button>
 
                     <div class="dropdown-menu dropdown-menu-end">
-                        <!-- Profile -->
-                        <a class="dropdown-item" href="#">
-                            <i class="bx bx-user fs-15 align-middle me-1"></i>
-                            <span>Profile</span>
+                        <!-- System Settings (Superuser only) -->
+                        {% if user.is_superuser %}
+                        <a class="dropdown-item" href="{% url 'system_settings' %}">
+                            <i class="bx bx-cog fs-15 align-middle me-1"></i>
+                            <span>System Settings</span>
                         </a>
+                        {% endif %}
 
                         <!-- Admin Panel -->
                         {% if user.is_staff or user.is_superuser %}

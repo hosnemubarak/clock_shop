@@ -130,6 +130,12 @@ def sale_create(request):
                     product = Product.objects.get(pk=item['product_id'])
                     batch = Batch.objects.select_for_update().get(pk=item['batch_id'])
                     
+                    # Validate batch is from a shop warehouse
+                    if not batch.warehouse.is_shop:
+                        messages.error(request, f'Product "{product.name}" can only be sold from shop locations. Please transfer stock from warehouse to shop first.')
+                        sale.delete()
+                        return redirect('sale_create')
+                    
                     # Validate stock
                     if quantity > batch.quantity:
                         messages.error(request, f'Insufficient stock in batch {batch.batch_number}')
@@ -298,12 +304,40 @@ def pos_view(request):
 
 @login_required
 def api_product_info(request, product_id):
-    """API endpoint to get product info with available batches."""
+    """API endpoint to get product info with available batches from SHOP warehouses only."""
+    from apps.warehouse.models import Warehouse
+    
     product = get_object_or_404(Product, pk=product_id)
+    
+    # Only get batches from shop warehouses (is_shop=True)
     batches = Batch.objects.filter(
         product=product,
-        quantity__gt=0
+        quantity__gt=0,
+        warehouse__is_shop=True  # Only shop warehouses
     ).select_related('warehouse').order_by('purchase_date')
+    
+    # Get stock breakdown by warehouse (all warehouses for display)
+    all_batches = Batch.objects.filter(
+        product=product,
+        quantity__gt=0
+    ).select_related('warehouse').values(
+        'warehouse__id', 'warehouse__name', 'warehouse__is_shop'
+    ).annotate(
+        total_qty=Sum('quantity')
+    ).order_by('-warehouse__is_shop', 'warehouse__name')
+    
+    warehouse_availability = [{
+        'warehouse_id': w['warehouse__id'],
+        'warehouse_name': w['warehouse__name'],
+        'is_shop': w['warehouse__is_shop'],
+        'quantity': w['total_qty']
+    } for w in all_batches]
+    
+    # Check if product has stock in non-shop warehouses (for guidance message)
+    warehouse_stock = sum(w['quantity'] for w in warehouse_availability if not w['is_shop'])
+    
+    # Get shop stock total
+    shop_stock = sum(w['quantity'] for w in warehouse_availability if w['is_shop'])
     
     data = {
         'id': product.id,
@@ -311,6 +345,9 @@ def api_product_info(request, product_id):
         'sku': product.sku,
         'default_price': str(product.default_selling_price),
         'total_stock': product.total_stock,
+        'shop_stock': shop_stock,  # Stock available in shops
+        'warehouse_stock': warehouse_stock,  # Stock in non-shop warehouses
+        'warehouse_availability': warehouse_availability,  # Detailed breakdown
         'batches': [{
             'id': b.id,
             'batch_number': b.batch_number,
@@ -318,6 +355,7 @@ def api_product_info(request, product_id):
             'buy_price': str(b.buy_price),
             'warehouse': b.warehouse.name,
             'warehouse_id': b.warehouse.id,
+            'is_shop': b.warehouse.is_shop,
             'purchase_date': b.purchase_date.strftime('%Y-%m-%d'),
         } for b in batches]
     }

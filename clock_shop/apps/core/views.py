@@ -1,14 +1,15 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.contrib.auth import login
 from django.contrib import messages
 from django.db.models import Sum, Count, F
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, date
 from decimal import Decimal
 
-from .models import AuditLog
+from .models import AuditLog, SystemSettings
+from .forms import SystemSettingsForm
 from apps.inventory.models import Product, Batch
 from apps.sales.models import Sale, SaleItem
 from apps.customers.models import Customer
@@ -40,9 +41,14 @@ def dashboard(request):
     # Inventory metrics
     total_products = Product.objects.filter(is_active=True).count()
     
+    # Get low stock threshold from settings
+    from .models import SystemSettings
+    db_settings = SystemSettings.get_settings()
+    low_stock_threshold = db_settings.low_stock_threshold or 5
+    
     low_stock_products = Batch.objects.filter(
         quantity__gt=0,
-        quantity__lte=10
+        quantity__lte=low_stock_threshold
     ).values('product').distinct().count()
     
     # Customer metrics
@@ -60,7 +66,7 @@ def dashboard(request):
     # Low stock alerts
     low_stock_batches = Batch.objects.filter(
         quantity__gt=0,
-        quantity__lte=10
+        quantity__lte=low_stock_threshold
     ).select_related('product', 'warehouse').order_by('quantity')[:10]
     
     # Payment status counts for chart
@@ -200,3 +206,32 @@ def register(request):
         return redirect('login')
     
     return render(request, 'core/register.html')
+
+
+def is_superuser(user):
+    """Check if user is superuser."""
+    return user.is_superuser
+
+
+@login_required
+@user_passes_test(is_superuser)
+def system_settings(request):
+    """View and update system settings."""
+    settings = SystemSettings.get_settings()
+    
+    if request.method == 'POST':
+        form = SystemSettingsForm(request.POST, instance=settings)
+        if form.is_valid():
+            settings = form.save(commit=False)
+            settings.updated_by = request.user
+            settings.save()
+            messages.success(request, 'System settings updated successfully.')
+            return redirect('system_settings')
+    else:
+        form = SystemSettingsForm(instance=settings)
+    
+    context = {
+        'form': form,
+        'settings': settings,
+    }
+    return render(request, 'core/system_settings.html', context)

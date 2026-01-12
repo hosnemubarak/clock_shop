@@ -40,3 +40,57 @@ class TimeStampedModel(models.Model):
     
     class Meta:
         abstract = True
+
+
+class SystemSettings(models.Model):
+    """
+    Singleton model for system-wide settings.
+    Values here override environment variables.
+    """
+    shop_name = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text='Shop name displayed across the system'
+    )
+    license_expiry_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text='Server/license expiry date'
+    )
+    low_stock_threshold = models.PositiveIntegerField(
+        default=5,
+        help_text='Products with stock at or below this level are considered low stock'
+    )
+    alert_days_before_expiry = models.PositiveIntegerField(
+        default=30,
+        help_text='Number of days before expiry to start showing alerts'
+    )
+    currency_symbol = models.CharField(
+        max_length=10,
+        default='৳',
+        help_text='Currency symbol for prices'
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    
+    class Meta:
+        verbose_name = 'System Settings'
+        verbose_name_plural = 'System Settings'
+    
+    def __str__(self):
+        return 'System Settings'
+    
+    @classmethod
+    def get_settings(cls):
+        """Get or create the singleton settings instance."""
+        settings, created = cls.objects.get_or_create(pk=1)
+        return settings
+    
+    def save(self, *args, **kwargs):
+        self.pk = 1  # Ensure singleton
+        super().save(*args, **kwargs)

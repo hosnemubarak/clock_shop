@@ -16,15 +16,51 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <form method="get" class="row g-3">
-                    <div class="col-md-3">
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-2">
+                        <label class="form-label">From</label>
                         <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
+                        <label class="form-label">To</label>
                         <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">Generate</button>
+                        <label class="form-label">Shop</label>
+                        <select name="shop" class="form-select">
+                            <option value="">All Shops</option>
+                            {% for shop in shops %}
+                            <option value="{{ shop.id }}" {% if selected_shop == shop.id|stringformat:"s" %}selected{% endif %}>{{ shop.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Category</label>
+                        <select name="category" class="form-select">
+                            <option value="">All Categories</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Product</label>
+                        <select name="product" class="form-select">
+                            <option value="">All Products</option>
+                            {% for prod in products %}
+                            <option value="{{ prod.id }}" {% if selected_product == prod.id|stringformat:"s" %}selected{% endif %}>{{ prod.name|truncatechars:25 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="las la-search"></i>
+                        </button>
+                    </div>
+                    <div class="col-md-1">
+                        <a href="{% url 'profit_report' %}" class="btn btn-outline-secondary w-100">
+                            <i class="las la-redo-alt"></i>
+                        </a>
                     </div>
                 </form>
             </div>

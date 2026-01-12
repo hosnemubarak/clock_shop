@@ -4,6 +4,24 @@
 {% block title %}Dashboard | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
+<!-- License/Server Expiry Alert -->
+{% if EXPIRY_ALERT %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-{{ EXPIRY_ALERT.type }} alert-dismissible alert-label-icon label-arrow fade show" role="alert">
+            <i class="ri-{% if EXPIRY_ALERT.critical %}error-warning{% else %}alarm-warning{% endif %}-line label-icon"></i>
+            <strong>{{ EXPIRY_ALERT.message }}</strong>
+            {% if request.user.is_superuser %}
+            <a href="{% url 'system_settings' %}" class="alert-link ms-2">
+                <i class="las la-cog"></i> Update Settings
+            </a>
+            {% endif %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
