@@ -70,8 +70,9 @@
                                 <!-- Inventory Item Form -->
                                 <div class="tab-pane active" id="inventoryTab" role="tabpanel">
                                     <div id="inventoryItemForm">
-                                        <div class="row g-3 align-items-end">
-                                            <div class="col-md-4">
+                                        <!-- Row 1: Product and Batch -->
+                                        <div class="row g-3 mb-3">
+                                            <div class="col-md-6">
                                                 <label class="form-label fw-medium">Product <span class="text-danger">*</span></label>
                                                 <select class="form-select" id="newProduct">
                                                     <option value="">Search or select product...</option>
@@ -80,24 +81,27 @@
                                                     {% endfor %}
                                                 </select>
                                             </div>
-                                            <div class="col-md-3">
+                                            <div class="col-md-6">
                                                 <label class="form-label fw-medium">Batch <span class="text-danger">*</span></label>
                                                 <select class="form-select" id="newBatch">
                                                     <option value="">Select Batch</option>
                                                 </select>
                                             </div>
-                                            <div class="col-md-2 col-6">
+                                        </div>
+                                        <!-- Row 2: Qty, Price, Add Button -->
+                                        <div class="row g-3 align-items-end">
+                                            <div class="col-4 col-md-3">
                                                 <label class="form-label fw-medium">Qty</label>
                                                 <input type="number" class="form-control" id="newQty" min="1" value="1">
                                             </div>
-                                            <div class="col-md-2 col-6">
+                                            <div class="col-5 col-md-4">
                                                 <label class="form-label fw-medium">Price</label>
                                                 <div class="input-group">
                                                     <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
                                                     <input type="number" class="form-control" id="newPrice" step="0.01">
                                                 </div>
                                             </div>
-                                            <div class="col-md-1">
+                                            <div class="col-3 col-md-2">
                                                 <button type="button" class="btn btn-primary w-100" onclick="addItem()">
                                                     <i class="las la-plus fs-18"></i>
                                                 </button>
