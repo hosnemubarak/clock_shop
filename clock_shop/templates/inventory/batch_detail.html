@@ -11,7 +11,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'product_detail' batch.product.pk %}">{{ batch.product.display_name }}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'product_detail' batch.product.pk %}">{{ batch.product.sku }}</a></li>
                     <li class="breadcrumb-item active">{{ batch.batch_number }}</li>
                 </ol>
             </nav>
@@ -165,7 +165,7 @@
                     <div>
                         <h5 class="mb-1">
                             <a href="{% url 'product_detail' batch.product.pk %}" class="text-reset">
-                                {{ batch.product.display_name }}
+                                {{ batch.product.sku }}
                             </a>
                         </h5>
                         <p class="text-muted mb-0">

@@ -52,7 +52,7 @@
                             <select class="form-select" id="newProduct">
                                 <option value="">Select Product</option>
                                 {% for p in products %}
-                                <option value="{{ p.id }}" data-name="{{ p.display_name }}" data-sku="{{ p.sku }}">{{ p.display_name }}</option>
+                                <option value="{{ p.id }}" data-sku="{{ p.sku }}">{{ p.sku }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -154,7 +154,7 @@ function addItem() {
     const item = {
         index: itemIndex++,
         product_id: productSelect.value,
-        product_name: product.dataset.name,
+        product_sku: product.dataset.sku,
         warehouse_id: warehouseSelect.value,
         warehouse_name: warehouse.dataset.name,
         quantity: parseInt(qty),
@@ -185,7 +185,7 @@ function renderItems() {
         total += lineTotal;
         html += `
             <tr>
-                <td>${item.product_name}</td>
+                <td>${item.product_sku}</td>
                 <td>${item.warehouse_name}</td>
                 <td>${item.quantity}</td>
                 <td>{{ CURRENCY_SYMBOL }}${item.unit_price.toFixed(2)}</td>

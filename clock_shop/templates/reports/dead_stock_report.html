@@ -80,7 +80,7 @@
                         <tbody>
                             {% for b in dead_stock %}
                             <tr>
-                                <td><a href="{% url 'product_detail' b.product.pk %}">{{ b.product.display_name|truncatechars:25 }}</a></td>
+                                <td><a href="{% url 'product_detail' b.product.pk %}">{{ b.product.sku }}</a></td>
                                 <td><code>{{ b.batch_number }}</code></td>
                                 <td>{{ b.warehouse.code }}</td>
                                 <td class="text-center">{{ b.quantity }}</td>

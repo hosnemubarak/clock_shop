@@ -77,7 +77,7 @@
                                                 <select class="form-select" id="newProduct">
                                                     <option value="">Search or select product...</option>
                                                     {% for p in products %}
-                                                    <option value="{{ p.id }}" data-name="{{ p.display_name }}" data-price="{{ p.default_selling_price }}">{{ p.display_name }} ({{ p.total_stock }} in stock)</option>
+                                                    <option value="{{ p.id }}" data-sku="{{ p.sku }}" data-price="{{ p.default_selling_price }}">{{ p.sku }} ({{ p.total_stock }} in stock)</option>
                                                     {% endfor %}
                                                 </select>
                                             </div>
@@ -379,7 +379,7 @@ function addItem() {
     const item = {
         index: itemIndex++,
         product_id: productId,
-        product_name: productOption.dataset.name,
+        product_sku: productOption.dataset.sku,
         batch_id: batchId,
         batch_number: batch.batch_number,
         quantity: qty,
@@ -428,7 +428,7 @@ function addCustomItem() {
     const item = {
         index: itemIndex++,
         product_id: null,
-        product_name: description,
+        product_sku: description,
         batch_id: null,
         batch_number: 'CUSTOM',
         quantity: qty,
@@ -471,7 +471,7 @@ function renderItems() {
         const itemJson = JSON.stringify(item).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
         html += `
             <tr class="${rowClass}">
-                <td>${escapeHtml(item.product_name)}</td>
+                <td>${escapeHtml(item.product_sku)}</td>
                 <td>${batchBadge}</td>
                 <td>${item.quantity}</td>
                 <td>{{ CURRENCY_SYMBOL }}${item.unit_price.toFixed(2)}</td>

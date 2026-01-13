@@ -73,7 +73,7 @@
                             <select class="form-select" id="productSelect">
                                 <option value="">Select Product...</option>
                                 {% for p in products %}
-                                <option value="{{ p.id }}" data-name="{{ p.display_name }}">{{ p.display_name }} ({{ p.total_stock }} in stock)</option>
+                                <option value="{{ p.id }}" data-sku="{{ p.sku }}">{{ p.sku }} ({{ p.total_stock }} in stock)</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -271,7 +271,7 @@ function addItem() {
     const quantity = parseInt(qtyEl.value);
     
     if (!productId || !batchId || !quantity) {
-        alert('Please select product, batch and enter quantity');
+        showValidationModal('Please select product, batch and enter quantity', 'Missing Information');
         return;
     }
     
@@ -279,7 +279,7 @@ function addItem() {
     const availableQty = parseInt(batchOption.dataset.qty);
     
     if (quantity > availableQty) {
-        alert(`Cannot remove more than available quantity (${availableQty})`);
+        showValidationModal(`Cannot remove more than available quantity (${availableQty})`, 'Insufficient Stock');
         return;
     }
     
@@ -288,7 +288,7 @@ function addItem() {
     if (existingIndex >= 0) {
         const newQty = items[existingIndex].quantity + quantity;
         if (newQty > availableQty) {
-            alert(`Total quantity would exceed available (${availableQty})`);
+            showValidationModal(`Total quantity would exceed available (${availableQty})`, 'Quantity Exceeded');
             return;
         }
         items[existingIndex].quantity = newQty;
@@ -296,7 +296,7 @@ function addItem() {
         items.push({
             batch_id: batchId,
             product_id: productId,
-            product_name: productEl.options[productEl.selectedIndex].dataset.name,
+            product_sku: productEl.options[productEl.selectedIndex].dataset.sku,
             batch_number: batchOption.dataset.number,
             quantity: quantity,
             unit_cost: parseFloat(batchOption.dataset.price),
@@ -333,7 +333,7 @@ function renderItems() {
         items.forEach((item, index) => {
             const total = item.quantity * item.unit_cost;
             tbody.innerHTML += `<tr>
-                <td>${item.product_name}</td>
+                <td>${item.product_sku}</td>
                 <td><code>${item.batch_number}</code></td>
                 <td class="text-center">${item.quantity}</td>
                 <td class="text-end">{{ CURRENCY_SYMBOL }}${item.unit_cost.toFixed(2)}</td>
@@ -367,7 +367,7 @@ function updateSummary() {
 document.getElementById('stockoutForm').addEventListener('submit', function(e) {
     if (items.length === 0) {
         e.preventDefault();
-        alert('Please add at least one item');
+        showValidationModal('Please add at least one item before submitting', 'No Items Added');
         return false;
     }
 });

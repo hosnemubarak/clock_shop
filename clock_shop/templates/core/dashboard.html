@@ -332,7 +332,7 @@
                             {% for batch in low_stock_batches %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'product_detail' batch.product.pk %}">{{ batch.product.display_name|truncatechars:25 }}</a>
+                                    <a href="{% url 'product_detail' batch.product.pk %}">{{ batch.product.sku }}</a>
                                 </td>
                                 <td><small>{{ batch.warehouse.code }}</small></td>
                                 <td>

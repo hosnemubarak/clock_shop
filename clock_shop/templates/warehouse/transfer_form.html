@@ -100,41 +100,11 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- Validation Modal -->
-<div class="modal fade" id="validationModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-warning-subtle">
-                <h5 class="modal-title text-warning" id="validationModalTitle">
-                    <i class="las la-exclamation-triangle me-1"></i> Validation Error
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="validationModalBody">
-                <!-- Message will be inserted here -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
-                    <i class="las la-check me-1"></i> OK
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
 const CURRENCY_SYMBOL = '{{ CURRENCY_SYMBOL }}';
 let items = [];
 let itemIndex = 0;
 let batchesData = {};
-
-// Validation modal helper function
-function showValidationModal(message, title = 'Validation Error') {
-    document.getElementById('validationModalTitle').innerHTML = `<i class="las la-exclamation-triangle me-1"></i> ${title}`;
-    document.getElementById('validationModalBody').textContent = message;
-    const modal = new bootstrap.Modal(document.getElementById('validationModal'));
-    modal.show();
-}
 
 // Initialize source warehouse change listener
 const sourceWarehouseSelect = document.querySelector('[name="source_warehouse"]');
@@ -242,7 +212,6 @@ function addItem() {
             index: itemIndex++,
             batch_id: batchValue,
             batch_number: batch.batch_number,
-            product_name: batch.product_name,
             product_sku: batch.product_sku,
             quantity: qty,
             buy_price: batch.buy_price

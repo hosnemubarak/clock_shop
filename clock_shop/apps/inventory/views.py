@@ -291,6 +291,8 @@ def batch_list(request):
         'batches': batches,
         'warehouses': warehouses,
         'search': search,
+        'warehouse_filter': warehouse_id,
+        'stock_filter': stock_filter,
     }
     return render(request, 'inventory/batch_list.html', context)
 

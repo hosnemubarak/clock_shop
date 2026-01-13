@@ -23,21 +23,21 @@
             <div class="card-header">
                 <form method="get" class="row g-3">
                     <div class="col-md-4">
-                        <input type="text" name="search" class="form-control" placeholder="Search batches..." value="{{ search }}">
+                        <input type="text" name="search" class="form-control" placeholder="Search by batch #, SKU, brand, or supplier..." value="{{ search }}">
                     </div>
                     <div class="col-md-3">
                         <select name="warehouse" class="form-select">
                             <option value="">All Warehouses</option>
                             {% for wh in warehouses %}
-                            <option value="{{ wh.id }}">{{ wh.name }}</option>
+                            <option value="{{ wh.id }}" {% if warehouse_filter == wh.id|stringformat:"s" %}selected{% endif %}>{{ wh.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="col-md-3">
                         <select name="stock" class="form-select">
                             <option value="">All Stock</option>
-                            <option value="available">Available Only</option>
-                            <option value="depleted">Depleted</option>
+                            <option value="available" {% if stock_filter == 'available' %}selected{% endif %}>Available Only</option>
+                            <option value="depleted" {% if stock_filter == 'depleted' %}selected{% endif %}>Depleted</option>
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -65,7 +65,12 @@
                             <tr>
                                 <td><a href="{% url 'batch_detail' batch.pk %}">{{ batch.batch_number }}</a></td>
                                 <td>
-                                    <a href="{% url 'product_detail' batch.product.pk %}">{{ batch.product.display_name|truncatechars:30 }}</a>
+                                    <a href="{% url 'product_detail' batch.product.pk %}">
+                                        <strong>{{ batch.product.sku }}</strong>
+                                        {% if batch.product.brand %}
+                                        <br><small class="text-muted">{{ batch.product.brand.name }}</small>
+                                        {% endif %}
+                                    </a>
                                 </td>
                                 <td>{{ batch.warehouse.code }}</td>
                                 <td>{{ CURRENCY_SYMBOL }}{{ batch.buy_price|floatformat:2 }}</td>

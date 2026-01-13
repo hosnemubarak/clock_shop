@@ -159,7 +159,7 @@
                         <tbody>
                             {% for b in low_stock %}
                             <tr>
-                                <td>{{ b.product.display_name|truncatechars:25 }}</td>
+                                <td>{{ b.product.sku }}</td>
                                 <td>{{ b.warehouse.code }}</td>
                                 <td class="text-center"><span class="badge bg-danger">{{ b.quantity }}</span></td>
                             </tr>

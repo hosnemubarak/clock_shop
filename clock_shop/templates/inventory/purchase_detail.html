@@ -33,7 +33,7 @@
                         <tbody>
                             {% for item in purchase.items.all %}
                             <tr>
-                                <td>{{ item.product.display_name }}</td>
+                                <td>{{ item.product.sku }}</td>
                                 <td><code>{{ item.batch.batch_number }}</code></td>
                                 <td>{{ item.quantity }}</td>
                                 <td>{{ CURRENCY_SYMBOL }}{{ item.unit_price|floatformat:2 }}</td>

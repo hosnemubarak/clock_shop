@@ -1,0 +1,154 @@
+<!-- Standardized Modal Components -->
+
+<!-- Validation/Error Modal -->
+<div class="modal fade" id="validationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning-subtle">
+                <h5 class="modal-title text-warning" id="validationModalTitle">
+                    <i class="las la-exclamation-triangle me-1"></i> Validation Error
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="validationModalBody">
+                <!-- Message will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                    <i class="las la-check me-1"></i> OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success-subtle">
+                <h5 class="modal-title text-success" id="successModalTitle">
+                    <i class="las la-check-circle me-1"></i> Success
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="successModalBody">
+                <!-- Message will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+                    <i class="las la-check me-1"></i> OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary-subtle">
+                <h5 class="modal-title text-primary" id="confirmModalTitle">
+                    <i class="las la-question-circle me-1"></i> Confirm Action
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="confirmModalBody">
+                <!-- Message will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    <i class="las la-times me-1"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-primary" id="confirmModalBtn">
+                    <i class="las la-check me-1"></i> Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Danger/Delete Confirmation Modal -->
+<div class="modal fade" id="dangerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger-subtle">
+                <h5 class="modal-title text-danger" id="dangerModalTitle">
+                    <i class="las la-exclamation-triangle me-1"></i> Confirm Action
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="dangerModalBody">
+                <!-- Message will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    <i class="las la-times me-1"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="dangerModalBtn">
+                    <i class="las la-trash me-1"></i> Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Global modal helper functions
+let confirmCallback = null;
+let dangerCallback = null;
+
+function showValidationModal(message, title = 'Validation Error') {
+    document.getElementById('validationModalTitle').innerHTML = `<i class="las la-exclamation-triangle me-1"></i> ${title}`;
+    document.getElementById('validationModalBody').textContent = message;
+    const modal = new bootstrap.Modal(document.getElementById('validationModal'));
+    modal.show();
+}
+
+function showSuccessModal(message, title = 'Success') {
+    document.getElementById('successModalTitle').innerHTML = `<i class="las la-check-circle me-1"></i> ${title}`;
+    document.getElementById('successModalBody').textContent = message;
+    const modal = new bootstrap.Modal(document.getElementById('successModal'));
+    modal.show();
+}
+
+function showConfirmModal(message, title, callback) {
+    document.getElementById('confirmModalTitle').innerHTML = `<i class="las la-question-circle me-1"></i> ${title}`;
+    document.getElementById('confirmModalBody').textContent = message;
+    confirmCallback = callback;
+    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    modal.show();
+}
+
+function showDangerModal(message, title, callback) {
+    document.getElementById('dangerModalTitle').innerHTML = `<i class="las la-exclamation-triangle me-1"></i> ${title}`;
+    document.getElementById('dangerModalBody').textContent = message;
+    dangerCallback = callback;
+    const modal = new bootstrap.Modal(document.getElementById('dangerModal'));
+    modal.show();
+}
+
+// Confirm button click handler
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmBtn = document.getElementById('confirmModalBtn');
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', function() {
+            if (confirmCallback) {
+                confirmCallback();
+            }
+            bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+        });
+    }
+    
+    const dangerBtn = document.getElementById('dangerModalBtn');
+    if (dangerBtn) {
+        dangerBtn.addEventListener('click', function() {
+            if (dangerCallback) {
+                dangerCallback();
+            }
+            bootstrap.Modal.getInstance(document.getElementById('dangerModal')).hide();
+        });
+    }
+});
+</script>

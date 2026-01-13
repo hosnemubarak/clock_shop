@@ -139,7 +139,7 @@
                             {% for batch in batches %}
                             <tr>
                                 <td><a href="{% url 'batch_detail' batch.pk %}">{{ batch.batch_number }}</a></td>
-                                <td>{{ batch.product.display_name }}</td>
+                                <td>{{ batch.product.sku }}</td>
                                 <td>{{ CURRENCY_SYMBOL }}{{ batch.buy_price|floatformat:2 }}</td>
                                 <td>{{ batch.quantity }}</td>
                                 <td>{{ CURRENCY_SYMBOL }}{{ batch.total_value|floatformat:2 }}</td>

@@ -125,48 +125,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- Confirmation Modal -->
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-primary-subtle">
-                <h5 class="modal-title text-primary" id="confirmModalTitle">
-                    <i class="las la-question-circle me-1"></i> Confirm Action
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="confirmModalBody">
-                <!-- Message will be inserted here -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-                    <i class="las la-times me-1"></i> Cancel
-                </button>
-                <button type="button" class="btn btn-primary" id="confirmModalBtn">
-                    <i class="las la-check me-1"></i> Confirm
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
-let confirmCallback = null;
-
-function showConfirmModal(message, title, callback) {
-    document.getElementById('confirmModalTitle').innerHTML = `<i class="las la-question-circle me-1"></i> ${title}`;
-    document.getElementById('confirmModalBody').textContent = message;
-    confirmCallback = callback;
-    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
-    modal.show();
-}
-
-document.getElementById('confirmModalBtn').addEventListener('click', function() {
-    if (confirmCallback) {
-        confirmCallback();
-    }
-    bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
-});
 
 function confirmComplete() {
     showConfirmModal(
