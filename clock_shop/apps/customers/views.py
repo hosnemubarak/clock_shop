@@ -76,7 +76,7 @@ def customer_detail(request, pk):
         sale__customer=customer,
         sale__status='completed'
     ).values(
-        'product__name', 'product__sku'
+        'product__sku', 'product__brand__name'
     ).annotate(
         total_quantity=Sum('quantity'),
         total_amount=Sum('quantity') * Sum('unit_price')

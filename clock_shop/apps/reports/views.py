@@ -93,7 +93,7 @@ def sales_report(request):
         is_custom=False,
         product__isnull=False
     ).values(
-        'product__name', 'product__sku'
+        'product__sku', 'product__brand__name'
     ).annotate(
         total_quantity=Sum('quantity'),
         total_revenue=Sum(F('quantity') * F('unit_price')),
@@ -179,7 +179,7 @@ def profit_report(request):
     profit_by_product = SaleItem.objects.filter(
         **base_filter
     ).values(
-        'product__name', 'product__sku', 'product__category__name'
+        'product__sku', 'product__brand__name', 'product__category__name'
     ).annotate(
         quantity_sold=Sum('quantity'),
         revenue=Sum(F('quantity') * F('unit_price')),
@@ -275,13 +275,13 @@ def stock_report(request):
         batches = batches.filter(warehouse_id=warehouse_id)
     
     stock_summary = batches.values(
-        'product__id', 'product__name', 'product__sku', 
+        'product__id', 'product__sku', 'product__brand__name',
         'product__category__name', 'product__default_selling_price'
     ).annotate(
         total_quantity=Sum('quantity'),
         total_value=Sum(F('quantity') * F('buy_price')),
         avg_cost=Avg('buy_price'),
-    ).order_by('product__name')
+    ).order_by('product__sku')
     
     if category_id:
         stock_summary = stock_summary.filter(product__category_id=category_id)
@@ -464,7 +464,7 @@ def dead_stock_report(request):
         is_custom=False,
         product__isnull=False
     ).values(
-        'product__id', 'product__name', 'product__sku'
+        'product__id', 'product__sku', 'product__brand__name'
     ).annotate(
         quantity_sold=Sum('quantity')
     ).filter(quantity_sold__lte=5).order_by('quantity_sold')

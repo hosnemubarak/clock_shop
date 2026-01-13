@@ -118,7 +118,10 @@
                         <tbody>
                             {% for p in slow_moving %}
                             <tr>
-                                <td>{{ p.product__name|truncatechars:20 }}</td>
+                                <td>
+                                    {{ p.product__sku }}
+                                    {% if p.product__brand__name %} - {{ p.product__brand__name }}{% endif %}
+                                </td>
                                 <td class="text-center"><span class="badge bg-warning">{{ p.quantity_sold }}</span></td>
                             </tr>
                             {% empty %}

@@ -47,15 +47,15 @@ def warehouse_detail(request, pk):
     batches = Batch.objects.filter(
         warehouse=warehouse, 
         quantity__gt=0
-    ).select_related('product').order_by('product__name')
+    ).select_related('product', 'product__brand').order_by('product__sku')
     
     # Stock summary by product
     stock_summary = batches.values(
-        'product__name', 'product__sku'
+        'product__sku', 'product__brand__name'
     ).annotate(
         total_quantity=Sum('quantity'),
         total_value=Sum(F('quantity') * F('buy_price'))
-    ).order_by('product__name')
+    ).order_by('product__sku')
     
     context = {
         'warehouse': warehouse,

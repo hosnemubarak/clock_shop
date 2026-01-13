@@ -126,7 +126,10 @@
                         <tbody>
                             {% for p in profit_by_product %}
                             <tr>
-                                <td>{{ p.product__name|truncatechars:25 }}</td>
+                                <td>
+                                    {{ p.product__sku }}
+                                    {% if p.product__brand__name %} - {{ p.product__brand__name }}{% endif %}
+                                </td>
                                 <td><small>{{ p.product__category__name }}</small></td>
                                 <td class="text-center">{{ p.quantity_sold }}</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ p.revenue|floatformat:2 }}</td>

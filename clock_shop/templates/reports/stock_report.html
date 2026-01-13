@@ -80,8 +80,10 @@
                         <tbody>
                             {% for item in stock_summary %}
                             <tr>
-                                <td>{{ item.product__name }}</td>
-                                <td><code>{{ item.product__sku }}</code></td>
+                                <td>
+                                    <code>{{ item.product__sku }}</code>
+                                    {% if item.product__brand__name %} - {{ item.product__brand__name }}{% endif %}
+                                </td>
                                 <td>{{ item.product__category__name }}</td>
                                 <td class="text-center">
                                     {% if item.total_quantity <= 10 %}

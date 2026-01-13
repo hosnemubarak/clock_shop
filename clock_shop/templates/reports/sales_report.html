@@ -161,7 +161,10 @@
                         <tbody>
                             {% for p in top_products %}
                             <tr>
-                                <td>{{ p.product__name|truncatechars:20 }}</td>
+                                <td>
+                                    {{ p.product__sku }}
+                                    {% if p.product__brand__name %} - {{ p.product__brand__name }}{% endif %}
+                                </td>
                                 <td class="text-center">{{ p.total_quantity }}</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ p.total_revenue|floatformat:0 }}</td>
                             </tr>
@@ -314,7 +317,7 @@ if (document.getElementById("sales-period-chart") && salesPeriodLabels.length > 
 }
 
 // Top Products Data
-var topProductLabels = [{% for p in top_products %}"{{ p.product__name|truncatechars:15 }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+var topProductLabels = [{% for p in top_products %}"{{ p.product__sku }}{% if p.product__brand__name %} - {{ p.product__brand__name|truncatechars:10 }}{% endif %}"{% if not forloop.last %},{% endif %}{% endfor %}];
 var topProductValues = [{% for p in top_products %}{{ p.total_revenue|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}];
 
 // Top Products Horizontal Bar Chart
