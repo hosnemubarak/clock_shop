@@ -496,17 +496,46 @@
 document.addEventListener('DOMContentLoaded', function() {
     var themeOffcanvas = document.getElementById('theme-settings-offcanvas');
     if (themeOffcanvas) {
+        // Force close the offcanvas on page load
+        var bsOffcanvas = bootstrap.Offcanvas.getInstance(themeOffcanvas);
+        if (bsOffcanvas) {
+            bsOffcanvas.hide();
+        }
+        
         // Remove show class if present
         themeOffcanvas.classList.remove('show');
+        themeOffcanvas.classList.remove('showing');
+        
         // Remove backdrop if present
         var backdrop = document.querySelector('.offcanvas-backdrop');
         if (backdrop) {
             backdrop.remove();
         }
-        // Ensure body doesn't have offcanvas-open class
+        
+        // Ensure body doesn't have modal/offcanvas classes
         document.body.classList.remove('offcanvas-backdrop');
+        document.body.classList.remove('modal-open');
         document.body.style.overflow = '';
         document.body.style.paddingRight = '';
     }
 });
+
+// Additional check after a short delay to catch any delayed auto-opens
+setTimeout(function() {
+    var themeOffcanvas = document.getElementById('theme-settings-offcanvas');
+    if (themeOffcanvas && themeOffcanvas.classList.contains('show')) {
+        var bsOffcanvas = bootstrap.Offcanvas.getInstance(themeOffcanvas);
+        if (bsOffcanvas) {
+            bsOffcanvas.hide();
+        }
+        themeOffcanvas.classList.remove('show');
+        var backdrop = document.querySelector('.offcanvas-backdrop');
+        if (backdrop) {
+            backdrop.remove();
+        }
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }
+}, 500);
 </script>
