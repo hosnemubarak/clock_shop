@@ -35,23 +35,16 @@
                             <small class="text-muted">Unique product identifier</small>
                             {% if form.sku.errors %}<div class="text-danger small">{{ form.sku.errors.0 }}</div>{% endif %}
                         </div>
-                        <div class="col-md-8 mb-3">
-                            <label for="id_name" class="form-label">Product Name <span class="text-danger">*</span></label>
-                            {{ form.name }}
-                            {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors.0 }}</div>{% endif %}
+                        <div class="col-md-4 mb-3">
+                            <label for="id_brand" class="form-label">Brand <span class="text-danger">*</span></label>
+                            {{ form.brand }}
+                            <small class="text-muted">Displays as: SKU - Brand Name</small>
+                            {% if form.brand.errors %}<div class="text-danger small">{{ form.brand.errors.0 }}</div>{% endif %}
                         </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="id_category" class="form-label">Category <span class="text-danger">*</span></label>
                             {{ form.category }}
                             {% if form.category.errors %}<div class="text-danger small">{{ form.category.errors.0 }}</div>{% endif %}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="id_brand" class="form-label">Brand</label>
-                            {{ form.brand }}
-                            <small class="text-muted">Optional</small>
                         </div>
                     </div>
 

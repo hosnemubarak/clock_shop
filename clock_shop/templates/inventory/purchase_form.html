@@ -52,7 +52,7 @@
                             <select class="form-select" id="newProduct">
                                 <option value="">Select Product</option>
                                 {% for p in products %}
-                                <option value="{{ p.id }}" data-name="{{ p.name }}" data-sku="{{ p.sku }}">{{ p.name }}</option>
+                                <option value="{{ p.id }}" data-name="{{ p.display_name }}" data-sku="{{ p.sku }}">{{ p.display_name }}</option>
                                 {% endfor %}
                             </select>
                         </div>

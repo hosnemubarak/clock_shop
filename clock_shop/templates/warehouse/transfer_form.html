@@ -142,7 +142,16 @@ function loadWarehouseBatches(warehouseId) {
             }
             data.forEach(batch => {
                 batchesData[batch.id] = batch;
-                batchSelect.innerHTML += `<option value="${batch.id}">${batch.product_name} - ${batch.batch_number} (${batch.quantity} avail @ ${CURRENCY_SYMBOL}${batch.buy_price})</option>`;
+                batchSelect.innerHTML += `<option value="${batch.id}">${batch.product_name} - Batch: ${batch.batch_number} (${batch.quantity} avail @ ${CURRENCY_SYMBOL}${batch.buy_price})</option>`;
+            });
+            
+            // Initialize Tom Select for searchable batch dropdown
+            if (window.batchTomSelect) {
+                window.batchTomSelect.destroy();
+            }
+            window.batchTomSelect = new TomSelect('#newBatch', {
+                placeholder: 'Search batch...',
+                allowEmptyOption: true
             });
         })
         .catch(error => {
@@ -202,16 +211,21 @@ function addItem() {
     batchesData[batchSelect.value].quantity -= qty;
     
     // Update the batch select option to show new available quantity
-    const option = batchSelect.querySelector(`option[value="${batchSelect.value}"]`);
-    if (option && batchesData[batchSelect.value]) {
+    if (window.batchTomSelect) {
         const b = batchesData[batchSelect.value];
-        option.textContent = `${b.product_name} - ${b.batch_number} (${b.quantity} avail @ ${CURRENCY_SYMBOL}${b.buy_price})`;
+        window.batchTomSelect.updateOption(batchSelect.value, {
+            text: `${b.product_name} - Batch: ${b.batch_number} (${b.quantity} avail @ ${CURRENCY_SYMBOL}${b.buy_price})`
+        });
     }
     
     renderItems();
     
     // Reset inputs
-    batchSelect.value = '';
+    if (window.batchTomSelect) {
+        window.batchTomSelect.clear();
+    } else {
+        batchSelect.value = '';
+    }
     qtyInput.value = '1';
 }
 
@@ -221,11 +235,11 @@ function removeItem(index) {
         batchesData[item.batch_id].quantity += item.quantity;
         
         // Update the batch select option
-        const batchSelect = document.getElementById('newBatch');
-        const option = batchSelect.querySelector(`option[value="${item.batch_id}"]`);
-        if (option) {
+        if (window.batchTomSelect) {
             const b = batchesData[item.batch_id];
-            option.textContent = `${b.product_name} - ${b.batch_number} (${b.quantity} avail @ ${CURRENCY_SYMBOL}${b.buy_price})`;
+            window.batchTomSelect.updateOption(item.batch_id, {
+                text: `${b.product_name} - Batch: ${b.batch_number} (${b.quantity} avail @ ${CURRENCY_SYMBOL}${b.buy_price})`
+            });
         }
     }
     items = items.filter(i => i.index !== index);

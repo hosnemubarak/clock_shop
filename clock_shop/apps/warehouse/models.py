@@ -169,7 +169,7 @@ class StockTransferItem(TimeStampedModel):
         ordering = ['id']
     
     def __str__(self):
-        return f"{self.source_batch.product.name} x {self.quantity}"
+        return f"{self.source_batch.product.display_name} x {self.quantity}"
     
     @property
     def product(self):

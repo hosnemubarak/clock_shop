@@ -117,7 +117,7 @@
                                 <td>{{ forloop.counter }}</td>
                                 <td>
                                     <a href="{% url 'product_detail' item.batch.product.pk %}">
-                                        {{ item.batch.product.name }}
+                                        {{ item.batch.product.display_name }}
                                     </a>
                                     <br><small class="text-muted">{{ item.batch.product.sku }}</small>
                                 </td>

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load humanize %}
 
-{% block title %}{{ product.name }} | {{ SHOP_NAME }}{% endblock %}
+{% block title %}{{ product.display_name }} | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -25,7 +25,7 @@
             <div class="card-body">
                 <div class="text-center mb-4">
                     {% if product.image %}
-                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="max-height: 200px;">
+                    <img src="{{ product.image.url }}" alt="{{ product.display_name }}" class="img-fluid rounded" style="max-height: 200px;">
                     {% else %}
                     <div class="avatar-xl mx-auto">
                         <div class="avatar-title bg-light rounded">
@@ -34,7 +34,7 @@
                     </div>
                     {% endif %}
                 </div>
-                <h5 class="text-center">{{ product.name }}</h5>
+                <h5 class="text-center">{{ product.display_name }}</h5>
                 <p class="text-center text-muted">SKU: <code>{{ product.sku }}</code></p>
                 
                 <div class="table-responsive">

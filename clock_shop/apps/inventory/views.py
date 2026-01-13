@@ -23,7 +23,6 @@ def product_list(request):
     search = request.GET.get('search', '')
     if search:
         products = products.filter(
-            Q(name__icontains=search) | 
             Q(sku__icontains=search) |
             Q(brand__name__icontains=search)
         )
@@ -97,7 +96,7 @@ def product_create(request):
         if form.is_valid():
             product = form.save()
             create_audit_log(request, 'CREATE', product)
-            messages.success(request, f'Product "{product.name}" created successfully.')
+            messages.success(request, f'Product "{product.display_name}" created successfully.')
             return redirect('product_list')
     else:
         form = ProductForm()
@@ -115,7 +114,7 @@ def product_edit(request, pk):
         if form.is_valid():
             product = form.save()
             create_audit_log(request, 'UPDATE', product)
-            messages.success(request, f'Product "{product.name}" updated successfully.')
+            messages.success(request, f'Product "{product.display_name}" updated successfully.')
             return redirect('product_detail', pk=product.pk)
     else:
         form = ProductForm(instance=product)
@@ -136,10 +135,10 @@ def product_delete(request, pk):
         if product.batches.exists():
             messages.error(request, 'Cannot delete product with existing batches.')
         else:
-            name = product.name
+            display_name = product.display_name
             create_audit_log(request, 'DELETE', product)
             product.delete()
-            messages.success(request, f'Product "{name}" deleted successfully.')
+            messages.success(request, f'Product "{display_name}" deleted successfully.')
             return redirect('product_list')
     
     return render(request, 'inventory/product_confirm_delete.html', {'product': product})
@@ -265,7 +264,8 @@ def batch_list(request):
     if search:
         batches = batches.filter(
             Q(batch_number__icontains=search) |
-            Q(product__name__icontains=search) |
+            Q(product__sku__icontains=search) |
+            Q(product__brand__name__icontains=search) |
             Q(supplier__icontains=search)
         )
     
@@ -581,7 +581,7 @@ def api_warehouse_batches(request, warehouse_id):
         'id': b.id,
         'batch_number': b.batch_number,
         'product_id': b.product_id,
-        'product_name': b.product.name,
+        'product_name': b.product.display_name,
         'quantity': b.quantity,
         'buy_price': str(b.buy_price),
         'purchase_date': b.purchase_date.strftime('%Y-%m-%d'),

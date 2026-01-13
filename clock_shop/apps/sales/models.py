@@ -174,7 +174,7 @@ class SaleItem(TimeStampedModel):
     def __str__(self):
         if self.is_custom:
             return f"{self.custom_description} x {self.quantity}"
-        return f"{self.product.name} x {self.quantity}" if self.product else f"Item x {self.quantity}"
+        return f"{self.product.display_name} x {self.quantity}" if self.product else f"Item x {self.quantity}"
     
     @property
     def total_price(self):
@@ -244,4 +244,4 @@ class SaleReturnItem(TimeStampedModel):
         ordering = ['id']
     
     def __str__(self):
-        return f"{self.sale_item.product.name} x {self.quantity}"
+        return f"{self.sale_item.product.display_name} x {self.quantity}"

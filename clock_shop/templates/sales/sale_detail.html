@@ -46,7 +46,7 @@
                                         {{ item.custom_description }}
                                         <br><small class="text-muted">Custom Entry</small>
                                     {% else %}
-                                        <a href="{% url 'product_detail' item.product.pk %}">{{ item.product.name }}</a>
+                                        <a href="{% url 'product_detail' item.product.pk %}">{{ item.product.display_name }}</a>
                                         <br><small class="text-muted">SKU: {{ item.product.sku }}</small>
                                     {% endif %}
                                 </td>

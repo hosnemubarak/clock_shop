@@ -57,7 +57,7 @@
                             {% for item in batch_data %}
                             <tr>
                                 <td><a href="{% url 'batch_detail' item.batch.pk %}">{{ item.batch.batch_number }}</a></td>
-                                <td>{{ item.batch.product.name|truncatechars:25 }}</td>
+                                <td>{{ item.batch.product.display_name|truncatechars:25 }}</td>
                                 <td>{{ item.batch.warehouse.code }}</td>
                                 <td class="text-center">{{ item.batch.quantity }}</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.batch.buy_price|floatformat:2 }}</td>

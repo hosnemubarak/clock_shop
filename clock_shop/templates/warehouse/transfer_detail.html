@@ -46,7 +46,7 @@
                         <tbody>
                             {% for item in transfer.items.all %}
                             <tr>
-                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.product.display_name }}</td>
                                 <td><code>{{ item.source_batch.batch_number }}</code></td>
                                 <td class="text-center">{{ item.quantity }}</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.unit_cost|floatformat:2 }}</td>

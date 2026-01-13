@@ -77,7 +77,7 @@
                                                 <select class="form-select" id="newProduct">
                                                     <option value="">Search or select product...</option>
                                                     {% for p in products %}
-                                                    <option value="{{ p.id }}" data-name="{{ p.name }}" data-price="{{ p.default_selling_price }}">{{ p.name }} ({{ p.total_stock }} in stock)</option>
+                                                    <option value="{{ p.id }}" data-name="{{ p.display_name }}" data-price="{{ p.default_selling_price }}">{{ p.display_name }} ({{ p.total_stock }} in stock)</option>
                                                     {% endfor %}
                                                 </select>
                                             </div>

@@ -34,7 +34,6 @@ class Brand(TimeStampedModel):
 class Product(TimeStampedModel):
     """Product model for clocks and related items."""
     sku = models.CharField(max_length=50, unique=True, verbose_name='SKU')
-    name = models.CharField(max_length=200)
     category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='products')
     brand = models.ForeignKey(Brand, on_delete=models.PROTECT, related_name='products', null=True, blank=True)
     description = models.TextField(blank=True)
@@ -49,10 +48,22 @@ class Product(TimeStampedModel):
     total_stock = models.PositiveIntegerField(default=0)
     
     class Meta:
-        ordering = ['name']
+        ordering = ['sku']
     
     def __str__(self):
-        return f"{self.sku} - {self.name}"
+        return self.display_name
+    
+    @property
+    def display_name(self):
+        """Returns SKU + Brand Name as the product identifier."""
+        if self.brand:
+            return f"{self.sku} - {self.brand.name}"
+        return self.sku
+    
+    @property
+    def dropdown_display(self):
+        """Returns SKU + Brand Name for dropdown displays (same as display_name)."""
+        return self.display_name
     
     def update_total_stock(self):
         """Update total stock from all batches."""
@@ -105,7 +116,7 @@ class Batch(TimeStampedModel):
         verbose_name_plural = 'Batches'
     
     def __str__(self):
-        return f"{self.batch_number} - {self.product.name} ({self.quantity} units)"
+        return f"{self.batch_number} - {self.product.display_name} ({self.quantity} units)"
     
     def save(self, *args, **kwargs):
         if not self.batch_number:
@@ -184,7 +195,7 @@ class PurchaseItem(TimeStampedModel):
         ordering = ['id']
     
     def __str__(self):
-        return f"{self.product.name} x {self.quantity}"
+        return f"{self.product.display_name} x {self.quantity}"
     
     @property
     def total_price(self):
@@ -330,7 +341,7 @@ class StockOutItem(TimeStampedModel):
         ordering = ['id']
     
     def __str__(self):
-        return f"{self.batch.product.name} x {self.quantity}"
+        return f"{self.batch.product.display_name} x {self.quantity}"
     
     @property
     def product(self):

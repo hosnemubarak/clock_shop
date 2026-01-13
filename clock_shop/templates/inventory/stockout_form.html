@@ -73,7 +73,7 @@
                             <select class="form-select" id="productSelect">
                                 <option value="">Select Product...</option>
                                 {% for p in products %}
-                                <option value="{{ p.id }}" data-name="{{ p.name }}">{{ p.name }} ({{ p.total_stock }} in stock)</option>
+                                <option value="{{ p.id }}" data-name="{{ p.display_name }}">{{ p.display_name }} ({{ p.total_stock }} in stock)</option>
                                 {% endfor %}
                             </select>
                         </div>

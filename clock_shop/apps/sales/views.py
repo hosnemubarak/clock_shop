@@ -132,7 +132,7 @@ def sale_create(request):
                     
                     # Validate batch is from a shop warehouse
                     if not batch.warehouse.is_shop:
-                        messages.error(request, f'Product "{product.name}" can only be sold from shop locations. Please transfer stock from warehouse to shop first.')
+                        messages.error(request, f'Product "{product.display_name}" can only be sold from shop locations. Please transfer stock from warehouse to shop first.')
                         sale.delete()
                         return redirect('sale_create')
                     
@@ -341,7 +341,7 @@ def api_product_info(request, product_id):
     
     data = {
         'id': product.id,
-        'name': product.name,
+        'name': product.display_name,
         'sku': product.sku,
         'default_price': str(product.default_selling_price),
         'total_stock': product.total_stock,
