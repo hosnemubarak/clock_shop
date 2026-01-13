@@ -100,11 +100,41 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Validation Modal -->
+<div class="modal fade" id="validationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning-subtle">
+                <h5 class="modal-title text-warning" id="validationModalTitle">
+                    <i class="las la-exclamation-triangle me-1"></i> Validation Error
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="validationModalBody">
+                <!-- Message will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                    <i class="las la-check me-1"></i> OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 const CURRENCY_SYMBOL = '{{ CURRENCY_SYMBOL }}';
 let items = [];
 let itemIndex = 0;
 let batchesData = {};
+
+// Validation modal helper function
+function showValidationModal(message, title = 'Validation Error') {
+    document.getElementById('validationModalTitle').innerHTML = `<i class="las la-exclamation-triangle me-1"></i> ${title}`;
+    document.getElementById('validationModalBody').textContent = message;
+    const modal = new bootstrap.Modal(document.getElementById('validationModal'));
+    modal.show();
+}
 
 // Initialize source warehouse change listener
 const sourceWarehouseSelect = document.querySelector('[name="source_warehouse"]');
@@ -142,7 +172,7 @@ function loadWarehouseBatches(warehouseId) {
             }
             data.forEach(batch => {
                 batchesData[batch.id] = batch;
-                batchSelect.innerHTML += `<option value="${batch.id}">${batch.product_name} - Batch: ${batch.batch_number} (${batch.quantity} avail @ ${CURRENCY_SYMBOL}${batch.buy_price})</option>`;
+                batchSelect.innerHTML += `<option value="${batch.id}">${batch.product_sku} - Batch: ${batch.batch_number} (${batch.quantity} avail @ ${CURRENCY_SYMBOL}${batch.buy_price})</option>`;
             });
             
             // Initialize Tom Select for searchable batch dropdown
@@ -161,23 +191,35 @@ function loadWarehouseBatches(warehouseId) {
 }
 
 function addItem() {
-    const batchSelect = document.getElementById('newBatch');
-    const qtyInput = document.getElementById('newQty');
-    const qty = parseInt(qtyInput.value);
-    
-    if (!batchSelect.value) {
-        showValidationModal('Please select a batch before adding.', 'Batch Required');
-        return;
-    }
+    try {
+        console.log('addItem function called');
+        const batchSelect = document.getElementById('newBatch');
+        const qtyInput = document.getElementById('newQty');
+        const qty = parseInt(qtyInput.value);
+        
+        console.log('batchSelect:', batchSelect);
+        console.log('window.batchTomSelect:', window.batchTomSelect);
+        
+        // Get batch value from Tom Select instance if it exists, otherwise from select element
+        const batchValue = window.batchTomSelect ? window.batchTomSelect.getValue() : batchSelect.value;
+        
+        console.log('batchValue:', batchValue);
+        console.log('qty:', qty);
+        console.log('batchesData:', batchesData);
+        
+        if (!batchValue) {
+            showValidationModal('Please select a batch before adding.', 'Batch Required');
+            return;
+        }
     
     if (!qty || qty < 1) {
         showValidationModal('Please enter a valid quantity greater than zero.', 'Invalid Quantity');
         return;
     }
     
-    const batch = batchesData[batchSelect.value];
+    const batch = batchesData[batchValue];
     if (!batch) {
-        showErrorModal('The selected batch is invalid. Please refresh and try again.', 'Invalid Batch');
+        showValidationModal('The selected batch is invalid. Please refresh and try again.', 'Invalid Batch');
         return;
     }
     
@@ -187,7 +229,7 @@ function addItem() {
     }
     
     // Check if batch already added
-    const existingItem = items.find(i => i.batch_id === batchSelect.value);
+    const existingItem = items.find(i => i.batch_id === batchValue);
     if (existingItem) {
         const newQty = existingItem.quantity + qty;
         if (newQty > batch.quantity + existingItem.quantity) {
@@ -198,7 +240,7 @@ function addItem() {
     } else {
         const item = {
             index: itemIndex++,
-            batch_id: batchSelect.value,
+            batch_id: batchValue,
             batch_number: batch.batch_number,
             product_name: batch.product_name,
             product_sku: batch.product_sku,
@@ -208,16 +250,25 @@ function addItem() {
         items.push(item);
     }
     
-    batchesData[batchSelect.value].quantity -= qty;
+    batchesData[batchValue].quantity -= qty;
     
     // Update the batch select option to show new available quantity
     if (window.batchTomSelect) {
-        const b = batchesData[batchSelect.value];
-        window.batchTomSelect.updateOption(batchSelect.value, {
-            text: `${b.product_name} - Batch: ${b.batch_number} (${b.quantity} avail @ ${CURRENCY_SYMBOL}${b.buy_price})`
-        });
+        const b = batchesData[batchValue];
+        const newText = `${b.product_sku} - Batch: ${b.batch_number} (${b.quantity} avail @ ${CURRENCY_SYMBOL}${b.buy_price})`;
+        
+        // Remove and re-add the option to avoid Tom Select errors
+        window.batchTomSelect.removeOption(batchValue);
+        window.batchTomSelect.addOption({value: batchValue, text: newText});
+        window.batchTomSelect.refreshOptions(false);
     }
     
+    
+    console.log('Item added successfully');
+    } catch (error) {
+        console.error('Error in addItem:', error);
+        showValidationModal('Error adding item: ' + error.message, 'Error');
+    }
     renderItems();
     
     // Reset inputs
@@ -237,9 +288,12 @@ function removeItem(index) {
         // Update the batch select option
         if (window.batchTomSelect) {
             const b = batchesData[item.batch_id];
-            window.batchTomSelect.updateOption(item.batch_id, {
-                text: `${b.product_name} - Batch: ${b.batch_number} (${b.quantity} avail @ ${CURRENCY_SYMBOL}${b.buy_price})`
-            });
+            const newText = `${b.product_sku} - Batch: ${b.batch_number} (${b.quantity} avail @ ${CURRENCY_SYMBOL}${b.buy_price})`;
+            
+            // Remove and re-add the option to avoid Tom Select errors
+            window.batchTomSelect.removeOption(item.batch_id);
+            window.batchTomSelect.addOption({value: item.batch_id, text: newText});
+            window.batchTomSelect.refreshOptions(false);
         }
     }
     items = items.filter(i => i.index !== index);
@@ -257,8 +311,7 @@ function renderItems() {
         html += `
             <tr>
                 <td>
-                    <strong>${item.product_name}</strong>
-                    <br><small class="text-muted">${item.product_sku || ''}</small>
+                    <strong>${item.product_sku}</strong>
                 </td>
                 <td><code>${item.batch_number}</code></td>
                 <td class="text-center">${item.quantity}</td>

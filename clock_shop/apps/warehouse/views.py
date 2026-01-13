@@ -252,7 +252,6 @@ def api_warehouse_batches(request, warehouse_id):
         'id': b.id,
         'batch_number': b.batch_number,
         'product_id': b.product.id,
-        'product_name': b.product.display_name,
         'product_sku': b.product.sku,
         'quantity': b.quantity,
         'buy_price': str(b.buy_price),
