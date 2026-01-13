@@ -150,7 +150,7 @@ def profit_report(request):
     
     # Get filter options
     from apps.inventory.models import Product, Category
-    products = Product.objects.filter(is_active=True).order_by('name')
+    products = Product.objects.filter(is_active=True).select_related('brand').order_by('sku')
     shops = Warehouse.objects.filter(is_shop=True, is_active=True).order_by('name')
     categories = Category.objects.filter(is_active=True).order_by('name')
     
