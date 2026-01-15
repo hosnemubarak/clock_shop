@@ -98,9 +98,13 @@ python manage.py collectstatic --noinput
 # Run migrations
 python manage.py migrate
 
-# Create admin user
+# Create admin user (if you have SSH access)
 python manage.py createsuperuser
 ```
+
+**No SSH Access?** See `CREATE_ADMIN_WITHOUT_SSH.md` for alternative methods:
+- Use `create_admin.py` script via cPanel Python App
+- Or use temporary Django view method
 
 ---
 

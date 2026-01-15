@@ -46,6 +46,21 @@ This guide will help you deploy the Clock Shop Django application on cPanel with
 ### Option A: Using File Manager (Easier)
 
 1. **Compress your project locally:**
+   
+   **Windows (PowerShell):**
+   ```powershell
+   # On your local machine
+   cd clock_shop\clock_shop
+   Get-ChildItem -Recurse -File | Where-Object {
+       $_.FullName -notmatch "\\.git\\" -and
+       $_.FullName -notmatch "__pycache__" -and
+       $_.Extension -ne ".pyc" -and
+       $_.Name -ne "db.sqlite3" -and
+       $_.FullName -notmatch "\\.venv\\"
+   } | Compress-Archive -DestinationPath clock_shop.zip -Force
+   ```
+   
+   **Linux/Mac:**
    ```bash
    # On your local machine
    cd clock_shop
@@ -204,10 +219,19 @@ This guide will help you deploy the Clock Shop Django application on cPanel with
    ```
 
 2. **Create superuser:**
+   
+   **If you have SSH access:**
    ```bash
    python manage.py createsuperuser
    ```
    Follow the prompts to create your admin account.
+   
+   **If you DON'T have SSH access:**
+   See `CREATE_ADMIN_WITHOUT_SSH.md` for alternative methods:
+   - Method 1: Use `create_admin.py` script (recommended)
+   - Method 2: Use temporary Django view
+   - Method 3: Direct database insertion
+   - Method 4: Contact hosting provider
 
 3. **Load initial data (optional):**
    ```bash
