@@ -97,9 +97,9 @@ This guide will help you deploy the Clock Shop Django application on cPanel with
 2. **Go to "Setup Python App"**
 3. **Create Application:**
    - Python version: **3.11** (or latest available)
-   - Application root: `/home/username/clock_shop`
-   - Application URL: Your domain or subdomain
-   - Application startup file: `passenger_wsgi.py`
+   - Application Root: `/home/rumaelec_/clock_shop`
+   - Application URL: Your domain (e.g., rumaelectronics.xyz)
+   - Application startup file: `clock_shop/wsgi.py` (cPanel auto-detects)
    - Application Entry point: `application`
 
 4. **Click "Create"**
@@ -141,33 +141,17 @@ This guide will help you deploy the Clock Shop Django application on cPanel with
 
 ## Step 5: Configure Environment Variables
 
-1. **Create `.env` file in project root:**
+1. **Create `.env` file:**
    ```bash
    cd ~/clock_shop
+   cp .env.cpanel .env
    nano .env
    ```
 
-2. **Add the following configuration:**
-   ```env
-   # Security Settings
-   SECRET_KEY=your-very-long-random-secret-key-generate-new-one
-   DEBUG=False
-   ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
-   CSRF_TRUSTED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
-   
-   # Database Settings (PostgreSQL)
-   DB_ENGINE=postgresql
-   DB_NAME=rumaelec_clock_shop_db
-   DB_USER=rumaelec_clock_shop_user
-   DB_PASSWORD=your_database_password
-   DB_HOST=localhost
-   DB_PORT=5432
-   
-   # Business Settings
-   SHOP_NAME=Clock Shop
-   CURRENCY_SYMBOL=৳
-   LOW_STOCK_THRESHOLD=5
-   ```
+2. **Update required values:**
+   - Generate new `SECRET_KEY`
+   - Update `DB_PASSWORD` with your actual database password
+   - Verify `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS`
 
 3. **Generate SECRET_KEY:**
    ```bash
@@ -179,24 +163,19 @@ This guide will help you deploy the Clock Shop Django application on cPanel with
 
 ---
 
-## Step 6: Update Configuration Files
+## Step 6: Configure Environment Variables
 
-1. **Update `passenger_wsgi.py`:**
+1. **Create `.env` file:**
    ```bash
-   nano ~/clock_shop/passenger_wsgi.py
-   ```
-   
-   Replace `YOUR_CPANEL_USERNAME` with your actual cPanel username:
-   ```python
-   INTERP = os.path.expanduser("~/virtualenv/clock_shop/3.11/bin/python3")
+   cd ~/clock_shop
+   cp .env.cpanel .env
+   nano .env
    ```
 
-2. **Update `.htaccess`:**
-   ```bash
-   nano ~/clock_shop/.htaccess
-   ```
-   
-   Replace `YOUR_CPANEL_USERNAME` with your actual username in both places.
+2. **Update required values:**
+   - Generate new `SECRET_KEY`
+   - Update `DB_PASSWORD` with your actual database password
+   - Verify `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS`
 
 ---
 
@@ -219,19 +198,10 @@ This guide will help you deploy the Clock Shop Django application on cPanel with
    ```
 
 2. **Create superuser:**
-   
-   **If you have SSH access:**
    ```bash
    python manage.py createsuperuser
    ```
    Follow the prompts to create your admin account.
-   
-   **If you DON'T have SSH access:**
-   See `CREATE_ADMIN_WITHOUT_SSH.md` for alternative methods:
-   - Method 1: Use `create_admin.py` script (recommended)
-   - Method 2: Use temporary Django view
-   - Method 3: Direct database insertion
-   - Method 4: Contact hosting provider
 
 3. **Load initial data (optional):**
    ```bash

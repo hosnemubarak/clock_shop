@@ -30,9 +30,9 @@ zip -r clock_shop.zip . -x "*.git*" -x "*__pycache__*" -x "*.pyc" -x "db.sqlite3
 ```
 Setup Python App → Create Application
 - Python: 3.11
-- App Root: /home/username/clock_shop
-- App URL: yourdomain.com
-- Startup: passenger_wsgi.py
+- App Root: /home/rumaelec_/clock_shop
+- App URL: rumaelectronics.xyz
+- Startup: clock_shop/wsgi.py (cPanel will auto-detect)
 - Entry: application
 ```
 
@@ -76,13 +76,14 @@ python -c "from django.core.management.utils import get_random_secret_key; print
 
 ---
 
-### 6. Update Config Files
+### 6. Configure Environment
 ```bash
-# Update passenger_wsgi.py - replace YOUR_CPANEL_USERNAME
-nano ~/clock_shop/passenger_wsgi.py
+# Create .env file from template
+cd ~/clock_shop
+cp .env.cpanel .env
+nano .env
 
-# Update .htaccess - replace YOUR_CPANEL_USERNAME
-nano ~/clock_shop/.htaccess
+# Update: SECRET_KEY and DB_PASSWORD
 ```
 
 ---
@@ -98,13 +99,9 @@ python manage.py collectstatic --noinput
 # Run migrations
 python manage.py migrate
 
-# Create admin user (if you have SSH access)
+# Create admin user
 python manage.py createsuperuser
 ```
-
-**No SSH Access?** See `CREATE_ADMIN_WITHOUT_SSH.md` for alternative methods:
-- Use `create_admin.py` script via cPanel Python App
-- Or use temporary Django view method
 
 ---
 
@@ -178,8 +175,6 @@ tail -f ~/logs/error_log
 - [ ] SECRET_KEY generated (not default)
 - [ ] DEBUG=False
 - [ ] ALLOWED_HOSTS set
-- [ ] passenger_wsgi.py updated
-- [ ] .htaccess updated
 - [ ] Static files collected
 - [ ] Migrations run
 - [ ] Superuser created
