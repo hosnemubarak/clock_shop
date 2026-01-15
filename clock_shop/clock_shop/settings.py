@@ -79,23 +79,51 @@ WSGI_APPLICATION = 'clock_shop.wsgi.application'
 # =============================================================================
 # DATABASE CONFIGURATION
 # =============================================================================
-# Supports both SQLite (local development) and PostgreSQL (Docker/production)
-# Set DATABASE_URL or individual DB_* variables to use PostgreSQL
+# Supports SQLite (local), PostgreSQL (Docker), and MySQL (cPanel)
+# Set DATABASE_URL or individual DB_* variables
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
-    # PostgreSQL configuration (Docker/Production)
+    # Parse DATABASE_URL for any database type
     import urllib.parse
     url = urllib.parse.urlparse(DATABASE_URL)
+    
+    # Determine engine from scheme
+    if url.scheme == 'mysql':
+        engine = 'django.db.backends.mysql'
+        port = url.port or 3306
+    elif url.scheme in ('postgres', 'postgresql'):
+        engine = 'django.db.backends.postgresql'
+        port = url.port or 5432
+    else:
+        engine = 'django.db.backends.sqlite3'
+        port = None
+    
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
+            'ENGINE': engine,
             'NAME': url.path[1:],
             'USER': url.username,
             'PASSWORD': url.password,
             'HOST': url.hostname,
-            'PORT': url.port or 5432,
+            'PORT': port,
+        }
+    }
+elif os.environ.get('DB_ENGINE') == 'mysql':
+    # MySQL configuration (cPanel/Production)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('DB_NAME', 'clock_shop'),
+            'USER': os.environ.get('DB_USER', 'root'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '3306'),
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                'charset': 'utf8mb4',
+            },
         }
     }
 elif os.environ.get('DB_ENGINE') == 'postgresql':
