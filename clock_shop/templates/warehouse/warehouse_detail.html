@@ -39,7 +39,17 @@
     <div class="col-lg-8">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">Stock Summary by Product</h5>
+                <form method="get" class="row g-3 align-items-center">
+                    <div class="col-md-6">
+                        <input type="text" name="search" class="form-control" placeholder="Search products in this warehouse..." value="{{ search }}">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'warehouse_detail' warehouse.pk %}" class="btn btn-outline-secondary w-100">Clear</a>
+                    </div>
+                </form>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -69,6 +79,10 @@
                         </tbody>
                     </table>
                 </div>
+
+                {% with page_obj=stock_summary %}
+                {% include 'includes/pagination.html' %}
+                {% endwith %}
             </div>
         </div>
     </div>

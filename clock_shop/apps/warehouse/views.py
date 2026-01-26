@@ -24,18 +24,25 @@ def warehouse_list(request):
         warehouses = warehouses.filter(
             Q(name__icontains=search) | Q(code__icontains=search) | Q(address__icontains=search)
         )
-    
-    # Calculate stock info for each warehouse
-    warehouse_list = list(warehouses)
-    for warehouse in warehouse_list:
+
+    total_warehouses = warehouses.count()
+    active_shops = warehouses.filter(is_shop=True, is_active=True).count()
+
+    paginator = Paginator(warehouses, 10)
+    page = request.GET.get('page')
+    warehouses = paginator.get_page(page)
+
+    # Calculate stock info for current page only
+    for warehouse in warehouses:
         warehouse.stock_value = warehouse.get_total_stock_value()
         warehouse.total_items = warehouse.get_total_items()
     
-    paginator = Paginator(warehouse_list, 10)
-    page = request.GET.get('page')
-    warehouses = paginator.get_page(page)
-    
-    return render(request, 'warehouse/warehouse_list.html', {'warehouses': warehouses, 'search': search})
+    return render(request, 'warehouse/warehouse_list.html', {
+        'warehouses': warehouses,
+        'search': search,
+        'total_warehouses': total_warehouses,
+        'active_shops': active_shops,
+    })
 
 
 @login_required
@@ -48,14 +55,27 @@ def warehouse_detail(request, pk):
         warehouse=warehouse, 
         quantity__gt=0
     ).select_related('product', 'product__brand').order_by('product__sku')
+
+    # Search products within warehouse
+    search = request.GET.get('search', '')
+    stock_batches = batches
+    if search:
+        stock_batches = stock_batches.filter(
+            Q(product__sku__icontains=search) |
+            Q(product__brand__name__icontains=search)
+        )
     
     # Stock summary by product
-    stock_summary = batches.values(
+    stock_summary = stock_batches.values(
         'product__sku', 'product__brand__name'
     ).annotate(
         total_quantity=Sum('quantity'),
         total_value=Sum(F('quantity') * F('buy_price'))
     ).order_by('product__sku')
+
+    paginator = Paginator(stock_summary, 10)
+    page = request.GET.get('page')
+    stock_summary = paginator.get_page(page)
     
     context = {
         'warehouse': warehouse,
@@ -63,6 +83,7 @@ def warehouse_detail(request, pk):
         'stock_summary': stock_summary,
         'total_value': warehouse.get_total_stock_value(),
         'total_items': warehouse.get_total_items(),
+        'search': search,
     }
     return render(request, 'warehouse/warehouse_detail.html', context)
 

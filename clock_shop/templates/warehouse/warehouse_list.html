@@ -26,7 +26,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <p class="fw-medium text-muted mb-0">Total Warehouses</p>
-                        <h2 class="mt-4 ff-secondary fw-semibold">{{ warehouses|length }}</h2>
+                        <h2 class="mt-4 ff-secondary fw-semibold">{{ total_warehouses }}</h2>
                     </div>
                     <div class="avatar-sm flex-shrink-0">
                         <span class="avatar-title bg-primary-subtle rounded-circle fs-2">
@@ -43,7 +43,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <p class="fw-medium text-muted mb-0">Active Shops</p>
-                        <h2 class="mt-4 ff-secondary fw-semibold">{% for w in warehouses %}{% if w.is_shop and w.is_active %}1{% endif %}{% endfor %}</h2>
+                        <h2 class="mt-4 ff-secondary fw-semibold">{{ active_shops }}</h2>
                     </div>
                     <div class="avatar-sm flex-shrink-0">
                         <span class="avatar-title bg-success-subtle rounded-circle fs-2">
@@ -78,11 +78,20 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <h5 class="card-title mb-0">All Warehouses</h5>
+                <form method="get" class="row g-3 align-items-center">
+                    <div class="col-md-4">
+                        <input type="text" name="search" class="form-control" placeholder="Search warehouses..." value="{{ search }}">
                     </div>
-                </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="{% url 'warehouse_list' %}" class="btn btn-outline-secondary w-100">Clear</a>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <h5 class="card-title mb-0">All Warehouses <span class="badge bg-primary-subtle text-primary ms-2">{{ warehouses.paginator.count }}</span></h5>
+                    </div>
+                </form>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
