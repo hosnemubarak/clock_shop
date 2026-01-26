@@ -86,10 +86,6 @@ def warehouse_detail(request, pk):
     batch_stock = request.GET.get('batch_stock', '')
     purchase_from = request.GET.get('purchase_from', '')
     purchase_to = request.GET.get('purchase_to', '')
-    min_qty = request.GET.get('min_qty', '')
-    max_qty = request.GET.get('max_qty', '')
-    min_buy_price = request.GET.get('min_buy_price', '')
-    max_buy_price = request.GET.get('max_buy_price', '')
 
     batches = all_batches
     if batch_search:
@@ -110,28 +106,6 @@ def warehouse_detail(request, pk):
     if purchase_to:
         batches = batches.filter(purchase_date__lte=purchase_to)
 
-    if min_qty:
-        try:
-            batches = batches.filter(quantity__gte=int(min_qty))
-        except ValueError:
-            pass
-    if max_qty:
-        try:
-            batches = batches.filter(quantity__lte=int(max_qty))
-        except ValueError:
-            pass
-
-    if min_buy_price:
-        try:
-            batches = batches.filter(buy_price__gte=Decimal(min_buy_price))
-        except (InvalidOperation, ValueError):
-            pass
-    if max_buy_price:
-        try:
-            batches = batches.filter(buy_price__lte=Decimal(max_buy_price))
-        except (InvalidOperation, ValueError):
-            pass
-
     batches = batches.order_by('-purchase_date', '-created_at')
     batch_paginator = Paginator(batches, 10)
     batch_page = request.GET.get('batch_page')
@@ -148,10 +122,6 @@ def warehouse_detail(request, pk):
         'batch_stock': batch_stock,
         'purchase_from': purchase_from,
         'purchase_to': purchase_to,
-        'min_qty': min_qty,
-        'max_qty': max_qty,
-        'min_buy_price': min_buy_price,
-        'max_buy_price': max_buy_price,
     }
     return render(request, 'warehouse/warehouse_detail.html', context)
 
