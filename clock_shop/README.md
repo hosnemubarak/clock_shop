@@ -494,17 +494,39 @@ LOW_STOCK_THRESHOLD=10
 # SQLite backup
 cp db.sqlite3 backup_$(date +%Y%m%d).sqlite3
 
-# PostgreSQL backup (Docker)
-docker-compose exec db pg_dump -U clock_shop clock_shop > backup.sql
+# PostgreSQL (Recommended) - full DB backup/restore (NO Docker)
+# Requires PostgreSQL client tools installed: pg_dump, pg_restore, createdb
+#
+# Dump (use your actual host/user/db, or values from your .env: DB_HOST/DB_PORT/DB_USER/DB_NAME)
+pg_dump -h localhost -p 5432 -U clock_shop -Fc -f clock_shop.dump clock_shop
 
-# PostgreSQL restore (Docker)
-cat backup.sql | docker-compose exec -T db psql -U clock_shop clock_shop
+# Restore into a NEW database
+createdb -h localhost -p 5432 -U clock_shop clock_shop_new
+pg_restore -h localhost -p 5432 -U clock_shop -d clock_shop_new --clean --if-exists clock_shop.dump
 
-# Export data as JSON
-python manage.py dumpdata > backup.json
+# After restoring to a new DB, point your app to it (DATABASE_URL / DB_NAME) and run:
+python manage.py migrate
 
-# Import data from JSON
+# Django (data-only) export/import (NOT a full DB backup)
+# Export
+python manage.py dumpdata --natural-foreign --natural-primary -e contenttypes -e auth.Permission > backup.json
+
+# Import
 python manage.py loaddata backup.json
+```
+
+**Windows PowerShell examples (no Docker):**
+
+```powershell
+# Optional: avoid password prompt (session-only)
+$env:PGPASSWORD = "your-db-password"
+
+# Dump
+pg_dump -h localhost -p 5432 -U clock_shop -Fc -f clock_shop.dump clock_shop
+
+# Restore into a NEW database
+createdb -h localhost -p 5432 -U clock_shop clock_shop_new
+pg_restore -h localhost -p 5432 -U clock_shop -d clock_shop_new --clean --if-exists clock_shop.dump
 ```
 
 ### Payment Methods Supported

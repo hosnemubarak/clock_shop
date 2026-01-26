@@ -1,3 +1,4 @@
+{% with page_param=page_param|default:'page' %}
 {% if page_obj.has_other_pages %}
 <nav aria-label="Page navigation" class="mt-4">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -7,12 +8,12 @@
         <ul class="pagination pagination-sm mb-0">
             {% if page_obj.has_previous %}
             <li class="page-item">
-                <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="First">
+                <a class="page-link" href="?{{ page_param }}=1{% for key, value in request.GET.items %}{% if key != page_param %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="First">
                     <i class="ti ti-chevrons-left"></i>
                 </a>
             </li>
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous">
+                <a class="page-link" href="?{{ page_param }}={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != page_param %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous">
                     <i class="ti ti-chevron-left"></i> Previous
                 </a>
             </li>
@@ -30,15 +31,15 @@
                 <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                 {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                    <a class="page-link" href="?{{ page_param }}={{ num }}{% for key, value in request.GET.items %}{% if key != page_param %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
                 </li>
                 {% elif num == 1 %}
                 <li class="page-item">
-                    <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">1</a>
+                    <a class="page-link" href="?{{ page_param }}=1{% for key, value in request.GET.items %}{% if key != page_param %}&{{ key }}={{ value }}{% endif %}{% endfor %}">1</a>
                 </li>
                 {% elif num == page_obj.paginator.num_pages %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                    <a class="page-link" href="?{{ page_param }}={{ num }}{% for key, value in request.GET.items %}{% if key != page_param %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
                 </li>
                 {% elif num == 2 and page_obj.number > 4 %}
                 <li class="page-item disabled"><span class="page-link">...</span></li>
@@ -49,12 +50,12 @@
 
             {% if page_obj.has_next %}
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next">
+                <a class="page-link" href="?{{ page_param }}={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != page_param %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next">
                     Next <i class="ti ti-chevron-right"></i>
                 </a>
             </li>
             <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Last">
+                <a class="page-link" href="?{{ page_param }}={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != page_param %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Last">
                     <i class="ti ti-chevrons-right"></i>
                 </a>
             </li>
@@ -74,3 +75,4 @@
     <p class="mb-0">No records found</p>
 </div>
 {% endif %}
+{% endwith %}

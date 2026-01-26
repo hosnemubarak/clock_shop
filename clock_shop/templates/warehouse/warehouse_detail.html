@@ -41,14 +41,24 @@
             <div class="card-header">
                 <form method="get" class="row g-3 align-items-center">
                     <div class="col-md-6">
-                        <input type="text" name="search" class="form-control" placeholder="Search products in this warehouse..." value="{{ search }}">
+                        <input type="text" name="product_search" class="form-control" placeholder="Search products in this warehouse..." value="{{ product_search }}">
                     </div>
                     <div class="col-md-3">
                         <button type="submit" class="btn btn-primary w-100">Filter</button>
                     </div>
                     <div class="col-md-3">
-                        <a href="{% url 'warehouse_detail' warehouse.pk %}" class="btn btn-outline-secondary w-100">Clear</a>
+                        <a href="?{% for key, value in request.GET.items %}{% if key != 'product_search' and key != 'search' and key != 'product_page' and key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}" class="btn btn-outline-secondary w-100">Clear</a>
                     </div>
+
+                    {% if batch_search %}<input type="hidden" name="batch_search" value="{{ batch_search }}">{% endif %}
+                    {% if batch_stock %}<input type="hidden" name="batch_stock" value="{{ batch_stock }}">{% endif %}
+                    {% if purchase_from %}<input type="hidden" name="purchase_from" value="{{ purchase_from }}">{% endif %}
+                    {% if purchase_to %}<input type="hidden" name="purchase_to" value="{{ purchase_to }}">{% endif %}
+                    {% if min_qty %}<input type="hidden" name="min_qty" value="{{ min_qty }}">{% endif %}
+                    {% if max_qty %}<input type="hidden" name="max_qty" value="{{ max_qty }}">{% endif %}
+                    {% if min_buy_price %}<input type="hidden" name="min_buy_price" value="{{ min_buy_price }}">{% endif %}
+                    {% if max_buy_price %}<input type="hidden" name="max_buy_price" value="{{ max_buy_price }}">{% endif %}
+                    {% if batches.number %}<input type="hidden" name="batch_page" value="{{ batches.number }}">{% endif %}
                 </form>
             </div>
             <div class="card-body">
@@ -65,8 +75,10 @@
                             {% for item in stock_summary %}
                             <tr>
                                 <td>
-                                    <code>{{ item.product__sku }}</code>
-                                    {% if item.product__brand__name %} - {{ item.product__brand__name }}{% endif %}
+                                    <a href="{% url 'product_detail' item.product__id %}" class="fw-medium">
+                                        <code>{{ item.product__sku }}</code>
+                                        {% if item.product__brand__name %} - {{ item.product__brand__name }}{% endif %}
+                                    </a>
                                 </td>
                                 <td class="text-center">{{ item.total_quantity }}</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.total_value|floatformat:2 }}</td>
@@ -80,7 +92,7 @@
                     </table>
                 </div>
 
-                {% with page_obj=stock_summary %}
+                {% with page_obj=stock_summary page_param='product_page' %}
                 {% include 'includes/pagination.html' %}
                 {% endwith %}
             </div>
@@ -134,7 +146,51 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">All Batches in Warehouse</h5>
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">Search</label>
+                        <input type="text" name="batch_search" class="form-control" placeholder="Batch #, SKU, brand, supplier..." value="{{ batch_search }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Stock</label>
+                        <select name="batch_stock" class="form-select">
+                            <option value="">All Stock</option>
+                            <option value="available" {% if batch_stock == 'available' %}selected{% endif %}>Available Only</option>
+                            <option value="depleted" {% if batch_stock == 'depleted' %}selected{% endif %}>Depleted</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Purchase From</label>
+                        <input type="date" name="purchase_from" class="form-control" value="{{ purchase_from }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small text-muted">Purchase To</label>
+                        <input type="date" name="purchase_to" class="form-control" value="{{ purchase_to }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">Quantity Range</label>
+                        <div class="input-group">
+                            <input type="number" name="min_qty" class="form-control" placeholder="Min" value="{{ min_qty }}">
+                            <input type="number" name="max_qty" class="form-control" placeholder="Max" value="{{ max_qty }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">Buy Price Range</label>
+                        <div class="input-group">
+                            <input type="number" step="0.01" name="min_buy_price" class="form-control" placeholder="Min" value="{{ min_buy_price }}">
+                            <input type="number" step="0.01" name="max_buy_price" class="form-control" placeholder="Max" value="{{ max_buy_price }}">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="?{% for key, value in request.GET.items %}{% if key != 'batch_search' and key != 'batch_stock' and key != 'purchase_from' and key != 'purchase_to' and key != 'min_qty' and key != 'max_qty' and key != 'min_buy_price' and key != 'max_buy_price' and key != 'batch_page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}" class="btn btn-outline-secondary w-100">Clear</a>
+                    </div>
+
+                    {% if product_search %}<input type="hidden" name="product_search" value="{{ product_search }}">{% endif %}
+                    {% if stock_summary.number %}<input type="hidden" name="product_page" value="{{ stock_summary.number }}">{% endif %}
+                </form>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -167,6 +223,10 @@
                         </tbody>
                     </table>
                 </div>
+
+                {% with page_obj=batches page_param='batch_page' %}
+                {% include 'includes/pagination.html' %}
+                {% endwith %}
             </div>
         </div>
     </div>

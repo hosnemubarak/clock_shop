@@ -5,6 +5,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Sum, F
 from django.http import JsonResponse
 from django.utils import timezone
+from decimal import Decimal, InvalidOperation
 import json
 
 from .models import Warehouse, StockTransfer, StockTransferItem
@@ -50,32 +51,91 @@ def warehouse_detail(request, pk):
     """View warehouse details with stock information."""
     warehouse = get_object_or_404(Warehouse, pk=pk)
     
-    # Get batches in this warehouse
-    batches = Batch.objects.filter(
-        warehouse=warehouse, 
+    # Base querysets
+    available_batches = Batch.objects.filter(
+        warehouse=warehouse,
         quantity__gt=0
-    ).select_related('product', 'product__brand').order_by('product__sku')
+    ).select_related('product', 'product__brand')
+    all_batches = Batch.objects.filter(
+        warehouse=warehouse
+    ).select_related('product', 'product__brand')
 
-    # Search products within warehouse
-    search = request.GET.get('search', '')
-    stock_batches = batches
-    if search:
+    # Product summary filters (stock summary by product)
+    product_search = request.GET.get('product_search', request.GET.get('search', ''))
+    stock_batches = available_batches
+    if product_search:
         stock_batches = stock_batches.filter(
-            Q(product__sku__icontains=search) |
-            Q(product__brand__name__icontains=search)
+            Q(product__sku__icontains=product_search) |
+            Q(product__brand__name__icontains=product_search)
         )
     
     # Stock summary by product
     stock_summary = stock_batches.values(
-        'product__sku', 'product__brand__name'
+        'product__id', 'product__sku', 'product__brand__name'
     ).annotate(
         total_quantity=Sum('quantity'),
         total_value=Sum(F('quantity') * F('buy_price'))
     ).order_by('product__sku')
 
-    paginator = Paginator(stock_summary, 10)
-    page = request.GET.get('page')
-    stock_summary = paginator.get_page(page)
+    product_paginator = Paginator(stock_summary, 10)
+    product_page = request.GET.get('product_page', request.GET.get('page'))
+    stock_summary = product_paginator.get_page(product_page)
+
+    # Batch list filters (All Batches in Warehouse)
+    batch_search = request.GET.get('batch_search', '')
+    batch_stock = request.GET.get('batch_stock', '')
+    purchase_from = request.GET.get('purchase_from', '')
+    purchase_to = request.GET.get('purchase_to', '')
+    min_qty = request.GET.get('min_qty', '')
+    max_qty = request.GET.get('max_qty', '')
+    min_buy_price = request.GET.get('min_buy_price', '')
+    max_buy_price = request.GET.get('max_buy_price', '')
+
+    batches = all_batches
+    if batch_search:
+        batches = batches.filter(
+            Q(batch_number__icontains=batch_search) |
+            Q(product__sku__icontains=batch_search) |
+            Q(product__brand__name__icontains=batch_search) |
+            Q(supplier__icontains=batch_search)
+        )
+
+    if batch_stock == 'available':
+        batches = batches.filter(quantity__gt=0)
+    elif batch_stock == 'depleted':
+        batches = batches.filter(quantity=0)
+
+    if purchase_from:
+        batches = batches.filter(purchase_date__gte=purchase_from)
+    if purchase_to:
+        batches = batches.filter(purchase_date__lte=purchase_to)
+
+    if min_qty:
+        try:
+            batches = batches.filter(quantity__gte=int(min_qty))
+        except ValueError:
+            pass
+    if max_qty:
+        try:
+            batches = batches.filter(quantity__lte=int(max_qty))
+        except ValueError:
+            pass
+
+    if min_buy_price:
+        try:
+            batches = batches.filter(buy_price__gte=Decimal(min_buy_price))
+        except (InvalidOperation, ValueError):
+            pass
+    if max_buy_price:
+        try:
+            batches = batches.filter(buy_price__lte=Decimal(max_buy_price))
+        except (InvalidOperation, ValueError):
+            pass
+
+    batches = batches.order_by('-purchase_date', '-created_at')
+    batch_paginator = Paginator(batches, 10)
+    batch_page = request.GET.get('batch_page')
+    batches = batch_paginator.get_page(batch_page)
     
     context = {
         'warehouse': warehouse,
@@ -83,7 +143,15 @@ def warehouse_detail(request, pk):
         'stock_summary': stock_summary,
         'total_value': warehouse.get_total_stock_value(),
         'total_items': warehouse.get_total_items(),
-        'search': search,
+        'product_search': product_search,
+        'batch_search': batch_search,
+        'batch_stock': batch_stock,
+        'purchase_from': purchase_from,
+        'purchase_to': purchase_to,
+        'min_qty': min_qty,
+        'max_qty': max_qty,
+        'min_buy_price': min_buy_price,
+        'max_buy_price': max_buy_price,
     }
     return render(request, 'warehouse/warehouse_detail.html', context)
 
