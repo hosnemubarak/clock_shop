@@ -40,6 +40,10 @@ def dashboard(request):
     
     # Inventory metrics
     total_products = Product.objects.filter(is_active=True).count()
+
+    total_product_quantity = Batch.objects.filter(
+        quantity__gt=0
+    ).aggregate(total=Sum('quantity'))['total'] or 0
     
     # Get low stock threshold from settings
     from .models import SystemSettings
@@ -89,6 +93,7 @@ def dashboard(request):
         'total_sales_month': total_sales_month,
         'profit_month': profit_month,
         'total_products': total_products,
+        'total_product_quantity': total_product_quantity,
         'low_stock_products': low_stock_products,
         'total_customers': total_customers,
         'total_dues': total_dues,

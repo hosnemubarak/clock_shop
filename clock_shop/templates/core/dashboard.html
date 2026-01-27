@@ -162,6 +162,28 @@
             </div>
         </a>
     </div>
+
+    <div class="col-xl-3 col-md-6">
+        <a href="{% url 'stock_report' %}" class="text-decoration-none">
+            <div class="card card-animate">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <p class="fw-medium text-muted mb-0">Total Product Quantity</p>
+                            <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ total_product_quantity }}">{{ total_product_quantity }}</span></h2>
+                        </div>
+                        <div>
+                            <div class="avatar-sm flex-shrink-0">
+                                <span class="avatar-title bg-success-subtle rounded-circle fs-2">
+                                    <i class="las la-cubes text-success"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
     
     <div class="col-xl-3 col-md-6">
         <a href="{% url 'stock_report' %}?stock_filter=low" class="text-decoration-none">
