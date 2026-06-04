@@ -58,6 +58,20 @@ class SystemSettings(models.Model):
         null=True,
         help_text='Shop logo displayed on invoices and pages'
     )
+    shop_phone = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text='Shop phone number displayed on invoices'
+    )
+    shop_email = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text='Shop email address displayed on invoices'
+    )
+    shop_address = models.TextField(
+        blank=True,
+        help_text='Shop physical address displayed on invoices'
+    )
     license_expiry_date = models.DateField(
         null=True,
         blank=True,

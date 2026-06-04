@@ -39,6 +39,11 @@ def global_context(request):
     if db_settings and db_settings.logo:
         shop_logo_url = db_settings.logo.url
     
+    # Shop contact details
+    shop_phone = db_settings.shop_phone if db_settings else None
+    shop_email = db_settings.shop_email if db_settings else None
+    shop_address = db_settings.shop_address if db_settings else None
+    
     # License expiry alert
     expiry_alert = None
     days_until_expiry = None
@@ -65,6 +70,9 @@ def global_context(request):
     return {
         'SHOP_NAME': shop_name,
         'SHOP_LOGO_URL': shop_logo_url,
+        'SHOP_PHONE': shop_phone,
+        'SHOP_EMAIL': shop_email,
+        'SHOP_ADDRESS': shop_address,
         'CURRENCY_SYMBOL': currency_symbol,
         'LOW_STOCK_THRESHOLD': low_stock_threshold,
         'EXPIRY_ALERT': expiry_alert,

@@ -67,6 +67,39 @@
                     </div>
                     
                     <hr class="my-4">
+                    <h6 class="text-primary mb-3"><i class="las la-phone me-1"></i> Contact Information</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">{{ form.shop_phone.label }}</label>
+                            {{ form.shop_phone }}
+                            <small class="text-muted">{{ form.shop_phone.help_text }}</small>
+                            {% if form.shop_phone.errors %}
+                            <div class="text-danger small">{{ form.shop_phone.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">{{ form.shop_email.label }}</label>
+                            {{ form.shop_email }}
+                            <small class="text-muted">{{ form.shop_email.help_text }}</small>
+                            {% if form.shop_email.errors %}
+                            <div class="text-danger small">{{ form.shop_email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-medium">{{ form.shop_address.label }}</label>
+                            {{ form.shop_address }}
+                            <small class="text-muted">{{ form.shop_address.help_text }}</small>
+                            {% if form.shop_address.errors %}
+                            <div class="text-danger small">{{ form.shop_address.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
                     <h6 class="text-primary mb-3"><i class="las la-box me-1"></i> Inventory Settings</h6>
                     
                     <div class="row">

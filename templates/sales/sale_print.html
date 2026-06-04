@@ -163,6 +163,17 @@
             font-weight: 700;
         }
 
+        .shop-contact-info {
+            margin-top: 8px;
+            font-size: 11.5px;
+            line-height: 1.45;
+            color: var(--slate-500);
+        }
+
+        .shop-meta-line {
+            margin: 0;
+        }
+
         .invoice-title-section {
             text-align: right;
         }
@@ -551,7 +562,19 @@
                     {% else %}
                     <h1 class="brand-text">{{ SHOP_NAME }}</h1>
                     {% endif %}
-                    <p class="brand-subtext">Authorized Distributor & Retailer</p>
+                    
+                    <div class="shop-contact-info">
+                        {% if SHOP_ADDRESS %}
+                        <p class="shop-meta-line">{{ SHOP_ADDRESS|linebreaksbr }}</p>
+                        {% endif %}
+                        {% if SHOP_PHONE or SHOP_EMAIL %}
+                        <p class="shop-meta-line" style="margin-top: 3px;">
+                            {% if SHOP_PHONE %}<span>Tel: {{ SHOP_PHONE }}</span>{% endif %}
+                            {% if SHOP_PHONE and SHOP_EMAIL %} &bull; {% endif %}
+                            {% if SHOP_EMAIL %}<span>{{ SHOP_EMAIL }}</span>{% endif %}
+                        </p>
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="invoice-title-section">
                     <h2 class="invoice-title">INVOICE</h2>

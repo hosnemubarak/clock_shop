@@ -10,6 +10,9 @@ class SystemSettingsForm(forms.ModelForm):
         fields = [
             'shop_name',
             'logo',
+            'shop_phone',
+            'shop_email',
+            'shop_address',
             'currency_symbol',
             'license_expiry_date',
             'low_stock_threshold',
@@ -23,6 +26,20 @@ class SystemSettingsForm(forms.ModelForm):
             'logo': forms.FileInput(attrs={
                 'class': 'form-control',
                 'accept': 'image/*'
+            }),
+            'shop_phone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter shop phone number'
+            }),
+            'shop_email': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter shop email address',
+                'type': 'email'
+            }),
+            'shop_address': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter shop address',
+                'rows': 3
             }),
             'currency_symbol': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -46,6 +63,9 @@ class SystemSettingsForm(forms.ModelForm):
         labels = {
             'shop_name': 'Shop Name',
             'logo': 'Shop Logo',
+            'shop_phone': 'Shop Phone Number',
+            'shop_email': 'Shop Email Address',
+            'shop_address': 'Shop Address',
             'currency_symbol': 'Currency Symbol',
             'license_expiry_date': 'License/Server Expiry Date',
             'low_stock_threshold': 'Low Stock Threshold',
@@ -54,6 +74,9 @@ class SystemSettingsForm(forms.ModelForm):
         help_texts = {
             'shop_name': 'Leave blank to use environment variable (SHOP_NAME)',
             'logo': 'Upload a JPG, PNG, or SVG image (recommended size: 250x80px)',
+            'shop_phone': 'Phone number displayed on invoices and receipts',
+            'shop_email': 'Email address displayed on invoices and receipts',
+            'shop_address': 'Physical address displayed on invoices and receipts',
             'currency_symbol': 'Symbol displayed before prices',
             'license_expiry_date': 'Date when server/license expires',
             'low_stock_threshold': 'Products at or below this stock level are flagged as low stock',
