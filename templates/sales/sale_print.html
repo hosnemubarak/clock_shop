@@ -651,15 +651,14 @@
             <!-- Summary section -->
             <div class="summary-wrapper">
                 <!-- Special Notes (left side) -->
+                {% if sale.notes %}
                 <div class="notes-block">
-                    {% if sale.notes %}
                     <h4>Special Instructions / Notes</h4>
                     <p>{{ sale.notes }}</p>
-                    {% else %}
-                    <h4>Invoice Notes</h4>
-                    <p>Thank you for choosing {{ SHOP_NAME }} for your energy and electrical needs. We appreciate your partnership.</p>
-                    {% endif %}
                 </div>
+                {% else %}
+                <div></div>
+                {% endif %}
 
                 <!-- Totals (right side) -->
                 <div class="totals-block">
