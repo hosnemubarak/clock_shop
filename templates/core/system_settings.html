@@ -26,7 +26,7 @@
                 </h5>
             </div>
             <div class="card-body">
-                <form method="post">
+                <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     
                     <div class="row">
@@ -44,6 +44,24 @@
                             <small class="text-muted">{{ form.currency_symbol.help_text }}</small>
                             {% if form.currency_symbol.errors %}
                             <div class="text-danger small">{{ form.currency_symbol.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-medium">{{ form.logo.label }}</label>
+                            {{ form.logo }}
+                            <small class="text-muted">{{ form.logo.help_text }}</small>
+                            {% if form.logo.errors %}
+                            <div class="text-danger small">{{ form.logo.errors.0 }}</div>
+                            {% endif %}
+                            
+                            {% if settings.logo %}
+                            <div class="mt-3 p-3 border rounded bg-light d-inline-block">
+                                <span class="d-block text-muted small mb-2 fw-medium">Current Logo Preview:</span>
+                                <img src="{{ settings.logo.url }}" alt="Logo" class="img-fluid rounded border shadow-sm" style="max-height: 80px; object-fit: contain;">
+                            </div>
                             {% endif %}
                         </div>
                     </div>

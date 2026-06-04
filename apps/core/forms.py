@@ -9,6 +9,7 @@ class SystemSettingsForm(forms.ModelForm):
         model = SystemSettings
         fields = [
             'shop_name',
+            'logo',
             'currency_symbol',
             'license_expiry_date',
             'low_stock_threshold',
@@ -18,6 +19,10 @@ class SystemSettingsForm(forms.ModelForm):
             'shop_name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter shop name'
+            }),
+            'logo': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*'
             }),
             'currency_symbol': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -40,6 +45,7 @@ class SystemSettingsForm(forms.ModelForm):
         }
         labels = {
             'shop_name': 'Shop Name',
+            'logo': 'Shop Logo',
             'currency_symbol': 'Currency Symbol',
             'license_expiry_date': 'License/Server Expiry Date',
             'low_stock_threshold': 'Low Stock Threshold',
@@ -47,6 +53,7 @@ class SystemSettingsForm(forms.ModelForm):
         }
         help_texts = {
             'shop_name': 'Leave blank to use environment variable (SHOP_NAME)',
+            'logo': 'Upload a JPG, PNG, or SVG image (recommended size: 250x80px)',
             'currency_symbol': 'Symbol displayed before prices',
             'license_expiry_date': 'Date when server/license expires',
             'low_stock_threshold': 'Products at or below this stock level are flagged as low stock',

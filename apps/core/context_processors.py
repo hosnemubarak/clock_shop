@@ -34,6 +34,11 @@ def global_context(request):
     else:
         low_stock_threshold = getattr(django_settings, 'LOW_STOCK_THRESHOLD', 5)
     
+    # Shop logo URL
+    shop_logo_url = None
+    if db_settings and db_settings.logo:
+        shop_logo_url = db_settings.logo.url
+    
     # License expiry alert
     expiry_alert = None
     days_until_expiry = None
@@ -59,6 +64,7 @@ def global_context(request):
     
     return {
         'SHOP_NAME': shop_name,
+        'SHOP_LOGO_URL': shop_logo_url,
         'CURRENCY_SYMBOL': currency_symbol,
         'LOW_STOCK_THRESHOLD': low_stock_threshold,
         'EXPIRY_ALERT': expiry_alert,

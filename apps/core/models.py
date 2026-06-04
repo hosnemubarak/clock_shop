@@ -52,6 +52,12 @@ class SystemSettings(models.Model):
         blank=True,
         help_text='Shop name displayed across the system'
     )
+    logo = models.ImageField(
+        upload_to='settings/',
+        blank=True,
+        null=True,
+        help_text='Shop logo displayed on invoices and pages'
+    )
     license_expiry_date = models.DateField(
         null=True,
         blank=True,
