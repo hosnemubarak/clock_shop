@@ -562,19 +562,6 @@
                     {% else %}
                     <h1 class="brand-text">{{ SHOP_NAME }}</h1>
                     {% endif %}
-                    
-                    <div class="shop-contact-info">
-                        {% if SHOP_ADDRESS %}
-                        <p class="shop-meta-line">{{ SHOP_ADDRESS|linebreaksbr }}</p>
-                        {% endif %}
-                        {% if SHOP_PHONE or SHOP_EMAIL %}
-                        <p class="shop-meta-line" style="margin-top: 3px;">
-                            {% if SHOP_PHONE %}<span>Tel: {{ SHOP_PHONE }}</span>{% endif %}
-                            {% if SHOP_PHONE and SHOP_EMAIL %} &bull; {% endif %}
-                            {% if SHOP_EMAIL %}<span>{{ SHOP_EMAIL }}</span>{% endif %}
-                        </p>
-                        {% endif %}
-                    </div>
                 </div>
                 <div class="invoice-title-section">
                     <h2 class="invoice-title">INVOICE</h2>
@@ -736,9 +723,18 @@
 
             <!-- Footer -->
             <div class="invoice-footer">
-                <p>Thank you for your valuable business!</p>
-                <p>Sky Zone International — Delivering Energy & Electrical Excellence</p>
-                <div class="shop-info">{{ SHOP_NAME }}</div>
+                <p style="font-weight: 600; color: var(--slate-700); font-size: 12px; margin-bottom: 8px;">Thank you for your valuable business!</p>
+                <div class="shop-info" style="font-weight: 700; color: var(--slate-900); font-size: 13px; margin-bottom: 4px; margin-top: 4px;">{{ SHOP_NAME }}</div>
+                {% if SHOP_ADDRESS %}
+                <p class="shop-meta-line" style="color: var(--slate-500); font-size: 11px; margin-bottom: 4px;">{{ SHOP_ADDRESS|linebreaksbr }}</p>
+                {% endif %}
+                {% if SHOP_PHONE or SHOP_EMAIL %}
+                <p class="shop-meta-line" style="color: var(--slate-500); font-size: 11px;">
+                    {% if SHOP_PHONE %}<span>Tel: {{ SHOP_PHONE }}</span>{% endif %}
+                    {% if SHOP_PHONE and SHOP_EMAIL %} &bull; {% endif %}
+                    {% if SHOP_EMAIL %}<span>{{ SHOP_EMAIL }}</span>{% endif %}
+                </p>
+                {% endif %}
             </div>
         </div>
     </div>
