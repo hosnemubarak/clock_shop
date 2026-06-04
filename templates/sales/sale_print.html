@@ -12,8 +12,8 @@
         :root {
             --primary: #0f172a;
             --primary-light: #1e293b;
-            --accent: #2563eb;
-            --accent-light: #eff6ff;
+            --accent: #0f172a;
+            --accent-light: #f1f5f9;
             --slate-50: #f8fafc;
             --slate-100: #f1f5f9;
             --slate-200: #e2e8f0;
@@ -66,7 +66,7 @@
         }
         
         .no-print-bar button {
-            background-color: var(--accent);
+            background-color: var(--slate-700);
             color: #fff;
             border: none;
             padding: 10px 20px;
@@ -78,11 +78,11 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.1);
         }
 
         .no-print-bar button:hover {
-            background-color: #1d4ed8;
+            background-color: var(--slate-900);
             transform: translateY(-1px);
         }
 
@@ -120,7 +120,7 @@
             left: 0;
             right: 0;
             height: 6px;
-            background: linear-gradient(90deg, var(--accent) 0%, #3b82f6 100%);
+            background: linear-gradient(90deg, var(--slate-900) 0%, var(--slate-500) 100%);
         }
 
         /* Invoice Header */
