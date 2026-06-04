@@ -7,33 +7,41 @@
     <title>Invoice {{ sale.invoice_number }} | {{ SHOP_NAME }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-dark: #1d4ed8;
+            --primary: #0f172a;
+            --primary-light: #1e293b;
+            --accent: #2563eb;
+            --accent-light: #eff6ff;
             --slate-50: #f8fafc;
             --slate-100: #f1f5f9;
             --slate-200: #e2e8f0;
+            --slate-300: #cbd5e1;
+            --slate-400: #94a3b8;
+            --slate-500: #64748b;
             --slate-700: #334155;
-            --slate-800: #1e293b;
             --slate-900: #0f172a;
             
-            --success-bg: #dcfce7;
-            --success-text: #15803d;
-            --warning-bg: #fef9c3;
-            --warning-text: #a16207;
+            --success-bg: #d1fae5;
+            --success-text: #065f46;
+            --warning-bg: #fef3c7;
+            --warning-text: #92400e;
             --danger-bg: #fee2e2;
-            --danger-text: #b91c1c;
+            --danger-text: #991b1b;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
             color: var(--slate-700);
-            background-color: #fff;
+            background-color: #f1f5f9;
             margin: 0;
-            padding: 40px;
-            font-size: 14px;
+            padding: 40px 0;
+            font-size: 13px;
             line-height: 1.5;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
@@ -42,48 +50,77 @@
         .container {
             max-width: 850px;
             margin: 0 auto;
+            padding: 0 20px;
         }
 
-        /* Print Button and Back Navigation */
+        /* Action Bar */
         .no-print-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
             background-color: var(--slate-900);
-            padding: 12px 24px;
+            padding: 14px 24px;
             border-radius: 8px;
-            margin-bottom: 40px;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
         }
         
         .no-print-bar button {
-            background-color: var(--primary);
+            background-color: var(--accent);
             color: #fff;
             border: none;
             padding: 10px 20px;
             border-radius: 6px;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
             display: inline-flex;
             align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
         }
 
         .no-print-bar button:hover {
-            background-color: var(--primary-dark);
+            background-color: #1d4ed8;
+            transform: translateY(-1px);
         }
 
         .no-print-bar a {
-            color: var(--slate-200);
+            color: var(--slate-300);
             text-decoration: none;
             font-weight: 500;
-            font-size: 14px;
+            font-size: 13px;
             transition: color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .no-print-bar a:hover {
             color: #fff;
+        }
+
+        /* Invoice Card Style */
+        .invoice-card {
+            background-color: #fff;
+            padding: 60px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--slate-200);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Top Accent Border */
+        .invoice-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--accent) 0%, #3b82f6 100%);
         }
 
         /* Invoice Header */
@@ -91,17 +128,17 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            border-bottom: 2px solid var(--slate-100);
+            margin-bottom: 40px;
             padding-bottom: 30px;
-            margin-bottom: 30px;
+            border-bottom: 1px solid var(--slate-100);
         }
 
         .brand-section {
-            max-width: 50%;
+            max-width: 60%;
         }
 
         .brand-logo {
-            max-height: 70px;
+            max-height: 55px;
             max-width: 250px;
             object-fit: contain;
             margin-bottom: 12px;
@@ -112,17 +149,18 @@
             font-size: 26px;
             font-weight: 800;
             color: var(--slate-900);
-            margin: 0 0 4px 0;
-            letter-spacing: -0.025em;
+            margin: 0 0 6px 0;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
         }
 
         .brand-subtext {
-            font-size: 13px;
-            color: #64748b;
+            font-size: 11px;
+            color: var(--slate-500);
             margin: 0;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-weight: 600;
+            letter-spacing: 0.12em;
+            font-weight: 700;
         }
 
         .invoice-title-section {
@@ -133,19 +171,20 @@
             font-size: 32px;
             font-weight: 800;
             color: var(--slate-900);
-            margin: 0 0 8px 0;
-            letter-spacing: -0.025em;
+            margin: 0 0 6px 0;
+            letter-spacing: 0.05em;
+            line-height: 1;
         }
 
         /* Badges */
         .badge {
             display: inline-block;
-            padding: 6px 12px;
-            font-size: 12px;
+            padding: 6px 14px;
+            font-size: 10px;
             font-weight: 700;
             border-radius: 9999px;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.06em;
         }
 
         .badge-paid {
@@ -163,96 +202,103 @@
             color: var(--danger-text);
         }
 
-        /* Info Grid */
-        .info-grid {
+        /* Billing and Meta Grid */
+        .invoice-details-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 50px;
             margin-bottom: 40px;
         }
 
-        .info-block h3 {
-            font-size: 12px;
+        .details-block h3 {
+            font-size: 10px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #64748b;
+            letter-spacing: 0.1em;
+            color: var(--slate-400);
             margin: 0 0 12px 0;
-            border-bottom: 1px solid var(--slate-200);
+            border-bottom: 1px solid var(--slate-100);
             padding-bottom: 6px;
         }
 
-        .info-block address {
+        .details-block address {
             font-style: normal;
             color: var(--slate-700);
             line-height: 1.6;
         }
 
-        .info-block address strong {
+        .details-block address strong {
             color: var(--slate-900);
             font-size: 15px;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 6px;
         }
 
-        .meta-list {
-            margin: 0;
-            padding: 0;
-            list-style: none;
-            line-height: 1.8;
+        .meta-table {
+            width: 100%;
+            border-collapse: collapse;
         }
 
-        .meta-list li {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 4px;
+        .meta-table td {
+            padding: 6px 0;
+            font-size: 13px;
         }
 
-        .meta-list li span:first-child {
-            color: #64748b;
+        .meta-table tr:not(:last-child) td {
+            border-bottom: 1px solid var(--slate-50);
+        }
+
+        .meta-table td.meta-label {
+            color: var(--slate-500);
             font-weight: 500;
         }
 
-        .meta-list li span:last-child {
+        .meta-table td.meta-value {
             color: var(--slate-900);
-            font-weight: 600;
+            font-weight: 700;
+            text-align: right;
         }
 
         /* Items Table */
+        .table-container {
+            margin-bottom: 35px;
+        }
+
         table.items-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
         }
 
         table.items-table th {
-            background-color: var(--slate-900);
-            color: #fff;
-            font-weight: 600;
+            background-color: var(--slate-50);
+            border-top: 1px solid var(--slate-200);
+            border-bottom: 2px solid var(--slate-200);
+            color: var(--slate-900);
+            font-weight: 700;
             text-transform: uppercase;
-            font-size: 11px;
-            letter-spacing: 0.05em;
-            padding: 12px 16px;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            padding: 14px 16px;
             text-align: left;
         }
 
         table.items-table td {
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--slate-200);
-            vertical-align: top;
-        }
-
-        table.items-table tbody tr:nth-child(even) {
-            background-color: var(--slate-50);
+            padding: 16px;
+            border-bottom: 1px solid var(--slate-100);
+            vertical-align: middle;
         }
 
         .item-name {
             font-weight: 600;
             color: var(--slate-900);
             margin-bottom: 4px;
+            font-size: 14px;
         }
 
         .item-desc {
-            font-size: 12px;
-            color: #64748b;
+            font-size: 11px;
+            color: var(--slate-500);
             margin: 0;
         }
 
@@ -260,41 +306,50 @@
             text-align: right !important;
         }
 
-        /* Financial summary block */
+        .text-center {
+            text-align: center !important;
+        }
+
+        /* Summary Area */
         .summary-wrapper {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 40px;
             margin-top: 20px;
+            margin-bottom: 30px;
             page-break-inside: avoid;
         }
 
+        /* Special Notes Block */
         .notes-block {
-            width: 50%;
             background-color: var(--slate-50);
-            border: 1px solid var(--slate-200);
+            border: 1px dashed var(--slate-200);
             border-radius: 8px;
-            padding: 16px;
+            padding: 20px;
         }
 
         .notes-block h4 {
-            margin: 0 0 8px 0;
-            font-size: 12px;
+            margin: 0 0 10px 0;
+            font-size: 10px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #64748b;
+            letter-spacing: 0.08em;
+            color: var(--slate-900);
         }
 
         .notes-block p {
             margin: 0;
-            font-size: 13px;
-            line-height: 1.5;
-            color: var(--slate-700);
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--slate-600);
         }
 
+        /* Totals Block */
         .totals-block {
-            width: 320px;
+            background-color: var(--slate-50);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid var(--slate-100);
         }
 
         .totals-table {
@@ -303,40 +358,134 @@
         }
 
         .totals-table td {
-            padding: 8px 12px;
-            font-size: 14px;
+            padding: 8px 0;
+            font-size: 13px;
         }
 
-        .totals-table tr.total-row {
-            font-weight: 800;
-            font-size: 18px;
+        .totals-table tr:not(:last-child) td {
+            border-bottom: 1px solid var(--slate-100);
+        }
+
+        .totals-table td.total-label {
+            color: var(--slate-500);
+            font-weight: 500;
+        }
+
+        .totals-table td.total-value {
             color: var(--slate-900);
-            border-top: 2px solid var(--slate-900);
-            border-bottom: 2px solid var(--slate-900);
+            font-weight: 600;
+            text-align: right;
         }
 
         .totals-table tr.total-row td {
-            padding: 12px 12px;
+            border-top: 2px solid var(--slate-200);
+            border-bottom: none;
+            padding: 12px 0;
         }
 
-        .totals-table tr.due-row {
+        .totals-table tr.total-row td.total-label {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--slate-900);
+        }
+
+        .totals-table tr.total-row td.total-value {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .totals-table tr.due-row td {
+            border-top: 1px solid var(--slate-200);
+            background-color: var(--danger-bg);
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .totals-table tr.due-row td.total-label {
             color: var(--danger-text);
             font-weight: 700;
         }
 
+        .totals-table tr.due-row td.total-value {
+            color: var(--danger-text);
+            font-weight: 800;
+            text-align: right;
+        }
+
+        /* Terms & Delivery Section (Full Width, placed below) */
+        .terms-delivery-section {
+            border-top: 1px solid var(--slate-200);
+            padding-top: 20px;
+            margin-top: 30px;
+            margin-bottom: 40px;
+            page-break-inside: avoid;
+        }
+
+        .terms-delivery-section h4 {
+            margin: 0 0 6px 0;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--slate-900);
+        }
+
+        .terms-delivery-section p {
+            margin: 0;
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--slate-500);
+            font-weight: 500;
+        }
+
+        /* Signature block */
+        .signature-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 50px;
+            page-break-inside: avoid;
+        }
+
+        .signature-block {
+            text-align: center;
+            width: 220px;
+        }
+
+        .signature-line {
+            border-bottom: 1.5px solid var(--slate-900);
+            height: 45px;
+            margin-bottom: 8px;
+        }
+
+        .signature-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--slate-900);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
         /* Footer */
         .invoice-footer {
-            margin-top: 80px;
+            margin-top: 70px;
             text-align: center;
             border-top: 1px solid var(--slate-200);
             padding-top: 24px;
-            color: #94a3b8;
-            font-size: 12px;
+            color: var(--slate-400);
+            font-size: 11px;
             page-break-inside: avoid;
         }
 
         .invoice-footer p {
             margin: 4px 0;
+        }
+
+        .invoice-footer .shop-info {
+            font-weight: 700;
+            color: var(--slate-700);
+            font-size: 12px;
+            margin-top: 8px;
         }
 
         /* Print Settings */
@@ -353,11 +502,28 @@
             .container {
                 max-width: 100%;
                 width: 100%;
+                padding: 0;
             }
 
-            table.items-table th {
-                background-color: #0f172a !important;
-                color: #fff !important;
+            .invoice-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+                border-radius: 0;
+            }
+
+            .invoice-card::before {
+                display: none;
+            }
+
+            .totals-block, .notes-block {
+                background-color: #fafbfc !important;
+                border: 1px solid var(--slate-100) !important;
+            }
+
+            .totals-table tr.due-row td {
+                background-color: var(--danger-bg) !important;
+                color: var(--danger-text) !important;
             }
         }
     </style>
@@ -366,160 +532,192 @@
     <div class="container">
         <!-- Action Bar -->
         <div class="no-print-bar">
-            <a href="{% url 'sale_detail' sale.pk %}">&larr; Back to Invoice Details</a>
+            <a href="{% url 'sale_detail' sale.pk %}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Back to Invoice Details
+            </a>
             <button onclick="window.print()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 8px;"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
                 Print Invoice
             </button>
         </div>
 
-        <!-- Invoice Header -->
-        <div class="invoice-header">
-            <div class="brand-section">
-                {% if SHOP_LOGO_URL %}
-                <img src="{{ SHOP_LOGO_URL }}" alt="{{ SHOP_NAME }}" class="brand-logo">
-                {% else %}
-                <h1 class="brand-text">{{ SHOP_NAME }}</h1>
-                <p class="brand-subtext">Retail Shop</p>
-                {% endif %}
-            </div>
-            <div class="invoice-title-section">
-                <h2 class="invoice-title">INVOICE</h2>
-                <span class="badge {% if sale.payment_status == 'paid' %}badge-paid{% elif sale.payment_status == 'partial' %}badge-partial{% else %}badge-unpaid{% endif %}">
-                    {% if sale.payment_status == 'paid' %}Fully Paid{% elif sale.payment_status == 'partial' %}Partially Paid{% else %}Unpaid{% endif %}
-                </span>
-            </div>
-        </div>
-
-        <!-- Info Grid -->
-        <div class="info-grid">
-            <div class="info-block">
-                <h3>Billed To</h3>
-                <address>
-                    {% if sale.customer %}
-                    <strong>{{ sale.customer.name }}</strong><br>
-                    {% if sale.customer.phone %}<span style="color:#64748b;">Phone:</span> {{ sale.customer.phone }}<br>{% endif %}
-                    {% if sale.customer.email %}<span style="color:#64748b;">Email:</span> {{ sale.customer.email }}<br>{% endif %}
-                    {% if sale.customer.address %}{{ sale.customer.address }}{% endif %}
+        <div class="invoice-card">
+            <!-- Invoice Header -->
+            <div class="invoice-header">
+                <div class="brand-section">
+                    {% if SHOP_LOGO_URL %}
+                    <img src="{{ SHOP_LOGO_URL }}" alt="{{ SHOP_NAME }}" class="brand-logo">
                     {% else %}
-                    <strong>Walk-in Customer</strong>
+                    <h1 class="brand-text">{{ SHOP_NAME }}</h1>
                     {% endif %}
-                </address>
+                    <p class="brand-subtext">Authorized Distributor & Retailer</p>
+                </div>
+                <div class="invoice-title-section">
+                    <h2 class="invoice-title">INVOICE</h2>
+                    <span class="badge {% if sale.payment_status == 'paid' %}badge-paid{% elif sale.payment_status == 'partial' %}badge-partial{% else %}badge-unpaid{% endif %}">
+                        {% if sale.payment_status == 'paid' %}Fully Paid{% elif sale.payment_status == 'partial' %}Partially Paid{% else %}Unpaid{% endif %}
+                    </span>
+                </div>
             </div>
-            <div class="info-block">
-                <h3>Invoice Details</h3>
-                <ul class="meta-list">
-                    <li>
-                        <span>Invoice Number:</span>
-                        <span>{{ sale.invoice_number }}</span>
-                    </li>
-                    <li>
-                        <span>Date issued:</span>
-                        <span>{{ sale.sale_date|date:"F d, Y" }}</span>
-                    </li>
-                    {% if sale.created_by %}
-                    <li>
-                        <span>Prepared By:</span>
-                        <span>{{ sale.created_by.username }}</span>
-                    </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
 
-        <!-- Items Table -->
-        <table class="items-table">
-            <thead>
-                <tr>
-                    <th style="width: 45%;">Item / Product</th>
-                    <th style="width: 20%;">SKU</th>
-                    <th class="text-right" style="width: 10%;">Qty</th>
-                    <th class="text-right" style="width: 12%;">Unit Price</th>
-                    <th class="text-right" style="width: 13%;">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in sale.items.all %}
-                <tr>
-                    <td>
-                        <div class="item-name">
-                            {% if item.is_custom %}
-                            {{ item.custom_description }}
-                            {% else %}
-                            {{ item.product.sku }}
-                            {% endif %}
-                        </div>
-                        {% if item.is_custom %}
-                        <p class="item-desc">Custom manual entry</p>
-                        {% elif item.product.description %}
-                        <p class="item-desc">{{ item.product.description }}</p>
+            <!-- Billing & Details Grid -->
+            <div class="invoice-details-grid">
+                <div class="details-block">
+                    <h3>Billing Information</h3>
+                    <address>
+                        {% if sale.customer %}
+                        <strong>{{ sale.customer.name }}</strong>
+                        {% if sale.customer.phone %}
+                            <span style="color: var(--slate-500); font-weight: 500;">Phone:</span> {{ sale.customer.phone }}<br>
                         {% endif %}
-                    </td>
-                    <td>
-                        {% if item.is_custom %}
-                        &mdash;
+                        {% if sale.customer.email %}
+                            <span style="color: var(--slate-500); font-weight: 500;">Email:</span> {{ sale.customer.email }}<br>
+                        {% endif %}
+                        {% if sale.customer.address %}
+                            {{ sale.customer.address }}
+                        {% endif %}
                         {% else %}
-                        <code>{{ item.product.sku }}</code>
+                        <strong>Walk-in Customer</strong>
                         {% endif %}
-                    </td>
-                    <td class="text-right">{{ item.quantity }}</td>
-                    <td class="text-right">{{ CURRENCY_SYMBOL }}{{ item.unit_price|floatformat:2|intcomma }}</td>
-                    <td class="text-right" style="font-weight: 500; color: var(--slate-900);">{{ CURRENCY_SYMBOL }}{{ item.total_price|floatformat:2|intcomma }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <!-- Summary section -->
-        <div class="summary-wrapper">
-            <!-- Notes (left side) -->
-            <div class="notes-block" style="{% if not sale.notes %}visibility: hidden;{% endif %}">
-                <h4>Invoice Notes</h4>
-                <p>{{ sale.notes|default:"No additional notes." }}</p>
+                    </address>
+                </div>
+                <div class="details-block">
+                    <h3>Invoice Meta Data</h3>
+                    <table class="meta-table">
+                        <tr>
+                            <td class="meta-label">Invoice No:</td>
+                            <td class="meta-value">{{ sale.invoice_number }}</td>
+                        </tr>
+                        <tr>
+                            <td class="meta-label">Issue Date:</td>
+                            <td class="meta-value">{{ sale.sale_date|date:"M d, Y" }}</td>
+                        </tr>
+                        {% if sale.created_by %}
+                        <tr>
+                            <td class="meta-label">Authorized By:</td>
+                            <td class="meta-value">{{ sale.created_by.username }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
             </div>
 
-            <!-- Totals (right side) -->
-            <div class="totals-block">
-                <table class="totals-table">
-                    <tr>
-                        <td style="color: #64748b;">Subtotal:</td>
-                        <td class="text-right">{{ CURRENCY_SYMBOL }}{{ sale.subtotal|floatformat:2|intcomma }}</td>
-                    </tr>
-                    {% if sale.discount_amount > 0 %}
-                    <tr style="color: var(--danger-text);">
-                        <td>Discount:</td>
-                        <td class="text-right">-{{ CURRENCY_SYMBOL }}{{ sale.discount_amount|floatformat:2|intcomma }}</td>
-                    </tr>
-                    {% endif %}
-                    {% if sale.tax_amount > 0 %}
-                    <tr>
-                        <td style="color: #64748b;">Tax:</td>
-                        <td class="text-right">{{ CURRENCY_SYMBOL }}{{ sale.tax_amount|floatformat:2|intcomma }}</td>
-                    </tr>
-                    {% endif %}
-                    <tr class="total-row">
-                        <td>Total:</td>
-                        <td class="text-right">{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2|intcomma }}</td>
-                    </tr>
-                    <tr>
-                        <td style="color: #64748b;">Amount Paid:</td>
-                        <td class="text-right" style="font-weight: 500;">{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2|intcomma }}</td>
-                    </tr>
-                    {% if sale.due_amount > 0 %}
-                    <tr class="due-row">
-                        <td>Balance Due:</td>
-                        <td class="text-right">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2|intcomma }}</td>
-                    </tr>
-                    {% endif %}
+            <!-- Items Table -->
+            <div class="table-container">
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 45%;">Item / Description</th>
+                            <th style="width: 20%;">SKU</th>
+                            <th class="text-center" style="width: 10%;">Qty</th>
+                            <th class="text-right" style="width: 12%;">Unit Price</th>
+                            <th class="text-right" style="width: 13%;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in sale.items.all %}
+                        <tr>
+                            <td>
+                                <div class="item-name">
+                                    {% if item.is_custom %}
+                                    {{ item.custom_description }}
+                                    {% else %}
+                                    {{ item.product.sku }}
+                                    {% endif %}
+                                </div>
+                                {% if item.is_custom %}
+                                <p class="item-desc">Custom manual product entry</p>
+                                {% elif item.product.description %}
+                                <p class="item-desc">{{ item.product.description }}</p>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.is_custom %}
+                                &mdash;
+                                {% else %}
+                                <code>{{ item.product.sku }}</code>
+                                {% endif %}
+                            </td>
+                            <td class="text-center" style="font-weight: 600; color: var(--slate-900);">{{ item.quantity }}</td>
+                            <td class="text-right">{{ CURRENCY_SYMBOL }}{{ item.unit_price|floatformat:2|intcomma }}</td>
+                            <td class="text-right" style="font-weight: 700; color: var(--slate-900);">{{ CURRENCY_SYMBOL }}{{ item.total_price|floatformat:2|intcomma }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
                 </table>
             </div>
-        </div>
 
-        <!-- Footer -->
-        <div class="invoice-footer">
-            <p>Thank you for your business!</p>
-            <p>If you have any questions about this invoice, please contact us.</p>
-            <p style="margin-top: 15px; font-weight: 600; color: var(--slate-700);">{{ SHOP_NAME }}</p>
+            <!-- Summary section -->
+            <div class="summary-wrapper">
+                <!-- Special Notes (left side) -->
+                <div class="notes-block">
+                    {% if sale.notes %}
+                    <h4>Special Instructions / Notes</h4>
+                    <p>{{ sale.notes }}</p>
+                    {% else %}
+                    <h4>Invoice Notes</h4>
+                    <p>Thank you for choosing {{ SHOP_NAME }} for your energy and electrical needs. We appreciate your partnership.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Totals (right side) -->
+                <div class="totals-block">
+                    <table class="totals-table">
+                        <tr>
+                            <td class="total-label">Subtotal:</td>
+                            <td class="total-value">{{ CURRENCY_SYMBOL }}{{ sale.subtotal|floatformat:2|intcomma }}</td>
+                        </tr>
+                        {% if sale.discount_amount > 0 %}
+                        <tr style="color: var(--danger-text);">
+                            <td class="total-label" style="color: var(--danger-text);">Discount:</td>
+                            <td class="total-value" style="color: var(--danger-text);">-{{ CURRENCY_SYMBOL }}{{ sale.discount_amount|floatformat:2|intcomma }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if sale.tax_amount > 0 %}
+                        <tr>
+                            <td class="total-label">Tax:</td>
+                            <td class="total-value">{{ CURRENCY_SYMBOL }}{{ sale.tax_amount|floatformat:2|intcomma }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr class="total-row">
+                            <td class="total-label">Total Amount:</td>
+                            <td class="total-value">{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2|intcomma }}</td>
+                        </tr>
+                        <tr>
+                            <td class="total-label">Amount Paid:</td>
+                            <td class="total-value" style="color: var(--slate-900);">{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2|intcomma }}</td>
+                        </tr>
+                        {% if sale.due_amount > 0 %}
+                        <tr class="due-row">
+                            <td class="total-label">Balance Due:</td>
+                            <td class="total-value">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2|intcomma }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+
+            <!-- Payment Terms & Delivery section (moved below summary-wrapper as requested) -->
+            <div class="terms-delivery-section">
+                <h4>Payment Terms & Delivery</h4>
+                <p>Goods once sold are not returnable unless verified under warranty terms.</p>
+            </div>
+
+            <!-- Signature block -->
+            <div class="signature-section">
+                <div class="signature-block">
+                    <div class="signature-line"></div>
+                    <div class="signature-title">Authorized Signature</div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="invoice-footer">
+                <p>Thank you for your valuable business!</p>
+                <p>Sky Zone International — Delivering Energy & Electrical Excellence</p>
+                <div class="shop-info">{{ SHOP_NAME }}</div>
+            </div>
         </div>
     </div>
 </body>
