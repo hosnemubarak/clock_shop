@@ -104,7 +104,7 @@
         /* Invoice Card Style */
         .invoice-card {
             background-color: #fff;
-            padding: 60px;
+            padding: 40px;
             border-radius: 12px;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
             border: 1px solid var(--slate-200);
@@ -128,8 +128,8 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 40px;
-            padding-bottom: 30px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
             border-bottom: 1px solid var(--slate-100);
         }
 
@@ -218,7 +218,7 @@
             display: grid;
             grid-template-columns: 1.2fr 0.8fr;
             gap: 50px;
-            margin-bottom: 40px;
+            margin-bottom: 24px;
         }
 
         .details-block h3 {
@@ -273,7 +273,7 @@
 
         /* Items Table */
         .table-container {
-            margin-bottom: 35px;
+            margin-bottom: 24px;
         }
 
         table.items-table {
@@ -479,24 +479,40 @@
 
         /* Footer */
         .invoice-footer {
-            margin-top: 70px;
+            margin-top: 40px;
             text-align: center;
             border-top: 1px solid var(--slate-200);
-            padding-top: 24px;
-            color: var(--slate-400);
-            font-size: 11px;
+            padding-top: 20px;
             page-break-inside: avoid;
         }
 
-        .invoice-footer p {
-            margin: 4px 0;
+        .footer-thanks {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--slate-500);
+            margin-bottom: 6px;
+            letter-spacing: 0.02em;
         }
 
-        .invoice-footer .shop-info {
+        .footer-shop-details {
+            font-size: 11px;
+            color: var(--slate-500);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            line-height: 1.4;
+        }
+
+        .footer-shop-name {
             font-weight: 700;
             color: var(--slate-700);
-            font-size: 12px;
-            margin-top: 8px;
+        }
+
+        .footer-separator {
+            color: var(--slate-300);
+            font-size: 10px;
         }
 
         /* Print Settings */
@@ -723,18 +739,22 @@
 
             <!-- Footer -->
             <div class="invoice-footer">
-                <p style="font-weight: 600; color: var(--slate-700); font-size: 12px; margin-bottom: 8px;">Thank you for your valuable business!</p>
-                <div class="shop-info" style="font-weight: 700; color: var(--slate-900); font-size: 13px; margin-bottom: 4px; margin-top: 4px;">{{ SHOP_NAME }}</div>
-                {% if SHOP_ADDRESS %}
-                <p class="shop-meta-line" style="color: var(--slate-500); font-size: 11px; margin-bottom: 4px;">{{ SHOP_ADDRESS|linebreaksbr }}</p>
-                {% endif %}
-                {% if SHOP_PHONE or SHOP_EMAIL %}
-                <p class="shop-meta-line" style="color: var(--slate-500); font-size: 11px;">
-                    {% if SHOP_PHONE %}<span>Tel: {{ SHOP_PHONE }}</span>{% endif %}
-                    {% if SHOP_PHONE and SHOP_EMAIL %} &bull; {% endif %}
-                    {% if SHOP_EMAIL %}<span>{{ SHOP_EMAIL }}</span>{% endif %}
-                </p>
-                {% endif %}
+                <div class="footer-thanks">Thank you for your valuable business!</div>
+                <div class="footer-shop-details">
+                    <span class="footer-shop-name">{{ SHOP_NAME }}</span>
+                    {% if SHOP_ADDRESS %}
+                    <span class="footer-separator">&bull;</span>
+                    <span class="footer-address">{{ SHOP_ADDRESS }}</span>
+                    {% endif %}
+                    {% if SHOP_PHONE %}
+                    <span class="footer-separator">&bull;</span>
+                    <span class="footer-phone">Tel: {{ SHOP_PHONE }}</span>
+                    {% endif %}
+                    {% if SHOP_EMAIL %}
+                    <span class="footer-separator">&bull;</span>
+                    <span class="footer-email">{{ SHOP_EMAIL }}</span>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
