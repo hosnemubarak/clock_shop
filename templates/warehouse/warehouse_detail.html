@@ -17,7 +17,7 @@
 </div>
 
 <div class="row">
-    <div class="col-xl-3 col-md-6">
+    <div class="{% if request.user.is_staff or request.user.is_superuser %}col-xl-3{% else %}col-xl-6{% endif %} col-md-6">
         <div class="card card-animate">
             <div class="card-body">
                 <p class="text-uppercase fw-medium text-muted mb-0">Total Items</p>
@@ -25,6 +25,7 @@
             </div>
         </div>
     </div>
+    {% if request.user.is_staff or request.user.is_superuser %}
     <div class="col-xl-3 col-md-6">
         <div class="card card-animate">
             <div class="card-body">
@@ -33,6 +34,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <div class="row">
@@ -64,7 +66,9 @@
                             <tr>
                                 <th>Product (SKU - Brand)</th>
                                 <th class="text-center">Quantity</th>
+                                {% if request.user.is_staff or request.user.is_superuser %}
                                 <th class="text-end">Value</th>
+                                {% endif %}
                             </tr>
                         </thead>
                         <tbody>
@@ -77,11 +81,13 @@
                                     </a>
                                 </td>
                                 <td class="text-center">{{ item.total_quantity }}</td>
+                                {% if request.user.is_staff or request.user.is_superuser %}
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.total_value|floatformat:2 }}</td>
+                                {% endif %}
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center text-muted">No stock in this warehouse</td>
+                                <td colspan="{% if request.user.is_staff or request.user.is_superuser %}3{% else %}2{% endif %}" class="text-center text-muted">No stock in this warehouse</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -184,9 +190,13 @@
                             <tr>
                                 <th>Batch</th>
                                 <th>Product</th>
+                                {% if request.user.is_staff or request.user.is_superuser %}
                                 <th>Buy Price</th>
+                                {% endif %}
                                 <th>Qty</th>
+                                {% if request.user.is_staff or request.user.is_superuser %}
                                 <th>Value</th>
+                                {% endif %}
                                 <th>Purchase Date</th>
                             </tr>
                         </thead>
@@ -195,14 +205,18 @@
                             <tr>
                                 <td><a href="{% url 'batch_detail' batch.pk %}">{{ batch.batch_number }}</a></td>
                                 <td>{{ batch.product.sku }}</td>
+                                {% if request.user.is_staff or request.user.is_superuser %}
                                 <td>{{ CURRENCY_SYMBOL }}{{ batch.buy_price|floatformat:2 }}</td>
+                                {% endif %}
                                 <td>{{ batch.quantity }}</td>
+                                {% if request.user.is_staff or request.user.is_superuser %}
                                 <td>{{ CURRENCY_SYMBOL }}{{ batch.total_value|floatformat:2 }}</td>
+                                {% endif %}
                                 <td>{{ batch.purchase_date|date:"M d, Y" }}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="6" class="text-center text-muted">No batches</td>
+                                <td colspan="{% if request.user.is_staff or request.user.is_superuser %}6{% else %}4{% endif %}" class="text-center text-muted">No batches</td>
                             </tr>
                             {% endfor %}
                         </tbody>

@@ -21,7 +21,7 @@
 
 <!-- Summary Cards -->
 <div class="row">
-    <div class="col-md-3">
+    <div class="{% if request.user.is_staff or request.user.is_superuser %}col-md-3{% else %}col-md-6{% endif %}">
         <div class="card card-animate">
             <div class="card-body">
                 <div class="d-flex justify-content-between">
@@ -41,6 +41,7 @@
             </div>
         </div>
     </div>
+    {% if request.user.is_staff or request.user.is_superuser %}
     <div class="col-md-3">
         <div class="card card-animate">
             <div class="card-body">
@@ -77,7 +78,8 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    {% endif %}
+    <div class="{% if request.user.is_staff or request.user.is_superuser %}col-md-3{% else %}col-md-6{% endif %}">
         <div class="card card-animate">
             <div class="card-body">
                 <div class="d-flex justify-content-between">

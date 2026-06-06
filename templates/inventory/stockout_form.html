@@ -114,18 +114,21 @@
                                     <th>Product</th>
                                     <th>Batch</th>
                                     <th class="text-center">Qty</th>
+                                    {% if request.user.is_staff or request.user.is_superuser %}
                                     <th class="text-end">Unit Cost</th>
                                     <th class="text-end">Total</th>
+                                    {% endif %}
                                     <th class="text-center" style="width: 60px;">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="itemsTableBody">
                                 <tr id="emptyRow">
-                                    <td colspan="6" class="text-center text-muted py-4">
+                                    <td colspan="{% if request.user.is_staff or request.user.is_superuser %}6{% else %}4{% endif %}" class="text-center text-muted py-4">
                                         No items added yet
                                     </td>
                                 </tr>
                             </tbody>
+                            {% if request.user.is_staff or request.user.is_superuser %}
                             <tfoot class="table-light">
                                 <tr>
                                     <th colspan="4" class="text-end">Total Value:</th>
@@ -133,6 +136,7 @@
                                     <th></th>
                                 </tr>
                             </tfoot>
+                            {% endif %}
                         </table>
                     </div>
                 </div>
@@ -154,11 +158,13 @@
                         <span class="text-muted">Total Quantity:</span>
                         <span class="fw-medium" id="summaryQty">0</span>
                     </div>
+                    {% if request.user.is_staff or request.user.is_superuser %}
                     <hr>
                     <div class="d-flex justify-content-between">
                         <span class="fw-medium">Total Value:</span>
                         <span class="fw-bold text-danger fs-5" id="summaryValue">{{ CURRENCY_SYMBOL }}0.00</span>
                     </div>
+                    {% endif %}
                 </div>
                 <div class="card-footer">
                     <div class="d-grid gap-2">
@@ -238,7 +244,7 @@ function loadBatches(productId) {
                     data-qty="${batch.quantity}" 
                     data-price="${batch.buy_price}"
                     data-number="${batch.batch_number}">
-                    ${batch.batch_number} (${batch.quantity} units @ {{ CURRENCY_SYMBOL }}${batch.buy_price})
+                    ${batch.batch_number} (${batch.quantity} units{% if request.user.is_staff or request.user.is_superuser %} @ {{ CURRENCY_SYMBOL }}${batch.buy_price}{% endif %})
                 </option>`;
             });
             batchSelect.disabled = data.length === 0;
@@ -336,8 +342,10 @@ function renderItems() {
                 <td>${item.product_sku}</td>
                 <td><code>${item.batch_number}</code></td>
                 <td class="text-center">${item.quantity}</td>
-                <td class="text-end">{{ CURRENCY_SYMBOL }}${item.unit_cost.toFixed(2)}</td>
-                <td class="text-end">{{ CURRENCY_SYMBOL }}${total.toFixed(2)}</td>
+                {% if request.user.is_staff or request.user.is_superuser %}
+                <td class="text-end">${CURRENCY_SYMBOL}${item.unit_cost.toFixed(2)}</td>
+                <td class="text-end">${CURRENCY_SYMBOL}${total.toFixed(2)}</td>
+                {% endif %}
                 <td class="text-center">
                     <button type="button" class="btn btn-sm btn-soft-danger" onclick="removeItem(${index})">
                         <i class="las la-trash"></i>

@@ -74,7 +74,9 @@
                                 <th>Warehouse</th>
                                 <th>Reason</th>
                                 <th class="text-center">Items</th>
+                                {% if request.user.is_staff or request.user.is_superuser %}
                                 <th class="text-end">Value</th>
+                                {% endif %}
                                 <th>Status</th>
                                 <th>Created By</th>
                                 <th class="text-center">Actions</th>
@@ -96,7 +98,9 @@
                                     </span>
                                 </td>
                                 <td class="text-center">{{ stockout.total_quantity }}</td>
+                                {% if request.user.is_staff or request.user.is_superuser %}
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ stockout.total_value|floatformat:2|intcomma }}</td>
+                                {% endif %}
                                 <td>
                                     {% if stockout.status == 'completed' %}
                                     <span class="badge bg-success-subtle text-success">Completed</span>
@@ -115,7 +119,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="9" class="text-center text-muted py-4">
+                                <td colspan="{% if request.user.is_staff or request.user.is_superuser %}9{% else %}8{% endif %}" class="text-center text-muted py-4">
                                     <i class="las la-inbox fs-1 d-block mb-2"></i>
                                     No stock out records found
                                 </td>

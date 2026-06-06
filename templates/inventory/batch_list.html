@@ -53,9 +53,13 @@
                                 <th>Batch #</th>
                                 <th>Product</th>
                                 <th>Warehouse</th>
+                                {% if request.user.is_staff or request.user.is_superuser %}
                                 <th>Buy Price</th>
+                                {% endif %}
                                 <th>Qty</th>
+                                {% if request.user.is_staff or request.user.is_superuser %}
                                 <th>Value</th>
+                                {% endif %}
                                 <th>Purchase Date</th>
                                 <th>Actions</th>
                             </tr>
@@ -73,7 +77,9 @@
                                     </a>
                                 </td>
                                 <td>{{ batch.warehouse.code }}</td>
+                                {% if request.user.is_staff or request.user.is_superuser %}
                                 <td>{{ CURRENCY_SYMBOL }}{{ batch.buy_price|floatformat:2 }}</td>
+                                {% endif %}
                                 <td>
                                     {% if batch.quantity == 0 %}
                                     <span class="badge bg-secondary">0</span>
@@ -83,7 +89,9 @@
                                     <span class="badge bg-success">{{ batch.quantity }}</span>
                                     {% endif %}
                                 </td>
+                                {% if request.user.is_staff or request.user.is_superuser %}
                                 <td>{{ CURRENCY_SYMBOL }}{{ batch.total_value|floatformat:2 }}</td>
+                                {% endif %}
                                 <td>{{ batch.purchase_date|date:"M d, Y" }}</td>
                                 <td>
                                     <a href="{% url 'batch_detail' batch.pk %}" class="btn btn-soft-info btn-sm">
@@ -93,7 +101,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-4">No batches found</td>
+                                <td colspan="{% if request.user.is_staff or request.user.is_superuser %}8{% else %}6{% endif %}" class="text-center text-muted py-4">No batches found</td>
                             </tr>
                             {% endfor %}
                         </tbody>

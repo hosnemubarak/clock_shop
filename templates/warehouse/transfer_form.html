@@ -34,7 +34,9 @@
                                     <th>Product</th>
                                     <th>Batch</th>
                                     <th width="100">Qty</th>
+                                    {% if request.user.is_staff or request.user.is_superuser %}
                                     <th width="120">Cost</th>
+                                    {% endif %}
                                     <th width="50"></th>
                                 </tr>
                             </thead>
@@ -142,7 +144,7 @@ function loadWarehouseBatches(warehouseId) {
             }
             data.forEach(batch => {
                 batchesData[batch.id] = batch;
-                batchSelect.innerHTML += `<option value="${batch.id}">${batch.product_sku} - Batch: ${batch.batch_number} (${batch.quantity} avail @ ${CURRENCY_SYMBOL}${batch.buy_price})</option>`;
+                batchSelect.innerHTML += `<option value="${batch.id}">${batch.product_sku} - Batch: ${batch.batch_number} (${batch.quantity} avail{% if request.user.is_staff or request.user.is_superuser %} @ ${CURRENCY_SYMBOL}${batch.buy_price}{% endif %})</option>`;
             });
             
             // Initialize Tom Select for searchable batch dropdown
@@ -224,7 +226,7 @@ function addItem() {
     // Update the batch select option to show new available quantity
     if (window.batchTomSelect) {
         const b = batchesData[batchValue];
-        const newText = `${b.product_sku} - Batch: ${b.batch_number} (${b.quantity} avail @ ${CURRENCY_SYMBOL}${b.buy_price})`;
+        const newText = `${b.product_sku} - Batch: ${b.batch_number} (${b.quantity} avail{% if request.user.is_staff or request.user.is_superuser %} @ ${CURRENCY_SYMBOL}${b.buy_price}{% endif %})`;
         
         // Remove and re-add the option to avoid Tom Select errors
         window.batchTomSelect.removeOption(batchValue);
@@ -257,7 +259,7 @@ function removeItem(index) {
         // Update the batch select option
         if (window.batchTomSelect) {
             const b = batchesData[item.batch_id];
-            const newText = `${b.product_sku} - Batch: ${b.batch_number} (${b.quantity} avail @ ${CURRENCY_SYMBOL}${b.buy_price})`;
+            const newText = `${b.product_sku} - Batch: ${b.batch_number} (${b.quantity} avail{% if request.user.is_staff or request.user.is_superuser %} @ ${CURRENCY_SYMBOL}${b.buy_price}{% endif %})`;
             
             // Remove and re-add the option to avoid Tom Select errors
             window.batchTomSelect.removeOption(item.batch_id);
@@ -284,7 +286,9 @@ function renderItems() {
                 </td>
                 <td><code>${item.batch_number}</code></td>
                 <td class="text-center">${item.quantity}</td>
+                {% if request.user.is_staff or request.user.is_superuser %}
                 <td class="text-end">${CURRENCY_SYMBOL}${total.toFixed(2)}</td>
+                {% endif %}
                 <td class="text-center">
                     <button type="button" class="btn btn-soft-danger btn-sm" onclick="removeItem(${item.index})">
                         <i class="las la-times"></i>
@@ -296,6 +300,7 @@ function renderItems() {
     });
     
     if (items.length > 0) {
+        {% if request.user.is_staff or request.user.is_superuser %}
         html += `
             <tr class="table-light">
                 <td colspan="3" class="text-end fw-bold">Total Value:</td>
@@ -303,9 +308,10 @@ function renderItems() {
                 <td></td>
             </tr>
         `;
+        {% endif %}
     }
     
-    tbody.innerHTML = html || '<tr><td colspan="5" class="text-center text-muted py-3">No items added yet. Select a batch and quantity above.</td></tr>';
+    tbody.innerHTML = html || '<tr><td colspan="{% if request.user.is_staff or request.user.is_superuser %}5{% else %}4{% endif %}" class="text-center text-muted py-3">No items added yet. Select a batch and quantity above.</td></tr>';
 }
 
 document.getElementById('transferForm').addEventListener('submit', function(e) {

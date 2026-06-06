@@ -128,7 +128,7 @@ function selectProduct(productId, productName, defaultPrice) {
                         <div class="d-flex justify-content-between">
                             <div>
                                 <strong>${batch.batch_number}</strong><br>
-                                <small class="text-muted">${batch.warehouse} | Cost: {{ CURRENCY_SYMBOL }}${batch.buy_price}</small>
+                                <small class="text-muted">${batch.warehouse}{% if request.user.is_staff or request.user.is_superuser %} | Cost: {{ CURRENCY_SYMBOL }}${batch.buy_price}{% endif %}</small>
                             </div>
                             <div class="text-end">
                                 <span class="badge bg-primary">${batch.quantity} avail</span>

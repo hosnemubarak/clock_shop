@@ -63,10 +63,12 @@
                                 {% endif %}
                             </td>
                         </tr>
+                        {% if request.user.is_staff or request.user.is_superuser %}
                         <tr>
                             <td class="text-muted">Avg. Cost</td>
                             <td class="fw-medium">{{ CURRENCY_SYMBOL }}{{ product.get_average_cost|floatformat:2 }}</td>
                         </tr>
+                        {% endif %}
                         <tr>
                             <td class="text-muted">Status</td>
                             <td>
@@ -109,9 +111,13 @@
                             <tr>
                                 <th>Batch #</th>
                                 <th>Warehouse</th>
+                                {% if request.user.is_staff or request.user.is_superuser %}
                                 <th>Buy Price</th>
+                                {% endif %}
                                 <th>Quantity</th>
+                                {% if request.user.is_staff or request.user.is_superuser %}
                                 <th>Value</th>
+                                {% endif %}
                                 <th>Purchase Date</th>
                             </tr>
                         </thead>
@@ -120,14 +126,18 @@
                             <tr>
                                 <td><a href="{% url 'batch_detail' batch.pk %}">{{ batch.batch_number }}</a></td>
                                 <td>{{ batch.warehouse.name }}</td>
+                                {% if request.user.is_staff or request.user.is_superuser %}
                                 <td>{{ CURRENCY_SYMBOL }}{{ batch.buy_price|floatformat:2 }}</td>
+                                {% endif %}
                                 <td><span class="badge bg-primary">{{ batch.quantity }}</span></td>
+                                {% if request.user.is_staff or request.user.is_superuser %}
                                 <td>{{ CURRENCY_SYMBOL }}{{ batch.total_value|floatformat:2 }}</td>
+                                {% endif %}
                                 <td>{{ batch.purchase_date|date:"M d, Y" }}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">No stock available</td>
+                                <td colspan="{% if request.user.is_staff or request.user.is_superuser %}6{% else %}4{% endif %}" class="text-center text-muted py-4">No stock available</td>
                             </tr>
                             {% endfor %}
                         </tbody>

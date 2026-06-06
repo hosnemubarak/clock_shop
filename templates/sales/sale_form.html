@@ -313,7 +313,7 @@ function loadBatches(productId) {
                 batchesData[batch.id] = batch;
                 batchSelect.addOption({
                     value: batch.id,
-                    text: `${batch.batch_number} - ${batch.warehouse} (${batch.quantity} avail) @ {{ CURRENCY_SYMBOL }}${batch.buy_price}`
+                    text: `${batch.batch_number} - ${batch.warehouse} (${batch.quantity} avail){% if request.user.is_staff or request.user.is_superuser %} @ {{ CURRENCY_SYMBOL }}${batch.buy_price}{% endif %}`
                 });
             });
             batchSelect.refreshOptions(false);
@@ -336,7 +336,7 @@ function updateBatchInfo(batchId) {
     
     if (batchId && batchesData[batchId]) {
         const batch = batchesData[batchId];
-        info.innerHTML = `<i class="las la-info-circle"></i> Available: ${batch.quantity} units | Cost: {{ CURRENCY_SYMBOL }}${batch.buy_price} | Purchased: ${batch.purchase_date}`;
+        info.innerHTML = `<i class="las la-info-circle"></i> Available: ${batch.quantity} units{% if request.user.is_staff or request.user.is_superuser %} | Cost: {{ CURRENCY_SYMBOL }}${batch.buy_price}{% endif %} | Purchased: ${batch.purchase_date}`;
     } else {
         info.innerHTML = '';
     }

@@ -38,7 +38,7 @@
 
 <!-- Stats Cards -->
 <div class="row">
-    <div class="col-xl-3 col-md-6">
+    <div class="{% if request.user.is_staff or request.user.is_superuser %}col-xl-3{% else %}col-xl-4{% endif %} col-md-6">
         <a href="{% url 'sale_list' %}" class="text-decoration-none">
             <div class="card card-animate">
                 <div class="card-body">
@@ -63,8 +63,10 @@
         </a>
     </div>
 
-    <div class="col-xl-3 col-md-6">
+    <div class="{% if request.user.is_staff or request.user.is_superuser %}col-xl-3{% else %}col-xl-4{% endif %} col-md-6">
+        {% if request.user.is_staff or request.user.is_superuser %}
         <a href="{% url 'sales_report' %}" class="text-decoration-none">
+        {% endif %}
             <div class="card card-animate">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -75,7 +77,9 @@
                     <div class="d-flex align-items-end justify-content-between mt-4">
                         <div>
                             <h4 class="fs-22 fw-semibold mb-4"><span class="counter-value" data-target="{{ total_sales_month }}">{{ CURRENCY_SYMBOL }}{{ total_sales_month|floatformat:2|intcomma }}</span></h4>
+                            {% if request.user.is_staff or request.user.is_superuser %}
                             <span class="text-success">View Report <i class="las la-arrow-right"></i></span>
+                            {% endif %}
                         </div>
                         <div class="avatar-sm flex-shrink-0">
                             <span class="avatar-title bg-success-subtle rounded fs-3">
@@ -85,9 +89,12 @@
                     </div>
                 </div>
             </div>
+        {% if request.user.is_staff or request.user.is_superuser %}
         </a>
+        {% endif %}
     </div>
 
+    {% if request.user.is_staff or request.user.is_superuser %}
     <div class="col-xl-3 col-md-6">
         <a href="{% url 'profit_report' %}" class="text-decoration-none">
             <div class="card card-animate">
@@ -112,9 +119,12 @@
             </div>
         </a>
     </div>
+    {% endif %}
 
-    <div class="col-xl-3 col-md-6">
+    <div class="{% if request.user.is_staff or request.user.is_superuser %}col-xl-3{% else %}col-xl-4{% endif %} col-md-6">
+        {% if request.user.is_staff or request.user.is_superuser %}
         <a href="{% url 'customer_report' %}" class="text-decoration-none">
+        {% endif %}
             <div class="card card-animate">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -125,7 +135,9 @@
                     <div class="d-flex align-items-end justify-content-between mt-4">
                         <div>
                             <h4 class="fs-22 fw-semibold mb-4 text-danger">{{ CURRENCY_SYMBOL }}{{ total_dues|floatformat:2|intcomma }}</h4>
+                            {% if request.user.is_staff or request.user.is_superuser %}
                             <span class="text-danger">View Dues <i class="las la-arrow-right"></i></span>
+                            {% endif %}
                         </div>
                         <div class="avatar-sm flex-shrink-0">
                             <span class="avatar-title bg-danger-subtle rounded fs-3">
@@ -135,7 +147,9 @@
                     </div>
                 </div>
             </div>
+        {% if request.user.is_staff or request.user.is_superuser %}
         </a>
+        {% endif %}
     </div>
 </div>
 
