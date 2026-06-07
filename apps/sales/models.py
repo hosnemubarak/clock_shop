@@ -177,6 +177,18 @@ class SaleItem(TimeStampedModel):
         return f"{self.product.display_name} x {self.quantity}" if self.product else f"Item x {self.quantity}"
     
     @property
+    def returned_quantity(self):
+        """Total quantity returned for this sale item."""
+        return self.salereturnitem_set.aggregate(
+            total=models.Sum('quantity')
+        )['total'] or 0
+
+    @property
+    def returnable_quantity(self):
+        """Remaining quantity that can be returned."""
+        return self.quantity - self.returned_quantity
+
+    @property
     def total_price(self):
         """Total selling price."""
         return (self.quantity * self.unit_price) - self.discount
@@ -245,3 +257,10 @@ class SaleReturnItem(TimeStampedModel):
     
     def __str__(self):
         return f"{self.sale_item.product.display_name} x {self.quantity}"
+
+    @property
+    def refund_total(self):
+        """Total refund amount for this returned item."""
+        item = self.sale_item
+        effective_unit_price = item.unit_price - (item.discount / Decimal(item.quantity))
+        return Decimal(self.quantity) * effective_unit_price

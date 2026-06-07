@@ -10,7 +10,7 @@ from decimal import Decimal
 import json
 import html
 
-from .models import Sale, SaleItem
+from .models import Sale, SaleItem, SaleReturn, SaleReturnItem
 from .forms import SaleForm, SaleItemForm, PaymentForm
 from apps.inventory.models import Product, Batch
 from apps.customers.models import Customer, Payment
@@ -64,10 +64,21 @@ def sale_detail(request, pk):
     """View sale/invoice details."""
     sale = get_object_or_404(
         Sale.objects.select_related('customer', 'created_by').prefetch_related(
-            'items__product', 'items__batch'
+            'items__product', 'items__batch', 'returns'
         ),
         pk=pk
     )
+    
+    # Calculate return stats
+    returns_total = sum(ret.refund_amount for ret in sale.returns.all())
+    net_total = sale.total_amount - returns_total
+    
+    net_due = Decimal('0.00')
+    credit_amount = Decimal('0.00')
+    if net_total > sale.paid_amount:
+        net_due = net_total - sale.paid_amount
+    else:
+        credit_amount = sale.paid_amount - net_total
     
     # Get payments for this sale
     payments = []
@@ -80,6 +91,10 @@ def sale_detail(request, pk):
     context = {
         'sale': sale,
         'payments': payments,
+        'returns_total': returns_total,
+        'net_total': net_total,
+        'net_due': net_due,
+        'credit_amount': credit_amount,
     }
     return render(request, 'sales/sale_detail.html', context)
 
@@ -361,3 +376,168 @@ def api_product_info(request, product_id):
     }
     
     return JsonResponse(data)
+
+
+@login_required
+@transaction.atomic
+def sale_return_create(request, sale_pk):
+    """Process a new return against a completed sale."""
+    sale = get_object_or_404(Sale, pk=sale_pk)
+    
+    # Validation: returns are only allowed for completed sales
+    if sale.status != 'completed':
+        messages.error(request, "Returns can only be processed for completed sales.")
+        return redirect('sale_detail', pk=sale.pk)
+        
+    if request.method == 'POST':
+        # Retrieve form data
+        reason = request.POST.get('reason', '').strip()
+        if not reason:
+            messages.error(request, "A reason for the return is required.")
+            return redirect('sale_return_create', sale_pk=sale.pk)
+            
+        # Parse returned quantities
+        returned_items_data = []
+        total_refund_calculated = Decimal('0.00')
+        
+        # We loop through items to find returned quantities
+        for item in sale.items.all():
+            qty_field = f"qty_{item.pk}"
+            qty_to_return_str = request.POST.get(qty_field, '0')
+            try:
+                qty_to_return = int(qty_to_return_str)
+            except ValueError:
+                qty_to_return = 0
+                
+            if qty_to_return > 0:
+                # Validate against returnable quantity
+                max_returnable = item.returnable_quantity
+                if qty_to_return > max_returnable:
+                    messages.error(request, f"Cannot return more than {max_returnable} units of {item}.")
+                    return redirect('sale_return_create', sale_pk=sale.pk)
+                    
+                # Calculate proportional refund per unit
+                # unit_price - (discount / quantity)
+                effective_unit_price = item.unit_price - (item.discount / Decimal(item.quantity))
+                item_refund = Decimal(qty_to_return) * effective_unit_price
+                
+                returned_items_data.append((item, qty_to_return, item_refund))
+                total_refund_calculated += item_refund
+                
+        if not returned_items_data:
+            messages.error(request, "Please select at least one item to return.")
+            return redirect('sale_return_create', sale_pk=sale.pk)
+            
+        # Create SaleReturn object
+        sale_return = SaleReturn.objects.create(
+            sale=sale,
+            return_date=timezone.now(),
+            reason=reason,
+            refund_amount=total_refund_calculated,
+            created_by=request.user
+        )
+        
+        # Create SaleReturnItems and update stock/batches
+        for sale_item, qty, refund in returned_items_data:
+            # Create SaleReturnItem
+            SaleReturnItem.objects.create(
+                sale_return=sale_return,
+                sale_item=sale_item,
+                quantity=qty
+            )
+            
+            # Restore stock to Batch if not custom
+            if not sale_item.is_custom and sale_item.batch:
+                batch = sale_item.batch
+                # Lock batch for update to avoid race conditions
+                batch = Batch.objects.select_for_update().get(pk=batch.pk)
+                batch.quantity += qty
+                batch.save()
+                
+                # Update product stock
+                if sale_item.product:
+                    sale_item.product.update_total_stock()
+                    
+        # Update customer balance if applicable
+        if sale.customer:
+            sale.customer.recalculate_balance()
+            
+        create_audit_log(request, 'RETURN', sale_return, {
+            'sale': sale.invoice_number,
+            'refund_amount': str(sale_return.refund_amount),
+            'items_count': len(returned_items_data)
+        })
+        
+        messages.success(request, f"Return {sale_return.return_number} processed successfully.")
+        return redirect('sale_return_detail', pk=sale_return.pk)
+        
+    # GET request - show form
+    # Filter items that can still be returned
+    items_with_balance = []
+    for item in sale.items.all():
+        if item.returnable_quantity > 0:
+            effective_unit_price = item.unit_price - (item.discount / Decimal(item.quantity))
+            items_with_balance.append({
+                'item': item,
+                'returnable_qty': item.returnable_quantity,
+                'refund_price': effective_unit_price
+            })
+            
+    context = {
+        'sale': sale,
+        'items_with_balance': items_with_balance,
+    }
+    return render(request, 'sales/sale_return_form.html', context)
+
+
+@login_required
+def sale_return_list(request):
+    """List all returns / credit notes."""
+    returns = SaleReturn.objects.select_related('sale', 'created_by').all()
+    
+    # Search
+    search = request.GET.get('search', '')
+    if search:
+        returns = returns.filter(
+            Q(return_number__icontains=search) |
+            Q(sale__invoice_number__icontains=search) |
+            Q(sale__customer__name__icontains=search)
+        )
+        
+    paginator = Paginator(returns, 10)
+    page = request.GET.get('page')
+    returns = paginator.get_page(page)
+    
+    context = {
+        'returns': returns,
+        'search': search,
+    }
+    return render(request, 'sales/sale_return_list.html', context)
+
+
+@login_required
+def sale_return_detail(request, pk):
+    """View details of a specific return / credit note."""
+    sale_return = get_object_or_404(
+        SaleReturn.objects.select_related('sale__customer', 'created_by').prefetch_related(
+            'items__sale_item__product'
+        ),
+        pk=pk
+    )
+    
+    context = {
+        'return': sale_return,
+    }
+    return render(request, 'sales/sale_return_detail.html', context)
+
+
+@login_required
+def sale_return_print(request, pk):
+    """Print credit note."""
+    sale_return = get_object_or_404(
+        SaleReturn.objects.select_related('sale__customer', 'created_by').prefetch_related(
+            'items__sale_item__product'
+        ),
+        pk=pk
+    )
+    return render(request, 'sales/sale_return_print.html', {'return': sale_return})

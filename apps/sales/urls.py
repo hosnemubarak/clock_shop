@@ -9,6 +9,12 @@ urlpatterns = [
     path('<int:pk>/cancel/', views.sale_cancel, name='sale_cancel'),
     path('<int:pk>/payment/', views.sale_payment, name='sale_payment'),
     path('<int:pk>/print/', views.sale_print, name='sale_print'),
+    path('<int:sale_pk>/return/', views.sale_return_create, name='sale_return_create'),
+    
+    # Returns / Credit Notes
+    path('returns/', views.sale_return_list, name='sale_return_list'),
+    path('returns/<int:pk>/', views.sale_return_detail, name='sale_return_detail'),
+    path('returns/<int:pk>/print/', views.sale_return_print, name='sale_return_print'),
     
     # POS
     path('pos/', views.pos_view, name='pos'),

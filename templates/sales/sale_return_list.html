@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Returns & Credit Notes | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Returns & Credit Notes</h4>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" name="search" class="form-control" placeholder="Search by Return #, Invoice # or Customer..." value="{{ search }}">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Search</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Return Number</th>
+                                <th>Original Invoice</th>
+                                <th>Customer</th>
+                                <th>Return Date</th>
+                                <th>Reason</th>
+                                <th class="text-end">Refund Amount</th>
+                                <th>Processed By</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for return in returns %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'sale_return_detail' return.pk %}" class="fw-medium text-warning">
+                                        {{ return.return_number }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <a href="{% url 'sale_detail' return.sale.pk %}" class="fw-medium">
+                                        {{ return.sale.invoice_number }}
+                                    </a>
+                                </td>
+                                <td>{{ return.sale.customer.name|default:"Walk-in" }}</td>
+                                <td>{{ return.return_date|date:"M d, Y H:i" }}</td>
+                                <td>{{ return.reason|truncatechars:30 }}</td>
+                                <td class="text-end text-warning fw-semibold">
+                                    {{ CURRENCY_SYMBOL }}{{ return.refund_amount|floatformat:2 }}
+                                </td>
+                                <td>{{ return.created_by.username|default:"-" }}</td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            <i class="las la-ellipsis-h"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'sale_return_detail' return.pk %}">
+                                                    <i class="las la-eye me-2"></i>View Details
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'sale_return_print' return.pk %}" target="_blank">
+                                                    <i class="las la-print me-2"></i>Print Credit Note
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">No returns found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% with page_obj=returns %}
+                {% include 'includes/pagination.html' %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

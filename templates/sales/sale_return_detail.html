@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Return: {{ return.return_number }} | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Credit Note / Return: {{ return.return_number }}</h4>
+            <div class="page-title-right">
+                <a href="{% url 'sale_return_print' return.pk %}" class="btn btn-primary" target="_blank">
+                    <i class="las la-print"></i> Print Credit Note
+                </a>
+                <a href="{% url 'sale_return_list' %}" class="btn btn-outline-secondary">
+                    <i class="las la-list"></i> All Returns
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Returned Items</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product</th>
+                                <th>Batch</th>
+                                <th class="text-center">Returned Qty</th>
+                                <th class="text-end">Refund Price (Unit)</th>
+                                <th class="text-end">Total Refund</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in return.items.all %}
+                            <tr>
+                                <td>
+                                    {% if item.sale_item.is_custom %}
+                                        {{ item.sale_item.custom_description }}
+                                        <br><small class="text-muted">Custom Entry</small>
+                                    {% else %}
+                                        <a href="{% url 'product_detail' item.sale_item.product.pk %}">
+                                            {{ item.sale_item.product.sku }}
+                                        </a>
+                                        <br><small class="text-muted">{{ item.sale_item.product.display_name }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.sale_item.is_custom %}
+                                        <span class="badge bg-warning-subtle text-warning">CUSTOM</span>
+                                    {% else %}
+                                        <code>{{ item.sale_item.batch.batch_number }}</code>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">{{ item.quantity }}</td>
+                                <td class="text-end">
+                                    {{ CURRENCY_SYMBOL }}{{ item.sale_item.unit_price|floatformat:2 }}
+                                </td>
+                                <td class="text-end">
+                                    {% with refund_unit=item.sale_item.unit_price|add:0 %} <!-- fallback helper for arithmetic -->
+                                    <!-- We do proportional price calculation in Django context if we want, or we can just render the actual value using math filter or custom helper. Wait, we can compute refund price per unit in a property on SaleReturnItem or SaleItem, or directly in python and pass it or use model property! Let's check: can we add a property to SaleReturnItem? -->
+                                    <!-- Yes! In SaleReturnItem, the refund price per unit is `sale_item.unit_price - (sale_item.discount / sale_item.quantity)`. -->
+                                    <!-- So the item's total refund value is `quantity * (sale_item.unit_price - (sale_item.discount / sale_item.quantity))`. Let's add that property to SaleReturnItem model! It's so clean and elegant! -->
+                                    {{ CURRENCY_SYMBOL }}{{ item.refund_total|floatformat:2 }}
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="fw-bold fs-16 table-light">
+                                <td colspan="4" class="text-end text-warning">Total Refund Amount:</td>
+                                <td class="text-end text-warning">{{ CURRENCY_SYMBOL }}{{ return.refund_amount|floatformat:2 }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Credit Note Details</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted">Return #</td>
+                        <td class="fw-medium text-warning">{{ return.return_number }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Return Date</td>
+                        <td>{{ return.return_date|date:"F d, Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Original Invoice</td>
+                        <td>
+                            <a href="{% url 'sale_detail' return.sale.pk %}" class="fw-semibold">
+                                {{ return.sale.invoice_number }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Customer</td>
+                        <td>
+                            {% if return.sale.customer %}
+                            <a href="{% url 'customer_detail' return.sale.customer.pk %}">
+                                {{ return.sale.customer.name }}
+                            </a>
+                            {% else %}
+                            Walk-in Customer
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Processed By</td>
+                        <td>{{ return.created_by.username|default:"-" }}</td>
+                    </tr>
+                </table>
+                {% if return.reason %}
+                <hr>
+                <div class="mb-0">
+                    <strong class="text-muted d-block mb-1">Reason:</strong>
+                    <p class="mb-0 text-dark bg-light p-2 rounded border-start border-3 border-warning">{{ return.reason }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

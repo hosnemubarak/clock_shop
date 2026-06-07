@@ -13,6 +13,7 @@ class AuditLog(models.Model):
         ('PAYMENT', 'Payment'),
         ('STOCK_IN', 'Stock In'),
         ('STOCK_OUT', 'Stock Out'),
+        ('RETURN', 'Return'),
     ]
     
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)

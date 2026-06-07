@@ -9,6 +9,11 @@
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
             <h4 class="mb-sm-0">Invoice: {{ sale.invoice_number }}</h4>
             <div class="page-title-right">
+                {% if sale.status == 'completed' %}
+                <a href="{% url 'sale_return_create' sale.pk %}" class="btn btn-warning me-1">
+                    <i class="las la-undo-alt"></i> Return Items
+                </a>
+                {% endif %}
                 <a href="{% url 'sale_print' sale.pk %}" class="btn btn-primary" target="_blank">
                     <i class="las la-print"></i> Print
                 </a>
@@ -64,33 +69,48 @@
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="4" class="text-end">Subtotal:</td>
+                                <td colspan="4" class="text-end text-muted">Original Subtotal:</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.subtotal|floatformat:2 }}</td>
                             </tr>
                             {% if sale.discount_amount > 0 %}
                             <tr>
-                                <td colspan="4" class="text-end">Discount:</td>
+                                <td colspan="4" class="text-end text-muted">Discount:</td>
                                 <td class="text-end text-danger">-{{ CURRENCY_SYMBOL }}{{ sale.discount_amount|floatformat:2 }}</td>
                             </tr>
                             {% endif %}
                             {% if sale.tax_amount > 0 %}
                             <tr>
-                                <td colspan="4" class="text-end">Tax:</td>
+                                <td colspan="4" class="text-end text-muted">Tax:</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.tax_amount|floatformat:2 }}</td>
                             </tr>
                             {% endif %}
-                            <tr class="fw-bold">
-                                <td colspan="4" class="text-end">Total:</td>
+                            <tr class="fw-bold border-bottom">
+                                <td colspan="4" class="text-end">Original Total:</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
                             </tr>
-                            <tr class="text-success">
-                                <td colspan="4" class="text-end">Paid:</td>
+                            {% if returns_total > 0 %}
+                            <tr class="text-warning fw-bold">
+                                <td colspan="4" class="text-end">Returned Amount (Refunded):</td>
+                                <td class="text-end">-{{ CURRENCY_SYMBOL }}{{ returns_total|floatformat:2 }}</td>
+                            </tr>
+                            <tr class="table-light fw-bold border-bottom">
+                                <td colspan="4" class="text-end">Net Invoice Total:</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ net_total|floatformat:2 }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr class="text-success fw-semibold">
+                                <td colspan="4" class="text-end">Total Paid:</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2 }}</td>
                             </tr>
-                            {% if sale.due_amount > 0 %}
-                            <tr class="text-danger fw-bold">
-                                <td colspan="4" class="text-end">Due:</td>
-                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2 }}</td>
+                            {% if net_due > 0 %}
+                            <tr class="text-danger fw-bold fs-15">
+                                <td colspan="4" class="text-end">Outstanding Due:</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ net_due|floatformat:2 }}</td>
+                            </tr>
+                            {% elif credit_amount > 0 %}
+                            <tr class="text-info fw-bold fs-15">
+                                <td colspan="4" class="text-end">Credit Balance / Refund Due:</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ credit_amount|floatformat:2 }}</td>
                             </tr>
                             {% endif %}
                         </tfoot>
@@ -98,6 +118,44 @@
                 </div>
             </div>
         </div>
+
+        {% if sale.returns.all %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Return History (Credit Notes)</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Return #</th>
+                                <th>Date</th>
+                                <th>Reason</th>
+                                <th class="text-end">Refund Amount</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ret in sale.returns.all %}
+                            <tr>
+                                <td><a href="{% url 'sale_return_detail' ret.pk %}">{{ ret.return_number }}</a></td>
+                                <td>{{ ret.return_date|date:"M d, Y H:i" }}</td>
+                                <td>{{ ret.reason|truncatechars:40 }}</td>
+                                <td class="text-end text-warning">{{ CURRENCY_SYMBOL }}{{ ret.refund_amount|floatformat:2 }}</td>
+                                <td class="text-center">
+                                    <a href="{% url 'sale_return_print' ret.pk %}" class="btn btn-sm btn-outline-primary py-0" target="_blank">
+                                        <i class="las la-print"></i> Print
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         {% if payments %}
         <div class="card">
