@@ -3,19 +3,7 @@
 
 {% block title %}Profit Report | {{ SHOP_NAME }}{% endblock %}
 
-{% block extra_css %}
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
-<style>
-    .ts-wrapper.form-select {
-        border: none;
-        padding: 0;
-        height: auto;
-    }
-    .ts-control {
-        border-color: #ced4da;
-    }
-</style>
-{% endblock %}
+
 
 {% block content %}
 <div class="row">
@@ -222,7 +210,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     new TomSelect('#productSelect', {
