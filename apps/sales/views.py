@@ -23,8 +23,6 @@ from apps.core.utils import create_audit_log
 def sale_list(request):
     """List all sales with filtering."""
     sales = Sale.objects.select_related('customer', 'created_by').all()
-    if not (request.user.is_staff or request.user.is_superuser):
-        sales = sales.filter(created_by=request.user)
     
     # Search
     search = request.GET.get('search', '')
@@ -72,8 +70,7 @@ def sale_detail(request, pk):
         ),
         pk=pk
     )
-    if not (request.user.is_staff or request.user.is_superuser) and sale.created_by != request.user:
-        raise PermissionDenied
+
     
     # Calculate return stats
     returns_total = sum(ret.refund_amount for ret in sale.returns.all())
@@ -277,8 +274,7 @@ def sale_cancel(request, pk):
 def sale_payment(request, pk):
     """Record payment for a sale."""
     sale = get_object_or_404(Sale, pk=pk)
-    if not (request.user.is_staff or request.user.is_superuser) and sale.created_by != request.user:
-        raise PermissionDenied
+
     
     if request.method == 'POST':
         form = PaymentForm(request.POST)
@@ -337,8 +333,7 @@ def sale_print(request, pk):
         ),
         pk=pk
     )
-    if not (request.user.is_staff or request.user.is_superuser) and sale.created_by != request.user:
-        raise PermissionDenied
+
     return render(request, 'sales/sale_print.html', {'sale': sale})
 
 
