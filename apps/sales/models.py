@@ -103,6 +103,30 @@ class Sale(TimeStampedModel):
     def due_amount(self):
         """Amount still due."""
         return self.total_amount - self.paid_amount
+
+    @property
+    def returns_total(self):
+        """Total refund amount from all returns."""
+        return self.returns.aggregate(total=models.Sum('refund_amount'))['total'] or Decimal('0.00')
+
+    @property
+    def net_total(self):
+        """Net total invoice amount (post-tax, after returns)."""
+        return self.total_amount - self.returns_total
+
+    @property
+    def net_due(self):
+        """Net outstanding due amount after returns."""
+        if self.net_total > self.paid_amount:
+            return self.net_total - self.paid_amount
+        return Decimal('0.00')
+
+    @property
+    def credit_amount(self):
+        """Credit/refund amount due back to the customer if overpaid."""
+        if self.paid_amount > self.net_total:
+            return self.paid_amount - self.net_total
+        return Decimal('0.00')
     
     @property
     def net_sale_amount(self):
@@ -217,6 +241,19 @@ class SaleItem(TimeStampedModel):
     def returnable_quantity(self):
         """Remaining quantity that can be returned."""
         return self.quantity - self.returned_quantity
+
+    @property
+    def net_quantity(self):
+        """Quantity remaining after returns."""
+        return self.returnable_quantity
+
+    @property
+    def net_total_price(self):
+        """Total price for remaining quantity after returns and proportional item discount."""
+        if self.quantity == 0:
+            return Decimal('0.00')
+        remaining_discount = self.discount * Decimal(self.returnable_quantity) / Decimal(self.quantity)
+        return (Decimal(self.returnable_quantity) * self.unit_price) - remaining_discount
 
     @property
     def total_price(self):

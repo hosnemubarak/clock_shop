@@ -329,7 +329,7 @@ def sale_print(request, pk):
     """Print-friendly invoice view."""
     sale = get_object_or_404(
         Sale.objects.select_related('customer', 'created_by').prefetch_related(
-            'items__product', 'items__batch'
+            'items__product', 'items__batch', 'returns'
         ),
         pk=pk
     )

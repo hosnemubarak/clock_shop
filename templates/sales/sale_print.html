@@ -424,6 +424,24 @@
             text-align: right;
         }
 
+        .totals-table tr.refund-row td {
+            border-top: 1px solid var(--slate-200);
+            background-color: var(--success-bg);
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .totals-table tr.refund-row td.total-label {
+            color: var(--success-text);
+            font-weight: 700;
+        }
+
+        .totals-table tr.refund-row td.total-value {
+            color: var(--success-text);
+            font-weight: 800;
+            text-align: right;
+        }
+
         /* Terms & Delivery Section (Full Width, placed below) */
         .terms-delivery-section {
             border-top: 1px solid var(--slate-200);
@@ -665,9 +683,21 @@
                                 <code>{{ item.product.sku }}</code>
                                 {% endif %}
                             </td>
-                            <td class="text-center" style="font-weight: 600; color: var(--slate-900);">{{ item.quantity }}</td>
+                            <td class="text-center" style="font-weight: 600; color: var(--slate-900);">
+                                {% if item.returned_quantity > 0 %}
+                                    {{ item.net_quantity }} <span style="font-size: 0.85em; font-weight: normal; color: var(--warning-text);">({{ item.returned_quantity }} returned)</span>
+                                {% else %}
+                                    {{ item.quantity }}
+                                {% endif %}
+                            </td>
                             <td class="text-right">{{ CURRENCY_SYMBOL }}{{ item.unit_price|floatformat:2|intcomma }}</td>
-                            <td class="text-right" style="font-weight: 700; color: var(--slate-900);">{{ CURRENCY_SYMBOL }}{{ item.total_price|floatformat:2|intcomma }}</td>
+                            <td class="text-right" style="font-weight: 700; color: var(--slate-900);">
+                                {% if item.returned_quantity > 0 %}
+                                    {{ CURRENCY_SYMBOL }}{{ item.net_total_price|floatformat:2|intcomma }}
+                                {% else %}
+                                    {{ CURRENCY_SYMBOL }}{{ item.total_price|floatformat:2|intcomma }}
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -709,15 +739,39 @@
                             <td class="total-label">Total Amount:</td>
                             <td class="total-value">{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2|intcomma }}</td>
                         </tr>
+                        {% if sale.returns_total > 0 %}
+                        <tr style="color: var(--warning-text); font-weight: 600;">
+                            <td class="total-label" style="color: var(--warning-text);">Returned Amount (Refunded):</td>
+                            <td class="total-value" style="color: var(--warning-text);">-{{ CURRENCY_SYMBOL }}{{ sale.returns_total|floatformat:2|intcomma }}</td>
+                        </tr>
+                        <tr class="total-row" style="background-color: var(--slate-50); border-top: 1px solid var(--slate-200); border-bottom: 2px solid var(--slate-900);">
+                            <td class="total-label">Net Invoice Total:</td>
+                            <td class="total-value" style="font-weight: 700;">{{ CURRENCY_SYMBOL }}{{ sale.net_total|floatformat:2|intcomma }}</td>
+                        </tr>
+                        {% endif %}
                         <tr>
                             <td class="total-label">Amount Paid:</td>
                             <td class="total-value" style="color: var(--slate-900);">{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2|intcomma }}</td>
                         </tr>
-                        {% if sale.due_amount > 0 %}
-                        <tr class="due-row">
-                            <td class="total-label">Balance Due:</td>
-                            <td class="total-value">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2|intcomma }}</td>
-                        </tr>
+                        {% if sale.returns_total > 0 %}
+                            {% if sale.net_due > 0 %}
+                            <tr class="due-row">
+                                <td class="total-label">Balance Due:</td>
+                                <td class="total-value">{{ CURRENCY_SYMBOL }}{{ sale.net_due|floatformat:2|intcomma }}</td>
+                            </tr>
+                            {% elif sale.credit_amount > 0 %}
+                            <tr class="refund-row">
+                                <td class="total-label">Refund Due / Credit:</td>
+                                <td class="total-value">{{ CURRENCY_SYMBOL }}{{ sale.credit_amount|floatformat:2|intcomma }}</td>
+                            </tr>
+                            {% endif %}
+                        {% else %}
+                            {% if sale.due_amount > 0 %}
+                            <tr class="due-row">
+                                <td class="total-label">Balance Due:</td>
+                                <td class="total-value">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2|intcomma }}</td>
+                            </tr>
+                            {% endif %}
                         {% endif %}
                     </table>
                 </div>

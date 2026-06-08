@@ -63,9 +63,21 @@
                                         <code>{{ item.batch.batch_number }}</code>
                                     {% endif %}
                                 </td>
-                                <td class="text-center">{{ item.quantity }}</td>
+                                <td class="text-center">
+                                    {% if item.returned_quantity > 0 %}
+                                        {{ item.net_quantity }} <small class="text-warning">({{ item.returned_quantity }} returned)</small>
+                                    {% else %}
+                                        {{ item.quantity }}
+                                    {% endif %}
+                                </td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.unit_price|floatformat:2 }}</td>
-                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.total_price|floatformat:2 }}</td>
+                                <td class="text-end">
+                                    {% if item.returned_quantity > 0 %}
+                                        {{ CURRENCY_SYMBOL }}{{ item.net_total_price|floatformat:2 }}
+                                    {% else %}
+                                        {{ CURRENCY_SYMBOL }}{{ item.total_price|floatformat:2 }}
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
