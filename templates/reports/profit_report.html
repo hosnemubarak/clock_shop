@@ -3,6 +3,20 @@
 
 {% block title %}Profit Report | {{ SHOP_NAME }}{% endblock %}
 
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<style>
+    .ts-wrapper.form-select {
+        border: none;
+        padding: 0;
+        height: auto;
+    }
+    .ts-control {
+        border-color: #ced4da;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-12">
@@ -45,10 +59,10 @@
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Product</label>
-                        <select name="product" class="form-select">
+                        <select name="product" id="productSelect" class="form-select">
                             <option value="">All Products</option>
                             {% for prod in products %}
-                            <option value="{{ prod.id }}" {% if selected_product == prod.id|stringformat:"s" %}selected{% endif %}>{{ prod.name|truncatechars:25 }}</option>
+                            <option value="{{ prod.id }}" {% if selected_product == prod.id|stringformat:"s" %}selected{% endif %}>{{ prod.display_name }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -205,4 +219,20 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    new TomSelect('#productSelect', {
+        create: false,
+        sortField: {
+            field: "text",
+            direction: "asc"
+        },
+        placeholder: 'Search product...'
+    });
+});
+</script>
 {% endblock %}

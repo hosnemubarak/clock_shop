@@ -105,9 +105,25 @@ class Sale(TimeStampedModel):
         return self.total_amount - self.paid_amount
     
     @property
+    def net_sale_amount(self):
+        """Net sale amount (revenue) after all discounts and returns (pre-tax)."""
+        returns_total = self.returns.aggregate(total=models.Sum('refund_amount'))['total'] or Decimal('0.00')
+        return self.subtotal - self.discount_amount - returns_total
+
+    @property
+    def net_product_cost(self):
+        """Net product cost (COGS) after deducting returned items cost."""
+        returned_cost = SaleReturnItem.objects.filter(
+            sale_return__sale=self
+        ).aggregate(
+            total=models.Sum(models.F('quantity') * models.F('sale_item__cost_price'))
+        )['total'] or Decimal('0.00')
+        return self.total_cost - returned_cost
+
+    @property
     def profit(self):
         """Calculate profit for this sale."""
-        return self.total_amount - self.discount_amount - self.total_cost
+        return self.net_sale_amount - self.net_product_cost
     
     def update_payment_status(self):
         """Update payment status based on paid amount."""

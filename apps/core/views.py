@@ -53,7 +53,7 @@ def dashboard(request):
     # Sales metrics
     gross_sales_today = sales_qs.filter(
         sale_date__date=today
-    ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+    ).aggregate(total=Sum(F('subtotal') - F('discount_amount')))['total'] or Decimal('0')
     
     returns_today = returns_qs.filter(
         return_date__date=today
@@ -63,7 +63,7 @@ def dashboard(request):
     
     gross_sales_month = sales_qs.filter(
         sale_date__date__gte=month_start
-    ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+    ).aggregate(total=Sum(F('subtotal') - F('discount_amount')))['total'] or Decimal('0')
     
     returns_month = returns_qs.filter(
         return_date__date__gte=month_start
@@ -73,12 +73,15 @@ def dashboard(request):
     
     # Profit calculation
     if is_admin:
-        gross_profit_month = SaleItem.objects.filter(
-            sale__sale_date__date__gte=month_start,
-            sale__status='completed'
+        sales_month_agg = sales_qs.filter(
+            sale_date__date__gte=month_start
         ).aggregate(
-            profit=Sum(F('quantity') * (F('unit_price') - F('cost_price')))
-        )['profit'] or Decimal('0')
+            net_sales=Sum(F('subtotal') - F('discount_amount')),
+            total_cost=Sum('total_cost')
+        )
+        net_sales = sales_month_agg['net_sales'] or Decimal('0.00')
+        total_cost = sales_month_agg['total_cost'] or Decimal('0.00')
+        gross_profit_month = net_sales - total_cost
         
         # Returned items profit for the month
         returned_items_month = SaleReturnItem.objects.filter(

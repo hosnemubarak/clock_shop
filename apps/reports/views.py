@@ -41,186 +41,255 @@ def sales_report(request):
     # Get all shops for filter dropdown
     shops = Warehouse.objects.filter(is_shop=True, is_active=True).order_by('name')
     
-    # Base queryset
-    sales = Sale.objects.filter(
-        status='completed',
-        sale_date__date__gte=date_from,
-        sale_date__date__lte=date_to
-    )
-    
-    # Filter by shop if selected (based on sale items' batch warehouse)
-    if shop_id:
-        sales = sales.filter(
-            items__batch__warehouse_id=shop_id,
-            items__is_custom=False
-        ).distinct()
-    
-    # Summary stats (gross)
-    summary = sales.aggregate(
-        total_sales=Sum('total_amount'),
-        total_cost=Sum('total_cost'),
-        total_discount=Sum('discount_amount'),
-        count=Count('id'),
-    )
-    
-    # Get returns within the selected date range
-    returns = SaleReturn.objects.filter(
-        sale__status='completed',
-        return_date__date__gte=date_from,
-        return_date__date__lte=date_to
-    )
-    if shop_id:
-        returns = returns.filter(
-            items__sale_item__batch__warehouse_id=shop_id
-        ).distinct()
-        
-    returns_summary = returns.aggregate(
-        total_refund=Sum('refund_amount'),
-        total_cost=Sum(F('items__quantity') * F('items__sale_item__cost_price'))
-    )
-    
-    returned_sales = returns_summary['total_refund'] or Decimal('0')
-    returned_cost = returns_summary['total_cost'] or Decimal('0')
-    
-    # Calculate net stats
-    summary['total_sales'] = (summary['total_sales'] or Decimal('0')) - returned_sales
-    summary['total_cost'] = (summary['total_cost'] or Decimal('0')) - returned_cost
-    summary['total_profit'] = summary['total_sales'] - summary['total_cost']
-    
-    # Group by period
-    if group_by == 'day':
-        trunc_func = TruncDate('sale_date')
-        trunc_func_ret = TruncDate('return_date')
-    elif group_by == 'week':
-        trunc_func = TruncWeek('sale_date')
-        trunc_func_ret = TruncWeek('return_date')
-    else:
-        trunc_func = TruncMonth('sale_date')
-        trunc_func_ret = TruncMonth('return_date')
-    
-    sales_by_period = sales.annotate(
-        period=trunc_func
-    ).values('period').annotate(
-        total=Sum('total_amount'),
-        cost=Sum('total_cost'),
-        count=Count('id')
-    ).order_by('period')
-    
-    # Group returns by period
-    returns_by_period = returns.annotate(
-        period=trunc_func_ret
-    ).values('period').annotate(
-        total_refund=Sum('refund_amount'),
-        total_cost=Sum(F('items__quantity') * F('items__sale_item__cost_price'))
-    ).order_by('period')
-    
-    returns_map = {r['period']: r for r in returns_by_period}
-    
-    # Calculate profit for each period with returns deducted
-    sales_data = []
-    for s in sales_by_period:
-        period_return = returns_map.get(s['period'], {})
-        ret_total = period_return.get('total_refund') or Decimal('0')
-        ret_cost = period_return.get('total_cost') or Decimal('0')
-        
-        s['total'] = (s['total'] or Decimal('0')) - ret_total
-        s['cost'] = (s['cost'] or Decimal('0')) - ret_cost
-        s['profit'] = s['total'] - s['cost']
-        sales_data.append(s)
-    
-    # Top selling products (exclude custom items)
-    top_products_gross = SaleItem.objects.filter(
+    # Base sale items query
+    sale_items = SaleItem.objects.filter(
         sale__status='completed',
         sale__sale_date__date__gte=date_from,
-        sale__sale_date__date__lte=date_to,
-        is_custom=False,
-        product__isnull=False
-    )
-    if shop_id:
-        top_products_gross = top_products_gross.filter(batch__warehouse_id=shop_id)
-        
-    top_products_agg = top_products_gross.values(
-        'product__id', 'product__sku', 'product__brand__name'
-    ).annotate(
-        total_quantity=Sum('quantity'),
-        total_revenue=Sum(F('quantity') * F('unit_price')),
-        total_cost=Sum(F('quantity') * F('cost_price'))
-    )
+        sale__sale_date__date__lte=date_to
+    ).select_related('sale', 'product', 'product__brand', 'batch__warehouse')
     
-    # Returned products summary
-    returned_items_agg = SaleReturnItem.objects.filter(
+    if shop_id:
+        sale_items = sale_items.filter(
+            batch__warehouse_id=shop_id,
+            is_custom=False
+        )
+        
+    # Base return items query
+    return_items = SaleReturnItem.objects.filter(
         sale_return__sale__status='completed',
         sale_return__return_date__date__gte=date_from,
-        sale_return__return_date__date__lte=date_to,
-        sale_item__is_custom=False
-    )
+        sale_return__return_date__date__lte=date_to
+    ).select_related('sale_return', 'sale_item', 'sale_item__sale', 'sale_item__product', 'sale_item__product__brand', 'sale_item__batch__warehouse')
+    
     if shop_id:
-        returned_items_agg = returned_items_agg.filter(sale_item__batch__warehouse_id=shop_id)
+        return_items = return_items.filter(
+            sale_item__batch__warehouse_id=shop_id,
+            sale_item__is_custom=False
+        )
+
+    # Load querysets to lists to avoid duplicate DB hits
+    sale_items = list(sale_items)
+    return_items = list(return_items)
+    
+    # Calculate net stats
+    total_sales_gross = Decimal('0.00')
+    total_cost_gross = Decimal('0.00')
+    total_discount = Decimal('0.00')
+    sale_ids = set()
+    
+    # Group by product
+    product_map = {}
+    
+    for item in sale_items:
+        sale_ids.add(item.sale_id)
         
-    returned_by_product = returned_items_agg.values('sale_item__product_id').annotate(
-        total_quantity=Sum('quantity'),
-        total_revenue=Sum(F('quantity') * (F('sale_item__unit_price') - (F('sale_item__discount') / F('sale_item__quantity')))),
-        total_cost=Sum(F('quantity') * F('sale_item__cost_price'))
-    )
+        subtotal = item.sale.subtotal
+        sale_discount = item.sale.discount_amount
+        item_total_price = item.total_price  # qty * unit_price - discount
+        
+        sale_discount_share = Decimal('0.00')
+        if subtotal > 0:
+            sale_discount_share = (sale_discount * item_total_price / subtotal).quantize(Decimal('0.01'))
+            
+        net_rev = item_total_price - sale_discount_share
+        cost = item.total_cost
+        
+        total_sales_gross += net_rev
+        total_cost_gross += cost
+        total_discount += item.discount + sale_discount_share
+        
+        # Product grouping (exclude custom items, and ensure product is not null)
+        if not item.is_custom and item.product:
+            pid = item.product_id
+            if pid not in product_map:
+                product_map[pid] = {
+                    'product__id': pid,
+                    'product__sku': item.product.sku,
+                    'product__brand__name': item.product.brand.name if item.product.brand else '',
+                    'total_quantity': 0,
+                    'total_revenue': Decimal('0.00'),
+                    'total_cost': Decimal('0.00'),
+                }
+            product_map[pid]['total_quantity'] += item.quantity
+            product_map[pid]['total_revenue'] += net_rev
+            product_map[pid]['total_cost'] += cost
+            
+    returned_sales = Decimal('0.00')
+    returned_cost = Decimal('0.00')
     
-    returns_product_map = {r['sale_item__product_id']: r for r in returned_by_product}
-    
+    for ret_item in return_items:
+        qty = ret_item.quantity
+        refund = ret_item.refund_total
+        cost = Decimal(qty) * ret_item.sale_item.cost_price
+        
+        returned_sales += refund
+        returned_cost += cost
+        
+        if not ret_item.sale_item.is_custom and ret_item.sale_item.product:
+            pid = ret_item.sale_item.product_id
+            if pid in product_map:
+                product_map[pid]['total_quantity'] -= qty
+                product_map[pid]['total_revenue'] -= refund
+                product_map[pid]['total_cost'] -= cost
+            else:
+                product_map[pid] = {
+                    'product__id': pid,
+                    'product__sku': ret_item.sale_item.product.sku,
+                    'product__brand__name': ret_item.sale_item.product.brand.name if ret_item.sale_item.product.brand else '',
+                    'total_quantity': -qty,
+                    'total_revenue': -refund,
+                    'total_cost': -cost,
+                }
+                
+    summary = {
+        'total_sales': total_sales_gross - returned_sales,
+        'total_cost': total_cost_gross - returned_cost,
+        'total_discount': total_discount,
+        'total_profit': (total_sales_gross - returned_sales) - (total_cost_gross - returned_cost),
+        'count': len(sale_ids),
+    }
+
+    # Group by period in Python
+    sales_by_period_map = {}
+    for item in sale_items:
+        sale_date = item.sale.sale_date
+        if group_by == 'day':
+            period_key = sale_date.date()
+        elif group_by == 'week':
+            period_key = (sale_date - timedelta(days=sale_date.weekday())).date()
+        else: # month
+            period_key = sale_date.date().replace(day=1)
+            
+        subtotal = item.sale.subtotal
+        sale_discount = item.sale.discount_amount
+        item_total_price = item.total_price
+        
+        sale_discount_share = Decimal('0.00')
+        if subtotal > 0:
+            sale_discount_share = (sale_discount * item_total_price / subtotal).quantize(Decimal('0.01'))
+            
+        net_rev = item_total_price - sale_discount_share
+        cost = item.total_cost
+        
+        if period_key not in sales_by_period_map:
+            sales_by_period_map[period_key] = {
+                'period': period_key,
+                'total': Decimal('0.00'),
+                'cost': Decimal('0.00'),
+                'count_sales': set()
+            }
+        sales_by_period_map[period_key]['total'] += net_rev
+        sales_by_period_map[period_key]['cost'] += cost
+        sales_by_period_map[period_key]['count_sales'].add(item.sale_id)
+        
+    returns_by_period_map = {}
+    for ret_item in return_items:
+        ret_date = ret_item.sale_return.return_date
+        if group_by == 'day':
+            period_key = ret_date.date()
+        elif group_by == 'week':
+            period_key = (ret_date - timedelta(days=ret_date.weekday())).date()
+        else: # month
+            period_key = ret_date.date().replace(day=1)
+            
+        qty = ret_item.quantity
+        refund = ret_item.refund_total
+        cost = Decimal(qty) * ret_item.sale_item.cost_price
+        
+        if period_key not in returns_by_period_map:
+            returns_by_period_map[period_key] = {
+                'total_refund': Decimal('0.00'),
+                'total_cost': Decimal('0.00'),
+            }
+        returns_by_period_map[period_key]['total_refund'] += refund
+        returns_by_period_map[period_key]['total_cost'] += cost
+        
+    sales_data = []
+    all_periods = sorted(list(set(list(sales_by_period_map.keys()) + list(returns_by_period_map.keys()))))
+    for period in all_periods:
+        s = sales_by_period_map.get(period, {
+            'period': period,
+            'total': Decimal('0.00'),
+            'cost': Decimal('0.00'),
+            'count_sales': set()
+        })
+        ret = returns_by_period_map.get(period, {
+            'total_refund': Decimal('0.00'),
+            'total_cost': Decimal('0.00'),
+        })
+        
+        net_t = s['total'] - ret['total_refund']
+        net_c = s['cost'] - ret['total_cost']
+        
+        sales_data.append({
+            'period': period,
+            'total': net_t,
+            'cost': net_c,
+            'profit': net_t - net_c,
+            'count': len(s['count_sales'])
+        })
+        
+    # Top Products
     top_products = []
-    for p in top_products_agg:
-        pid = p['product__id']
-        ret = returns_product_map.get(pid, {})
-        ret_qty = ret.get('total_quantity') or 0
-        ret_rev = ret.get('total_revenue') or Decimal('0')
-        ret_cost = ret.get('total_cost') or Decimal('0')
-        
-        p['total_quantity'] = (p['total_quantity'] or 0) - ret_qty
-        p['total_revenue'] = (p['total_revenue'] or Decimal('0')) - ret_rev
-        p['total_profit'] = p['total_revenue'] - ((p['total_cost'] or Decimal('0')) - ret_cost)
+    for p in product_map.values():
+        p['total_profit'] = p['total_revenue'] - p['total_cost']
         top_products.append(p)
-        
-    # Re-sort by revenue descending and slice to 10
     top_products.sort(key=lambda x: -x['total_revenue'])
     top_products = top_products[:10]
     
     # Shop-wise sales breakdown (for comparison)
     shop_sales = []
     if not shop_id:  # Only show breakdown when viewing all shops
-        for shop in shops:
-            shop_total = Sale.objects.filter(
-                status='completed',
-                sale_date__date__gte=date_from,
-                sale_date__date__lte=date_to,
-                items__batch__warehouse=shop,
-                items__is_custom=False
-            ).distinct().aggregate(
-                total=Sum('total_amount'),
-                cost=Sum('total_cost'),
-                count=Count('id')
-            )
-            if shop_total['total']:
-                shop_returns = SaleReturn.objects.filter(
-                    sale__status='completed',
-                    return_date__date__gte=date_from,
-                    return_date__date__lte=date_to,
-                    items__sale_item__batch__warehouse=shop
-                ).distinct().aggregate(
-                    total_refund=Sum('refund_amount'),
-                    total_cost=Sum(F('items__quantity') * F('items__sale_item__cost_price'))
-                )
-                ret_refund = shop_returns['total_refund'] or Decimal('0')
-                ret_cost = shop_returns['total_cost'] or Decimal('0')
-                
-                net_total = (shop_total['total'] or Decimal('0')) - ret_refund
-                net_cost = (shop_total['cost'] or Decimal('0')) - ret_cost
-                
-                shop_sales.append({
-                    'shop': shop,
-                    'total': net_total,
-                    'cost': net_cost,
-                    'profit': net_total - net_cost,
-                    'count': shop_total['count'] or 0
-                })
-    
+        shop_map = {}
+        for item in sale_items:
+            if item.batch and item.batch.warehouse:
+                wh = item.batch.warehouse
+                if wh.is_shop and wh.is_active:
+                    wid = wh.id
+                    if wid not in shop_map:
+                        shop_map[wid] = {
+                            'shop': wh,
+                            'total': Decimal('0.00'),
+                            'cost': Decimal('0.00'),
+                            'count_sales': set()
+                        }
+                    subtotal = item.sale.subtotal
+                    sale_discount = item.sale.discount_amount
+                    item_total_price = item.total_price
+                    
+                    sale_discount_share = Decimal('0.00')
+                    if subtotal > 0:
+                        sale_discount_share = (sale_discount * item_total_price / subtotal).quantize(Decimal('0.01'))
+                        
+                    net_rev = item_total_price - sale_discount_share
+                    cost = item.total_cost
+                    
+                    shop_map[wid]['total'] += net_rev
+                    shop_map[wid]['cost'] += cost
+                    shop_map[wid]['count_sales'].add(item.sale_id)
+                    
+        for ret_item in return_items:
+            if ret_item.sale_item.batch and ret_item.sale_item.batch.warehouse:
+                wh = ret_item.sale_item.batch.warehouse
+                if wh.is_shop and wh.is_active:
+                    wid = wh.id
+                    if wid in shop_map:
+                        qty = ret_item.quantity
+                        refund = ret_item.refund_total
+                        cost = Decimal(qty) * ret_item.sale_item.cost_price
+                        
+                        shop_map[wid]['total'] -= refund
+                        shop_map[wid]['cost'] -= cost
+                        
+        for wid, data in shop_map.items():
+            shop_sales.append({
+                'shop': data['shop'],
+                'total': data['total'],
+                'cost': data['cost'],
+                'profit': data['total'] - data['cost'],
+                'count': len(data['count_sales'])
+            })
+            
     context = {
         'date_from': date_from,
         'date_to': date_to,
@@ -273,19 +342,6 @@ def profit_report(request):
     if category_id:
         base_filter['product__category_id'] = category_id
     
-    # Profit by product (exclude custom items) - including product ID for mapping returns
-    profit_by_product = SaleItem.objects.filter(
-        **base_filter
-    ).values(
-        'product__id', 'product__sku', 'product__brand__name', 'product__category__name'
-    ).annotate(
-        quantity_sold=Sum('quantity'),
-        revenue=Sum(F('quantity') * F('unit_price')),
-        cost=Sum(F('quantity') * F('cost_price')),
-    ).annotate(
-        profit=F('revenue') - F('cost'),
-    ).order_by('-profit')
-    
     # Get returned items matching the period and filters
     returns_filter = {
         'sale_return__sale__status': 'completed',
@@ -301,36 +357,143 @@ def profit_report(request):
     if category_id:
         returns_filter['sale_item__product__category_id'] = category_id
         
-    returned_items = SaleReturnItem.objects.filter(**returns_filter)
-    
-    returned_by_product = returned_items.values('sale_item__product_id').annotate(
-        qty=Sum('quantity'),
-        refund=Sum(F('quantity') * (F('sale_item__unit_price') - (F('sale_item__discount') / F('sale_item__quantity')))),
-        cost=Sum(F('quantity') * F('sale_item__cost_price'))
+    # Fetch sale items and return items matching the period and filters
+    sale_items = SaleItem.objects.filter(**base_filter).select_related(
+        'sale', 'product', 'product__category', 'product__brand', 'batch__warehouse'
     )
-    returns_prod_map = {r['sale_item__product_id']: r for r in returned_by_product}
+    returned_items = SaleReturnItem.objects.filter(**returns_filter).select_related(
+        'sale_return', 'sale_item', 'sale_item__sale', 'sale_item__product', 'sale_item__product__category', 'sale_item__product__brand', 'sale_item__batch__warehouse'
+    )
     
-    # Calculate margin adjusting for returns
+    sale_items = list(sale_items)
+    returned_items = list(returned_items)
+    
+    product_data = {}
+    category_data_map = {}
+    warehouse_data_map = {}
+    
+    total_revenue = Decimal('0.00')
+    total_cost = Decimal('0.00')
+    
+    for item in sale_items:
+        subtotal = item.sale.subtotal
+        sale_discount = item.sale.discount_amount
+        item_total_price = item.total_price  # (quantity * unit_price) - discount
+        
+        sale_discount_share = Decimal('0.00')
+        if subtotal > 0:
+            sale_discount_share = (sale_discount * item_total_price / subtotal).quantize(Decimal('0.01'))
+            
+        net_rev = item_total_price - sale_discount_share
+        cost = item.total_cost
+        qty = item.quantity
+        
+        # Product
+        pid = item.product.id
+        if pid not in product_data:
+            product_data[pid] = {
+                'product__id': pid,
+                'product__sku': item.product.sku,
+                'product__brand__name': item.product.brand.name if item.product.brand else '',
+                'product__category__name': item.product.category.name if item.product.category else '',
+                'quantity_sold': 0,
+                'revenue': Decimal('0.00'),
+                'cost': Decimal('0.00'),
+            }
+        product_data[pid]['quantity_sold'] += qty
+        product_data[pid]['revenue'] += net_rev
+        product_data[pid]['cost'] += cost
+        
+        # Category
+        if item.product.category:
+            cid = item.product.category.id
+            if cid not in category_data_map:
+                category_data_map[cid] = {
+                    'product__category__id': cid,
+                    'product__category__name': item.product.category.name,
+                    'revenue': Decimal('0.00'),
+                    'cost': Decimal('0.00'),
+                }
+            category_data_map[cid]['revenue'] += net_rev
+            category_data_map[cid]['cost'] += cost
+            
+        # Warehouse
+        if item.batch and item.batch.warehouse:
+            wid = item.batch.warehouse.id
+            if wid not in warehouse_data_map:
+                warehouse_data_map[wid] = {
+                    'batch__warehouse__id': wid,
+                    'batch__warehouse__name': item.batch.warehouse.name,
+                    'batch__warehouse__is_shop': item.batch.warehouse.is_shop,
+                    'revenue': Decimal('0.00'),
+                    'cost': Decimal('0.00'),
+                }
+            warehouse_data_map[wid]['revenue'] += net_rev
+            warehouse_data_map[wid]['cost'] += cost
+            
+        total_revenue += net_rev
+        total_cost += cost
+        
+    for ret_item in returned_items:
+        qty = ret_item.quantity
+        refund = ret_item.refund_total
+        cost = Decimal(qty) * ret_item.sale_item.cost_price
+        
+        # Product
+        pid = ret_item.sale_item.product_id
+        if pid not in product_data:
+            product_data[pid] = {
+                'product__id': pid,
+                'product__sku': ret_item.sale_item.product.sku,
+                'product__brand__name': ret_item.sale_item.product.brand.name if ret_item.sale_item.product.brand else '',
+                'product__category__name': ret_item.sale_item.product.category.name if ret_item.sale_item.product.category else '',
+                'quantity_sold': 0,
+                'revenue': Decimal('0.00'),
+                'cost': Decimal('0.00'),
+            }
+        product_data[pid]['quantity_sold'] -= qty
+        product_data[pid]['revenue'] -= refund
+        product_data[pid]['cost'] -= cost
+        
+        # Category
+        if ret_item.sale_item.product.category:
+            cid = ret_item.sale_item.product.category.id
+            if cid not in category_data_map:
+                category_data_map[cid] = {
+                    'product__category__id': cid,
+                    'product__category__name': ret_item.sale_item.product.category.name,
+                    'revenue': Decimal('0.00'),
+                    'cost': Decimal('0.00'),
+                }
+            category_data_map[cid]['revenue'] -= refund
+            category_data_map[cid]['cost'] -= cost
+            
+        # Warehouse
+        if ret_item.sale_item.batch and ret_item.sale_item.batch.warehouse:
+            wid = ret_item.sale_item.batch.warehouse.id
+            if wid not in warehouse_data_map:
+                warehouse_data_map[wid] = {
+                    'batch__warehouse__id': wid,
+                    'batch__warehouse__name': ret_item.sale_item.batch.warehouse.name,
+                    'batch__warehouse__is_shop': ret_item.sale_item.batch.warehouse.is_shop,
+                    'revenue': Decimal('0.00'),
+                    'cost': Decimal('0.00'),
+                }
+            warehouse_data_map[wid]['revenue'] -= refund
+            warehouse_data_map[wid]['cost'] -= cost
+            
+        total_revenue -= refund
+        total_cost -= cost
+        
+    # Build final list and calculate margins/profits
     profit_data = []
-    for p in profit_by_product:
-        pid = p['product__id']
-        ret = returns_prod_map.get(pid, {})
-        ret_qty = ret.get('qty') or 0
-        ret_refund = ret.get('refund') or Decimal('0')
-        ret_cost = ret.get('cost') or Decimal('0')
-        
-        p['quantity_sold'] = (p['quantity_sold'] or 0) - ret_qty
-        p['revenue'] = (p['revenue'] or Decimal('0')) - ret_refund
-        p['cost'] = (p['cost'] or Decimal('0')) - ret_cost
+    for p in product_data.values():
         p['profit'] = p['revenue'] - p['cost']
-        
         if p['revenue'] and p['revenue'] > 0:
             p['margin'] = round((p['profit'] / p['revenue']) * 100, 2)
         else:
             p['margin'] = 0
         profit_data.append(p)
-        
-    # Re-sort profit data by net profit descending
     profit_data.sort(key=lambda x: -x['profit'])
     
     # Paginate profit by product
@@ -338,95 +501,25 @@ def profit_report(request):
     page = request.GET.get('page')
     profit_by_product_page = paginator.get_page(page)
     
-    # Profit by category (exclude custom items)
-    profit_by_category = SaleItem.objects.filter(
-        **base_filter
-    ).values(
-        'product__category__id', 'product__category__name'
-    ).annotate(
-        revenue=Sum(F('quantity') * F('unit_price')),
-        cost=Sum(F('quantity') * F('cost_price')),
-    ).annotate(
-        profit=F('revenue') - F('cost'),
-    ).order_by('-profit')
-    
-    returned_by_cat = returned_items.values('sale_item__product__category_id').annotate(
-        refund=Sum(F('quantity') * (F('sale_item__unit_price') - (F('sale_item__discount') / F('sale_item__quantity')))),
-        cost=Sum(F('quantity') * F('sale_item__cost_price'))
-    )
-    returns_cat_map = {r['sale_item__product__category_id']: r for r in returned_by_cat}
-    
     category_data = []
-    for c in profit_by_category:
-        cid = c['product__category__id']
-        ret = returns_cat_map.get(cid, {})
-        ret_refund = ret.get('refund') or Decimal('0')
-        ret_cost = ret.get('cost') or Decimal('0')
-        
-        c['revenue'] = (c['revenue'] or Decimal('0')) - ret_refund
-        c['cost'] = (c['cost'] or Decimal('0')) - ret_cost
+    for c in category_data_map.values():
         c['profit'] = c['revenue'] - c['cost']
         category_data.append(c)
-        
     category_data.sort(key=lambda x: -x['profit'])
     
-    # Profit by warehouse/shop (exclude custom items)
-    warehouse_filter = base_filter.copy()
-    warehouse_filter['batch__isnull'] = False
-    if 'product__isnull' in warehouse_filter:
-        del warehouse_filter['product__isnull']
-    
-    profit_by_warehouse = SaleItem.objects.filter(
-        **warehouse_filter
-    ).values(
-        'batch__warehouse__id', 'batch__warehouse__name', 'batch__warehouse__is_shop'
-    ).annotate(
-        revenue=Sum(F('quantity') * F('unit_price')),
-        cost=Sum(F('quantity') * F('cost_price')),
-    ).annotate(
-        profit=F('revenue') - F('cost'),
-    ).order_by('-profit')
-    
-    returned_by_wh = returned_items.values('sale_item__batch__warehouse__id').annotate(
-        refund=Sum(F('quantity') * (F('sale_item__unit_price') - (F('sale_item__discount') / F('sale_item__quantity')))),
-        cost=Sum(F('quantity') * F('sale_item__cost_price'))
-    )
-    returns_wh_map = {r['sale_item__batch__warehouse__id']: r for r in returned_by_wh}
-    
     warehouse_data = []
-    for w in profit_by_warehouse:
-        wid = w['batch__warehouse__id']
-        ret = returns_wh_map.get(wid, {})
-        ret_refund = ret.get('refund') or Decimal('0')
-        ret_cost = ret.get('cost') or Decimal('0')
-        
-        w['revenue'] = (w['revenue'] or Decimal('0')) - ret_refund
-        w['cost'] = (w['cost'] or Decimal('0')) - ret_cost
+    for w in warehouse_data_map.values():
         w['profit'] = w['revenue'] - w['cost']
         warehouse_data.append(w)
-        
     warehouse_data.sort(key=lambda x: -x['profit'])
     
-    # Total summary (exclude custom items for accurate profit calc)
-    totals = SaleItem.objects.filter(
-        **base_filter
-    ).aggregate(
-        total_revenue=Sum(F('quantity') * F('unit_price')),
-        total_cost=Sum(F('quantity') * F('cost_price')),
-    )
-    
-    total_refund_agg = returned_items.aggregate(
-        refund=Sum(F('quantity') * (F('sale_item__unit_price') - (F('sale_item__discount') / F('sale_item__quantity')))),
-        cost=Sum(F('quantity') * F('sale_item__cost_price'))
-    )
-    ret_refund_val = total_refund_agg['refund'] or Decimal('0')
-    ret_cost_val = total_refund_agg['cost'] or Decimal('0')
-    
-    totals['total_revenue'] = (totals['total_revenue'] or Decimal('0')) - ret_refund_val
-    totals['total_cost'] = (totals['total_cost'] or Decimal('0')) - ret_cost_val
-    totals['total_profit'] = totals['total_revenue'] - totals['total_cost']
-    if totals['total_revenue'] and totals['total_revenue'] > 0:
-        totals['margin'] = round((totals['total_profit'] / totals['total_revenue']) * 100, 2)
+    totals = {
+        'total_revenue': total_revenue,
+        'total_cost': total_cost,
+        'total_profit': total_revenue - total_cost,
+    }
+    if total_revenue and total_revenue > 0:
+        totals['margin'] = round((totals['total_profit'] / total_revenue) * 100, 2)
     else:
         totals['margin'] = 0
     
