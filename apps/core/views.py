@@ -12,7 +12,7 @@ from decimal import Decimal
 from .models import AuditLog, SystemSettings
 from .forms import SystemSettingsForm
 from apps.inventory.models import Product, Batch
-from apps.sales.models import Sale, SaleItem
+from apps.sales.models import Sale, SaleItem, SaleReturn, SaleReturnItem
 from apps.customers.models import Customer
 from apps.warehouse.models import Warehouse
 
@@ -24,20 +24,49 @@ def dashboard(request):
     month_start = today.replace(day=1)
     
     # Sales metrics
-    total_sales_today = Sale.objects.filter(
-        sale_date__date=today
+    gross_sales_today = Sale.objects.filter(
+        sale_date__date=today,
+        status='completed'
     ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
     
-    total_sales_month = Sale.objects.filter(
-        sale_date__date__gte=month_start
+    returns_today = SaleReturn.objects.filter(
+        return_date__date=today
+    ).aggregate(total=Sum('refund_amount'))['total'] or Decimal('0')
+    
+    total_sales_today = gross_sales_today - returns_today
+    
+    gross_sales_month = Sale.objects.filter(
+        sale_date__date__gte=month_start,
+        status='completed'
     ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+    
+    returns_month = SaleReturn.objects.filter(
+        return_date__date__gte=month_start
+    ).aggregate(total=Sum('refund_amount'))['total'] or Decimal('0')
+    
+    total_sales_month = gross_sales_month - returns_month
     
     # Profit calculation
-    profit_month = SaleItem.objects.filter(
-        sale__sale_date__date__gte=month_start
+    gross_profit_month = SaleItem.objects.filter(
+        sale__sale_date__date__gte=month_start,
+        sale__status='completed'
     ).aggregate(
         profit=Sum(F('quantity') * (F('unit_price') - F('cost_price')))
     )['profit'] or Decimal('0')
+    
+    # Returned items profit for the month
+    returned_items_month = SaleReturnItem.objects.filter(
+        sale_return__return_date__date__gte=month_start
+    ).select_related('sale_item')
+    
+    returns_profit_month = Decimal('0')
+    for item in returned_items_month:
+        effective_unit_price = item.sale_item.unit_price - (item.sale_item.discount / Decimal(item.sale_item.quantity))
+        item_refund_total = Decimal(item.quantity) * effective_unit_price
+        item_cost_total = Decimal(item.quantity) * item.sale_item.cost_price
+        returns_profit_month += item_refund_total - item_cost_total
+        
+    profit_month = gross_profit_month - returns_profit_month
     
     # Inventory metrics
     total_products = Product.objects.filter(is_active=True).count()

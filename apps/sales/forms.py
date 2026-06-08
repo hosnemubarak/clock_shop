@@ -107,6 +107,7 @@ class PaymentForm(forms.Form):
             ('bank_transfer', 'Bank Transfer'),
             ('mobile_payment', 'Mobile Payment'),
             ('cheque', 'Cheque'),
+            ('credit_balance', 'Credit Balance'),
         ],
         widget=forms.Select(attrs={'class': 'form-select'})
     )

@@ -182,11 +182,30 @@ def sale_create(request):
             sale.total_amount = subtotal - sale.discount_amount + sale.tax_amount
             sale.save()
             
-            # Update customer balance if applicable
+            # Update customer balance and auto-apply credit if applicable
             if sale.customer:
-                sale.customer.total_purchases += sale.total_amount
-                sale.customer.total_due += sale.total_amount
-                sale.customer.save()
+                # Store credit balance before we recalculate with the new sale
+                available_credit = sale.customer.credit_balance
+                
+                # Check if customer has credit balance to auto-apply
+                if available_credit > Decimal('0.00'):
+                    credit_to_apply = min(available_credit, sale.due_amount)
+                    if credit_to_apply > Decimal('0.00'):
+                        Payment.objects.create(
+                            customer=sale.customer,
+                            sale=sale,
+                            amount=credit_to_apply,
+                            payment_method='credit_balance',
+                            reference='Applied from credit balance',
+                            notes=f'Auto-applied credit balance of {credit_to_apply} against invoice {sale.invoice_number}.',
+                            received_by=request.user,
+                        )
+                        # Update sale
+                        sale.paid_amount += credit_to_apply
+                        sale.update_payment_status()
+                
+                # Recalculate customer balance to incorporate the new sale and any applied credit payments
+                sale.customer.recalculate_balance()
             
             create_audit_log(request, 'SALE', sale, {
                 'total': str(sale.total_amount),
@@ -230,14 +249,12 @@ def sale_cancel(request, pk):
                         batch.save()
                         item.product.update_total_stock()
                 
-                # Update customer balance
-                if sale.customer:
-                    sale.customer.total_purchases -= sale.total_amount
-                    sale.customer.total_due -= sale.due_amount
-                    sale.customer.save()
-                
                 sale.status = 'cancelled'
                 sale.save()
+                
+                # Update customer balance
+                if sale.customer:
+                    sale.customer.recalculate_balance()
                 
                 create_audit_log(request, 'SALE', sale, {'action': 'cancelled'})
                 messages.success(request, f'Sale "{sale.invoice_number}" cancelled.')
@@ -254,6 +271,15 @@ def sale_payment(request, pk):
         form = PaymentForm(request.POST)
         if form.is_valid():
             amount = form.cleaned_data['amount']
+            payment_method = form.cleaned_data['payment_method']
+            
+            if payment_method == 'credit_balance':
+                if not sale.customer:
+                    messages.error(request, "Cannot apply credit balance to a walk-in customer.")
+                    return redirect('sale_detail', pk=sale.pk)
+                if amount > sale.customer.credit_balance:
+                    messages.error(request, f"Insufficient credit balance. Available: {sale.customer.credit_balance}")
+                    return redirect('sale_detail', pk=sale.pk)
             
             if amount > sale.due_amount:
                 messages.error(request, f'Payment amount exceeds due amount ({sale.due_amount}).')
@@ -265,20 +291,17 @@ def sale_payment(request, pk):
                             customer=sale.customer,
                             sale=sale,
                             amount=amount,
-                            payment_method=form.cleaned_data['payment_method'],
+                            payment_method=payment_method,
                             reference=form.cleaned_data.get('reference', ''),
                             notes=form.cleaned_data.get('notes', ''),
                             received_by=request.user,
                         )
                         
-                        # Update customer balance
-                        sale.customer.total_paid += amount
-                        sale.customer.total_due -= amount
-                        sale.customer.save()
+                        # Recalculate customer balance
+                        sale.customer.recalculate_balance()
                     
-                    # Update sale
-                    sale.paid_amount += amount
-                    sale.update_payment_status()
+                    # Recalculate sale
+                    sale.recalculate_paid_amount()
                     
                     create_audit_log(request, 'PAYMENT', sale, {
                         'amount': str(amount),

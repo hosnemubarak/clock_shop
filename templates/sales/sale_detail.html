@@ -259,6 +259,9 @@
                             <option value="card">Card</option>
                             <option value="bank_transfer">Bank Transfer</option>
                             <option value="mobile_payment">Mobile Payment</option>
+                            {% if sale.customer and sale.customer.credit_balance > 0 %}
+                            <option value="credit_balance">Credit Balance (Available: {{ CURRENCY_SYMBOL }}{{ sale.customer.credit_balance|floatformat:2 }})</option>
+                            {% endif %}
                         </select>
                     </div>
                     <div class="mb-3">
@@ -308,6 +311,7 @@ if (paymentForm) {
         const amountInput = this.querySelector('input[name="amount"]');
         const amount = parseFloat(amountInput.value);
         const maxAmount = parseFloat(amountInput.getAttribute('max'));
+        const methodSelect = this.querySelector('select[name="payment_method"]');
         
         if (!amount || amount <= 0) {
             e.preventDefault();
@@ -319,6 +323,15 @@ if (paymentForm) {
             e.preventDefault();
             showValidationModal(`Payment amount cannot exceed the due amount ({{ CURRENCY_SYMBOL }}${maxAmount.toFixed(2)}).`, 'Amount Exceeds Due');
             return false;
+        }
+        
+        if (methodSelect && methodSelect.value === 'credit_balance') {
+            const availableCredit = parseFloat("{{ sale.customer.credit_balance|default:0 }}");
+            if (amount > availableCredit) {
+                e.preventDefault();
+                showValidationModal(`Payment amount cannot exceed the available credit balance ({{ CURRENCY_SYMBOL }}${availableCredit.toFixed(2)}).`, 'Insufficient Credit');
+                return false;
+            }
         }
     });
 }

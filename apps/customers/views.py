@@ -260,14 +260,11 @@ def payment_create(request):
             payment.save()
             
             # Update customer balance
-            payment.customer.total_paid += payment.amount
-            payment.customer.total_due -= payment.amount
-            payment.customer.save()
+            payment.customer.recalculate_balance()
             
             # Update sale payment status if linked to specific sale
             if payment.sale:
-                payment.sale.paid_amount += payment.amount
-                payment.sale.update_payment_status()
+                payment.sale.recalculate_paid_amount()
             
             create_audit_log(request, 'PAYMENT', payment, {
                 'amount': str(payment.amount),
@@ -309,6 +306,7 @@ def api_customer_info(request, customer_id):
         'total_purchases': str(customer.total_purchases),
         'total_paid': str(customer.total_paid),
         'total_due': str(customer.total_due),
+        'credit_balance': str(customer.credit_balance),
         'unpaid_invoices': list(unpaid),
     }
     

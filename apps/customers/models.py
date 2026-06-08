@@ -31,6 +31,12 @@ class Customer(TimeStampedModel):
         default=Decimal('0.00'),
         help_text='Outstanding balance'
     )
+    credit_balance = models.DecimalField(
+        max_digits=14, decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.00'))],
+        default=Decimal('0.00'),
+        help_text='Customer credit/wallet balance (advance amount)'
+    )
     
     credit_limit = models.DecimalField(
         max_digits=12, decimal_places=2,
@@ -94,15 +100,25 @@ class Customer(TimeStampedModel):
             total=models.Sum('refund_amount')
         )['total'] or Decimal('0.00')
         
-        # Total payments
-        payments_total = self.payments.aggregate(
+        # Total payments (excluding internal credit applications)
+        payments_total = self.payments.exclude(
+            payment_method='credit_balance'
+        ).aggregate(
             total=models.Sum('amount')
         )['total'] or Decimal('0.00')
         
         self.total_purchases = sales_total - returns_total
         self.total_paid = payments_total
-        self.total_due = sales_total - payments_total - returns_total
-        self.save(update_fields=['total_purchases', 'total_paid', 'total_due'])
+        
+        net_balance = self.total_purchases - self.total_paid
+        if net_balance > Decimal('0.00'):
+            self.total_due = net_balance
+            self.credit_balance = Decimal('0.00')
+        else:
+            self.total_due = Decimal('0.00')
+            self.credit_balance = -net_balance
+            
+        self.save(update_fields=['total_purchases', 'total_paid', 'total_due', 'credit_balance'])
     
     def get_purchase_history(self):
         """Get all purchases by this customer."""
@@ -129,6 +145,7 @@ class Payment(TimeStampedModel):
         ('bank_transfer', 'Bank Transfer'),
         ('mobile_payment', 'Mobile Payment'),
         ('cheque', 'Cheque'),
+        ('credit_balance', 'Credit Balance'),
     ]
     
     customer = models.ForeignKey(

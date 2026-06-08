@@ -46,6 +46,22 @@ class PaymentForm(forms.ModelForm):
         else:
             self.fields['sale'].queryset = Sale.objects.none()
 
+    def clean(self):
+        cleaned_data = super().clean()
+        payment_method = cleaned_data.get('payment_method')
+        amount = cleaned_data.get('amount')
+        customer = cleaned_data.get('customer')
+        sale = cleaned_data.get('sale')
+        
+        if payment_method == 'credit_balance':
+            if not customer:
+                raise forms.ValidationError("Customer must be selected for Credit Balance payments.")
+            if not sale:
+                raise forms.ValidationError("A specific invoice must be selected to apply credit balance.")
+            if amount and amount > customer.credit_balance:
+                raise forms.ValidationError(f"Insufficient credit balance. Available: {customer.credit_balance}")
+        return cleaned_data
+
 
 class CustomerNoteForm(forms.ModelForm):
     class Meta:
@@ -76,3 +92,9 @@ class QuickPaymentForm(forms.Form):
         required=False,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. TXN-12345'})
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['payment_method'].choices = [
+            c for c in Payment.PAYMENT_METHOD_CHOICES if c[0] != 'credit_balance'
+        ]

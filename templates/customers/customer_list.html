@@ -55,6 +55,7 @@
                                 <th>Phone</th>
                                 <th>Total Purchases</th>
                                 <th>Paid</th>
+                                <th>Credit Balance</th>
                                 <th>Due</th>
                                 <th>Status</th>
                                 <th>Actions</th>
@@ -69,6 +70,7 @@
                                 <td>{{ customer.phone|default:"-" }}</td>
                                 <td>{{ CURRENCY_SYMBOL }}{{ customer.total_purchases|floatformat:2 }}</td>
                                 <td class="text-success">{{ CURRENCY_SYMBOL }}{{ customer.total_paid|floatformat:2 }}</td>
+                                <td class="text-info">{{ CURRENCY_SYMBOL }}{{ customer.credit_balance|floatformat:2 }}</td>
                                 <td class="{% if customer.total_due > 0 %}text-danger fw-bold{% endif %}">
                                     {{ CURRENCY_SYMBOL }}{{ customer.total_due|floatformat:2 }}
                                 </td>
