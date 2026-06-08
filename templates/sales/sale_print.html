@@ -695,7 +695,7 @@
                         </tr>
                         {% if sale.discount_amount > 0 %}
                         <tr style="color: var(--danger-text);">
-                            <td class="total-label" style="color: var(--danger-text);">Discount:</td>
+                            <td class="total-label" style="color: var(--danger-text);">Discount {% if sale.discount_type == 'percentage' %}({{ sale.discount_value|floatformat:0 }}%){% else %}(Fixed){% endif %}:</td>
                             <td class="total-value" style="color: var(--danger-text);">-{{ CURRENCY_SYMBOL }}{{ sale.discount_amount|floatformat:2|intcomma }}</td>
                         </tr>
                         {% endif %}

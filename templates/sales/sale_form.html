@@ -166,7 +166,10 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Discount</label>
-                        {{ form.discount_amount }}
+                        <div class="input-group">
+                            {{ form.discount_type }}
+                            {{ form.discount_value }}
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Tax</label>
@@ -507,7 +510,16 @@ function updateTotals() {
         subtotal += item.quantity * item.unit_price;
     });
     
-    const discount = parseFloat(document.querySelector('[name="discount_amount"]').value) || 0;
+    const discountType = document.querySelector('[name="discount_type"]').value;
+    const discountVal = parseFloat(document.querySelector('[name="discount_value"]').value) || 0;
+    
+    let discount = 0;
+    if (discountType === 'percentage') {
+        discount = subtotal * (discountVal / 100);
+    } else {
+        discount = discountVal;
+    }
+    
     const tax = parseFloat(document.querySelector('[name="tax_amount"]').value) || 0;
     const total = subtotal - discount + tax;
     
@@ -515,7 +527,8 @@ function updateTotals() {
     document.getElementById('summaryTotal').textContent = '{{ CURRENCY_SYMBOL }}' + total.toFixed(2);
 }
 
-document.querySelector('[name="discount_amount"]').addEventListener('input', updateTotals);
+document.querySelector('[name="discount_type"]').addEventListener('change', updateTotals);
+document.querySelector('[name="discount_value"]').addEventListener('input', updateTotals);
 document.querySelector('[name="tax_amount"]').addEventListener('input', updateTotals);
 
 document.getElementById('saleForm').addEventListener('submit', function(e) {

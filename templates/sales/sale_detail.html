@@ -74,7 +74,7 @@
                             </tr>
                             {% if sale.discount_amount > 0 %}
                             <tr>
-                                <td colspan="4" class="text-end text-muted">Discount:</td>
+                                <td colspan="4" class="text-end text-muted">Discount {% if sale.discount_type == 'percentage' %}({{ sale.discount_value|floatformat:0 }}%){% else %}(Fixed){% endif %}:</td>
                                 <td class="text-end text-danger">-{{ CURRENCY_SYMBOL }}{{ sale.discount_amount|floatformat:2 }}</td>
                             </tr>
                             {% endif %}

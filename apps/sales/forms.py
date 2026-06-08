@@ -8,14 +8,18 @@ from apps.inventory.models import Product, Batch
 class SaleForm(forms.ModelForm):
     class Meta:
         model = Sale
-        fields = ['customer', 'sale_date', 'discount_amount', 'tax_amount', 'notes']
+        fields = ['customer', 'sale_date', 'discount_type', 'discount_value', 'tax_amount', 'notes']
         widgets = {
             'customer': forms.Select(attrs={'class': 'form-select'}),
             'sale_date': forms.DateTimeInput(attrs={
                 'class': 'form-control',
                 'type': 'datetime-local'
             }),
-            'discount_amount': forms.NumberInput(attrs={
+            'discount_type': forms.Select(attrs={
+                'class': 'form-select',
+                'style': 'max-width: 120px;'
+            }),
+            'discount_value': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'step': '0.01',
                 'min': '0'

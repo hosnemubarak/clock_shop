@@ -40,6 +40,16 @@ class Sale(TimeStampedModel):
         validators=[MinValueValidator(Decimal('0.00'))],
         default=Decimal('0.00')
     )
+    discount_type = models.CharField(
+        max_length=15,
+        choices=[('fixed', 'Fixed Amount'), ('percentage', 'Percentage')],
+        default='fixed'
+    )
+    discount_value = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.00'))],
+        default=Decimal('0.00')
+    )
     tax_amount = models.DecimalField(
         max_digits=12, decimal_places=2,
         validators=[MinValueValidator(Decimal('0.00'))],
@@ -114,8 +124,12 @@ class Sale(TimeStampedModel):
         items = self.items.all()
         self.subtotal = sum(item.total_price for item in items)
         self.total_cost = sum(item.total_cost for item in items)
+        if self.discount_type == 'percentage':
+            self.discount_amount = (self.subtotal * (self.discount_value / Decimal('100.00'))).quantize(Decimal('0.01'))
+        else:
+            self.discount_amount = self.discount_value
         self.total_amount = self.subtotal - self.discount_amount + self.tax_amount
-        self.save(update_fields=['subtotal', 'total_cost', 'total_amount'])
+        self.save(update_fields=['subtotal', 'total_cost', 'discount_amount', 'total_amount'])
     
     def recalculate_paid_amount(self):
         """Recalculate paid_amount from all linked payments."""

@@ -179,6 +179,10 @@ def sale_create(request):
             # Update sale totals
             sale.subtotal = subtotal
             sale.total_cost = total_cost
+            if sale.discount_type == 'percentage':
+                sale.discount_amount = (subtotal * (sale.discount_value / Decimal('100.00'))).quantize(Decimal('0.01'))
+            else:
+                sale.discount_amount = sale.discount_value
             sale.total_amount = subtotal - sale.discount_amount + sale.tax_amount
             sale.save()
             
