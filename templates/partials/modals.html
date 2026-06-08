@@ -102,32 +102,44 @@ let dangerCallback = null;
 function showValidationModal(message, title = 'Validation Error') {
     document.getElementById('validationModalTitle').innerHTML = `<i class="las la-exclamation-triangle me-1"></i> ${title}`;
     document.getElementById('validationModalBody').textContent = message;
-    const modal = new bootstrap.Modal(document.getElementById('validationModal'));
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('validationModal'));
     modal.show();
 }
+
+// Ensure global helper is accessible if other scripts call it
+window.showValidationModal = showValidationModal;
 
 function showSuccessModal(message, title = 'Success') {
     document.getElementById('successModalTitle').innerHTML = `<i class="las la-check-circle me-1"></i> ${title}`;
     document.getElementById('successModalBody').textContent = message;
-    const modal = new bootstrap.Modal(document.getElementById('successModal'));
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('successModal'));
     modal.show();
 }
+
+window.showSuccessModal = showSuccessModal;
 
 function showConfirmModal(message, title, callback) {
     document.getElementById('confirmModalTitle').innerHTML = `<i class="las la-question-circle me-1"></i> ${title}`;
     document.getElementById('confirmModalBody').textContent = message;
     confirmCallback = callback;
-    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('confirmModal'));
     modal.show();
 }
+
+window.showConfirmModal = showConfirmModal;
+
+// Backward compatibility or alternative naming
+window.showConfirmationModal = showConfirmModal;
 
 function showDangerModal(message, title, callback) {
     document.getElementById('dangerModalTitle').innerHTML = `<i class="las la-exclamation-triangle me-1"></i> ${title}`;
     document.getElementById('dangerModalBody').textContent = message;
     dangerCallback = callback;
-    const modal = new bootstrap.Modal(document.getElementById('dangerModal'));
+    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('dangerModal'));
     modal.show();
 }
+
+window.showDangerModal = showDangerModal;
 
 // Confirm button click handler
 document.addEventListener('DOMContentLoaded', function() {
@@ -137,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (confirmCallback) {
                 confirmCallback();
             }
-            bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('confirmModal')).hide();
         });
     }
     
@@ -147,8 +159,106 @@ document.addEventListener('DOMContentLoaded', function() {
             if (dangerCallback) {
                 dangerCallback();
             }
-            bootstrap.Modal.getInstance(document.getElementById('dangerModal')).hide();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('dangerModal')).hide();
         });
     }
+
+    // Global POST form submit confirmation interceptor
+    document.addEventListener('submit', function(e) {
+        const form = e.target;
+        
+        // Only intercept POST forms
+        if (form.method && form.method.toLowerCase() === 'post') {
+            const action = form.action || '';
+            
+            // Skip login/logout forms or if explicitly opted out
+            if (action.includes('/login/') || action.includes('/logout/') || form.getAttribute('data-confirm') === 'false') {
+                return;
+            }
+            
+            // Check if we are already confirmed
+            if (form.dataset.confirmed === 'true') {
+                return;
+            }
+            
+            // Prevent immediate submission
+            e.preventDefault();
+            
+            const submitter = e.submitter;
+            if (submitter && submitter.getAttribute('data-confirm') === 'false') {
+                form.dataset.confirmed = 'true';
+                form.submit();
+                return;
+            }
+            
+            // Determine message, title, and danger level
+            let message = '';
+            let title = 'Confirm Action';
+            let isDanger = false;
+            
+            // 1. Check data-confirm attributes
+            if (submitter && submitter.getAttribute('data-confirm')) {
+                message = submitter.getAttribute('data-confirm');
+            } else if (form.getAttribute('data-confirm')) {
+                message = form.getAttribute('data-confirm');
+            } else {
+                // 2. Deduce based on context
+                const btnText = submitter ? submitter.textContent.trim().toLowerCase() : '';
+                const pageHeader = document.querySelector('h4, h5, h3, h2, h1')?.textContent.trim().toLowerCase() || '';
+                
+                if (btnText.includes('delete') || btnText.includes('remove') || btnText.includes('cancel')) {
+                    isDanger = true;
+                    message = 'Are you sure you want to delete or cancel this item? This action might be irreversible.';
+                    title = 'Confirm Deletion / Cancellation';
+                } else if (btnText.includes('payment') || btnText.includes('pay') || btnText.includes('receive')) {
+                    message = 'Are you sure you want to record this payment?';
+                    title = 'Confirm Payment';
+                } else if (btnText.includes('transfer')) {
+                    message = 'Are you sure you want to process this stock transfer?';
+                    title = 'Confirm Transfer';
+                } else if (pageHeader.includes('customer')) {
+                    message = 'Are you sure you want to save these customer details?';
+                    title = 'Confirm Customer Action';
+                } else if (pageHeader.includes('product') || pageHeader.includes('batch') || pageHeader.includes('brand') || pageHeader.includes('category')) {
+                    message = 'Are you sure you want to save this inventory configuration?';
+                    title = 'Confirm Inventory Action';
+                } else if (pageHeader.includes('sale') || pageHeader.includes('invoice') || pageHeader.includes('pos')) {
+                    message = 'Are you sure you want to process this sale invoice?';
+                    title = 'Confirm Sale';
+                } else if (pageHeader.includes('warehouse')) {
+                    message = 'Are you sure you want to save this warehouse configuration?';
+                    title = 'Confirm Warehouse Action';
+                } else if (pageHeader.includes('settings')) {
+                    message = 'Are you sure you want to save these settings?';
+                    title = 'Confirm Settings Update';
+                } else {
+                    message = 'Are you sure you want to proceed with this action?';
+                }
+            }
+            
+            // Submitter class overrides danger level
+            if (form.classList.contains('confirm-danger') || (submitter && (submitter.classList.contains('btn-danger') || submitter.classList.contains('btn-outline-danger')))) {
+                isDanger = true;
+            }
+            
+            const confirmCallbackFunc = function() {
+                form.dataset.confirmed = 'true';
+                if (submitter && submitter.name) {
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = submitter.name;
+                    hiddenInput.value = submitter.value;
+                    form.appendChild(hiddenInput);
+                }
+                form.submit();
+            };
+            
+            if (isDanger) {
+                showDangerModal(message, title, confirmCallbackFunc);
+            } else {
+                showConfirmModal(message, title, confirmCallbackFunc);
+            }
+        }
+    });
 });
 </script>
