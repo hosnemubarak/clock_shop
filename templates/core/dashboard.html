@@ -121,9 +121,12 @@
     </div>
     {% endif %}
 
-    {% if request.user.is_staff or request.user.is_superuser %}
     <div class="col-xl-3 col-md-6">
+        {% if request.user.is_staff or request.user.is_superuser %}
         <a href="{% url 'customer_report' %}" class="text-decoration-none">
+        {% else %}
+        <a href="{% url 'customer_list' %}" class="text-decoration-none">
+        {% endif %}
             <div class="card card-animate">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -134,7 +137,11 @@
                     <div class="d-flex align-items-end justify-content-between mt-4">
                         <div>
                             <h4 class="fs-22 fw-semibold mb-4 text-danger">{{ CURRENCY_SYMBOL }}{{ total_dues|floatformat:2|intcomma }}</h4>
+                            {% if request.user.is_staff or request.user.is_superuser %}
                             <span class="text-danger">View Dues <i class="las la-arrow-right"></i></span>
+                            {% else %}
+                            <span class="text-danger">View Customers <i class="las la-arrow-right"></i></span>
+                            {% endif %}
                         </div>
                         <div class="avatar-sm flex-shrink-0">
                             <span class="avatar-title bg-danger-subtle rounded fs-3">
@@ -146,11 +153,9 @@
             </div>
         </a>
     </div>
-    {% endif %}
 </div>
 
 <!-- Second Row Stats -->
-{% if request.user.is_staff or request.user.is_superuser %}
 <div class="row">
     <div class="col-xl-3 col-md-6">
         <a href="{% url 'product_list' %}" class="text-decoration-none">
@@ -175,7 +180,9 @@
     </div>
 
     <div class="col-xl-3 col-md-6">
+        {% if request.user.is_staff or request.user.is_superuser %}
         <a href="{% url 'stock_report' %}" class="text-decoration-none">
+        {% endif %}
             <div class="card card-animate">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
@@ -193,11 +200,15 @@
                     </div>
                 </div>
             </div>
+        {% if request.user.is_staff or request.user.is_superuser %}
         </a>
+        {% endif %}
     </div>
     
     <div class="col-xl-3 col-md-6">
+        {% if request.user.is_staff or request.user.is_superuser %}
         <a href="{% url 'stock_report' %}?stock_filter=low" class="text-decoration-none">
+        {% endif %}
             <div class="card card-animate">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
@@ -215,7 +226,9 @@
                     </div>
                 </div>
             </div>
+        {% if request.user.is_staff or request.user.is_superuser %}
         </a>
+        {% endif %}
     </div>
     
     <div class="col-xl-3 col-md-6">
@@ -241,7 +254,9 @@
     </div>
     
     <div class="col-xl-3 col-md-6">
+        {% if request.user.is_staff or request.user.is_superuser %}
         <a href="{% url 'warehouse_list' %}" class="text-decoration-none">
+        {% endif %}
             <div class="card card-animate">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
@@ -259,10 +274,11 @@
                     </div>
                 </div>
             </div>
+        {% if request.user.is_staff or request.user.is_superuser %}
         </a>
+        {% endif %}
     </div>
 </div>
-{% endif %}
 
 <div class="row">
     <!-- Recent Sales -->
@@ -347,13 +363,14 @@
         </div>
         
         <!-- Low Stock Alerts -->
-        {% if request.user.is_staff or request.user.is_superuser %}
         <div class="card">
             <div class="card-header align-items-center d-flex">
                 <h4 class="card-title mb-0 flex-grow-1">Low Stock Alerts</h4>
+                {% if request.user.is_staff or request.user.is_superuser %}
                 <div class="flex-shrink-0">
                     <a href="{% url 'stock_report' %}?stock_filter=low" class="btn btn-soft-warning btn-sm">View All</a>
                 </div>
+                {% endif %}
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -386,7 +403,6 @@
                 </div>
             </div>
         </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}

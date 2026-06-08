@@ -100,11 +100,11 @@ def dashboard(request):
         profit_month = Decimal('0')
     
     # Inventory metrics
-    total_products = Product.objects.filter(is_active=True).count() if is_admin else 0
+    total_products = Product.objects.filter(is_active=True).count()
 
     total_product_quantity = Batch.objects.filter(
         quantity__gt=0
-    ).aggregate(total=Sum('quantity'))['total'] or 0 if is_admin else 0
+    ).aggregate(total=Sum('quantity'))['total'] or 0
     
     # Get low stock threshold from settings
     from .models import SystemSettings
@@ -114,16 +114,16 @@ def dashboard(request):
     low_stock_products = Batch.objects.filter(
         quantity__gt=0,
         quantity__lte=low_stock_threshold
-    ).values('product').distinct().count() if is_admin else 0
+    ).values('product').distinct().count()
     
     # Customer metrics
     total_customers = Customer.objects.count()
     total_dues = Customer.objects.aggregate(
         total=Sum('total_due')
-    )['total'] or Decimal('0.00') if is_admin else Decimal('0.00')
+    )['total'] or Decimal('0.00')
     
     # Warehouse metrics
-    total_warehouses = Warehouse.objects.filter(is_active=True).count() if is_admin else 0
+    total_warehouses = Warehouse.objects.filter(is_active=True).count()
     
     # Recent sales
     recent_sales = recent_sales_qs.order_by('-sale_date')[:10]
@@ -132,7 +132,7 @@ def dashboard(request):
     low_stock_batches = Batch.objects.filter(
         quantity__gt=0,
         quantity__lte=low_stock_threshold
-    ).select_related('product', 'warehouse').order_by('quantity')[:10] if is_admin else []
+    ).select_related('product', 'warehouse').order_by('quantity')[:10]
     
     # Payment status counts for chart
     chart_sales = Sale.objects.all()
