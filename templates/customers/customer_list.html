@@ -99,7 +99,15 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-4">No customers found</td>
+                                <td colspan="8" class="table-empty-row">
+                                    <div class="table-empty-state-wrapper">
+                                        <div class="empty-icon">
+                                            <i class="las la-users"></i>
+                                        </div>
+                                        <h5>No Customers Found</h5>
+                                        <p>There are no customer records matching the current filters or search query.</p>
+                                    </div>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>

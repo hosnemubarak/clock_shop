@@ -25,6 +25,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
 
     <!-- Custom placeholder styling -->
+    <!-- Custom placeholder & Global Table styling overrides -->
     <style>
         ::placeholder {
             color: #adb5bd !important;
@@ -40,6 +41,136 @@
         .form-select::placeholder {
             color: #adb5bd !important;
             font-style: italic;
+        }
+
+        /* Prevent table dropdown clipping on desktop screens */
+        @media (min-width: 992px) {
+            .table-responsive {
+                overflow: visible !important;
+            }
+        }
+
+        /* Responsive horizontal scroll behavior for smaller screens */
+        @media (max-width: 991.98px) {
+            .table-responsive {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        /* Sticky table header support */
+        .table-sticky {
+            position: relative;
+            max-height: 600px;
+            overflow: auto;
+        }
+        .table-sticky thead th {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            background-color: #f3f6f9 !important;
+            box-shadow: inset 0 -1px 0 #e9ebec;
+        }
+
+        /* Refined, modern table styling */
+        table.table {
+            margin-bottom: 0;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        table.table thead th {
+            font-weight: 700 !important;
+            text-transform: uppercase;
+            font-size: 11px !important;
+            letter-spacing: 0.05em;
+            color: #495057 !important;
+            background-color: #f3f6f9 !important;
+            border-top: none !important;
+            border-bottom: 2px solid #e9ebec !important;
+            padding: 14px 16px !important;
+            vertical-align: middle;
+        }
+
+        table.table tbody td {
+            padding: 14px 16px !important;
+            vertical-align: middle;
+            border-bottom: 1px solid #e9ebec !important;
+            font-size: 13.5px;
+            color: #212529;
+            transition: background-color 0.15s ease;
+        }
+
+        table.table tbody tr {
+            transition: all 0.15s ease-in-out;
+        }
+
+        table.table tbody tr:hover td {
+            background-color: rgba(64, 81, 137, 0.025) !important;
+        }
+
+        /* Styled table link tags */
+        table.table tbody td a:not(.btn) {
+            font-weight: 600;
+            color: #405189;
+            text-decoration: none;
+            transition: color 0.15s ease;
+        }
+
+        table.table tbody td a:not(.btn):hover {
+            color: #0ab39c;
+            text-decoration: underline;
+        }
+
+        /* Clean badges design */
+        .badge {
+            padding: 5px 8px !important;
+            font-weight: 600 !important;
+            font-size: 11px !important;
+            border-radius: 4px !important;
+            letter-spacing: 0.02em;
+        }
+
+        /* Premium table empty state layouts */
+        .table-empty-row {
+            padding: 48px 24px !important;
+            text-align: center;
+        }
+
+        .table-empty-state-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 16px;
+        }
+
+        .table-empty-state-wrapper .empty-icon {
+            font-size: 44px;
+            color: #cbd5e1;
+            margin-bottom: 16px;
+            background-color: #f8fafc;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 1px dashed #cbd5e1;
+        }
+
+        .table-empty-state-wrapper h5 {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+
+        .table-empty-state-wrapper p {
+            color: #64748b;
+            font-size: 13px;
+            max-width: 360px;
+            margin: 0 auto;
         }
     </style>
 

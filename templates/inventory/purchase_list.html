@@ -49,7 +49,15 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-4">No purchases found</td>
+                                <td colspan="7" class="table-empty-row">
+                                    <div class="table-empty-state-wrapper">
+                                        <div class="empty-icon">
+                                            <i class="las la-truck"></i>
+                                        </div>
+                                        <h5>No Purchase Orders Found</h5>
+                                        <p>There are no purchase order records matching your search query.</p>
+                                    </div>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
