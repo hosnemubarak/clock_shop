@@ -17,7 +17,7 @@ class SaleForm(forms.ModelForm):
             }),
             'discount_type': forms.Select(attrs={
                 'class': 'form-select',
-                'style': 'max-width: 150px;'
+                'style': 'max-width: 180px;'
             }),
             'discount_value': forms.NumberInput(attrs={
                 'class': 'form-control',
