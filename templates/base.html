@@ -68,8 +68,8 @@
             position: sticky;
             top: 0;
             z-index: 5;
-            background-color: #f3f6f9 !important;
-            box-shadow: inset 0 -1px 0 #e9ebec;
+            background-color: var(--in-tertiary-bg, #f3f6f9) !important;
+            box-shadow: inset 0 -1px 0 var(--in-border-color, #e9ebec);
         }
 
         /* Refined, modern table styling */
@@ -85,10 +85,10 @@
             text-transform: uppercase;
             font-size: 11px !important;
             letter-spacing: 0.05em;
-            color: #495057 !important;
-            background-color: #f3f6f9 !important;
+            color: var(--in-body-color, #495057) !important;
+            background-color: var(--in-tertiary-bg, #f3f6f9) !important;
             border-top: none !important;
-            border-bottom: 2px solid #e9ebec !important;
+            border-bottom: 2px solid var(--in-border-color, #e9ebec) !important;
             padding: 14px 16px !important;
             vertical-align: middle;
         }
@@ -96,9 +96,9 @@
         table.table tbody td {
             padding: 14px 16px !important;
             vertical-align: middle;
-            border-bottom: 1px solid #e9ebec !important;
+            border-bottom: 1px solid var(--in-border-color, #e9ebec) !important;
             font-size: 13.5px;
-            color: #212529;
+            /* Allow text color to adapt dynamically to light/dark themes */
             transition: background-color 0.15s ease;
         }
 
@@ -107,19 +107,19 @@
         }
 
         table.table tbody tr:hover td {
-            background-color: rgba(64, 81, 137, 0.025) !important;
+            background-color: rgba(var(--in-primary-rgb, 64, 81, 137), 0.025) !important;
         }
 
         /* Styled table link tags */
         table.table tbody td a:not(.btn) {
             font-weight: 600;
-            color: #405189;
+            color: var(--in-link-color, #405189);
             text-decoration: none;
             transition: color 0.15s ease;
         }
 
         table.table tbody td a:not(.btn):hover {
-            color: #0ab39c;
+            color: var(--in-link-hover-color, #0ab39c);
             text-decoration: underline;
         }
 
@@ -148,26 +148,26 @@
 
         .table-empty-state-wrapper .empty-icon {
             font-size: 44px;
-            color: #cbd5e1;
+            color: var(--in-secondary-color, #cbd5e1);
             margin-bottom: 16px;
-            background-color: #f8fafc;
+            background-color: var(--in-light, rgba(255,255,255,0.05));
             width: 80px;
             height: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
-            border: 1px dashed #cbd5e1;
+            border: 1px dashed var(--in-border-color, #cbd5e1);
         }
 
         .table-empty-state-wrapper h5 {
             font-weight: 600;
-            color: #334155;
+            color: var(--in-body-color, #334155);
             margin-bottom: 6px;
         }
 
         .table-empty-state-wrapper p {
-            color: #64748b;
+            color: var(--in-secondary-color, #64748b);
             font-size: 13px;
             max-width: 360px;
             margin: 0 auto;
