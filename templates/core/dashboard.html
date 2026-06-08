@@ -3,6 +3,47 @@
 
 {% block title %}Dashboard | {{ SHOP_NAME }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .dashboard-grid-first {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+
+    .dashboard-grid-second {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+
+    .dashboard-grid-first > div,
+    .dashboard-grid-second > div {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .dashboard-grid-first .card,
+    .dashboard-grid-second .card {
+        height: 100%;
+        margin-bottom: 0 !important;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .dashboard-grid-first a,
+    .dashboard-grid-second a {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <!-- License/Server Expiry Alert -->
 {% if EXPIRY_ALERT %}
@@ -37,8 +78,8 @@
 </div>
 
 <!-- Stats Cards -->
-<div class="row">
-    <div class="{% if request.user.is_staff or request.user.is_superuser %}col-xl-3{% else %}col-xl-4{% endif %} col-md-6">
+<div class="dashboard-grid-first">
+    <div>
         <a href="{% url 'sale_list' %}" class="text-decoration-none">
             <div class="card card-animate">
                 <div class="card-body">
@@ -63,7 +104,7 @@
         </a>
     </div>
 
-    <div class="{% if request.user.is_staff or request.user.is_superuser %}col-xl-3{% else %}col-xl-6{% endif %} col-md-6">
+    <div>
         {% if request.user.is_staff or request.user.is_superuser %}
         <a href="{% url 'sales_report' %}" class="text-decoration-none">
         {% endif %}
@@ -95,7 +136,7 @@
     </div>
 
     {% if request.user.is_staff or request.user.is_superuser %}
-    <div class="col-xl-3 col-md-6">
+    <div>
         <a href="{% url 'profit_report' %}" class="text-decoration-none">
             <div class="card card-animate">
                 <div class="card-body">
@@ -121,7 +162,7 @@
     </div>
     {% endif %}
 
-    <div class="col-xl-3 col-md-6">
+    <div>
         {% if request.user.is_staff or request.user.is_superuser %}
         <a href="{% url 'customer_report' %}" class="text-decoration-none">
         {% else %}
@@ -156,8 +197,8 @@
 </div>
 
 <!-- Second Row Stats -->
-<div class="row">
-    <div class="col-xl-3 col-md-6">
+<div class="dashboard-grid-second">
+    <div>
         <a href="{% url 'product_list' %}" class="text-decoration-none">
             <div class="card card-animate">
                 <div class="card-body">
@@ -179,7 +220,7 @@
         </a>
     </div>
 
-    <div class="col-xl-3 col-md-6">
+    <div>
         {% if request.user.is_staff or request.user.is_superuser %}
         <a href="{% url 'stock_report' %}" class="text-decoration-none">
         {% endif %}
@@ -205,7 +246,7 @@
         {% endif %}
     </div>
     
-    <div class="col-xl-3 col-md-6">
+    <div>
         {% if request.user.is_staff or request.user.is_superuser %}
         <a href="{% url 'stock_report' %}?stock_filter=low" class="text-decoration-none">
         {% endif %}
@@ -231,7 +272,7 @@
         {% endif %}
     </div>
     
-    <div class="col-xl-3 col-md-6">
+    <div>
         <a href="{% url 'customer_list' %}" class="text-decoration-none">
             <div class="card card-animate">
                 <div class="card-body">
@@ -253,7 +294,7 @@
         </a>
     </div>
     
-    <div class="col-xl-3 col-md-6">
+    <div>
         {% if request.user.is_staff or request.user.is_superuser %}
         <a href="{% url 'warehouse_list' %}" class="text-decoration-none">
         {% endif %}
