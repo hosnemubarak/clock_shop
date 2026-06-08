@@ -211,5 +211,33 @@
             });
         });
     </script>
+    
+    {% if RECAPTCHA_ENABLED %}
+    <script src="https://www.google.com/recaptcha/api.js?render={{ RECAPTCHA_SITE_KEY }}"></script>
+    <script>
+        const authForm = document.querySelector('form');
+        if (authForm) {
+            const tokenInput = document.createElement('input');
+            tokenInput.type = 'hidden';
+            tokenInput.name = 'recaptcha_token';
+            tokenInput.id = 'recaptcha_token';
+            authForm.appendChild(tokenInput);
+
+            authForm.addEventListener('submit', function(e) {
+                if (authForm.dataset.recaptchaPassed === 'true') {
+                    return;
+                }
+                e.preventDefault();
+                grecaptcha.ready(function() {
+                    grecaptcha.execute('{{ RECAPTCHA_SITE_KEY }}', {action: 'register'}).then(function(token) {
+                        document.getElementById('recaptcha_token').value = token;
+                        authForm.dataset.recaptchaPassed = 'true';
+                        authForm.submit();
+                    });
+                });
+            });
+        }
+    </script>
+    {% endif %}
 </body>
 </html>

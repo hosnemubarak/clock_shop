@@ -22,3 +22,42 @@ def create_audit_log(request, action, instance, changes=None):
         changes=changes or {},
         ip_address=get_client_ip(request),
     )
+
+
+def verify_recaptcha(token, ip=None):
+    """
+    Verify reCAPTCHA token with Google API.
+    Returns True if valid, False otherwise.
+    """
+    import urllib.request
+    import urllib.parse
+    import json
+    from django.conf import settings
+
+    if not getattr(settings, 'RECAPTCHA_ENABLED', False):
+        return True
+        
+    if not token:
+        return False
+        
+    secret_key = getattr(settings, 'RECAPTCHA_SECRET_KEY', None)
+    if not secret_key:
+        return False
+        
+    url = "https://www.google.com/recaptcha/api/siteverify"
+    params = {
+        'secret': secret_key,
+        'response': token,
+    }
+    if ip:
+        params['remoteip'] = ip
+        
+    data = urllib.parse.urlencode(params).encode('utf-8')
+    try:
+        req = urllib.request.Request(url, data=data)
+        with urllib.request.urlopen(req, timeout=5) as response:
+            result = json.loads(response.read().decode())
+            return result.get('success', False) and result.get('score', 0.0) >= 0.5
+    except Exception:
+        return False
+

@@ -8,6 +8,9 @@ from django.db.models import Sum, Count, F
 from django.utils import timezone
 from datetime import timedelta, date
 from decimal import Decimal
+from django.contrib.auth import views as auth_views
+from django.conf import settings
+from .utils import verify_recaptcha, get_client_ip
 
 from .models import AuditLog, SystemSettings
 from .forms import SystemSettingsForm
@@ -15,6 +18,18 @@ from apps.inventory.models import Product, Batch
 from apps.sales.models import Sale, SaleItem, SaleReturn, SaleReturnItem
 from apps.customers.models import Customer
 from apps.warehouse.models import Warehouse
+
+
+class CustomLoginView(auth_views.LoginView):
+    """Custom Login View with reCAPTCHA verification."""
+    def post(self, request, *args, **kwargs):
+        if getattr(settings, 'RECAPTCHA_ENABLED', False):
+            token = request.POST.get('recaptcha_token')
+            if not verify_recaptcha(token, get_client_ip(request)):
+                form = self.get_form()
+                form.add_error(None, "reCAPTCHA verification failed. Please try again.")
+                return self.form_invalid(form)
+        return super().post(request, *args, **kwargs)
 
 
 @login_required
@@ -211,6 +226,12 @@ def register(request):
         last_name = request.POST.get('last_name', '').strip()
         
         errors = []
+        
+        # reCAPTCHA Validation
+        if getattr(settings, 'RECAPTCHA_ENABLED', False):
+            token = request.POST.get('recaptcha_token')
+            if not verify_recaptcha(token, get_client_ip(request)):
+                errors.append('reCAPTCHA verification failed. Please try again.')
         
         # Validation
         if not username:

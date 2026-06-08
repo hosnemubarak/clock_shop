@@ -77,4 +77,6 @@ def global_context(request):
         'LOW_STOCK_THRESHOLD': low_stock_threshold,
         'EXPIRY_ALERT': expiry_alert,
         'DAYS_UNTIL_EXPIRY': days_until_expiry,
+        'RECAPTCHA_ENABLED': getattr(django_settings, 'RECAPTCHA_ENABLED', False),
+        'RECAPTCHA_SITE_KEY': getattr(django_settings, 'RECAPTCHA_SITE_KEY', ''),
     }

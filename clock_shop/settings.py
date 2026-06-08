@@ -333,3 +333,9 @@ LOGGING = {
         'level': 'INFO',
     },
 }
+
+# reCAPTCHA configuration
+RECAPTCHA_ENABLED = os.environ.get('RECAPTCHA_ENABLED', 'False').lower() in ('true', '1', 'yes')
+RECAPTCHA_SITE_KEY = os.environ.get('RECAPTCHA_SITE_KEY', '')
+RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '')
+
