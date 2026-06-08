@@ -169,6 +169,7 @@
                         <div class="input-group">
                             {{ form.discount_type }}
                             {{ form.discount_value }}
+                            <span class="input-group-text" id="discountAddon">{{ CURRENCY_SYMBOL }}</span>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -242,6 +243,9 @@ document.addEventListener('DOMContentLoaded', function() {
             allowEmptyOption: true
         });
     }
+    
+    // Initial totals and addon setup
+    updateTotals();
 });
 
 // Toggle between inventory and custom item forms (Bootstrap tabs handle visibility)
@@ -512,6 +516,12 @@ function updateTotals() {
     
     const discountType = document.querySelector('[name="discount_type"]').value;
     const discountVal = parseFloat(document.querySelector('[name="discount_value"]').value) || 0;
+    
+    // Update addon label based on discount type
+    const discountAddon = document.getElementById('discountAddon');
+    if (discountAddon) {
+        discountAddon.textContent = discountType === 'percentage' ? '%' : '{{ CURRENCY_SYMBOL }}';
+    }
     
     let discount = 0;
     if (discountType === 'percentage') {
