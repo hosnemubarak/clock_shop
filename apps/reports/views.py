@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.contrib.admin.views.decorators import staff_member_required
+from apps.core.decorators import staff_or_superuser_required
 from django.core.paginator import Paginator
 from django.db.models import Sum, Count, F, Q, Avg
 from django.db.models.functions import TruncDate, TruncMonth, TruncWeek
@@ -14,7 +14,7 @@ from apps.customers.models import Customer, Payment
 from apps.warehouse.models import Warehouse, StockTransfer
 
 
-@staff_member_required
+@staff_or_superuser_required
 def report_dashboard(request):
     """Main reports dashboard with overview."""
     today = timezone.now().date()
@@ -29,7 +29,7 @@ def report_dashboard(request):
     return render(request, 'reports/dashboard.html', context)
 
 
-@staff_member_required
+@staff_or_superuser_required
 def sales_report(request):
     """Sales report with date and shop filtering."""
     today = timezone.now().date()
@@ -236,8 +236,7 @@ def sales_report(request):
     return render(request, 'reports/sales_report.html', context)
 
 
-@staff_member_required
-@staff_member_required
+@staff_or_superuser_required
 def profit_report(request):
     """Profit analysis report with product and shop filters."""
     today = timezone.now().date()
@@ -448,7 +447,7 @@ def profit_report(request):
     return render(request, 'reports/profit_report.html', context)
 
 
-@staff_member_required
+@staff_or_superuser_required
 def stock_report(request):
     """Stock/inventory report."""
     warehouse_id = request.GET.get('warehouse')
@@ -534,7 +533,7 @@ def stock_report(request):
     return render(request, 'reports/stock_report.html', context)
 
 
-@staff_member_required
+@staff_or_superuser_required
 def customer_report(request):
     """Customer analysis report."""
     # Customers with dues
@@ -574,7 +573,7 @@ def customer_report(request):
     return render(request, 'reports/customer_report.html', context)
 
 
-@staff_member_required
+@staff_or_superuser_required
 def transfer_report(request):
     """Stock transfer history report."""
     date_from = request.GET.get('date_from')
@@ -615,7 +614,7 @@ def transfer_report(request):
     return render(request, 'reports/transfer_report.html', context)
 
 
-@staff_member_required
+@staff_or_superuser_required
 def dead_stock_report(request):
     """Report on slow-moving/dead stock."""
     days_threshold = int(request.GET.get('days', 90))
@@ -671,7 +670,7 @@ def dead_stock_report(request):
     return render(request, 'reports/dead_stock_report.html', context)
 
 
-@staff_member_required
+@staff_or_superuser_required
 def batch_report(request):
     """Detailed batch analysis report."""
     warehouse_id = request.GET.get('warehouse')

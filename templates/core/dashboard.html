@@ -63,7 +63,7 @@
         </a>
     </div>
 
-    <div class="{% if request.user.is_staff or request.user.is_superuser %}col-xl-3{% else %}col-xl-4{% endif %} col-md-6">
+    <div class="{% if request.user.is_staff or request.user.is_superuser %}col-xl-3{% else %}col-xl-6{% endif %} col-md-6">
         {% if request.user.is_staff or request.user.is_superuser %}
         <a href="{% url 'sales_report' %}" class="text-decoration-none">
         {% endif %}
@@ -121,10 +121,9 @@
     </div>
     {% endif %}
 
-    <div class="{% if request.user.is_staff or request.user.is_superuser %}col-xl-3{% else %}col-xl-4{% endif %} col-md-6">
-        {% if request.user.is_staff or request.user.is_superuser %}
+    {% if request.user.is_staff or request.user.is_superuser %}
+    <div class="col-xl-3 col-md-6">
         <a href="{% url 'customer_report' %}" class="text-decoration-none">
-        {% endif %}
             <div class="card card-animate">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -135,9 +134,7 @@
                     <div class="d-flex align-items-end justify-content-between mt-4">
                         <div>
                             <h4 class="fs-22 fw-semibold mb-4 text-danger">{{ CURRENCY_SYMBOL }}{{ total_dues|floatformat:2|intcomma }}</h4>
-                            {% if request.user.is_staff or request.user.is_superuser %}
                             <span class="text-danger">View Dues <i class="las la-arrow-right"></i></span>
-                            {% endif %}
                         </div>
                         <div class="avatar-sm flex-shrink-0">
                             <span class="avatar-title bg-danger-subtle rounded fs-3">
@@ -147,13 +144,13 @@
                     </div>
                 </div>
             </div>
-        {% if request.user.is_staff or request.user.is_superuser %}
         </a>
-        {% endif %}
     </div>
+    {% endif %}
 </div>
 
 <!-- Second Row Stats -->
+{% if request.user.is_staff or request.user.is_superuser %}
 <div class="row">
     <div class="col-xl-3 col-md-6">
         <a href="{% url 'product_list' %}" class="text-decoration-none">
@@ -265,6 +262,7 @@
         </a>
     </div>
 </div>
+{% endif %}
 
 <div class="row">
     <!-- Recent Sales -->
@@ -330,9 +328,11 @@
                         <a href="{% url 'sale_create' %}" class="btn btn-primary flex-grow-1">
                             <i class="las la-plus"></i> New Sale
                         </a>
+                        {% if request.user.is_staff or request.user.is_superuser %}
                         <a href="{% url 'batch_create' %}" class="btn btn-success flex-grow-1">
                             <i class="las la-plus"></i> Stock In
                         </a>
+                        {% endif %}
                     </div>
                     <div class="d-flex gap-2">
                         <a href="{% url 'payment_create' %}" class="btn btn-info flex-grow-1">
@@ -347,6 +347,7 @@
         </div>
         
         <!-- Low Stock Alerts -->
+        {% if request.user.is_staff or request.user.is_superuser %}
         <div class="card">
             <div class="card-header align-items-center d-flex">
                 <h4 class="card-title mb-0 flex-grow-1">Low Stock Alerts</h4>
@@ -385,6 +386,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

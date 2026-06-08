@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from apps.core.decorators import staff_or_superuser_required
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum, F
@@ -15,6 +16,7 @@ from apps.core.utils import create_audit_log
 
 
 @login_required
+@staff_or_superuser_required
 def warehouse_list(request):
     """List all warehouses."""
     warehouses = Warehouse.objects.all()
@@ -47,6 +49,7 @@ def warehouse_list(request):
 
 
 @login_required
+@staff_or_superuser_required
 def warehouse_detail(request, pk):
     """View warehouse details with stock information."""
     warehouse = get_object_or_404(Warehouse, pk=pk)
@@ -127,6 +130,7 @@ def warehouse_detail(request, pk):
 
 
 @login_required
+@staff_or_superuser_required
 def warehouse_create(request):
     """Create a new warehouse."""
     if request.method == 'POST':
@@ -143,6 +147,7 @@ def warehouse_create(request):
 
 
 @login_required
+@staff_or_superuser_required
 def warehouse_edit(request, pk):
     """Edit a warehouse."""
     warehouse = get_object_or_404(Warehouse, pk=pk)
@@ -165,6 +170,7 @@ def warehouse_edit(request, pk):
 
 
 @login_required
+@staff_or_superuser_required
 def transfer_list(request):
     """List all stock transfers."""
     transfers = StockTransfer.objects.select_related(
@@ -200,6 +206,7 @@ def transfer_list(request):
 
 
 @login_required
+@staff_or_superuser_required
 def transfer_create(request):
     """Create a new stock transfer."""
     warehouses = Warehouse.objects.filter(is_active=True)
@@ -248,6 +255,7 @@ def transfer_create(request):
 
 
 @login_required
+@staff_or_superuser_required
 def transfer_detail(request, pk):
     """View transfer details."""
     transfer = get_object_or_404(
@@ -260,6 +268,7 @@ def transfer_detail(request, pk):
 
 
 @login_required
+@staff_or_superuser_required
 def transfer_complete(request, pk):
     """Complete a pending transfer."""
     transfer = get_object_or_404(StockTransfer, pk=pk)
@@ -283,6 +292,7 @@ def transfer_complete(request, pk):
 
 
 @login_required
+@staff_or_superuser_required
 def transfer_cancel(request, pk):
     """Cancel a pending transfer."""
     transfer = get_object_or_404(StockTransfer, pk=pk)
@@ -300,6 +310,7 @@ def transfer_cancel(request, pk):
 
 
 @login_required
+@staff_or_superuser_required
 def api_warehouse_batches(request, warehouse_id):
     """API endpoint to get batches in a warehouse."""
     batches = Batch.objects.filter(

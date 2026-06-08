@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from apps.core.decorators import staff_or_superuser_required
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum
@@ -89,6 +90,7 @@ def product_detail(request, pk):
 
 
 @login_required
+@staff_or_superuser_required
 def product_create(request):
     """Create a new product."""
     if request.method == 'POST':
@@ -105,6 +107,7 @@ def product_create(request):
 
 
 @login_required
+@staff_or_superuser_required
 def product_edit(request, pk):
     """Edit a product."""
     product = get_object_or_404(Product, pk=pk)
@@ -127,6 +130,7 @@ def product_edit(request, pk):
 
 
 @login_required
+@staff_or_superuser_required
 def product_delete(request, pk):
     """Delete a product."""
     product = get_object_or_404(Product, pk=pk)
@@ -145,6 +149,7 @@ def product_delete(request, pk):
 
 
 @login_required
+@staff_or_superuser_required
 def category_list(request):
     """List all categories."""
     categories = Category.objects.annotate(product_count=Sum('products__total_stock'))
@@ -162,6 +167,7 @@ def category_list(request):
 
 
 @login_required
+@staff_or_superuser_required
 def category_create(request):
     """Create a new category."""
     if request.method == 'POST':
@@ -178,6 +184,7 @@ def category_create(request):
 
 
 @login_required
+@staff_or_superuser_required
 def category_edit(request, pk):
     """Edit a category."""
     category = get_object_or_404(Category, pk=pk)
@@ -200,6 +207,7 @@ def category_edit(request, pk):
 
 
 @login_required
+@staff_or_superuser_required
 def brand_list(request):
     """List all brands."""
     brands = Brand.objects.all()
@@ -217,6 +225,7 @@ def brand_list(request):
 
 
 @login_required
+@staff_or_superuser_required
 def brand_create(request):
     """Create a new brand."""
     if request.method == 'POST':
@@ -233,6 +242,7 @@ def brand_create(request):
 
 
 @login_required
+@staff_or_superuser_required
 def brand_edit(request, pk):
     """Edit a brand."""
     brand = get_object_or_404(Brand, pk=pk)
@@ -255,6 +265,7 @@ def brand_edit(request, pk):
 
 
 @login_required
+@staff_or_superuser_required
 def batch_list(request):
     """List all batches with filtering."""
     batches = Batch.objects.select_related('product', 'warehouse').all()
@@ -298,6 +309,7 @@ def batch_list(request):
 
 
 @login_required
+@staff_or_superuser_required
 def batch_create(request):
     """Create a new batch (stock in)."""
     if request.method == 'POST':
@@ -318,6 +330,7 @@ def batch_create(request):
 
 
 @login_required
+@staff_or_superuser_required
 def batch_detail(request, pk):
     """View batch details."""
     batch = get_object_or_404(Batch.objects.select_related('product', 'warehouse'), pk=pk)
@@ -325,6 +338,7 @@ def batch_detail(request, pk):
 
 
 @login_required
+@staff_or_superuser_required
 def purchase_list(request):
     """List all purchases."""
     purchases = Purchase.objects.select_related('created_by').prefetch_related('items')
@@ -337,6 +351,7 @@ def purchase_list(request):
 
 
 @login_required
+@staff_or_superuser_required
 def purchase_create(request):
     """Create a new purchase order with items."""
     warehouses = Warehouse.objects.filter(is_active=True)
@@ -402,6 +417,7 @@ def purchase_create(request):
 
 
 @login_required
+@staff_or_superuser_required
 def purchase_detail(request, pk):
     """View purchase details."""
     purchase = get_object_or_404(
@@ -434,6 +450,7 @@ def api_product_batches(request, product_id):
 
 # Stock Out Views
 @login_required
+@staff_or_superuser_required
 def stockout_list(request):
     """List all stock out records."""
     stockouts = StockOut.objects.select_related('warehouse', 'created_by').all()
@@ -478,6 +495,7 @@ def stockout_list(request):
 
 
 @login_required
+@staff_or_superuser_required
 def stockout_create(request):
     """Create a new stock out record."""
     from django.utils import timezone
@@ -541,6 +559,7 @@ def stockout_create(request):
 
 
 @login_required
+@staff_or_superuser_required
 def stockout_detail(request, pk):
     """View stock out details."""
     stockout = get_object_or_404(
@@ -553,6 +572,7 @@ def stockout_detail(request, pk):
 
 
 @login_required
+@staff_or_superuser_required
 def stockout_cancel(request, pk):
     """Cancel a stock out record."""
     stockout = get_object_or_404(StockOut, pk=pk)
@@ -571,6 +591,7 @@ def stockout_cancel(request, pk):
 
 
 @login_required
+@staff_or_superuser_required
 def api_warehouse_batches(request, warehouse_id):
     """API endpoint to get available batches for a warehouse."""
     product_id = request.GET.get('product')

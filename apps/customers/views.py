@@ -208,6 +208,8 @@ def customer_statement(request, pk):
 def payment_list(request):
     """List all payments."""
     payments = Payment.objects.select_related('customer', 'sale', 'received_by').all()
+    if not (request.user.is_staff or request.user.is_superuser):
+        payments = payments.filter(received_by=request.user)
     
     # Search
     search = request.GET.get('search', '')

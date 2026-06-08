@@ -26,9 +26,11 @@
             <div class="card-header border-0 pb-0">
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                     <h5 class="card-title mb-0"><i class="las la-filter me-1"></i> Filters</h5>
+                    {% if request.user.is_staff or request.user.is_superuser %}
                     <a href="{% url 'product_create' %}" class="btn btn-success">
                         <i class="las la-plus me-1"></i> Add Product
                     </a>
+                    {% endif %}
                 </div>
             </div>
             <div class="card-body">
@@ -141,9 +143,11 @@
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end">
                                             <li><a class="dropdown-item" href="{% url 'product_detail' product.pk %}"><i class="las la-eye me-2"></i>View</a></li>
+                                            {% if request.user.is_staff or request.user.is_superuser %}
                                             <li><a class="dropdown-item" href="{% url 'product_edit' product.pk %}"><i class="las la-pen me-2"></i>Edit</a></li>
                                             <li><hr class="dropdown-divider"></li>
                                             <li><a class="dropdown-item text-danger" href="{% url 'product_delete' product.pk %}"><i class="las la-trash me-2"></i>Delete</a></li>
+                                            {% endif %}
                                         </ul>
                                     </div>
                                 </td>

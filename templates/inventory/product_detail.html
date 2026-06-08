@@ -87,6 +87,7 @@
                 <p class="text-muted mb-0">{{ product.description }}</p>
                 {% endif %}
                 
+                {% if request.user.is_staff or request.user.is_superuser %}
                 <div class="mt-4 d-flex gap-2">
                     <a href="{% url 'product_edit' product.pk %}" class="btn btn-primary flex-grow-1">
                         <i class="las la-pen"></i> Edit
@@ -95,6 +96,7 @@
                         <i class="las la-plus"></i> Stock In
                     </a>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -124,7 +126,13 @@
                         <tbody>
                             {% for batch in available_batches %}
                             <tr>
-                                <td><a href="{% url 'batch_detail' batch.pk %}">{{ batch.batch_number }}</a></td>
+                                <td>
+                                    {% if request.user.is_staff or request.user.is_superuser %}
+                                    <a href="{% url 'batch_detail' batch.pk %}">{{ batch.batch_number }}</a>
+                                    {% else %}
+                                    {{ batch.batch_number }}
+                                    {% endif %}
+                                </td>
                                 <td>{{ batch.warehouse.name }}</td>
                                 {% if request.user.is_staff or request.user.is_superuser %}
                                 <td>{{ CURRENCY_SYMBOL }}{{ batch.buy_price|floatformat:2 }}</td>

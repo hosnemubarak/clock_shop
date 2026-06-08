@@ -10,9 +10,11 @@
             <h4 class="mb-sm-0">Invoice: {{ sale.invoice_number }}</h4>
             <div class="page-title-right">
                 {% if sale.status == 'completed' %}
+                {% if request.user.is_staff or request.user.is_superuser %}
                 <a href="{% url 'sale_return_create' sale.pk %}" class="btn btn-warning me-1">
                     <i class="las la-undo-alt"></i> Return Items
                 </a>
+                {% endif %}
                 {% endif %}
                 <a href="{% url 'sale_print' sale.pk %}" class="btn btn-primary" target="_blank">
                     <i class="las la-print"></i> Print
@@ -119,6 +121,7 @@
             </div>
         </div>
 
+        {% if request.user.is_staff or request.user.is_superuser %}
         {% if sale.returns.all %}
         <div class="card">
             <div class="card-header">
@@ -155,6 +158,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
         {% endif %}
 
         {% if payments %}
@@ -276,6 +280,7 @@
         </div>
         {% endif %}
 
+        {% if request.user.is_staff or request.user.is_superuser %}
         {% if sale.status == 'completed' and sale.paid_amount == 0 %}
         <div class="card border-danger">
             <div class="card-body">
@@ -287,6 +292,7 @@
                 </form>
             </div>
         </div>
+        {% endif %}
         {% endif %}
     </div>
 </div>

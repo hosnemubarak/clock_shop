@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from apps.core.decorators import staff_or_superuser_required
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum, F
@@ -21,6 +23,8 @@ from apps.core.utils import create_audit_log
 def sale_list(request):
     """List all sales with filtering."""
     sales = Sale.objects.select_related('customer', 'created_by').all()
+    if not (request.user.is_staff or request.user.is_superuser):
+        sales = sales.filter(created_by=request.user)
     
     # Search
     search = request.GET.get('search', '')
@@ -68,6 +72,8 @@ def sale_detail(request, pk):
         ),
         pk=pk
     )
+    if not (request.user.is_staff or request.user.is_superuser) and sale.created_by != request.user:
+        raise PermissionDenied
     
     # Calculate return stats
     returns_total = sum(ret.refund_amount for ret in sale.returns.all())
@@ -234,6 +240,7 @@ def sale_create(request):
 
 
 @login_required
+@staff_or_superuser_required
 def sale_cancel(request, pk):
     """Cancel a sale and restore stock."""
     sale = get_object_or_404(Sale, pk=pk)
@@ -270,6 +277,8 @@ def sale_cancel(request, pk):
 def sale_payment(request, pk):
     """Record payment for a sale."""
     sale = get_object_or_404(Sale, pk=pk)
+    if not (request.user.is_staff or request.user.is_superuser) and sale.created_by != request.user:
+        raise PermissionDenied
     
     if request.method == 'POST':
         form = PaymentForm(request.POST)
@@ -328,6 +337,8 @@ def sale_print(request, pk):
         ),
         pk=pk
     )
+    if not (request.user.is_staff or request.user.is_superuser) and sale.created_by != request.user:
+        raise PermissionDenied
     return render(request, 'sales/sale_print.html', {'sale': sale})
 
 
@@ -406,6 +417,7 @@ def api_product_info(request, product_id):
 
 
 @login_required
+@staff_or_superuser_required
 @transaction.atomic
 def sale_return_create(request, sale_pk):
     """Process a new return against a completed sale."""
@@ -518,6 +530,7 @@ def sale_return_create(request, sale_pk):
 
 
 @login_required
+@staff_or_superuser_required
 def sale_return_list(request):
     """List all returns / credit notes."""
     returns = SaleReturn.objects.select_related('sale', 'created_by').all()
@@ -543,6 +556,7 @@ def sale_return_list(request):
 
 
 @login_required
+@staff_or_superuser_required
 def sale_return_detail(request, pk):
     """View details of a specific return / credit note."""
     sale_return = get_object_or_404(
@@ -559,6 +573,7 @@ def sale_return_detail(request, pk):
 
 
 @login_required
+@staff_or_superuser_required
 def sale_return_print(request, pk):
     """Print credit note."""
     sale_return = get_object_or_404(

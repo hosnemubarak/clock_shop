@@ -23,57 +23,70 @@ def dashboard(request):
     today = timezone.now().date()
     month_start = today.replace(day=1)
     
+    is_admin = request.user.is_staff or request.user.is_superuser
+    
+    # Base querysets
+    sales_qs = Sale.objects.filter(status='completed')
+    returns_qs = SaleReturn.objects.all()
+    recent_sales_qs = Sale.objects.select_related('customer')
+    
+    if not is_admin:
+        sales_qs = sales_qs.filter(created_by=request.user)
+        returns_qs = returns_qs.filter(sale__created_by=request.user)
+        recent_sales_qs = recent_sales_qs.filter(created_by=request.user)
+        
     # Sales metrics
-    gross_sales_today = Sale.objects.filter(
-        sale_date__date=today,
-        status='completed'
+    gross_sales_today = sales_qs.filter(
+        sale_date__date=today
     ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
     
-    returns_today = SaleReturn.objects.filter(
+    returns_today = returns_qs.filter(
         return_date__date=today
     ).aggregate(total=Sum('refund_amount'))['total'] or Decimal('0')
     
     total_sales_today = gross_sales_today - returns_today
     
-    gross_sales_month = Sale.objects.filter(
-        sale_date__date__gte=month_start,
-        status='completed'
+    gross_sales_month = sales_qs.filter(
+        sale_date__date__gte=month_start
     ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
     
-    returns_month = SaleReturn.objects.filter(
+    returns_month = returns_qs.filter(
         return_date__date__gte=month_start
     ).aggregate(total=Sum('refund_amount'))['total'] or Decimal('0')
     
     total_sales_month = gross_sales_month - returns_month
     
     # Profit calculation
-    gross_profit_month = SaleItem.objects.filter(
-        sale__sale_date__date__gte=month_start,
-        sale__status='completed'
-    ).aggregate(
-        profit=Sum(F('quantity') * (F('unit_price') - F('cost_price')))
-    )['profit'] or Decimal('0')
-    
-    # Returned items profit for the month
-    returned_items_month = SaleReturnItem.objects.filter(
-        sale_return__return_date__date__gte=month_start
-    ).select_related('sale_item')
-    
-    returns_profit_month = Decimal('0')
-    for item in returned_items_month:
-        effective_unit_price = item.sale_item.unit_price - (item.sale_item.discount / Decimal(item.sale_item.quantity))
-        item_refund_total = Decimal(item.quantity) * effective_unit_price
-        item_cost_total = Decimal(item.quantity) * item.sale_item.cost_price
-        returns_profit_month += item_refund_total - item_cost_total
+    if is_admin:
+        gross_profit_month = SaleItem.objects.filter(
+            sale__sale_date__date__gte=month_start,
+            sale__status='completed'
+        ).aggregate(
+            profit=Sum(F('quantity') * (F('unit_price') - F('cost_price')))
+        )['profit'] or Decimal('0')
         
-    profit_month = gross_profit_month - returns_profit_month
+        # Returned items profit for the month
+        returned_items_month = SaleReturnItem.objects.filter(
+            sale_return__return_date__date__gte=month_start
+        ).select_related('sale_item')
+        
+        returns_profit_month = Decimal('0')
+        for item in returned_items_month:
+            effective_unit_price = item.sale_item.unit_price - (item.sale_item.discount / Decimal(item.sale_item.quantity))
+            item_refund_total = Decimal(item.quantity) * effective_unit_price
+            item_cost_total = Decimal(item.quantity) * item.sale_item.cost_price
+            returns_profit_month += item_refund_total - item_cost_total
+            
+        profit_month = gross_profit_month - returns_profit_month
+    else:
+        profit_month = Decimal('0')
     
     # Inventory metrics
-    total_products = Product.objects.filter(is_active=True).count()
+    total_products = Product.objects.filter(is_active=True).count() if is_admin else 0
 
     total_product_quantity = Batch.objects.filter(
         quantity__gt=0
-    ).aggregate(total=Sum('quantity'))['total'] or 0
+    ).aggregate(total=Sum('quantity'))['total'] or 0 if is_admin else 0
     
     # Get low stock threshold from settings
     from .models import SystemSettings
@@ -83,28 +96,31 @@ def dashboard(request):
     low_stock_products = Batch.objects.filter(
         quantity__gt=0,
         quantity__lte=low_stock_threshold
-    ).values('product').distinct().count()
+    ).values('product').distinct().count() if is_admin else 0
     
     # Customer metrics
     total_customers = Customer.objects.count()
     total_dues = Customer.objects.aggregate(
         total=Sum('total_due')
-    )['total'] or Decimal('0.00')
+    )['total'] or Decimal('0.00') if is_admin else Decimal('0.00')
     
     # Warehouse metrics
-    total_warehouses = Warehouse.objects.filter(is_active=True).count()
+    total_warehouses = Warehouse.objects.filter(is_active=True).count() if is_admin else 0
     
     # Recent sales
-    recent_sales = Sale.objects.select_related('customer').order_by('-sale_date')[:10]
+    recent_sales = recent_sales_qs.order_by('-sale_date')[:10]
     
     # Low stock alerts
     low_stock_batches = Batch.objects.filter(
         quantity__gt=0,
         quantity__lte=low_stock_threshold
-    ).select_related('product', 'warehouse').order_by('quantity')[:10]
+    ).select_related('product', 'warehouse').order_by('quantity')[:10] if is_admin else []
     
     # Payment status counts for chart
-    payment_status_counts = Sale.objects.values('payment_status').annotate(
+    chart_sales = Sale.objects.all()
+    if not is_admin:
+        chart_sales = chart_sales.filter(created_by=request.user)
+    payment_status_counts = chart_sales.values('payment_status').annotate(
         count=Count('id')
     )
     paid_count = 0
