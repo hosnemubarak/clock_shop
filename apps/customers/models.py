@@ -61,7 +61,7 @@ class Customer(TimeStampedModel):
                 fields=['email'],
                 name='unique_customer_email',
                 condition=~Q(email=''),
-                violation_error_message='A customer with this email already exists.'
+                violation_error_message='A customer with this email address already exists.'
             ),
         ]
     
@@ -78,7 +78,7 @@ class Customer(TimeStampedModel):
         if self.email:
             existing = Customer.objects.filter(email=self.email).exclude(pk=self.pk)
             if existing.exists():
-                raise ValidationError({'email': 'A customer with this email already exists.'})
+                raise ValidationError({'email': 'A customer with this email address already exists.'})
     
     def recalculate_balance(self):
         """Recalculate customer balance from sales, payments, and returns."""
