@@ -81,8 +81,16 @@
                             {% for item in stock_summary %}
                             <tr>
                                 <td>
-                                    <code>{{ item.product__sku }}</code>
-                                    {% if item.product__brand__name %} - {{ item.product__brand__name }}{% endif %}
+                                    {% if item.product__brand__name %}
+                                        {{ item.product__brand__name }}
+                                    {% else %}
+                                        Generic
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'product_detail' item.product__id %}" class="fw-medium">
+                                        <code>{{ item.product__sku }}</code>
+                                    </a>
                                 </td>
                                 <td>{{ item.product__category__name }}</td>
                                 <td class="text-center">
@@ -92,8 +100,8 @@
                                     <span class="badge bg-success">{{ item.total_quantity }}</span>
                                     {% endif %}
                                 </td>
-                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.avg_cost|floatformat:2 }}</td>
-                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.total_value|floatformat:2 }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.avg_cost|floatformat:2|intcomma }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.total_value|floatformat:2|intcomma }}</td>
                             </tr>
                             {% empty %}
                             <tr><td colspan="6" class="text-center text-muted">No stock data</td></tr>
