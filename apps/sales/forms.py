@@ -27,17 +27,20 @@ class SaleForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['customer'].queryset = Customer.objects.filter(is_active=True)
         self.fields['customer'].required = True
+        self.fields['customer'].empty_label = "Select Customer"
 
 
 class SaleItemForm(forms.Form):
     """Form for adding items to a sale with manual batch selection."""
     product = forms.ModelChoiceField(
         queryset=Product.objects.filter(is_active=True, total_stock__gt=0),
-        widget=forms.Select(attrs={'class': 'form-select product-select'})
+        widget=forms.Select(attrs={'class': 'form-select product-select'}),
+        empty_label="Select Product"
     )
     batch = forms.ModelChoiceField(
         queryset=Batch.objects.filter(quantity__gt=0),
-        widget=forms.Select(attrs={'class': 'form-select batch-select'})
+        widget=forms.Select(attrs={'class': 'form-select batch-select'}),
+        empty_label="Select Batch"
     )
     quantity = forms.IntegerField(
         min_value=1,
@@ -115,3 +118,7 @@ class PaymentForm(forms.Form):
         required=False,
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Any additional notes...'})
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['payment_method'].choices = [('', 'Select Payment Method')] + list(self.fields['payment_method'].choices)

@@ -35,7 +35,9 @@ class StockTransferForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['source_warehouse'].queryset = Warehouse.objects.filter(is_active=True)
+        self.fields['source_warehouse'].empty_label = "Select Source Warehouse"
         self.fields['destination_warehouse'].queryset = Warehouse.objects.filter(is_active=True)
+        self.fields['destination_warehouse'].empty_label = "Select Destination Warehouse"
     
     def clean(self):
         cleaned_data = super().clean()
@@ -52,7 +54,8 @@ class StockTransferItemForm(forms.Form):
     """Form for adding items to a transfer."""
     batch = forms.ModelChoiceField(
         queryset=Batch.objects.filter(quantity__gt=0),
-        widget=forms.Select(attrs={'class': 'form-select batch-select'})
+        widget=forms.Select(attrs={'class': 'form-select batch-select'}),
+        empty_label="Select Batch"
     )
     quantity = forms.IntegerField(
         min_value=1,

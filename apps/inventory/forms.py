@@ -39,6 +39,11 @@ class ProductForm(forms.ModelForm):
             'image': forms.FileInput(attrs={'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['brand'].empty_label = "Select Brand"
+        self.fields['category'].empty_label = "Select Category"
 
 
 class BatchForm(forms.ModelForm):
@@ -55,6 +60,11 @@ class BatchForm(forms.ModelForm):
             'supplier': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. ABC Clock Suppliers'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'e.g. Invoice #12345'}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['product'].empty_label = "Select Product"
+        self.fields['warehouse'].empty_label = "Select Warehouse"
     
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -80,11 +90,13 @@ class PurchaseItemForm(forms.Form):
     """Form for adding items to a purchase."""
     product = forms.ModelChoiceField(
         queryset=Product.objects.filter(is_active=True),
-        widget=forms.Select(attrs={'class': 'form-select product-select'})
+        widget=forms.Select(attrs={'class': 'form-select product-select'}),
+        empty_label="Select Product"
     )
     warehouse = forms.ModelChoiceField(
         queryset=Warehouse.objects.filter(is_active=True),
-        widget=forms.Select(attrs={'class': 'form-select'})
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        empty_label="Select Warehouse"
     )
     quantity = forms.IntegerField(
         min_value=1,
@@ -100,13 +112,15 @@ class PurchaseItemForm(forms.Form):
 class StockAdjustmentForm(forms.Form):
     """Form for manual stock adjustments."""
     ADJUSTMENT_TYPES = [
+        ('', 'Select Adjustment Type'),
         ('add', 'Add Stock'),
         ('remove', 'Remove Stock'),
     ]
     
     batch = forms.ModelChoiceField(
         queryset=Batch.objects.filter(quantity__gt=0),
-        widget=forms.Select(attrs={'class': 'form-select'})
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        empty_label="Select Batch"
     )
     adjustment_type = forms.ChoiceField(
         choices=ADJUSTMENT_TYPES,
@@ -139,3 +153,8 @@ class StockOutForm(forms.ModelForm):
                 'placeholder': 'Additional details about this stock out...'
             }),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['warehouse'].empty_label = "Select Warehouse"
+        self.fields['reason'].choices = [('', 'Select Reason')] + list(self.fields['reason'].choices)[1:]
