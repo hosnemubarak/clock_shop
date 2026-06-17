@@ -22,23 +22,24 @@
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table align-middle" id="itemsTable">
-                            <thead class="table-light">
+                            <thead class="table-light text-nowrap">
                                 <tr>
                                     <th>Product</th>
-                                    <th>Batch</th>
-                                    <th width="80">Qty</th>
-                                    <th width="120">Price</th>
-                                    <th width="120">Discount</th>
-                                    <th width="120">Total</th>
-                                    <th width="50"></th>
+                                    <th width="120">Batch</th>
+                                    <th width="100">Qty</th>
+                                    <th width="140">Price</th>
+                                    <th width="200">Discount</th>
+                                    <th width="140" class="text-end">Discounted Price</th>
+                                    <th width="140" class="text-end">Total</th>
+                                    <th width="40"></th>
                                 </tr>
                             </thead>
                             <tbody id="itemsBody">
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <td colspan="5" class="text-end fw-bold">Subtotal:</td>
-                                    <td class="fw-bold" id="subtotal">{{ CURRENCY_SYMBOL }}0.00</td>
+                                    <td colspan="6" class="text-end fw-bold">Subtotal:</td>
+                                    <td class="fw-bold text-end" id="subtotal">{{ CURRENCY_SYMBOL }}0.00</td>
                                     <td></td>
                                 </tr>
                             </tfoot>
@@ -197,16 +198,29 @@
                     
                     <hr>
                     <div class="d-flex justify-content-between mb-2">
-                        <span>Subtotal:</span>
-                        <span id="summarySubtotal">{{ CURRENCY_SYMBOL }}0.00</span>
+                        <span class="text-muted">Total Items:</span>
+                        <span id="summaryTotalItems" class="fw-medium">0</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
-                        <span>Discount:</span>
-                        <span id="summaryDiscount">{{ CURRENCY_SYMBOL }}0.00</span>
+                        <span class="text-muted">Total Quantity:</span>
+                        <span id="summaryTotalQty" class="fw-medium">0</span>
                     </div>
-                    <div class="d-flex justify-content-between fw-bold fs-5">
-                        <span>Total:</span>
-                        <span id="summaryTotal">{{ CURRENCY_SYMBOL }}0.00</span>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Subtotal:</span>
+                        <span id="summarySubtotal" class="fw-semibold">{{ CURRENCY_SYMBOL }}0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Total Discounts:</span>
+                        <span id="summaryDiscount" class="text-danger fw-semibold">-{{ CURRENCY_SYMBOL }}0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Tax:</span>
+                        <span id="summaryTax" class="fw-semibold">{{ CURRENCY_SYMBOL }}0.00</span>
+                    </div>
+                    <hr class="my-2 border-dashed">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="h6 mb-0 fw-bold">Grand Total:</span>
+                        <span id="summaryTotal" class="h5 mb-0 fw-bold text-primary">{{ CURRENCY_SYMBOL }}0.00</span>
                     </div>
                     
                     <hr>
@@ -258,13 +272,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Initial totals and addon setup
+    // Attach input and change listeners on items table body to handle inline edits (delegated & focus-safe)
+    const itemsBody = document.getElementById('itemsBody');
+    itemsBody.addEventListener('input', handleInlineEdit);
+    itemsBody.addEventListener('change', handleInlineEdit);
+    
+    // Initial totals setup
     updateTotals();
 });
 
 // Toggle between inventory and custom item forms (Bootstrap tabs handle visibility)
 function toggleItemType(type) {
-    // Additional logic can be added here if needed
     // Bootstrap tabs handle the visibility automatically
 }
 
@@ -404,6 +422,9 @@ function addItem() {
     
     const productOption = document.querySelector(`#newProduct option[value="${productId}"]`);
     
+    // Store original maximum available quantity (batch remaining + added qty)
+    const maxQty = batch.quantity;
+    
     const item = {
         index: itemIndex++,
         product_id: productId,
@@ -414,6 +435,7 @@ function addItem() {
         unit_price: price,
         discount_type: discountType,
         discount_value: discountVal,
+        max_qty: maxQty,
         discount: 0,
         is_custom: false
     };
@@ -474,6 +496,7 @@ function addCustomItem() {
         unit_price: price,
         discount_type: discountType,
         discount_value: discountVal,
+        max_qty: 999999,
         discount: 0,
         is_custom: true
     };
@@ -498,40 +521,159 @@ function removeItem(index) {
     renderItems();
 }
 
+function handleInlineEdit(e) {
+    const target = e.target;
+    if (!target.hasAttribute('data-index')) return;
+    
+    const index = parseInt(target.getAttribute('data-index'));
+    const item = items.find(i => i.index === index);
+    if (!item) return;
+    
+    const row = target.closest('tr');
+    if (!row) return;
+    
+    const qtyInput = row.querySelector('.line-qty');
+    const priceInput = row.querySelector('.line-price');
+    const discountTypeSelect = row.querySelector('.line-discount-type');
+    const discountValInput = row.querySelector('.line-discount-value');
+    
+    let qty = parseInt(qtyInput.value) || 0;
+    let price = parseFloat(priceInput.value) || 0;
+    let discountType = discountTypeSelect.value;
+    let discountVal = parseFloat(discountValInput.value) || 0;
+    
+    // Validations
+    if (qty < 1) {
+        qty = 1;
+        if (e.type === 'change') qtyInput.value = 1;
+    }
+    
+    // Validate quantity against batch limits
+    if (!item.is_custom && item.batch_id) {
+        const maxStock = batchesData[item.batch_id].quantity + item.quantity;
+        if (qty > maxStock) {
+            qty = maxStock;
+            qtyInput.value = maxStock;
+            showValidationModal(`Only ${maxStock} units available in this batch.`, 'Stock Limit Exceeded');
+        }
+        batchesData[item.batch_id].quantity = maxStock - qty;
+    }
+    
+    if (price < 0) {
+        price = 0;
+        if (e.type === 'change') priceInput.value = "0.00";
+    }
+    
+    const rawLineTotal = qty * price;
+    if (discountType === 'percentage') {
+        if (discountVal > 100) {
+            discountVal = 100;
+            discountValInput.value = "100.00";
+        }
+        if (discountVal < 0) {
+            discountVal = 0;
+            discountValInput.value = "0.00";
+        }
+    } else {
+        if (discountVal > rawLineTotal) {
+            discountVal = rawLineTotal;
+            discountValInput.value = rawLineTotal.toFixed(2);
+        }
+        if (discountVal < 0) {
+            discountVal = 0;
+            discountValInput.value = "0.00";
+        }
+    }
+    
+    // Update state object
+    item.quantity = qty;
+    item.unit_price = price;
+    item.discount_type = discountType;
+    item.discount_value = discountVal;
+    
+    // Recalculate line-level discount
+    let calculatedDiscount = 0;
+    if (discountType === 'percentage') {
+        calculatedDiscount = rawLineTotal * (discountVal / 100);
+    } else {
+        calculatedDiscount = discountVal;
+    }
+    if (calculatedDiscount > rawLineTotal) {
+        calculatedDiscount = rawLineTotal;
+    }
+    item.discount = calculatedDiscount;
+    
+    const finalLineTotal = rawLineTotal - calculatedDiscount;
+    const priceAfterDiscount = qty > 0 ? (finalLineTotal / qty) : 0;
+    
+    // Direct DOM writes (preserving input focus)
+    row.querySelector(`#discountedPrice-${index}`).textContent = priceAfterDiscount.toFixed(2);
+    row.querySelector(`#lineTotal-${index}`).textContent = finalLineTotal.toFixed(2);
+    
+    // Update hidden serialization field
+    const itemJson = JSON.stringify(item).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+    row.querySelector('input[name="items"]').value = itemJson;
+    
+    updateTotals();
+}
+
 function renderItems() {
     const tbody = document.getElementById('itemsBody');
     let html = '';
-    let subtotal = 0;
     
     items.forEach(item => {
         const lineTotal = item.quantity * item.unit_price;
-        subtotal += lineTotal;
+        
+        let itemDiscount = 0;
+        if (item.discount_type === 'percentage') {
+            itemDiscount = lineTotal * (item.discount_value / 100);
+        } else {
+            itemDiscount = item.discount_value;
+        }
+        if (itemDiscount > lineTotal) {
+            itemDiscount = lineTotal;
+        }
+        item.discount = itemDiscount;
+        
+        const lineTotalFinal = lineTotal - itemDiscount;
+        const priceAfterDiscount = item.quantity > 0 ? (lineTotalFinal / item.quantity) : 0;
+        
         const batchBadge = item.is_custom 
             ? '<span class="badge bg-warning-subtle text-warning">CUSTOM</span>' 
             : `<code>${escapeHtml(item.batch_number)}</code>`;
         const rowClass = item.is_custom ? 'table-warning' : '';
         
-        let discountDisplay = '&mdash;';
-        if (item.discount > 0) {
-            discountDisplay = `{{ CURRENCY_SYMBOL }}${item.discount.toFixed(2)}`;
-            if (item.discount_type === 'percentage') {
-                discountDisplay += ` <small class="text-muted">(${item.discount_value}%)</small>`;
-            }
-        }
-        
-        const lineTotalFinal = lineTotal - item.discount;
-        
-        // Properly escape JSON for HTML attribute
         const itemJson = JSON.stringify(item).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+        
         html += `
             <tr class="${rowClass}">
-                <td>${escapeHtml(item.product_sku)}</td>
-                <td>${batchBadge}</td>
-                <td>${item.quantity}</td>
-                <td>{{ CURRENCY_SYMBOL }}${item.unit_price.toFixed(2)}</td>
-                <td>${discountDisplay}</td>
-                <td>{{ CURRENCY_SYMBOL }}${lineTotalFinal.toFixed(2)}</td>
-                <td>
+                <td class="align-middle fw-medium">${escapeHtml(item.product_sku)}</td>
+                <td class="align-middle">${batchBadge}</td>
+                <td class="align-middle">
+                    <input type="number" class="form-control form-control-sm text-center line-qty" data-index="${item.index}" min="1" max="${item.max_qty}" value="${item.quantity}" style="max-width: 80px;">
+                </td>
+                <td class="align-middle">
+                    <div class="input-group input-group-sm" style="max-width: 120px;">
+                        <span class="input-group-text px-1">{{ CURRENCY_SYMBOL }}</span>
+                        <input type="number" class="form-control text-end line-price" data-index="${item.index}" step="0.01" min="0" value="${item.unit_price.toFixed(2)}">
+                    </div>
+                </td>
+                <td class="align-middle">
+                    <div class="input-group input-group-sm" style="max-width: 180px;">
+                        <select class="form-select px-1 line-discount-type" data-index="${item.index}">
+                            <option value="fixed" ${item.discount_type === 'fixed' ? 'selected' : ''}>Fixed</option>
+                            <option value="percentage" ${item.discount_type === 'percentage' ? 'selected' : ''}>%</option>
+                        </select>
+                        <input type="number" class="form-control text-end line-discount-value" data-index="${item.index}" step="0.01" min="0" value="${item.discount_value.toFixed(2)}">
+                    </div>
+                </td>
+                <td class="text-end text-nowrap align-middle">
+                    {{ CURRENCY_SYMBOL }}<span class="line-discounted-price" id="discountedPrice-${item.index}">${priceAfterDiscount.toFixed(2)}</span>
+                </td>
+                <td class="text-end text-nowrap align-middle fw-bold text-dark">
+                    {{ CURRENCY_SYMBOL }}<span class="line-total-final" id="lineTotal-${item.index}">${lineTotalFinal.toFixed(2)}</span>
+                </td>
+                <td class="align-middle text-center">
                     <button type="button" class="btn btn-soft-danger btn-sm" onclick="removeItem(${item.index})">
                         <i class="las la-times"></i>
                     </button>
@@ -541,9 +683,7 @@ function renderItems() {
         `;
     });
     
-    tbody.innerHTML = html || '<tr><td colspan="7" class="text-center text-muted">No items added</td></tr>';
-    document.getElementById('subtotal').textContent = '{{ CURRENCY_SYMBOL }}' + subtotal.toFixed(2);
-    document.getElementById('summarySubtotal').textContent = '{{ CURRENCY_SYMBOL }}' + subtotal.toFixed(2);
+    tbody.innerHTML = html || '<tr><td colspan="8" class="text-center text-muted py-3">No items added</td></tr>';
     
     updateTotals();
 }
@@ -559,10 +699,13 @@ function escapeHtml(text) {
 function updateTotals() {
     let subtotal = 0;
     let totalDiscount = 0;
+    let totalQty = 0;
+    let totalItems = items.length;
     
     items.forEach(item => {
         const lineTotal = item.quantity * item.unit_price;
         subtotal += lineTotal;
+        totalQty += item.quantity;
         
         let itemDiscount = 0;
         if (item.discount_type === 'percentage') {
@@ -582,7 +725,13 @@ function updateTotals() {
     const tax = parseFloat(document.querySelector('[name="tax_amount"]').value) || 0;
     const total = subtotal - totalDiscount + tax;
     
-    document.getElementById('summaryDiscount').textContent = '{{ CURRENCY_SYMBOL }}' + totalDiscount.toFixed(2);
+    // Update labels
+    document.getElementById('subtotal').textContent = '{{ CURRENCY_SYMBOL }}' + subtotal.toFixed(2);
+    document.getElementById('summaryTotalItems').textContent = totalItems;
+    document.getElementById('summaryTotalQty').textContent = totalQty;
+    document.getElementById('summarySubtotal').textContent = '{{ CURRENCY_SYMBOL }}' + subtotal.toFixed(2);
+    document.getElementById('summaryDiscount').textContent = '-{{ CURRENCY_SYMBOL }}' + totalDiscount.toFixed(2);
+    document.getElementById('summaryTax').textContent = '{{ CURRENCY_SYMBOL }}' + tax.toFixed(2);
     document.getElementById('summaryTotal').textContent = '{{ CURRENCY_SYMBOL }}' + total.toFixed(2);
 }
 
