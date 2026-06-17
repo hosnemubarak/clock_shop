@@ -119,14 +119,16 @@ def sale_create(request):
             sale.save()
             
             total_cost = Decimal('0')
-            subtotal = Decimal('0')
+            raw_subtotal = Decimal('0')
+            total_discount = Decimal('0')
             
             for item_json in items_data:
                 # Unescape HTML entities before parsing JSON
                 item = json.loads(html.unescape(item_json))
                 quantity = int(item['quantity'])
                 unit_price = Decimal(item['unit_price'])
-                discount = Decimal(item.get('discount', '0'))
+                discount_type = item.get('discount_type', 'fixed')
+                discount_value = Decimal(item.get('discount_value', '0'))
                 is_custom = item.get('is_custom', False)
                 
                 if is_custom:
@@ -138,11 +140,13 @@ def sale_create(request):
                         quantity=quantity,
                         unit_price=unit_price,
                         cost_price=Decimal('0'),  # No cost for custom items
-                        discount=discount,
+                        discount_type=discount_type,
+                        discount_value=discount_value,
                         custom_description=item.get('product_name', 'Custom Item'),
                         is_custom=True,
                     )
-                    subtotal += sale_item.total_price
+                    raw_subtotal += quantity * unit_price
+                    total_discount += sale_item.discount
                 else:
                     # Regular inventory item
                     product = Product.objects.get(pk=item['product_id'])
@@ -168,7 +172,8 @@ def sale_create(request):
                         quantity=quantity,
                         unit_price=unit_price,
                         cost_price=batch.buy_price,
-                        discount=discount,
+                        discount_type=discount_type,
+                        discount_value=discount_value,
                     )
                     
                     # Update batch quantity
@@ -176,17 +181,15 @@ def sale_create(request):
                     batch.save()
                     product.update_total_stock()
                     
-                    subtotal += sale_item.total_price
+                    raw_subtotal += quantity * unit_price
+                    total_discount += sale_item.discount
                     total_cost += sale_item.total_cost
             
             # Update sale totals
-            sale.subtotal = subtotal
+            sale.subtotal = raw_subtotal
             sale.total_cost = total_cost
-            if sale.discount_type == 'percentage':
-                sale.discount_amount = (subtotal * (sale.discount_value / Decimal('100.00'))).quantize(Decimal('0.01'))
-            else:
-                sale.discount_amount = sale.discount_value
-            sale.total_amount = subtotal - sale.discount_amount + sale.tax_amount
+            sale.discount_amount = total_discount
+            sale.total_amount = raw_subtotal - total_discount + sale.tax_amount
             sale.save()
             
             # Update customer balance and auto-apply credit if applicable

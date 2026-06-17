@@ -28,6 +28,7 @@
                                     <th>Batch</th>
                                     <th width="80">Qty</th>
                                     <th width="120">Price</th>
+                                    <th width="120">Discount</th>
                                     <th width="120">Total</th>
                                     <th width="50"></th>
                                 </tr>
@@ -36,7 +37,7 @@
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <td colspan="4" class="text-end fw-bold">Subtotal:</td>
+                                    <td colspan="5" class="text-end fw-bold">Subtotal:</td>
                                     <td class="fw-bold" id="subtotal">{{ CURRENCY_SYMBOL }}0.00</td>
                                     <td></td>
                                 </tr>
@@ -88,22 +89,32 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <!-- Row 2: Qty, Price, Add Button -->
+                                        <!-- Row 2: Qty, Price, Discount, Add Button -->
                                         <div class="row g-3 align-items-end">
-                                            <div class="col-4 col-md-3">
+                                            <div class="col-4 col-md-2">
                                                 <label class="form-label fw-medium">Qty</label>
                                                 <input type="number" class="form-control" id="newQty" min="1" value="1">
                                             </div>
-                                            <div class="col-5 col-md-4">
+                                            <div class="col-8 col-md-3">
                                                 <label class="form-label fw-medium">Price</label>
                                                 <div class="input-group">
                                                     <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
                                                     <input type="number" class="form-control" id="newPrice" step="0.01">
                                                 </div>
                                             </div>
-                                            <div class="col-3 col-md-2">
+                                            <div class="col-12 col-md-5">
+                                                <label class="form-label fw-medium">Discount</label>
+                                                <div class="input-group">
+                                                    <select class="form-select" id="newDiscountType" style="max-width: 110px;">
+                                                        <option value="fixed">Fixed</option>
+                                                        <option value="percentage">%</option>
+                                                    </select>
+                                                    <input type="number" class="form-control" id="newDiscountValue" step="0.01" min="0" value="0">
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-md-2">
                                                 <button type="button" class="btn btn-primary w-100" onclick="addItem()">
-                                                    <i class="las la-plus fs-18"></i>
+                                                    <i class="las la-plus fs-18"></i> Add
                                                 </button>
                                             </div>
                                         </div>
@@ -119,22 +130,32 @@
                                             Use this for <strong>old dues</strong>, <strong>legacy items</strong>, or <strong>one-time entries</strong> not in inventory.
                                         </div>
                                         <div class="row g-3 align-items-end">
-                                            <div class="col-md-5">
+                                            <div class="col-md-4 col-12">
                                                 <label class="form-label fw-medium">Description <span class="text-danger">*</span></label>
                                                 <input type="text" class="form-control" id="customDescription" placeholder="e.g., Old dues, Previous balance...">
                                             </div>
-                                            <div class="col-md-2 col-4">
+                                            <div class="col-md-1 col-4">
                                                 <label class="form-label fw-medium">Qty</label>
                                                 <input type="number" class="form-control" id="customQty" min="1" value="1">
                                             </div>
-                                            <div class="col-md-3 col-8">
+                                            <div class="col-md-2 col-8">
                                                 <label class="form-label fw-medium">Price <span class="text-danger">*</span></label>
                                                 <div class="input-group">
                                                     <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
                                                     <input type="number" class="form-control" id="customPrice" step="0.01" placeholder="0.00">
                                                 </div>
                                             </div>
-                                            <div class="col-md-2">
+                                            <div class="col-md-3 col-12">
+                                                <label class="form-label fw-medium">Discount</label>
+                                                <div class="input-group">
+                                                    <select class="form-select" id="customDiscountType" style="max-width: 100px;">
+                                                        <option value="fixed">Fixed</option>
+                                                        <option value="percentage">%</option>
+                                                    </select>
+                                                    <input type="number" class="form-control" id="customDiscountValue" step="0.01" min="0" value="0">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2 col-12">
                                                 <button type="button" class="btn btn-warning w-100" onclick="addCustomItem()">
                                                     <i class="las la-plus me-1"></i> Add
                                                 </button>
@@ -164,14 +185,7 @@
                         <label class="form-label">Sale Date</label>
                         {{ form.sale_date }}
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Discount</label>
-                        <div class="input-group">
-                            {{ form.discount_type }}
-                            {{ form.discount_value }}
-                            <span class="input-group-text" id="discountAddon">{{ CURRENCY_SYMBOL }}</span>
-                        </div>
-                    </div>
+                    <!-- Global discount replaced by item-level discounts -->
                     <div class="mb-3">
                         <label class="form-label">Tax</label>
                         {{ form.tax_amount }}
@@ -354,6 +368,8 @@ function addItem() {
     const batchId = batchSelect.getValue();
     const qty = parseInt(document.getElementById('newQty').value);
     const price = parseFloat(document.getElementById('newPrice').value);
+    const discountType = document.getElementById('newDiscountType').value;
+    const discountVal = parseFloat(document.getElementById('newDiscountValue').value) || 0;
     
     if (!productId) {
         showValidationModal('Please select a product first.', 'Product Required');
@@ -375,6 +391,11 @@ function addItem() {
         return;
     }
     
+    if (discountVal < 0) {
+        showValidationModal('Please enter a valid discount amount.', 'Invalid Discount');
+        return;
+    }
+    
     const batch = batchesData[batchId];
     if (qty > batch.quantity) {
         showValidationModal(`Only ${batch.quantity} units available in this batch. Please reduce the quantity.`, 'Insufficient Stock');
@@ -391,6 +412,8 @@ function addItem() {
         batch_number: batch.batch_number,
         quantity: qty,
         unit_price: price,
+        discount_type: discountType,
+        discount_value: discountVal,
         discount: 0,
         is_custom: false
     };
@@ -409,6 +432,8 @@ function addItem() {
     batchSelect.addOption({value: '', text: 'Select Batch'});
     document.getElementById('newQty').value = '1';
     document.getElementById('newPrice').value = '';
+    document.getElementById('newDiscountType').value = 'fixed';
+    document.getElementById('newDiscountValue').value = '0';
     document.getElementById('batchInfo').innerHTML = '';
 }
 
@@ -416,6 +441,8 @@ function addCustomItem() {
     const description = document.getElementById('customDescription').value.trim();
     const qty = parseInt(document.getElementById('customQty').value);
     const price = parseFloat(document.getElementById('customPrice').value);
+    const discountType = document.getElementById('customDiscountType').value;
+    const discountVal = parseFloat(document.getElementById('customDiscountValue').value) || 0;
     
     if (!description) {
         showValidationModal('Please enter a description for the custom item.', 'Description Required');
@@ -432,6 +459,11 @@ function addCustomItem() {
         return;
     }
     
+    if (discountVal < 0) {
+        showValidationModal('Please enter a valid discount amount.', 'Invalid Discount');
+        return;
+    }
+    
     const item = {
         index: itemIndex++,
         product_id: null,
@@ -440,6 +472,8 @@ function addCustomItem() {
         batch_number: 'CUSTOM',
         quantity: qty,
         unit_price: price,
+        discount_type: discountType,
+        discount_value: discountVal,
         discount: 0,
         is_custom: true
     };
@@ -451,6 +485,8 @@ function addCustomItem() {
     document.getElementById('customDescription').value = '';
     document.getElementById('customQty').value = '1';
     document.getElementById('customPrice').value = '';
+    document.getElementById('customDiscountType').value = 'fixed';
+    document.getElementById('customDiscountValue').value = '0';
 }
 
 function removeItem(index) {
@@ -474,6 +510,17 @@ function renderItems() {
             ? '<span class="badge bg-warning-subtle text-warning">CUSTOM</span>' 
             : `<code>${escapeHtml(item.batch_number)}</code>`;
         const rowClass = item.is_custom ? 'table-warning' : '';
+        
+        let discountDisplay = '&mdash;';
+        if (item.discount > 0) {
+            discountDisplay = `{{ CURRENCY_SYMBOL }}${item.discount.toFixed(2)}`;
+            if (item.discount_type === 'percentage') {
+                discountDisplay += ` <small class="text-muted">(${item.discount_value}%)</small>`;
+            }
+        }
+        
+        const lineTotalFinal = lineTotal - item.discount;
+        
         // Properly escape JSON for HTML attribute
         const itemJson = JSON.stringify(item).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
         html += `
@@ -482,7 +529,8 @@ function renderItems() {
                 <td>${batchBadge}</td>
                 <td>${item.quantity}</td>
                 <td>{{ CURRENCY_SYMBOL }}${item.unit_price.toFixed(2)}</td>
-                <td>{{ CURRENCY_SYMBOL }}${lineTotal.toFixed(2)}</td>
+                <td>${discountDisplay}</td>
+                <td>{{ CURRENCY_SYMBOL }}${lineTotalFinal.toFixed(2)}</td>
                 <td>
                     <button type="button" class="btn btn-soft-danger btn-sm" onclick="removeItem(${item.index})">
                         <i class="las la-times"></i>
@@ -493,7 +541,7 @@ function renderItems() {
         `;
     });
     
-    tbody.innerHTML = html || '<tr><td colspan="6" class="text-center text-muted">No items added</td></tr>';
+    tbody.innerHTML = html || '<tr><td colspan="7" class="text-center text-muted">No items added</td></tr>';
     document.getElementById('subtotal').textContent = '{{ CURRENCY_SYMBOL }}' + subtotal.toFixed(2);
     document.getElementById('summarySubtotal').textContent = '{{ CURRENCY_SYMBOL }}' + subtotal.toFixed(2);
     
@@ -510,35 +558,34 @@ function escapeHtml(text) {
 
 function updateTotals() {
     let subtotal = 0;
+    let totalDiscount = 0;
+    
     items.forEach(item => {
-        subtotal += item.quantity * item.unit_price;
+        const lineTotal = item.quantity * item.unit_price;
+        subtotal += lineTotal;
+        
+        let itemDiscount = 0;
+        if (item.discount_type === 'percentage') {
+            itemDiscount = lineTotal * (item.discount_value / 100);
+        } else {
+            itemDiscount = item.discount_value;
+        }
+        
+        if (itemDiscount > lineTotal) {
+            itemDiscount = lineTotal;
+        }
+        
+        item.discount = itemDiscount;
+        totalDiscount += itemDiscount;
     });
     
-    const discountType = document.querySelector('[name="discount_type"]').value;
-    const discountVal = parseFloat(document.querySelector('[name="discount_value"]').value) || 0;
-    
-    // Update addon label based on discount type
-    const discountAddon = document.getElementById('discountAddon');
-    if (discountAddon) {
-        discountAddon.textContent = discountType === 'percentage' ? '%' : '{{ CURRENCY_SYMBOL }}';
-    }
-    
-    let discount = 0;
-    if (discountType === 'percentage') {
-        discount = subtotal * (discountVal / 100);
-    } else {
-        discount = discountVal;
-    }
-    
     const tax = parseFloat(document.querySelector('[name="tax_amount"]').value) || 0;
-    const total = subtotal - discount + tax;
+    const total = subtotal - totalDiscount + tax;
     
-    document.getElementById('summaryDiscount').textContent = '{{ CURRENCY_SYMBOL }}' + discount.toFixed(2);
+    document.getElementById('summaryDiscount').textContent = '{{ CURRENCY_SYMBOL }}' + totalDiscount.toFixed(2);
     document.getElementById('summaryTotal').textContent = '{{ CURRENCY_SYMBOL }}' + total.toFixed(2);
 }
 
-document.querySelector('[name="discount_type"]').addEventListener('change', updateTotals);
-document.querySelector('[name="discount_value"]').addEventListener('input', updateTotals);
 document.querySelector('[name="tax_amount"]').addEventListener('input', updateTotals);
 
 document.getElementById('saleForm').addEventListener('submit', function(e) {

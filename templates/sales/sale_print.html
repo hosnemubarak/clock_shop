@@ -652,10 +652,11 @@
                 <table class="items-table">
                     <thead>
                         <tr>
-                            <th style="width: 45%;">Item / Description</th>
-                            <th style="width: 20%;">SKU</th>
+                            <th style="width: 40%;">Item / Description</th>
+                            <th style="width: 15%;">SKU</th>
                             <th class="text-center" style="width: 10%;">Qty</th>
-                            <th class="text-right" style="width: 12%;">Unit Price</th>
+                            <th class="text-right" style="width: 10%;">Unit Price</th>
+                            <th class="text-right" style="width: 12%;">Discount</th>
                             <th class="text-right" style="width: 13%;">Total</th>
                         </tr>
                     </thead>
@@ -691,6 +692,16 @@
                                 {% endif %}
                             </td>
                             <td class="text-right">{{ CURRENCY_SYMBOL }}{{ item.unit_price|floatformat:2|intcomma }}</td>
+                            <td class="text-right">
+                                {% if item.discount > 0 %}
+                                    {{ CURRENCY_SYMBOL }}{{ item.discount|floatformat:2|intcomma }}
+                                    {% if item.discount_type == 'percentage' %}
+                                        <br><span style="font-size: 0.8em; color: var(--slate-500);">({{ item.discount_value|floatformat:0 }}%)</span>
+                                    {% endif %}
+                                {% else %}
+                                    &mdash;
+                                {% endif %}
+                            </td>
                             <td class="text-right" style="font-weight: 700; color: var(--slate-900);">
                                 {% if item.returned_quantity > 0 %}
                                     {{ CURRENCY_SYMBOL }}{{ item.net_total_price|floatformat:2|intcomma }}
@@ -725,7 +736,7 @@
                         </tr>
                         {% if sale.discount_amount > 0 %}
                         <tr style="color: var(--danger-text);">
-                            <td class="total-label" style="color: var(--danger-text);">Discount {% if sale.discount_type == 'percentage' %}({{ sale.discount_value|floatformat:0 }}%){% else %}(Fixed){% endif %}:</td>
+                            <td class="total-label" style="color: var(--danger-text);">Discount:</td>
                             <td class="total-value" style="color: var(--danger-text);">-{{ CURRENCY_SYMBOL }}{{ sale.discount_amount|floatformat:2|intcomma }}</td>
                         </tr>
                         {% endif %}

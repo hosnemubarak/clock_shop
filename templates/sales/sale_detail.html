@@ -42,6 +42,7 @@
                                 <th>Batch</th>
                                 <th class="text-center">Qty</th>
                                 <th class="text-end">Price</th>
+                                <th class="text-end">Discount</th>
                                 <th class="text-end">Total</th>
                             </tr>
                         </thead>
@@ -72,6 +73,16 @@
                                 </td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.unit_price|floatformat:2 }}</td>
                                 <td class="text-end">
+                                    {% if item.discount > 0 %}
+                                        {{ CURRENCY_SYMBOL }}{{ item.discount|floatformat:2 }}
+                                        {% if item.discount_type == 'percentage' %}
+                                            <small class="text-muted">({{ item.discount_value|floatformat:0 }}%)</small>
+                                        {% endif %}
+                                    {% else %}
+                                        &mdash;
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
                                     {% if item.returned_quantity > 0 %}
                                         {{ CURRENCY_SYMBOL }}{{ item.net_total_price|floatformat:2 }}
                                     {% else %}
@@ -83,47 +94,47 @@
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="4" class="text-end text-muted">Original Subtotal:</td>
+                                <td colspan="5" class="text-end text-muted">Original Subtotal:</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.subtotal|floatformat:2 }}</td>
                             </tr>
                             {% if sale.discount_amount > 0 %}
                             <tr>
-                                <td colspan="4" class="text-end text-muted">Discount {% if sale.discount_type == 'percentage' %}({{ sale.discount_value|floatformat:0 }}%){% else %}(Fixed){% endif %}:</td>
+                                <td colspan="5" class="text-end text-muted">Discount:</td>
                                 <td class="text-end text-danger">-{{ CURRENCY_SYMBOL }}{{ sale.discount_amount|floatformat:2 }}</td>
                             </tr>
                             {% endif %}
                             {% if sale.tax_amount > 0 %}
                             <tr>
-                                <td colspan="4" class="text-end text-muted">Tax:</td>
+                                <td colspan="5" class="text-end text-muted">Tax:</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.tax_amount|floatformat:2 }}</td>
                             </tr>
                             {% endif %}
                             <tr class="fw-bold border-bottom">
-                                <td colspan="4" class="text-end">Original Total:</td>
+                                <td colspan="5" class="text-end">Original Total:</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
                             </tr>
                             {% if returns_total > 0 %}
                             <tr class="text-warning fw-bold">
-                                <td colspan="4" class="text-end">Returned Amount (Refunded):</td>
+                                <td colspan="5" class="text-end">Returned Amount (Refunded):</td>
                                 <td class="text-end">-{{ CURRENCY_SYMBOL }}{{ returns_total|floatformat:2 }}</td>
                             </tr>
                             <tr class="table-light fw-bold border-bottom">
-                                <td colspan="4" class="text-end">Net Invoice Total:</td>
+                                <td colspan="5" class="text-end">Net Invoice Total:</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ net_total|floatformat:2 }}</td>
                             </tr>
                             {% endif %}
                             <tr class="text-success fw-semibold">
-                                <td colspan="4" class="text-end">Total Paid:</td>
+                                <td colspan="5" class="text-end">Total Paid:</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2 }}</td>
                             </tr>
                             {% if net_due > 0 %}
                             <tr class="text-danger fw-bold fs-15">
-                                <td colspan="4" class="text-end">Outstanding Due:</td>
+                                <td colspan="5" class="text-end">Outstanding Due:</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ net_due|floatformat:2 }}</td>
                             </tr>
                             {% elif credit_amount > 0 %}
                             <tr class="text-info fw-bold fs-15">
-                                <td colspan="4" class="text-end">Credit Balance / Refund Due:</td>
+                                <td colspan="5" class="text-end">Credit Balance / Refund Due:</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ credit_amount|floatformat:2 }}</td>
                             </tr>
                             {% endif %}

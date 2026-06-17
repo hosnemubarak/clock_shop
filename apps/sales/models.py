@@ -162,12 +162,9 @@ class Sale(TimeStampedModel):
     def calculate_totals(self):
         """Recalculate totals from items."""
         items = self.items.all()
-        self.subtotal = sum(item.total_price for item in items)
+        self.subtotal = sum(item.quantity * item.unit_price for item in items)
         self.total_cost = sum(item.total_cost for item in items)
-        if self.discount_type == 'percentage':
-            self.discount_amount = (self.subtotal * (self.discount_value / Decimal('100.00'))).quantize(Decimal('0.01'))
-        else:
-            self.discount_amount = self.discount_value
+        self.discount_amount = sum(item.discount for item in items)
         self.total_amount = self.subtotal - self.discount_amount + self.tax_amount
         self.save(update_fields=['subtotal', 'total_cost', 'discount_amount', 'total_amount'])
     
@@ -211,6 +208,16 @@ class SaleItem(TimeStampedModel):
         help_text='Cost price from batch (for profit calculation)'
     )
     discount = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.00'))],
+        default=Decimal('0.00')
+    )
+    discount_type = models.CharField(
+        max_length=15,
+        choices=[('fixed', 'Fixed Amount'), ('percentage', 'Percentage')],
+        default='fixed'
+    )
+    discount_value = models.DecimalField(
         max_digits=12, decimal_places=2,
         validators=[MinValueValidator(Decimal('0.00'))],
         default=Decimal('0.00')
@@ -274,6 +281,18 @@ class SaleItem(TimeStampedModel):
         # Auto-set cost price from batch if not set
         if not self.cost_price and self.batch:
             self.cost_price = self.batch.buy_price
+        
+        # Calculate discount amount based on discount_type and discount_value
+        if self.discount_type == 'percentage':
+            self.discount = ((self.quantity * self.unit_price) * (self.discount_value / Decimal('100.00'))).quantize(Decimal('0.01'))
+        else:
+            self.discount = self.discount_value
+            
+        # Cap discount at raw total price to prevent negative line totals
+        raw_total = self.quantity * self.unit_price
+        if self.discount > raw_total:
+            self.discount = raw_total
+            
         super().save(*args, **kwargs)
 
 
