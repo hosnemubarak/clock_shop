@@ -26,7 +26,7 @@ class SaleForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['customer'].queryset = Customer.objects.filter(is_active=True)
-        self.fields['customer'].required = False
+        self.fields['customer'].required = True
 
 
 class SaleItemForm(forms.Form):
