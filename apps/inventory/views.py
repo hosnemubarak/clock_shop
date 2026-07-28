@@ -312,7 +312,10 @@ def batch_create(request):
             messages.success(request, f'Batch "{batch.batch_number}" created with {batch.quantity} units.')
             return redirect('batch_list')
     else:
-        form = BatchForm(initial={'purchase_date': date.today()})
+        initial_data = {'purchase_date': date.today()}
+        if 'product' in request.GET:
+            initial_data['product'] = request.GET['product']
+        form = BatchForm(initial=initial_data)
     
     return render(request, 'inventory/batch_form.html', {'form': form, 'title': 'Add Stock (New Batch)'})
 

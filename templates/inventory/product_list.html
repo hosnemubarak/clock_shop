@@ -135,16 +135,21 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <div class="dropdown">
-                                        <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                            <i class="las la-ellipsis-h"></i>
-                                        </button>
+                                    <div class="d-flex gap-2">
+                                        <a href="{% url 'batch_create' %}?product={{ product.pk }}" class="btn btn-sm btn-soft-primary" title="Add Stock">
+                                            <i class="las la-plus"></i> Add Stock
+                                        </a>
+                                        <div class="dropdown">
+                                            <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                <i class="las la-ellipsis-h"></i>
+                                            </button>
                                         <ul class="dropdown-menu dropdown-menu-end">
                                             <li><a class="dropdown-item" href="{% url 'product_detail' product.pk %}"><i class="las la-eye me-2"></i>View</a></li>
                                             <li><a class="dropdown-item" href="{% url 'product_edit' product.pk %}"><i class="las la-pen me-2"></i>Edit</a></li>
                                             <li><hr class="dropdown-divider"></li>
                                             <li><a class="dropdown-item text-danger" href="{% url 'product_delete' product.pk %}"><i class="las la-trash me-2"></i>Delete</a></li>
                                         </ul>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
