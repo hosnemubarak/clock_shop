@@ -406,9 +406,17 @@ def pos_checkout(request):
             customer = Customer.objects.get(pk=customer_id)
             
         # Create Sale
+        from django.utils.dateparse import parse_datetime, parse_date
+        sale_date_str = data.get('sale_date')
+        if sale_date_str:
+            parsed = parse_datetime(sale_date_str) or parse_date(sale_date_str)
+            sale_date = parsed if parsed else timezone.now()
+        else:
+            sale_date = timezone.now()
+            
         sale = Sale.objects.create(
             customer=customer,
-            sale_date=timezone.now(),
+            sale_date=sale_date,
             discount_amount=discount_amount,
             notes=data.get('notes', ''),
             created_by=request.user,
