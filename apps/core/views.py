@@ -31,17 +31,10 @@ def dashboard(request):
         sale_date__date__gte=month_start
     ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
     
-    # Cash Collection (Customer payments + Walk-in sales)
-    today_payments = Payment.objects.filter(
+    # Cash Collection
+    today_cash_collection = Payment.objects.filter(
         payment_date__date=today
     ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-    
-    walkin_payments = Sale.objects.filter(
-        sale_date__date=today,
-        customer__isnull=True
-    ).aggregate(total=Sum('paid_amount'))['total'] or Decimal('0.00')
-    
-    today_cash_collection = today_payments + walkin_payments
     
     # Profit calculation
     profit_month = SaleItem.objects.filter(

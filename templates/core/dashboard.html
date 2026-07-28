@@ -82,9 +82,9 @@
 
 <!-- Stats Cards -->
 <div class="row">
-    <div class="col-xl-3 col-md-6">
-        <a href="{% url 'sale_list' %}?date_filter=today" class="text-decoration-none">
-            <div class="card card-animate">
+    <div class="col-xl-4 col-md-6 mb-3">
+        <a href="{% url 'sale_list' %}?date_filter=today" class="text-decoration-none d-block h-100">
+            <div class="card card-animate h-100 mb-0">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-grow-1">
@@ -107,9 +107,9 @@
         </a>
     </div>
 
-    <div class="col-xl-3 col-md-6">
-        <a href="{% url 'payment_list' %}?date_from={% now 'Y-m-d' %}&date_to={% now 'Y-m-d' %}" class="text-decoration-none">
-            <div class="card card-animate">
+    <div class="col-xl-4 col-md-6 mb-3">
+        <a href="{% url 'payment_list' %}?date_from={% now 'Y-m-d' %}&date_to={% now 'Y-m-d' %}" class="text-decoration-none d-block h-100">
+            <div class="card card-animate h-100 mb-0">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-grow-1">
@@ -132,9 +132,9 @@
         </a>
     </div>
 
-    <div class="col-xl-3 col-md-6">
-        <a href="{% url 'sale_list' %}?date_filter=this_month" class="text-decoration-none">
-            <div class="card card-animate">
+    <div class="col-xl-4 col-md-6 mb-3">
+        <a href="{% url 'sale_list' %}?date_filter=this_month" class="text-decoration-none d-block h-100">
+            <div class="card card-animate h-100 mb-0">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-grow-1">
@@ -157,9 +157,9 @@
         </a>
     </div>
 
-    <div class="col-xl-3 col-md-6">
-        <a href="{% url 'customer_list' %}" class="text-decoration-none">
-            <div class="card card-animate">
+    <div class="col-xl-4 col-md-6 mb-3">
+        <a href="{% url 'customer_list' %}" class="text-decoration-none d-block h-100">
+            <div class="card card-animate h-100 mb-0">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="flex-grow-1">
@@ -181,10 +181,6 @@
             </div>
         </a>
     </div>
-</div>
-
-<!-- Second Row Stats -->
-<div class="row">
     <div class="col-xl-4 col-md-6 mb-3">
         <a href="{% url 'product_list' %}" class="text-decoration-none d-block h-100">
             <div class="card card-animate h-100 mb-0">
@@ -207,28 +203,7 @@
             </div>
         </a>
     </div>
-    
-    <div class="col-xl-4 col-md-6 mb-3">
-        <a href="{% url 'stock_report' %}?stock_filter=low" class="text-decoration-none d-block h-100">
-            <div class="card card-animate h-100 mb-0">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <p class="fw-medium text-muted mb-0">Low Stock Items</p>
-                            <h2 class="mt-4 ff-secondary fw-semibold {% if low_stock_products > 0 %}text-warning{% endif %}"><span class="counter-value" data-target="{{ low_stock_products }}">{{ low_stock_products }}</span></h2>
-                        </div>
-                        <div>
-                            <div class="avatar-sm flex-shrink-0">
-                                <span class="avatar-title bg-warning-subtle rounded-circle fs-2">
-                                    <i class="las la-exclamation-circle text-warning"></i>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </a>
-    </div>
+
     
     <div class="col-xl-4 col-md-6 mb-3">
         <a href="{% url 'warehouse_list' %}" class="text-decoration-none d-block h-100">
@@ -309,7 +284,12 @@
         <!-- Low Stock Alerts -->
         <div class="card">
             <div class="card-header align-items-center d-flex">
-                <h4 class="card-title mb-0 flex-grow-1">Low Stock Alerts</h4>
+                <h4 class="card-title mb-0 flex-grow-1">
+                    Low Stock Alerts 
+                    {% if low_stock_products > 0 %}
+                    <span class="badge bg-warning-subtle text-warning ms-2 fs-12">{{ low_stock_products }} Items</span>
+                    {% endif %}
+                </h4>
                 <div class="flex-shrink-0">
                     <a href="{% url 'stock_report' %}?stock_filter=low" class="btn btn-soft-warning btn-sm">View All</a>
                 </div>

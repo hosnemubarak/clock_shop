@@ -188,16 +188,15 @@ def sale_create(request):
             sale.total_amount = subtotal - sale.discount_amount + sale.tax_amount
             sale.save()
             
-            # Update customer balance if applicable
-            if sale.customer:
-                sale.customer.total_purchases += sale.total_amount
-                sale.customer.total_due += sale.total_amount
-                sale.customer.save()
+            # Update customer balance
+            sale.customer.total_purchases += sale.total_amount
+            sale.customer.total_due += sale.total_amount
+            sale.customer.save()
             
             create_audit_log(request, 'SALE', sale, {
                 'total': str(sale.total_amount),
                 'items': len(items_data),
-                'customer': sale.customer.name if sale.customer else 'Walk-in'
+                'customer': sale.customer.name
             })
             
             messages.success(request, f'Sale "{sale.invoice_number}" created successfully.')
@@ -237,10 +236,9 @@ def sale_cancel(request, pk):
                         item.product.update_total_stock()
                 
                 # Update customer balance
-                if sale.customer:
-                    sale.customer.total_purchases -= sale.total_amount
-                    sale.customer.total_due -= sale.due_amount
-                    sale.customer.save()
+                sale.customer.total_purchases -= sale.total_amount
+                sale.customer.total_due -= sale.due_amount
+                sale.customer.save()
                 
                 sale.status = 'cancelled'
                 sale.save()
@@ -266,21 +264,20 @@ def sale_payment(request, pk):
             else:
                 with transaction.atomic():
                     # Create payment record
-                    if sale.customer:
-                        payment = Payment.objects.create(
-                            customer=sale.customer,
-                            sale=sale,
-                            amount=amount,
-                            payment_method=form.cleaned_data['payment_method'],
-                            reference=form.cleaned_data.get('reference', ''),
-                            notes=form.cleaned_data.get('notes', ''),
-                            received_by=request.user,
-                        )
-                        
-                        # Update customer balance
-                        sale.customer.total_paid += amount
-                        sale.customer.total_due -= amount
-                        sale.customer.save()
+                    payment = Payment.objects.create(
+                        customer=sale.customer,
+                        sale=sale,
+                        amount=amount,
+                        payment_method=form.cleaned_data['payment_method'],
+                        reference=form.cleaned_data.get('reference', ''),
+                        notes=form.cleaned_data.get('notes', ''),
+                        received_by=request.user,
+                    )
+                    
+                    # Update customer balance
+                    sale.customer.total_paid += amount
+                    sale.customer.total_due -= amount
+                    sale.customer.save()
                     
                     # Update sale
                     sale.paid_amount += amount
