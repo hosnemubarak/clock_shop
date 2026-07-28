@@ -128,23 +128,11 @@
                         {{ form.sale_date }}
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Discount</label>
-                        {{ form.discount_amount }}
-                    </div>
-                    <div class="mb-3">
                         <label class="form-label">Notes</label>
                         {{ form.notes }}
                     </div>
                     
                     <hr>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Subtotal:</span>
-                        <span id="summarySubtotal">{{ CURRENCY_SYMBOL }}0.00</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Discount:</span>
-                        <span id="summaryDiscount">{{ CURRENCY_SYMBOL }}0.00</span>
-                    </div>
                     <div class="d-flex justify-content-between fw-bold fs-5">
                         <span>Total:</span>
                         <span id="summaryTotal">{{ CURRENCY_SYMBOL }}0.00</span>
@@ -171,11 +159,23 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="d-flex justify-content-between fw-bold fs-4 mb-4">
-                    <span>Total Due:</span>
-                    <span id="checkoutFinalTotal" class="text-danger">{{ CURRENCY_SYMBOL }}0.00</span>
+                <div class="mb-3">
+                    <label class="form-label">Discount Amount ({{ CURRENCY_SYMBOL }})</label>
+                    <input type="number" id="checkoutDiscount" class="form-control" value="0.00" step="0.01" min="0" oninput="updateCheckoutTotal()">
                 </div>
 
+                <div class="card bg-light mb-3">
+                    <div class="card-body py-2">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Subtotal:</span>
+                            <span id="checkoutSubtotal">{{ CURRENCY_SYMBOL }}0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between fw-bold fs-5">
+                            <span>Total Due:</span>
+                            <span id="checkoutFinalTotal" class="text-danger">{{ CURRENCY_SYMBOL }}0.00</span>
+                        </div>
+                    </div>
+                </div>
                 <div class="mb-3">
                     <label class="form-label">Payment Method</label>
                     <select id="checkoutMethod" class="form-select">
@@ -393,9 +393,7 @@ function renderItems() {
         `;
     });
     
-    tbody.innerHTML = html || '<tr><td colspan="5" class="text-center text-muted">No items added</td></tr>';
     document.getElementById('subtotal').textContent = '{{ CURRENCY_SYMBOL }}' + subtotal.toFixed(2);
-    document.getElementById('summarySubtotal').textContent = '{{ CURRENCY_SYMBOL }}' + subtotal.toFixed(2);
     
     updateTotals();
 }
@@ -414,14 +412,8 @@ function updateTotals() {
         subtotal += item.quantity * item.unit_price;
     });
     
-    const discount = parseFloat(document.querySelector('[name="discount_amount"]').value) || 0;
-    const total = subtotal - discount;
-    
-    document.getElementById('summaryDiscount').textContent = '{{ CURRENCY_SYMBOL }}' + discount.toFixed(2);
-    document.getElementById('summaryTotal').textContent = '{{ CURRENCY_SYMBOL }}' + total.toFixed(2);
+    document.getElementById('summaryTotal').textContent = '{{ CURRENCY_SYMBOL }}' + subtotal.toFixed(2);
 }
-
-document.querySelector('[name="discount_amount"]').addEventListener('input', updateTotals);
 
 document.getElementById('saleForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -432,16 +424,24 @@ document.addEventListener('DOMContentLoaded', function() {
     checkoutModal = new bootstrap.Modal(document.getElementById('checkoutModal'));
 });
 
+function updateCheckoutTotal() {
+    const subtotal = parseFloat(document.getElementById('summaryTotal').textContent.replace(/[^0-9.-]+/g, '')) || 0;
+    const discount = parseFloat(document.getElementById('checkoutDiscount').value) || 0;
+    const finalTotal = Math.max(0, subtotal - discount);
+    
+    document.getElementById('checkoutSubtotal').textContent = '{{ CURRENCY_SYMBOL }}' + subtotal.toFixed(2);
+    document.getElementById('checkoutFinalTotal').textContent = '{{ CURRENCY_SYMBOL }}' + finalTotal.toFixed(2);
+    document.getElementById('checkoutPaid').value = finalTotal.toFixed(2);
+    calculateChange();
+}
+
 function openCheckout() {
     if (items.length === 0) {
         showValidationModal('Please add at least one item to the sale before completing.', 'No Items Added');
         return;
     }
 
-    const totalText = document.getElementById('summaryTotal').textContent.replace(/[^0-9.]/g, '');
-    document.getElementById('checkoutFinalTotal').textContent = '{{ CURRENCY_SYMBOL }}' + totalText;
-    document.getElementById('checkoutPaid').value = totalText;
-    calculateChange();
+    updateCheckoutTotal();
     checkoutModal.show();
 }
 
@@ -472,10 +472,10 @@ function processCheckout() {
     // Gather data from main form
     const customerId = document.querySelector('[name="customer"]').value;
     const saleDate = document.querySelector('[name="sale_date"]').value;
-    const discountAmount = document.querySelector('[name="discount_amount"]').value || '0.00';
     const notes = document.querySelector('[name="notes"]').value;
     
     // Gather from modal
+    const discountAmount = document.getElementById('checkoutDiscount').value || '0.00';
     const paymentMethod = document.getElementById('checkoutMethod').value;
     const paymentAmount = document.getElementById('checkoutPaid').value;
     
