@@ -241,6 +241,8 @@ def payment_list(request):
     context = {
         'payments': payments,
         'search': search,
+        'date_from': date_from,
+        'date_to': date_to,
     }
     return render(request, 'customers/payment_list.html', context)
 
