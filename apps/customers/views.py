@@ -270,9 +270,10 @@ def payment_create(request):
             payment.save()
             
             # Update customer balance
-            payment.customer.total_paid += payment.amount
-            payment.customer.total_due -= payment.amount
-            payment.customer.save()
+            if payment.customer:
+                payment.customer.total_paid += payment.amount
+                payment.customer.total_due -= payment.amount
+                payment.customer.save()
             
             # Update sale payment status if linked to specific sale
             if payment.sale:
@@ -281,12 +282,15 @@ def payment_create(request):
             
             create_audit_log(request, 'PAYMENT', payment, {
                 'amount': str(payment.amount),
-                'customer': payment.customer.name,
+                'customer': payment.customer.name if payment.customer else 'Walk-in',
                 'invoice': payment.sale.invoice_number if payment.sale else 'General'
             })
             
             messages.success(request, f'Payment of {payment.amount} recorded.')
-            return redirect('customer_detail', pk=payment.customer.pk)
+            if payment.customer:
+                return redirect('customer_detail', pk=payment.customer.pk)
+            else:
+                return redirect('payment_list')
     else:
         form = PaymentForm(customer=customer)
     

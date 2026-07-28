@@ -55,7 +55,13 @@
                             {% for payment in payments %}
                             <tr>
                                 <td>{{ payment.payment_date|date:"M d, Y H:i" }}</td>
-                                <td><a href="{% url 'customer_detail' payment.customer.pk %}">{{ payment.customer.name }}</a></td>
+                                <td>
+                                    {% if payment.customer %}
+                                    <a href="{% url 'customer_detail' payment.customer.pk %}">{{ payment.customer.name }}</a>
+                                    {% else %}
+                                    Walk-in Customer
+                                    {% endif %}
+                                </td>
                                 <td class="text-success fw-medium">{{ CURRENCY_SYMBOL }}{{ payment.amount|floatformat:2 }}</td>
                                 <td>{{ payment.get_payment_method_display }}</td>
                                 <td>
