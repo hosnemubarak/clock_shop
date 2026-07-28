@@ -158,6 +158,17 @@ class Payment(TimeStampedModel):
         customer_name = self.customer.name if self.customer else 'Walk-in'
         return f"Payment of {self.amount} from {customer_name}"
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.sale:
+            self.sale.recalculate_paid_amount()
+            
+    def delete(self, *args, **kwargs):
+        sale = self.sale
+        super().delete(*args, **kwargs)
+        if sale:
+            sale.recalculate_paid_amount()
+
 
 class CustomerNote(TimeStampedModel):
     """Notes and communications with customer."""
