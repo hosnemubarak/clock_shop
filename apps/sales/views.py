@@ -112,6 +112,12 @@ def sale_create(request):
     """Create a new sale with manual batch selection."""
     products = Product.objects.filter(is_active=True, total_stock__gt=0)
     customers = Customer.objects.filter(is_active=True)
+    shop = Warehouse.objects.filter(is_shop=True).first()
+    
+    if not shop:
+        messages.error(request, 'No shop warehouse configured. Please configure a shop warehouse first.')
+        return redirect('dashboard')
+    
     
     if request.method == 'POST':
         form = SaleForm(request.POST)
@@ -134,13 +140,7 @@ def sale_create(request):
                 
                 # Regular inventory item
                 product = Product.objects.get(pk=item['product_id'])
-                warehouse = Warehouse.objects.get(pk=item['warehouse_id'])
-                
-                # Validate warehouse is a shop
-                if not warehouse.is_shop:
-                    messages.error(request, f'Product "{product.display_name}" can only be sold from shop locations. Please transfer stock from warehouse to shop first.')
-                    sale.delete()
-                    return redirect('sale_create')
+                warehouse = shop
                 
                 stock = ProductStock.objects.select_for_update().get(product=product, warehouse=warehouse)
                 

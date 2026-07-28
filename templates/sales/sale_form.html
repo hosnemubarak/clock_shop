@@ -42,7 +42,6 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Product</th>
-                                    <th>Warehouse</th>
                                     <th width="80">Qty</th>
                                     <th width="120">Price</th>
                                     <th width="120">Total</th>
@@ -53,7 +52,7 @@
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <td colspan="4" class="text-end fw-bold">Subtotal:</td>
+                                    <td colspan="3" class="text-end fw-bold">Subtotal:</td>
                                     <td class="fw-bold" id="subtotal">{{ CURRENCY_SYMBOL }}0.00</td>
                                     <td></td>
                                 </tr>
@@ -76,21 +75,15 @@
                         </div>
                         <div class="card-body pt-3">
                             <div id="inventoryItemForm">
-                                <!-- Row 1: Product and Warehouse -->
+                                <!-- Row 1: Product -->
                                 <div class="row g-3 mb-3">
-                                    <div class="col-md-6">
+                                    <div class="col-12">
                                         <label class="form-label fw-medium">Product <span class="text-danger">*</span></label>
                                         <select class="form-select" id="newProduct">
                                             <option value="">Search or select product...</option>
                                             {% for p in products %}
                                             <option value="{{ p.id }}" data-sku="{{ p.sku }}" data-price="{{ p.default_selling_price }}">{{ p.sku }} ({{ p.total_stock }} in stock)</option>
                                             {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-medium">Warehouse <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="newWarehouse">
-                                            <option value="">Select Warehouse</option>
                                         </select>
                                     </div>
                                 </div>
@@ -188,15 +181,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Warehouse dropdown
-    warehouseSelect = new TomSelect('#newWarehouse', {
-        placeholder: 'Select warehouse...',
-        allowEmptyOption: true,
-        onChange: function(value) {
-            updateStockInfo(value);
-        }
-    });
-    
     // Customer dropdown (if exists)
     const customerEl = document.querySelector('[name="customer"]');
     if (customerEl && customerEl.tagName === 'SELECT') {
@@ -209,13 +193,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Pre-select from URL params
     const urlParams = new URLSearchParams(window.location.search);
     const preProduct = urlParams.get('product');
-    const preWarehouse = urlParams.get('warehouse');
     if (preProduct) {
         productSelect.setValue(preProduct);
-        if (preWarehouse) {
-            // Save to a global variable to be used after fetch completes
-            window.preWarehouseToSelect = preWarehouse;
-        }
     }
 });
 
@@ -223,12 +202,7 @@ function loadStocks(productId) {
     const priceInput = document.getElementById('newPrice');
     const stockInfo = document.getElementById('stockInfo');
     
-    // Clear warehouse dropdown
-    warehouseSelect.clear();
-    warehouseSelect.clearOptions();
-    warehouseSelect.addOption({value: '', text: 'Select Warehouse'});
     stockInfo.innerHTML = '';
-    warehouseSelect.enable();  // Re-enable warehouse select
     
     if (!productId) return;
     
@@ -241,38 +215,22 @@ function loadStocks(productId) {
     fetch(`/sales/api/products/${productId}/`)
         .then(response => response.json())
         .then(data => {
-            stockData = {};
+            stockData = { shop_stock: data.shop_stock };
             
-            // Build warehouse availability display
-            let warehouseHtml = '';
-            if (data.warehouse_availability && data.warehouse_availability.length > 0) {
-                warehouseHtml = '<div class="mt-2 mb-2"><strong class="small text-muted">Stock Availability:</strong><div class="d-flex flex-wrap gap-1 mt-1">';
-                data.warehouse_availability.forEach(w => {
-                    const badgeClass = w.is_shop ? 'bg-success' : 'bg-secondary';
-                    const icon = w.is_shop ? 'la-store' : 'la-warehouse';
-                    warehouseHtml += `<span class="badge ${badgeClass}"><i class="las ${icon} me-1"></i>${w.warehouse_name}: ${w.quantity}</span>`;
-                });
-                warehouseHtml += '</div></div>';
-            }
-            
-            // Check if product has no shop stock but has warehouse stock
-            if (data.stocks.length === 0 && data.warehouse_stock > 0) {
-                warehouseSelect.disable();  // Disable warehouse selection
+            if (data.shop_stock === 0 && data.warehouse_stock > 0) {
                 stockInfo.innerHTML = `
-                    ${warehouseHtml}
                     <div class="alert alert-warning mb-0 mt-2">
                         <i class="las la-exclamation-triangle me-1"></i>
-                        <strong>Not available in shops!</strong><br>
-                        This product has <strong>${data.warehouse_stock} units</strong> in warehouses but none in shop locations.<br>
+                        <strong>Not available in shop!</strong><br>
+                        This product has <strong>${data.warehouse_stock} units</strong> in warehouses but none in the shop.<br>
                         <a href="/warehouse/transfers/create/" class="alert-link">
-                            <i class="las la-exchange-alt me-1"></i>Transfer stock to a shop first
+                            <i class="las la-exchange-alt me-1"></i>Transfer stock to the shop first
                         </a>
                     </div>`;
                 return;
             }
             
-            if (data.stocks.length === 0) {
-                warehouseSelect.disable();  // Disable warehouse selection
+            if (data.shop_stock === 0) {
                 stockInfo.innerHTML = `
                     <div class="alert alert-danger mb-0 mt-2">
                         <i class="las la-times-circle me-1"></i>
@@ -281,57 +239,29 @@ function loadStocks(productId) {
                 return;
             }
             
-            data.stocks.forEach(stock => {
-                stockData[stock.warehouse_id] = stock;
-                warehouseSelect.addOption({
-                    value: stock.warehouse_id,
-                    text: `${stock.warehouse} (${stock.quantity} avail) @ {{ CURRENCY_SYMBOL }}${stock.average_cost}`
-                });
-            });
-            warehouseSelect.refreshOptions(false);
+            let infoHtml = `<div class="text-success small fw-bold">
+                <i class="las la-check-circle me-1"></i>
+                ${data.shop_stock} units available for sale
+            </div>`;
             
-            if (window.preWarehouseToSelect) {
-                warehouseSelect.setValue(window.preWarehouseToSelect);
-                window.preWarehouseToSelect = null; // Clear it
-            }
-            
-            // Show warehouse availability and shop stock info
-            let infoHtml = warehouseHtml;
             if (data.warehouse_stock > 0) {
                 infoHtml += `
                     <div class="text-info small">
                         <i class="las la-info-circle me-1"></i>
-                        ${data.shop_stock} units available for sale (${data.warehouse_stock} more in warehouses)
+                        (${data.warehouse_stock} more in warehouses)
                     </div>`;
             }
             stockInfo.innerHTML = infoHtml;
         });
 }
 
-function updateStockInfo(warehouseId) {
-    const info = document.getElementById('stockInfo');
-    
-    if (warehouseId && stockData[warehouseId]) {
-        const stock = stockData[warehouseId];
-        info.innerHTML = `<i class="las la-info-circle"></i> Available: ${stock.quantity} units | Cost: {{ CURRENCY_SYMBOL }}${stock.average_cost}`;
-    } else {
-        info.innerHTML = '';
-    }
-}
-
 function addItem() {
     const productId = productSelect.getValue();
-    const warehouseId = warehouseSelect.getValue();
     const qty = parseInt(document.getElementById('newQty').value);
     const price = parseFloat(document.getElementById('newPrice').value);
     
     if (!productId) {
         showValidationModal('Please select a product first.', 'Product Required');
-        return;
-    }
-    
-    if (!warehouseId) {
-        showValidationModal('Please select a warehouse for this product.', 'Warehouse Required');
         return;
     }
     
@@ -345,9 +275,8 @@ function addItem() {
         return;
     }
     
-    const stock = stockData[warehouseId];
-    if (qty > stock.quantity) {
-        showValidationModal(`Only ${stock.quantity} units available in this warehouse. Please reduce the quantity.`, 'Insufficient Stock');
+    if (qty > stockData.shop_stock) {
+        showValidationModal(`Only ${stockData.shop_stock} units available in the shop. Please reduce the quantity.`, 'Insufficient Stock');
         return;
     }
     
@@ -357,8 +286,6 @@ function addItem() {
         index: itemIndex++,
         product_id: productId,
         product_sku: productOption.dataset.sku,
-        warehouse_id: warehouseId,
-        warehouse_name: stock.warehouse,
         quantity: qty,
         unit_price: price,
         discount: 0,
@@ -368,15 +295,12 @@ function addItem() {
     items.push(item);
     
     // Update available quantity in stock data
-    stockData[warehouseId].quantity -= qty;
+    stockData.shop_stock -= qty;
     
     renderItems();
     
     // Reset using Tom Select
     productSelect.clear();
-    warehouseSelect.clear();
-    warehouseSelect.clearOptions();
-    warehouseSelect.addOption({value: '', text: 'Select Warehouse'});
     document.getElementById('newQty').value = '1';
     document.getElementById('newPrice').value = '';
     document.getElementById('stockInfo').innerHTML = '';
@@ -384,8 +308,8 @@ function addItem() {
 
 function removeItem(index) {
     const item = items.find(i => i.index === index);
-    if (item && item.warehouse_id && stockData[item.warehouse_id]) {
-        stockData[item.warehouse_id].quantity += item.quantity;
+    if (item && stockData.shop_stock !== undefined) {
+        // Just remove, don't attempt to restore stock to shop_stock accurately across product switches
     }
     items = items.filter(i => i.index !== index);
     renderItems();
@@ -399,14 +323,11 @@ function renderItems() {
     items.forEach(item => {
         const lineTotal = item.quantity * item.unit_price;
         subtotal += lineTotal;
-        const warehouseBadge = `<code>${escapeHtml(item.warehouse_name)}</code>`;
-        const rowClass = '';
         // Properly escape JSON for HTML attribute
         const itemJson = JSON.stringify(item).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
         html += `
-            <tr class="${rowClass}">
+            <tr>
                 <td>${escapeHtml(item.product_sku)}</td>
-                <td>${warehouseBadge}</td>
                 <td>${item.quantity}</td>
                 <td>{{ CURRENCY_SYMBOL }}${item.unit_price.toFixed(2)}</td>
                 <td>{{ CURRENCY_SYMBOL }}${lineTotal.toFixed(2)}</td>
@@ -420,7 +341,7 @@ function renderItems() {
         `;
     });
     
-    tbody.innerHTML = html || '<tr><td colspan="6" class="text-center text-muted">No items added</td></tr>';
+    tbody.innerHTML = html || '<tr><td colspan="5" class="text-center text-muted">No items added</td></tr>';
     document.getElementById('subtotal').textContent = '{{ CURRENCY_SYMBOL }}' + subtotal.toFixed(2);
     document.getElementById('summarySubtotal').textContent = '{{ CURRENCY_SYMBOL }}' + subtotal.toFixed(2);
     

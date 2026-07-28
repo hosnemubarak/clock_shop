@@ -18,6 +18,12 @@ class Warehouse(TimeStampedModel):
     
     def __str__(self):
         return f"{self.name} ({self.code})"
+        
+    def save(self, *args, **kwargs):
+        if self.is_shop:
+            # Enforce single shop rule: unset is_shop on all other warehouses
+            Warehouse.objects.exclude(pk=self.pk).update(is_shop=False)
+        super().save(*args, **kwargs)
     
     def get_total_stock_value(self):
         """Calculate total value of stock in this warehouse."""

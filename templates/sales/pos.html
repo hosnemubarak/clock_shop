@@ -73,27 +73,6 @@
     </div>
 </div>
 
-<!-- Stock Selection Modal -->
-<div class="modal fade" id="stockModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-primary-subtle">
-                <h5 class="modal-title text-primary">
-                    <i class="las la-box me-1"></i> Select Warehouse
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="stockList"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-                    <i class="las la-times me-1"></i> Close
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -112,36 +91,9 @@ document.getElementById('searchProduct').addEventListener('input', function(e) {
 });
 
 function selectProduct(productId, productName, defaultPrice) {
-    fetch(`/sales/api/products/${productId}/`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.stocks.length === 0) {
-                showValidationModal('No stock available for this product in shop warehouses', 'Out of Stock');
-                return;
-            }
-            
-            let html = '<p>Available stocks for <strong>' + productName + '</strong>:</p>';
-            html += '<div class="list-group">';
-            data.stocks.forEach(stock => {
-                html += `
-                    <a href="{% url 'sale_create' %}?product=${productId}&warehouse=${stock.warehouse_id}" class="list-group-item list-group-item-action">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <strong>${stock.warehouse}</strong><br>
-                                <small class="text-muted">Cost: {{ CURRENCY_SYMBOL }}${stock.average_cost}</small>
-                            </div>
-                            <div class="text-end">
-                                <span class="badge bg-primary">${stock.quantity} avail</span>
-                            </div>
-                        </div>
-                    </a>
-                `;
-            });
-            html += '</div>';
-            
-            document.getElementById('stockList').innerHTML = html;
-            new bootstrap.Modal(document.getElementById('stockModal')).show();
-        });
+    // Simply redirect to sale_create with the product ID. 
+    // The view will handle checking the single shop's stock.
+    window.location.href = `{% url 'sale_create' %}?product=${productId}`;
 }
 </script>
 <style>
