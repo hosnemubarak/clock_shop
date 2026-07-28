@@ -105,7 +105,7 @@
                                 <th>Stock</th>
                                 <th>Price</th>
                                 <th>Status</th>
-                                <th>Actions</th>
+                                <th class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -135,7 +135,7 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <div class="d-flex gap-2">
+                                    <div class="d-flex gap-2 justify-content-center">
                                         <a href="{% url 'batch_create' %}?product={{ product.pk }}" class="btn btn-sm btn-soft-primary" title="Add Stock">
                                             <i class="las la-plus"></i> Add Stock
                                         </a>
