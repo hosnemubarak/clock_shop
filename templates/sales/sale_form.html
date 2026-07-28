@@ -13,6 +13,23 @@
 
 <form method="post" id="saleForm">
     {% csrf_token %}
+    
+    {% if form.errors %}
+    <div class="alert alert-danger">
+        <strong>Please correct the following errors:</strong>
+        <ul class="mb-0 mt-1">
+        {% for field in form %}
+            {% for error in field.errors %}
+                <li>{{ field.label }}: {{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    
     <div class="row">
         <div class="col-lg-8">
             <div class="card">
@@ -239,6 +256,18 @@ document.addEventListener('DOMContentLoaded', function() {
             allowEmptyOption: true
         });
     }
+
+    // Pre-select from URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const preProduct = urlParams.get('product');
+    const preWarehouse = urlParams.get('warehouse');
+    if (preProduct) {
+        productSelect.setValue(preProduct);
+        if (preWarehouse) {
+            // Save to a global variable to be used after fetch completes
+            window.preWarehouseToSelect = preWarehouse;
+        }
+    }
 });
 
 // Toggle between inventory and custom item forms (Bootstrap tabs handle visibility)
@@ -317,6 +346,11 @@ function loadStocks(productId) {
                 });
             });
             warehouseSelect.refreshOptions(false);
+            
+            if (window.preWarehouseToSelect) {
+                warehouseSelect.setValue(window.preWarehouseToSelect);
+                window.preWarehouseToSelect = null; // Clear it
+            }
             
             // Show warehouse availability and shop stock info
             let infoHtml = warehouseHtml;

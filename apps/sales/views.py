@@ -191,14 +191,15 @@ def sale_create(request):
             sale.save()
             
             # Update customer balance
-            sale.customer.total_purchases += sale.total_amount
-            sale.customer.total_due += sale.total_amount
-            sale.customer.save()
+            if sale.customer:
+                sale.customer.total_purchases += sale.total_amount
+                sale.customer.total_due += sale.total_amount
+                sale.customer.save()
             
             create_audit_log(request, 'SALE', sale, {
                 'total': str(sale.total_amount),
                 'items': len(items_data),
-                'customer': sale.customer.name
+                'customer': sale.customer.name if sale.customer else 'Walk-in'
             })
             
             messages.success(request, f'Sale "{sale.invoice_number}" created successfully.')
@@ -238,9 +239,10 @@ def sale_cancel(request, pk):
                         item.product.update_total_stock()
                 
                 # Update customer balance
-                sale.customer.total_purchases -= sale.total_amount
-                sale.customer.total_due -= sale.due_amount
-                sale.customer.save()
+                if sale.customer:
+                    sale.customer.total_purchases -= sale.total_amount
+                    sale.customer.total_due -= sale.due_amount
+                    sale.customer.save()
                 
                 sale.status = 'cancelled'
                 sale.save()
