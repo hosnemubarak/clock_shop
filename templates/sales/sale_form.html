@@ -63,103 +63,55 @@
                     
                     <hr>
                     
-                    <!-- Toggle between inventory and custom product -->
+                    <!-- Item Form -->
                     <div class="card bg-light-subtle border">
                         <div class="card-header border-bottom-0 pb-0">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h6 class="card-title mb-0"><i class="las la-plus-circle me-1"></i> Add Item</h6>
-                                <ul class="nav nav-pills nav-sm" role="tablist">
-                                    <li class="nav-item">
-                                        <a class="nav-link active" data-bs-toggle="tab" href="#inventoryTab" role="tab" onclick="toggleItemType('inventory')">
-                                            <i class="las la-boxes me-1"></i> From Inventory
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" data-bs-toggle="tab" href="#customTab" role="tab" onclick="toggleItemType('custom')">
-                                            <i class="las la-edit me-1"></i> Custom Entry
-                                        </a>
-                                    </li>
-                                </ul>
                             </div>
                         </div>
                         <div class="card-body pt-3">
-                            <div class="tab-content">
-                                <!-- Inventory Item Form -->
-                                <div class="tab-pane active" id="inventoryTab" role="tabpanel">
-                                    <div id="inventoryItemForm">
-                                        <!-- Row 1: Product and Warehouse -->
-                                        <div class="row g-3 mb-3">
-                                            <div class="col-md-6">
-                                                <label class="form-label fw-medium">Product <span class="text-danger">*</span></label>
-                                                <select class="form-select" id="newProduct">
-                                                    <option value="">Search or select product...</option>
-                                                    {% for p in products %}
-                                                    <option value="{{ p.id }}" data-sku="{{ p.sku }}" data-price="{{ p.default_selling_price }}">{{ p.sku }} ({{ p.total_stock }} in stock)</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label fw-medium">Warehouse <span class="text-danger">*</span></label>
-                                                <select class="form-select" id="newWarehouse">
-                                                    <option value="">Select Warehouse</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <!-- Row 2: Qty, Price, Add Button -->
-                                        <div class="row g-3 align-items-end">
-                                            <div class="col-4 col-md-3">
-                                                <label class="form-label fw-medium">Qty</label>
-                                                <input type="number" class="form-control" id="newQty" min="1" value="1">
-                                            </div>
-                                            <div class="col-5 col-md-4">
-                                                <label class="form-label fw-medium">Price</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
-                                                    <input type="number" class="form-control" id="newPrice" step="0.01">
-                                                </div>
-                                            </div>
-                                            <div class="col-3 col-md-2">
-                                                <button type="button" class="btn btn-primary w-100" onclick="addItem()">
-                                                    <i class="las la-plus fs-18"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div id="stockInfo" class="mt-2 small"></div>
+                            <div id="inventoryItemForm">
+                                <!-- Row 1: Product and Warehouse -->
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-medium">Product <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="newProduct">
+                                            <option value="">Search or select product...</option>
+                                            {% for p in products %}
+                                            <option value="{{ p.id }}" data-sku="{{ p.sku }}" data-price="{{ p.default_selling_price }}">{{ p.sku }} ({{ p.total_stock }} in stock)</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-medium">Warehouse <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="newWarehouse">
+                                            <option value="">Select Warehouse</option>
+                                        </select>
                                     </div>
                                 </div>
-
-                                <!-- Custom Item Form -->
-                                <div class="tab-pane" id="customTab" role="tabpanel">
-                                    <div id="customItemForm">
-                                        <div class="alert alert-soft-info border-0 mb-3" role="alert">
-                                            <i class="las la-info-circle me-2"></i>
-                                            Use this for <strong>old dues</strong>, <strong>legacy items</strong>, or <strong>one-time entries</strong> not in inventory.
-                                        </div>
-                                        <div class="row g-3 align-items-end">
-                                            <div class="col-md-5">
-                                                <label class="form-label fw-medium">Description <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" id="customDescription" placeholder="e.g., Old dues, Previous balance...">
-                                            </div>
-                                            <div class="col-md-2 col-4">
-                                                <label class="form-label fw-medium">Qty</label>
-                                                <input type="number" class="form-control" id="customQty" min="1" value="1">
-                                            </div>
-                                            <div class="col-md-3 col-8">
-                                                <label class="form-label fw-medium">Price <span class="text-danger">*</span></label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
-                                                    <input type="number" class="form-control" id="customPrice" step="0.01" placeholder="0.00">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <button type="button" class="btn btn-warning w-100" onclick="addCustomItem()">
-                                                    <i class="las la-plus me-1"></i> Add
-                                                </button>
-                                            </div>
+                                <!-- Row 2: Qty, Price, Add Button -->
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-4 col-md-3">
+                                        <label class="form-label fw-medium">Qty</label>
+                                        <input type="number" class="form-control" id="newQty" min="1" value="1">
+                                    </div>
+                                    <div class="col-5 col-md-4">
+                                        <label class="form-label fw-medium">Price</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
+                                            <input type="number" class="form-control" id="newPrice" step="0.01">
                                         </div>
                                     </div>
+                                    <div class="col-3 col-md-2">
+                                        <button type="button" class="btn btn-primary w-100" onclick="addItem()">
+                                            <i class="las la-plus fs-18"></i>
+                                        </button>
+                                    </div>
                                 </div>
+                                <div id="stockInfo" class="mt-2 small"></div>
                             </div>
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -184,10 +136,6 @@
                     <div class="mb-3">
                         <label class="form-label">Discount</label>
                         {{ form.discount_amount }}
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Tax</label>
-                        {{ form.tax_amount }}
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Notes</label>
@@ -269,12 +217,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
-
-// Toggle between inventory and custom item forms (Bootstrap tabs handle visibility)
-function toggleItemType(type) {
-    // Additional logic can be added here if needed
-    // Bootstrap tabs handle the visibility automatically
-}
 
 function loadStocks(productId) {
     const priceInput = document.getElementById('newPrice');
@@ -439,50 +381,9 @@ function addItem() {
     document.getElementById('stockInfo').innerHTML = '';
 }
 
-function addCustomItem() {
-    const description = document.getElementById('customDescription').value.trim();
-    const qty = parseInt(document.getElementById('customQty').value);
-    const price = parseFloat(document.getElementById('customPrice').value);
-    
-    if (!description) {
-        showValidationModal('Please enter a description for the custom item.', 'Description Required');
-        return;
-    }
-    
-    if (!qty || qty < 1) {
-        showValidationModal('Please enter a valid quantity.', 'Invalid Quantity');
-        return;
-    }
-    
-    if (!price || price <= 0) {
-        showValidationModal('Please enter a valid price.', 'Invalid Price');
-        return;
-    }
-    
-    const item = {
-        index: itemIndex++,
-        product_id: null,
-        product_sku: description,
-        warehouse_id: null,
-        warehouse_name: 'CUSTOM',
-        quantity: qty,
-        unit_price: price,
-        discount: 0,
-        is_custom: true
-    };
-    
-    items.push(item);
-    renderItems();
-    
-    // Reset custom form
-    document.getElementById('customDescription').value = '';
-    document.getElementById('customQty').value = '1';
-    document.getElementById('customPrice').value = '';
-}
-
 function removeItem(index) {
     const item = items.find(i => i.index === index);
-    if (item && !item.is_custom && item.warehouse_id && stockData[item.warehouse_id]) {
+    if (item && item.warehouse_id && stockData[item.warehouse_id]) {
         stockData[item.warehouse_id].quantity += item.quantity;
     }
     items = items.filter(i => i.index !== index);
@@ -497,10 +398,8 @@ function renderItems() {
     items.forEach(item => {
         const lineTotal = item.quantity * item.unit_price;
         subtotal += lineTotal;
-        const warehouseBadge = item.is_custom 
-            ? '<span class="badge bg-warning-subtle text-warning">CUSTOM</span>' 
-            : `<code>${escapeHtml(item.warehouse_name)}</code>`;
-        const rowClass = item.is_custom ? 'table-warning' : '';
+        const warehouseBadge = `<code>${escapeHtml(item.warehouse_name)}</code>`;
+        const rowClass = '';
         // Properly escape JSON for HTML attribute
         const itemJson = JSON.stringify(item).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
         html += `
@@ -542,15 +441,13 @@ function updateTotals() {
     });
     
     const discount = parseFloat(document.querySelector('[name="discount_amount"]').value) || 0;
-    const tax = parseFloat(document.querySelector('[name="tax_amount"]').value) || 0;
-    const total = subtotal - discount + tax;
+    const total = subtotal - discount;
     
     document.getElementById('summaryDiscount').textContent = '{{ CURRENCY_SYMBOL }}' + discount.toFixed(2);
     document.getElementById('summaryTotal').textContent = '{{ CURRENCY_SYMBOL }}' + total.toFixed(2);
 }
 
 document.querySelector('[name="discount_amount"]').addEventListener('input', updateTotals);
-document.querySelector('[name="tax_amount"]').addEventListener('input', updateTotals);
 
 document.getElementById('saleForm').addEventListener('submit', function(e) {
     if (items.length === 0) {

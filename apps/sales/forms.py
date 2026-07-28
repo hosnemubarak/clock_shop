@@ -9,7 +9,7 @@ from apps.warehouse.models import Warehouse
 class SaleForm(forms.ModelForm):
     class Meta:
         model = Sale
-        fields = ['customer', 'sale_date', 'discount_amount', 'tax_amount', 'notes']
+        fields = ['customer', 'sale_date', 'discount_amount', 'notes']
         widgets = {
             'customer': forms.Select(attrs={'class': 'form-select'}),
             'sale_date': forms.DateTimeInput(attrs={
@@ -17,11 +17,6 @@ class SaleForm(forms.ModelForm):
                 'type': 'datetime-local'
             }),
             'discount_amount': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'step': '0.01',
-                'min': '0'
-            }),
-            'tax_amount': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'step': '0.01',
                 'min': '0'

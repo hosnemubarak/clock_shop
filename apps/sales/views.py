@@ -131,63 +131,48 @@ def sale_create(request):
                 quantity = int(item['quantity'])
                 unit_price = Decimal(item['unit_price'])
                 discount = Decimal(item.get('discount', '0'))
-                is_custom = item.get('is_custom', False)
                 
-                if is_custom:
-                    # Custom item - no product/stock, just description
-                    sale_item = SaleItem.objects.create(
-                        sale=sale,
-                        product=None,
-                        quantity=quantity,
-                        unit_price=unit_price,
-                        cost_price=Decimal('0'),  # No cost for custom items
-                        discount=discount,
-                        custom_description=item.get('product_name', 'Custom Item'),
-                        is_custom=True,
-                    )
-                    subtotal += sale_item.total_price
-                else:
-                    # Regular inventory item
-                    product = Product.objects.get(pk=item['product_id'])
-                    warehouse = Warehouse.objects.get(pk=item['warehouse_id'])
-                    
-                    # Validate warehouse is a shop
-                    if not warehouse.is_shop:
-                        messages.error(request, f'Product "{product.display_name}" can only be sold from shop locations. Please transfer stock from warehouse to shop first.')
-                        sale.delete()
-                        return redirect('sale_create')
-                    
-                    stock = ProductStock.objects.select_for_update().get(product=product, warehouse=warehouse)
-                    
-                    # Validate stock
-                    if quantity > stock.quantity:
-                        messages.error(request, f'Insufficient stock for {product.display_name} in {warehouse.name}')
-                        sale.delete()
-                        return redirect('sale_create')
-                    
-                    # Create sale item
-                    sale_item = SaleItem.objects.create(
-                        sale=sale,
-                        product=product,
-                        warehouse=warehouse,
-                        quantity=quantity,
-                        unit_price=unit_price,
-                        cost_price=product.average_cost,
-                        discount=discount,
-                    )
-                    
-                    # Update stock
-                    stock.quantity -= quantity
-                    stock.save()
-                    product.update_total_stock()
-                    
-                    subtotal += sale_item.total_price
-                    total_cost += sale_item.total_cost
+                # Regular inventory item
+                product = Product.objects.get(pk=item['product_id'])
+                warehouse = Warehouse.objects.get(pk=item['warehouse_id'])
+                
+                # Validate warehouse is a shop
+                if not warehouse.is_shop:
+                    messages.error(request, f'Product "{product.display_name}" can only be sold from shop locations. Please transfer stock from warehouse to shop first.')
+                    sale.delete()
+                    return redirect('sale_create')
+                
+                stock = ProductStock.objects.select_for_update().get(product=product, warehouse=warehouse)
+                
+                # Validate stock
+                if quantity > stock.quantity:
+                    messages.error(request, f'Insufficient stock for {product.display_name} in {warehouse.name}')
+                    sale.delete()
+                    return redirect('sale_create')
+                
+                # Create sale item
+                sale_item = SaleItem.objects.create(
+                    sale=sale,
+                    product=product,
+                    warehouse=warehouse,
+                    quantity=quantity,
+                    unit_price=unit_price,
+                    cost_price=product.average_cost,
+                    discount=discount,
+                )
+                
+                # Update stock
+                stock.quantity -= quantity
+                stock.save()
+                product.update_total_stock()
+                
+                subtotal += sale_item.total_price
+                total_cost += sale_item.total_cost
             
             # Update sale totals
             sale.subtotal = subtotal
             sale.total_cost = total_cost
-            sale.total_amount = subtotal - sale.discount_amount + sale.tax_amount
+            sale.total_amount = subtotal - sale.discount_amount
             sale.save()
             
             # Update customer balance
@@ -230,9 +215,9 @@ def sale_cancel(request, pk):
             messages.error(request, 'Cannot cancel a sale with payments. Process refund first.')
         else:
             with transaction.atomic():
-                # Restore stock (skip custom items)
+                # Restore stock
                 for item in sale.items.all():
-                    if not item.is_custom and item.warehouse and item.product:
+                    if item.warehouse and item.product:
                         stock, _ = ProductStock.objects.get_or_create(product=item.product, warehouse=item.warehouse, defaults={'quantity': 0})
                         stock.quantity += item.quantity
                         stock.save()
