@@ -482,8 +482,8 @@ def pos_checkout(request):
                 amount=payment_amount,
                 payment_date=timezone.now(),
                 payment_method=payment_method,
-                reference_number=f'POS-{sale.invoice_number}',
-                collected_by=request.user,
+                reference=f'POS-{sale.invoice_number}',
+                received_by=request.user,
                 notes='POS Checkout Payment'
             )
             
