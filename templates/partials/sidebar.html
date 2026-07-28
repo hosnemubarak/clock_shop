@@ -82,65 +82,37 @@
 
                 <!-- Sales -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="#sidebarSales" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarSales">
+                    <a class="nav-link menu-link" href="{% url 'sale_list' %}">
                         <i class="las la-shopping-cart"></i> <span data-key="t-sales">Sales</span>
                     </a>
-                    <div class="collapse menu-dropdown" id="sidebarSales">
-                        <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
-                                <a href="{% url 'sale_list' %}" class="nav-link" data-key="t-all-sales">All Sales</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{% url 'sale_create' %}" class="nav-link" data-key="t-new-sale">New Sale</a>
-                            </li>
-                        </ul>
-                    </div>
                 </li>
 
                 <!-- Customers -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="#sidebarCustomers" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarCustomers">
+                    <a class="nav-link menu-link" href="{% url 'customer_list' %}">
                         <i class="las la-users"></i> <span data-key="t-customers">Customers</span>
                     </a>
-                    <div class="collapse menu-dropdown" id="sidebarCustomers">
-                        <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
-                                <a href="{% url 'customer_list' %}" class="nav-link" data-key="t-all-customers">All Customers</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{% url 'customer_create' %}" class="nav-link" data-key="t-add-customer">Add Customer</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{% url 'payment_list' %}" class="nav-link" data-key="t-payments">Payments</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{% url 'payment_create' %}" class="nav-link" data-key="t-receive-payment">Receive Payment</a>
-                            </li>
-                        </ul>
-                    </div>
+                </li>
+
+                <!-- Payments -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="{% url 'payment_list' %}">
+                        <i class="las la-money-bill-wave"></i> <span data-key="t-payments">Payments</span>
+                    </a>
                 </li>
 
                 <!-- Warehouse -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="#sidebarWarehouse" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarWarehouse">
-                        <i class="las la-warehouse"></i> <span data-key="t-warehouse">Warehouse</span>
+                    <a class="nav-link menu-link" href="{% url 'warehouse_list' %}">
+                        <i class="las la-warehouse"></i> <span data-key="t-warehouses">Warehouses</span>
                     </a>
-                    <div class="collapse menu-dropdown" id="sidebarWarehouse">
-                        <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
-                                <a href="{% url 'warehouse_list' %}" class="nav-link" data-key="t-warehouses">Warehouses</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{% url 'warehouse_create' %}" class="nav-link" data-key="t-add-warehouse">Add Warehouse</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{% url 'transfer_list' %}" class="nav-link" data-key="t-transfers">Transfers</a>
-                            </li>
-                            <!-- <li class="nav-item">
-                                <a href="{% url 'transfer_create' %}" class="nav-link" data-key="t-new-transfer">New Transfer</a>
-                            </li> -->
-                        </ul>
-                    </div>
+                </li>
+
+                <!-- Transfers -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="{% url 'transfer_list' %}">
+                        <i class="las la-exchange-alt"></i> <span data-key="t-transfers">Transfers</span>
+                    </a>
                 </li>
 
                 <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-analytics">Analytics</span></li>
@@ -161,9 +133,7 @@
                             <li class="nav-item">
                                 <a href="{% url 'stock_report' %}" class="nav-link" data-key="t-stock-report">Stock Report</a>
                             </li>
-                            <li class="nav-item">
-                                <a href="{% url 'customer_report' %}" class="nav-link" data-key="t-customer-report">Customer Report</a>
-                            </li>
+
                             <li class="nav-item">
                                 <a href="{% url 'transfer_report' %}" class="nav-link" data-key="t-transfer-history">Transfer History</a>
                             </li>

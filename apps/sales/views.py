@@ -9,6 +9,7 @@ from django.utils import timezone
 from decimal import Decimal
 import json
 import html
+import datetime
 
 from .models import Sale, SaleItem
 from .forms import SaleForm, SaleItemForm, PaymentForm
@@ -47,6 +48,23 @@ def sale_list(request):
         sales = sales.filter(sale_date__date__gte=date_from)
     if date_to:
         sales = sales.filter(sale_date__date__lte=date_to)
+        
+    # Date shortcuts
+    date_filter = request.GET.get('date_filter')
+    if date_filter == 'today':
+        today = timezone.localtime().date()
+        start_of_day = timezone.make_aware(datetime.datetime.combine(today, datetime.time.min))
+        end_of_day = timezone.make_aware(datetime.datetime.combine(today, datetime.time.max))
+        sales = sales.filter(sale_date__range=(start_of_day, end_of_day))
+        date_from = today.strftime('%Y-%m-%d')
+        date_to = today.strftime('%Y-%m-%d')
+    elif date_filter == 'this_month':
+        today = timezone.localtime().date()
+        start_of_month = timezone.make_aware(datetime.datetime.combine(today.replace(day=1), datetime.time.min))
+        end_of_day = timezone.make_aware(datetime.datetime.combine(today, datetime.time.max))
+        sales = sales.filter(sale_date__range=(start_of_month, end_of_day))
+        date_from = start_of_month.date().strftime('%Y-%m-%d')
+        date_to = today.strftime('%Y-%m-%d')
     
     paginator = Paginator(sales, 10)
     page = request.GET.get('page')
@@ -55,6 +73,9 @@ def sale_list(request):
     context = {
         'sales': sales,
         'search': search,
+        'payment_status': payment_status,
+        'date_from': date_from,
+        'date_to': date_to,
     }
     return render(request, 'sales/sale_list.html', context)
 

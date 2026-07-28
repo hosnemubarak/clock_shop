@@ -46,12 +46,20 @@ def customer_list(request):
     customers = paginator.get_page(page)
     
     # Summary stats
-    total_due = Customer.objects.aggregate(total=Sum('total_due'))['total'] or Decimal('0')
+    summary = Customer.objects.aggregate(
+        total_due=Sum('total_due'),
+        total_purchases=Sum('total_purchases')
+    )
+    total_due = summary['total_due'] or Decimal('0')
+    total_purchases = summary['total_purchases'] or Decimal('0')
+    total_customers = Customer.objects.count()
     
     context = {
         'customers': customers,
         'search': search,
         'total_due': total_due,
+        'total_purchases': total_purchases,
+        'total_customers': total_customers,
     }
     return render(request, 'customers/customer_list.html', context)
 

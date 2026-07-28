@@ -16,8 +16,24 @@
 </div>
 
 <div class="row">
-    <div class="col-xl-3 col-md-6">
-        <div class="card card-animate">
+    <div class="col-xl-4 col-md-6 mb-3">
+        <div class="card card-animate h-100 mb-0">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Total Customers</p>
+                <h4 class="fs-22 fw-semibold mt-4 text-primary">{{ total_customers|intcomma }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-6 mb-3">
+        <div class="card card-animate h-100 mb-0">
+            <div class="card-body">
+                <p class="text-uppercase fw-medium text-muted mb-0">Total Purchases</p>
+                <h4 class="fs-22 fw-semibold mt-4 text-success">{{ CURRENCY_SYMBOL }}{{ total_purchases|floatformat:2|intcomma }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-6 mb-3">
+        <div class="card card-animate h-100 mb-0">
             <div class="card-body">
                 <p class="text-uppercase fw-medium text-muted mb-0">Total Outstanding</p>
                 <h4 class="fs-22 fw-semibold mt-4 text-danger">{{ CURRENCY_SYMBOL }}{{ total_due|floatformat:2|intcomma }}</h4>

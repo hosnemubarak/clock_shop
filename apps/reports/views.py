@@ -347,44 +347,7 @@ def stock_report(request):
     return render(request, 'reports/stock_report.html', context)
 
 
-@login_required
-def customer_report(request):
-    """Customer analysis report."""
-    # Customers with dues
-    customers_with_dues = Customer.objects.filter(
-        total_due__gt=0
-    ).order_by('-total_due')
-    
-    # Paginate customers with dues
-    paginator = Paginator(customers_with_dues, 20)
-    page = request.GET.get('page')
-    customers_with_dues_page = paginator.get_page(page)
-    
-    # Top customers by purchases
-    top_customers = Customer.objects.filter(
-        total_purchases__gt=0
-    ).order_by('-total_purchases')[:20]
-    
-    # Customer summary
-    customer_summary = Customer.objects.aggregate(
-        total_customers=Count('id'),
-        active_customers=Count('id', filter=Q(is_active=True)),
-        total_dues=Sum('total_due'),
-        total_purchases=Sum('total_purchases'),
-    )
-    
-    # Recent payments
-    recent_payments = Payment.objects.select_related(
-        'customer', 'received_by'
-    ).order_by('-payment_date')[:20]
-    
-    context = {
-        'customers_with_dues': customers_with_dues_page,
-        'top_customers': top_customers,
-        'customer_summary': customer_summary,
-        'recent_payments': recent_payments,
-    }
-    return render(request, 'reports/customer_report.html', context)
+
 
 
 @login_required

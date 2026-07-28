@@ -36,10 +36,54 @@
     </div>
 </div>
 
+<!-- Quick Actions -->
+<div class="row mb-3">
+    <div class="col-xl-3 col-md-6">
+        <a href="{% url 'sale_create' %}" class="text-decoration-none">
+            <div class="card card-animate bg-primary">
+                <div class="card-body text-center p-3">
+                    <i class="las la-cart-plus text-white fs-1"></i>
+                    <h5 class="text-white mt-2 mb-0">New Sale</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <a href="{% url 'batch_create' %}" class="text-decoration-none">
+            <div class="card card-animate bg-success">
+                <div class="card-body text-center p-3">
+                    <i class="las la-box text-white fs-1"></i>
+                    <h5 class="text-white mt-2 mb-0">Stock In</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <a href="{% url 'payment_create' %}" class="text-decoration-none">
+            <div class="card card-animate bg-info">
+                <div class="card-body text-center p-3">
+                    <i class="las la-money-bill-wave text-white fs-1"></i>
+                    <h5 class="text-white mt-2 mb-0">Payment</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <a href="{% url 'customer_create' %}" class="text-decoration-none">
+            <div class="card card-animate bg-secondary">
+                <div class="card-body text-center p-3">
+                    <i class="las la-user-plus text-white fs-1"></i>
+                    <h5 class="text-white mt-2 mb-0">Customer</h5>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
 <!-- Stats Cards -->
 <div class="row">
-    <div class="col-xl-3 col-md-6">
-        <a href="{% url 'sale_list' %}" class="text-decoration-none">
+    <div class="col-xl-4 col-md-6">
+        <a href="{% url 'sale_list' %}?date_filter=today" class="text-decoration-none">
             <div class="card card-animate">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -63,8 +107,8 @@
         </a>
     </div>
 
-    <div class="col-xl-3 col-md-6">
-        <a href="{% url 'sales_report' %}" class="text-decoration-none">
+    <div class="col-xl-4 col-md-6">
+        <a href="{% url 'sale_list' %}?date_filter=this_month" class="text-decoration-none">
             <div class="card card-animate">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -88,33 +132,8 @@
         </a>
     </div>
 
-    <div class="col-xl-3 col-md-6">
-        <a href="{% url 'profit_report' %}" class="text-decoration-none">
-            <div class="card card-animate">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <p class="text-uppercase fw-medium text-muted mb-0">Monthly Profit</p>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-end justify-content-between mt-4">
-                        <div>
-                            <h4 class="fs-22 fw-semibold mb-4"><span class="counter-value" data-target="{{ profit_month }}">{{ CURRENCY_SYMBOL }}{{ profit_month|floatformat:2|intcomma }}</span></h4>
-                            <span class="text-info">View Report <i class="las la-arrow-right"></i></span>
-                        </div>
-                        <div class="avatar-sm flex-shrink-0">
-                            <span class="avatar-title bg-info-subtle rounded fs-3">
-                                <i class="las la-money-bill-wave text-info"></i>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-xl-3 col-md-6">
-        <a href="{% url 'customer_report' %}" class="text-decoration-none">
+    <div class="col-xl-4 col-md-6">
+        <a href="{% url 'customer_list' %}" class="text-decoration-none">
             <div class="card card-animate">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -141,14 +160,15 @@
 
 <!-- Second Row Stats -->
 <div class="row">
-    <div class="col-xl-3 col-md-6">
-        <a href="{% url 'product_list' %}" class="text-decoration-none">
-            <div class="card card-animate">
+    <div class="col-xl-4 col-md-6 mb-3">
+        <a href="{% url 'product_list' %}" class="text-decoration-none d-block h-100">
+            <div class="card card-animate h-100 mb-0">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <p class="fw-medium text-muted mb-0">Total Products</p>
+                            <p class="fw-medium text-muted mb-0">Products & Inventory</p>
                             <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ total_products }}">{{ total_products }}</span></h2>
+                            <p class="mb-0 text-muted mt-2"><span class="badge bg-success-subtle text-success fs-12"><i class="las la-cubes align-middle me-1"></i> {{ total_product_quantity }}</span> Total Units</p>
                         </div>
                         <div>
                             <div class="avatar-sm flex-shrink-0">
@@ -162,32 +182,10 @@
             </div>
         </a>
     </div>
-
-    <div class="col-xl-3 col-md-6">
-        <a href="{% url 'stock_report' %}" class="text-decoration-none">
-            <div class="card card-animate">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <p class="fw-medium text-muted mb-0">Total Product Quantity</p>
-                            <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ total_product_quantity }}">{{ total_product_quantity }}</span></h2>
-                        </div>
-                        <div>
-                            <div class="avatar-sm flex-shrink-0">
-                                <span class="avatar-title bg-success-subtle rounded-circle fs-2">
-                                    <i class="las la-cubes text-success"></i>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </a>
-    </div>
     
-    <div class="col-xl-3 col-md-6">
-        <a href="{% url 'stock_report' %}?stock_filter=low" class="text-decoration-none">
-            <div class="card card-animate">
+    <div class="col-xl-4 col-md-6 mb-3">
+        <a href="{% url 'stock_report' %}?stock_filter=low" class="text-decoration-none d-block h-100">
+            <div class="card card-animate h-100 mb-0">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
@@ -207,31 +205,9 @@
         </a>
     </div>
     
-    <div class="col-xl-3 col-md-6">
-        <a href="{% url 'customer_list' %}" class="text-decoration-none">
-            <div class="card card-animate">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <p class="fw-medium text-muted mb-0">Total Customers</p>
-                            <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ total_customers }}">{{ total_customers }}</span></h2>
-                        </div>
-                        <div>
-                            <div class="avatar-sm flex-shrink-0">
-                                <span class="avatar-title bg-primary-subtle rounded-circle fs-2">
-                                    <i class="las la-users text-primary"></i>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </a>
-    </div>
-    
-    <div class="col-xl-3 col-md-6">
-        <a href="{% url 'warehouse_list' %}" class="text-decoration-none">
-            <div class="card card-animate">
+    <div class="col-xl-4 col-md-6 mb-3">
+        <a href="{% url 'warehouse_list' %}" class="text-decoration-none d-block h-100">
+            <div class="card card-animate h-100 mb-0">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
@@ -303,35 +279,8 @@
         </div>
     </div>
 
-    <!-- Quick Actions & Low Stock Alerts -->
+    <!-- Low Stock Alerts Column -->
     <div class="col-xl-4">
-        <!-- Quick Actions -->
-        <div class="card">
-            <div class="card-header">
-                <h4 class="card-title mb-0">Quick Actions</h4>
-            </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
-                    <div class="d-flex gap-2">
-                        <a href="{% url 'sale_create' %}" class="btn btn-primary flex-grow-1">
-                            <i class="las la-plus"></i> New Sale
-                        </a>
-                        <a href="{% url 'batch_create' %}" class="btn btn-success flex-grow-1">
-                            <i class="las la-plus"></i> Stock In
-                        </a>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <a href="{% url 'payment_create' %}" class="btn btn-info flex-grow-1">
-                            <i class="las la-money-bill"></i> Payment
-                        </a>
-                        <a href="{% url 'customer_create' %}" class="btn btn-secondary flex-grow-1">
-                            <i class="las la-user-plus"></i> Customer
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
         <!-- Low Stock Alerts -->
         <div class="card">
             <div class="card-header align-items-center d-flex">
