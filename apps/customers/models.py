@@ -125,7 +125,8 @@ class Payment(TimeStampedModel):
     
     customer = models.ForeignKey(
         Customer, on_delete=models.PROTECT,
-        related_name='payments'
+        related_name='payments',
+        null=True, blank=True
     )
     sale = models.ForeignKey(
         'sales.Sale', on_delete=models.SET_NULL,
@@ -154,7 +155,8 @@ class Payment(TimeStampedModel):
         ordering = ['-payment_date']
     
     def __str__(self):
-        return f"Payment of {self.amount} from {self.customer.name}"
+        customer_name = self.customer.name if self.customer else 'Walk-in'
+        return f"Payment of {self.amount} from {customer_name}"
 
 
 class CustomerNote(TimeStampedModel):

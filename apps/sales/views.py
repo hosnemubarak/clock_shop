@@ -279,9 +279,10 @@ def sale_payment(request, pk):
                     )
                     
                     # Update customer balance
-                    sale.customer.total_paid += amount
-                    sale.customer.total_due -= amount
-                    sale.customer.save()
+                    if sale.customer:
+                        sale.customer.total_paid += amount
+                        sale.customer.total_due -= amount
+                        sale.customer.save()
                     
                     # Update sale
                     sale.paid_amount += amount
