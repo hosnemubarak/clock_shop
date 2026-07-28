@@ -1,0 +1,125 @@
+{% extends 'reports/pdf/base.html' %}
+
+{% block title %}Sales Report{% endblock %}
+{% block report_title %}Sales Report{% endblock %}
+
+{% block filters %}
+    <strong>Date Range:</strong> {{ date_from }} to {{ date_to }}<br>
+    {% if selected_shop %}
+        <strong>Shop:</strong> 
+        {% for shop in shops %}
+            {% if shop.id|stringformat:"s" == selected_shop %}{{ shop.name }}{% endif %}
+        {% endfor %}
+        <br>
+    {% else %}
+        <strong>Shop:</strong> All Shops<br>
+    {% endif %}
+    <strong>Group By:</strong> {{ group_by|title }}<br>
+{% endblock %}
+
+{% block content %}
+    <h3>Summary</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Total Sales</th>
+                <th>Total Cost</th>
+                <th>Total Discount</th>
+                <th>Net Profit</th>
+                <th>Transactions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ summary.total_sales|default:"0.00" }}</td>
+                <td>{{ summary.total_cost|default:"0.00" }}</td>
+                <td>{{ summary.total_discount|default:"0.00" }}</td>
+                <td>{{ summary.total_profit|default:"0.00" }}</td>
+                <td>{{ summary.count|default:"0" }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br>
+    <h3>Sales by {{ group_by|title }}</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Period</th>
+                <th class="text-right">Sales</th>
+                <th class="text-right">Cost</th>
+                <th class="text-right">Profit</th>
+                <th class="text-right">Transactions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in sales_by_period %}
+            <tr>
+                <td>{{ row.period|date:"M d, Y" }}</td>
+                <td class="text-right">{{ row.total|default:"0.00" }}</td>
+                <td class="text-right">{{ row.cost|default:"0.00" }}</td>
+                <td class="text-right">{{ row.profit|default:"0.00" }}</td>
+                <td class="text-right">{{ row.count }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">No sales data found for this period.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if not selected_shop and shop_sales %}
+    <br>
+    <h3>Shop-wise Breakdown</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Shop</th>
+                <th class="text-right">Sales</th>
+                <th class="text-right">Cost</th>
+                <th class="text-right">Profit</th>
+                <th class="text-right">Transactions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for shop in shop_sales %}
+            <tr>
+                <td>{{ shop.shop.name }}</td>
+                <td class="text-right">{{ shop.total|default:"0.00" }}</td>
+                <td class="text-right">{{ shop.cost|default:"0.00" }}</td>
+                <td class="text-right">{{ shop.profit|default:"0.00" }}</td>
+                <td class="text-right">{{ shop.count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if top_products %}
+    <br>
+    <h3>Top Selling Products</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>SKU</th>
+                <th>Brand</th>
+                <th class="text-right">Qty Sold</th>
+                <th class="text-right">Revenue</th>
+                <th class="text-right">Profit</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in top_products %}
+            <tr>
+                <td>{{ item.product__sku }}</td>
+                <td>{{ item.product__brand__name|default:"-" }}</td>
+                <td class="text-right">{{ item.total_quantity }}</td>
+                <td class="text-right">{{ item.total_revenue|default:"0.00" }}</td>
+                <td class="text-right">{{ item.total_profit|default:"0.00" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+{% endblock %}

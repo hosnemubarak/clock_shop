@@ -42,14 +42,17 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <form method="get" class="row g-3">
+                <form method="get" class="row g-3 align-items-end">
                     <div class="col-xl-3 col-lg-4 col-md-6">
+                        <label class="form-label">From Date</label>
                         <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
                     </div>
                     <div class="col-xl-3 col-lg-4 col-md-6">
+                        <label class="form-label">To Date</label>
                         <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
                     </div>
                     <div class="col-xl-3 col-lg-4 col-md-6">
+                        <label class="form-label">Status</label>
                         <select name="status" class="form-select">
                             <option value="">All Status</option>
                             <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending</option>
@@ -57,11 +60,15 @@
                             <option value="cancelled" {% if selected_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
                         </select>
                     </div>
-                    <div class="col-md-auto ms-auto d-flex gap-2">
-                        <button type="submit" class="btn btn-primary"><i class="las la-filter me-1"></i> Filter</button>
-                        {% if request.GET %}
-                        <a href="{{ request.path }}" class="btn btn-soft-danger"><i class="las la-times me-1"></i> Clear</a>
-                        {% endif %}
+                    <div class="col-auto ms-auto">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary"><i class="las la-filter"></i> Filter</button>
+                            {% if request.GET %}
+                            <a href="{{ request.path }}" class="btn btn-soft-danger"><i class="las la-times"></i> Clear</a>
+                            {% endif %}
+                            <button type="submit" name="export" value="pdf" class="btn btn-outline-danger" formtarget="_blank"><i class="las la-file-pdf"></i> PDF</button>
+                            <button type="submit" name="export" value="excel" class="btn btn-outline-success"><i class="las la-file-excel"></i> Excel</button>
+                        </div>
                     </div>
                 </form>
             </div>

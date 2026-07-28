@@ -1,0 +1,75 @@
+{% extends 'reports/pdf/base.html' %}
+
+{% block title %}Stock Report{% endblock %}
+{% block report_title %}Stock Report{% endblock %}
+
+{% block filters %}
+    {% if selected_warehouse %}
+        <strong>Warehouse:</strong> 
+        {% for wh in warehouses %}
+            {% if wh.id|stringformat:"s" == selected_warehouse %}{{ wh.name }}{% endif %}
+        {% endfor %}
+        <br>
+    {% endif %}
+
+    {% if selected_category %}
+        <strong>Category:</strong> 
+        {% for cat in categories %}
+            {% if cat.id|stringformat:"s" == selected_category %}{{ cat.name }}{% endif %}
+        {% endfor %}
+        <br>
+    {% endif %}
+
+    <strong>Stock Filter:</strong> {{ stock_filter|title }}<br>
+{% endblock %}
+
+{% block content %}
+    <h3>Summary</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Total Items in Stock</th>
+                <th>Total Inventory Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ totals.total_items|default:"0" }}</td>
+                <td>{{ totals.total_value|default:"0.00" }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br>
+    <h3>Stock Details</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>SKU</th>
+                <th>Brand</th>
+                <th>Category</th>
+                <th class="text-right">Default Price</th>
+                <th class="text-right">Total Qty</th>
+                <th class="text-right">Avg Cost</th>
+                <th class="text-right">Total Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in stock_summary %}
+            <tr>
+                <td>{{ item.product__sku }}</td>
+                <td>{{ item.product__brand__name|default:"-" }}</td>
+                <td>{{ item.product__category__name|default:"-" }}</td>
+                <td class="text-right">{{ item.product__default_selling_price|default:"0.00" }}</td>
+                <td class="text-right">{{ item.total_quantity }}</td>
+                <td class="text-right">{{ item.avg_cost|default:"0.00" }}</td>
+                <td class="text-right">{{ item.total_value|default:"0.00" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center">No stock data found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

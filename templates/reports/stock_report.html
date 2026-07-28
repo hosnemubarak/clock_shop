@@ -35,8 +35,9 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <form method="get" class="row g-3">
+                <form method="get" class="row g-3 align-items-end">
                     <div class="col-xl-3 col-lg-4 col-md-6">
+                        <label class="form-label">Warehouse</label>
                         <select name="warehouse" class="form-select">
                             <option value="">All Warehouses</option>
                             {% for w in warehouses %}
@@ -45,6 +46,7 @@
                         </select>
                     </div>
                     <div class="col-xl-3 col-lg-4 col-md-6">
+                        <label class="form-label">Category</label>
                         <select name="category" class="form-select">
                             <option value="">All Categories</option>
                             {% for c in categories %}
@@ -53,17 +55,22 @@
                         </select>
                     </div>
                     <div class="col-xl-3 col-lg-4 col-md-6">
+                        <label class="form-label">Stock Status</label>
                         <select name="stock_filter" class="form-select">
                             <option value="all">All Stock</option>
                             <option value="low" {% if stock_filter == 'low' %}selected{% endif %}>Low Stock (≤10)</option>
                             <option value="out" {% if stock_filter == 'out' %}selected{% endif %}>Out of Stock</option>
                         </select>
                     </div>
-                    <div class="col-md-auto ms-auto d-flex gap-2">
-                        <button type="submit" class="btn btn-primary"><i class="las la-filter me-1"></i> Filter</button>
-                        {% if request.GET %}
-                        <a href="{{ request.path }}" class="btn btn-soft-danger"><i class="las la-times me-1"></i> Clear</a>
-                        {% endif %}
+                    <div class="col-auto ms-auto">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary"><i class="las la-filter"></i> Filter</button>
+                            {% if request.GET %}
+                            <a href="{{ request.path }}" class="btn btn-soft-danger"><i class="las la-times"></i> Clear</a>
+                            {% endif %}
+                            <button type="submit" name="export" value="pdf" class="btn btn-outline-danger" formtarget="_blank"><i class="las la-file-pdf"></i> PDF</button>
+                            <button type="submit" name="export" value="excel" class="btn btn-outline-success"><i class="las la-file-excel"></i> Excel</button>
+                        </div>
                     </div>
                 </form>
             </div>

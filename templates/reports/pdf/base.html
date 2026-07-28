@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}Report{% endblock %}</title>
+    <style>
+        @page {
+            size: a4 portrait;
+            margin: 1.5cm;
+            @frame footer {
+                -pdf-frame-content: footerContent;
+                bottom: 0cm;
+                margin-left: 1.5cm;
+                margin-right: 1.5cm;
+                height: 1cm;
+            }
+        }
+        
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 11pt;
+            color: #333333;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            color: #438a7a;
+            font-size: 24pt;
+            margin-bottom: 5px;
+        }
+        
+        .header h2 {
+            color: #7f8c8d;
+            font-size: 16pt;
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+        
+        .meta-info {
+            font-size: 9pt;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th {
+            background-color: #438a7a;
+            color: white;
+            font-weight: bold;
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #438a7a;
+        }
+        
+        td {
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .summary-row td {
+            font-weight: bold;
+            background-color: #f8f9fa;
+        }
+        
+        #footerContent {
+            font-size: 8pt;
+            color: #7f8c8d;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="footerContent">
+        {{ company_name }} - Page <pdf:pagenumber> of <pdf:pagecount>
+    </div>
+
+    <div class="header">
+        <h1>{{ company_name }}</h1>
+        <h2>{% block report_title %}Report{% endblock %}</h2>
+    </div>
+    
+    <div class="meta-info">
+        <strong>Generated on:</strong> {{ generation_date }}<br>
+        {% block filters %}
+        {% endblock %}
+    </div>
+
+    <div class="content">
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+</html>

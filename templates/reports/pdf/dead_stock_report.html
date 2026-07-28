@@ -1,0 +1,65 @@
+{% extends 'reports/pdf/base.html' %}
+
+{% block title %}Dead Stock Report{% endblock %}
+{% block report_title %}Dead Stock Report{% endblock %}
+
+{% block filters %}
+    <strong>Inactivity Period:</strong> > {{ days_threshold }} Days<br>
+    <strong>Threshold Date:</strong> Before {{ threshold_date|date:"M d, Y" }}<br>
+{% endblock %}
+
+{% block content %}
+    <h3>Summary</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Total Dead Stock Items</th>
+                <th>Total Dead Stock Value</th>
+                <th>Number of Batches</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ dead_stock_summary.total_items|default:"0" }}</td>
+                <td>{{ dead_stock_summary.total_value|default:"0.00" }}</td>
+                <td>{{ dead_stock_summary.batch_count|default:"0" }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br>
+    <h3>Dead Stock Details</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>SKU</th>
+                <th>Brand</th>
+                <th>Category</th>
+                <th>Warehouse</th>
+                <th class="text-right">Qty</th>
+                <th class="text-right">Buy Price</th>
+                <th class="text-right">Total Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for batch in dead_stock %}
+            <tr>
+                <td>{{ batch.product.sku }}</td>
+                <td>{{ batch.product.brand.name|default:"-" }}</td>
+                <td>{{ batch.product.category.name|default:"-" }}</td>
+                <td>{{ batch.warehouse.name }}</td>
+                <td class="text-right">{{ batch.quantity }}</td>
+                <td class="text-right">{{ batch.buy_price|default:"0.00" }}</td>
+                <td class="text-right">
+                    {% widthratio batch.quantity 1 batch.buy_price as value %}
+                    {{ value|default:"0.00" }}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center">No dead stock found based on criteria.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

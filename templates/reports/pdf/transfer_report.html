@@ -1,0 +1,66 @@
+{% extends 'reports/pdf/base.html' %}
+
+{% block title %}Transfer Report{% endblock %}
+{% block report_title %}Transfer Report{% endblock %}
+
+{% block filters %}
+    <strong>Date Range:</strong> {{ date_from|default:"All" }} to {{ date_to|default:"All" }}<br>
+    <strong>Status:</strong> {{ selected_status|title|default:"All" }}<br>
+{% endblock %}
+
+{% block content %}
+    <h3>Summary</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Total Transfers</th>
+                <th>Completed</th>
+                <th>Pending</th>
+                <th>Cancelled</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ transfer_summary.total_transfers|default:"0" }}</td>
+                <td>{{ transfer_summary.completed|default:"0" }}</td>
+                <td>{{ transfer_summary.pending|default:"0" }}</td>
+                <td>{{ transfer_summary.cancelled|default:"0" }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br>
+    <h3>Transfer History</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Date</th>
+                <th>Source</th>
+                <th>Destination</th>
+                <th>Status</th>
+                <th>Items</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for transfer in transfers %}
+            <tr>
+                <td>#{{ transfer.id }}</td>
+                <td>{{ transfer.transfer_date|date:"M d, Y" }}</td>
+                <td>{{ transfer.source_warehouse.name }}</td>
+                <td>{{ transfer.destination_warehouse.name }}</td>
+                <td>{{ transfer.get_status_display }}</td>
+                <td>
+                    {% for item in transfer.items.all %}
+                        {{ item.source_batch.product.name }} (x{{ item.quantity }}){% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">No transfers found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

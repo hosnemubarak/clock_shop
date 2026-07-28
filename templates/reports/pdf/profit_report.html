@@ -1,0 +1,89 @@
+{% extends 'reports/pdf/base.html' %}
+
+{% block title %}Profit Report{% endblock %}
+{% block report_title %}Profit Report{% endblock %}
+
+{% block filters %}
+    <strong>Date Range:</strong> {{ date_from }} to {{ date_to }}<br>
+    
+    {% if selected_product %}
+        <strong>Product:</strong> 
+        {% for prod in products %}
+            {% if prod.id|stringformat:"s" == selected_product %}{{ prod.name }}{% endif %}
+        {% endfor %}
+        <br>
+    {% endif %}
+
+    {% if selected_category %}
+        <strong>Category:</strong> 
+        {% for cat in categories %}
+            {% if cat.id|stringformat:"s" == selected_category %}{{ cat.name }}{% endif %}
+        {% endfor %}
+        <br>
+    {% endif %}
+
+    {% if selected_shop %}
+        <strong>Shop:</strong> 
+        {% for shop in shops %}
+            {% if shop.id|stringformat:"s" == selected_shop %}{{ shop.name }}{% endif %}
+        {% endfor %}
+        <br>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <h3>Summary</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Total Revenue</th>
+                <th>Total Cost</th>
+                <th>Total Profit</th>
+                <th>Overall Margin</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ totals.total_revenue|default:"0.00" }}</td>
+                <td>{{ totals.total_cost|default:"0.00" }}</td>
+                <td>{{ totals.total_profit|default:"0.00" }}</td>
+                <td>{{ totals.margin }}%</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br>
+    <h3>Profit by Product</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>SKU</th>
+                <th>Brand</th>
+                <th>Category</th>
+                <th class="text-right">Qty</th>
+                <th class="text-right">Revenue</th>
+                <th class="text-right">Cost</th>
+                <th class="text-right">Profit</th>
+                <th class="text-right">Margin</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in profit_by_product %}
+            <tr>
+                <td>{{ item.product__sku }}</td>
+                <td>{{ item.product__brand__name|default:"-" }}</td>
+                <td>{{ item.product__category__name|default:"-" }}</td>
+                <td class="text-right">{{ item.quantity_sold }}</td>
+                <td class="text-right">{{ item.revenue|default:"0.00" }}</td>
+                <td class="text-right">{{ item.cost|default:"0.00" }}</td>
+                <td class="text-right">{{ item.profit|default:"0.00" }}</td>
+                <td class="text-right">{{ item.margin }}%</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center">No profit data found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
