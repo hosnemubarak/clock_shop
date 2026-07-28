@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.http import JsonResponse
 from decimal import Decimal
 
@@ -383,6 +383,15 @@ def api_customer_create(request):
                     'phone': customer.phone
                 }
             })
+        except IntegrityError as e:
+            error_msg = str(e)
+            if 'email' in error_msg.lower():
+                message = "A customer with this email already exists."
+            elif 'phone' in error_msg.lower():
+                message = "A customer with this phone number already exists."
+            else:
+                message = "A customer with this information already exists."
+            return JsonResponse({'status': 'error', 'message': message}, status=400)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     
