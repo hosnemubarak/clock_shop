@@ -15,14 +15,14 @@
             <tr>
                 <th>Total Dead Stock Items</th>
                 <th>Total Dead Stock Value</th>
-                <th>Number of Batches</th>
+                <th>Number of Stock Records</th>
             </tr>
         </thead>
         <tbody>
             <tr>
                 <td>{{ dead_stock_summary.total_items|default:"0" }}</td>
                 <td>{{ dead_stock_summary.total_value|default:"0.00" }}</td>
-                <td>{{ dead_stock_summary.batch_count|default:"0" }}</td>
+                <td>{{ dead_stock_summary.stock_count|default:"0" }}</td>
             </tr>
         </tbody>
     </table>
@@ -42,16 +42,16 @@
             </tr>
         </thead>
         <tbody>
-            {% for batch in dead_stock %}
+            {% for stock in dead_stock %}
             <tr>
-                <td>{{ batch.product.sku }}</td>
-                <td>{{ batch.product.brand.name|default:"-" }}</td>
-                <td>{{ batch.product.category.name|default:"-" }}</td>
-                <td>{{ batch.warehouse.name }}</td>
-                <td class="text-right">{{ batch.quantity }}</td>
-                <td class="text-right">{{ batch.buy_price|default:"0.00" }}</td>
+                <td>{{ stock.product.sku }}</td>
+                <td>{{ stock.product.brand.name|default:"-" }}</td>
+                <td>{{ stock.product.category.name|default:"-" }}</td>
+                <td>{{ stock.warehouse.name }}</td>
+                <td class="text-right">{{ stock.quantity }}</td>
+                <td class="text-right">{{ stock.product.average_cost|default:"0.00" }}</td>
                 <td class="text-right">
-                    {% widthratio batch.quantity 1 batch.buy_price as value %}
+                    {% widthratio stock.quantity 1 stock.product.average_cost as value %}
                     {{ value|default:"0.00" }}
                 </td>
             </tr>

@@ -89,7 +89,7 @@
                     <a href="{% url 'product_edit' product.pk %}" class="btn btn-primary flex-grow-1">
                         <i class="las la-pen"></i> Edit
                     </a>
-                    <a href="{% url 'batch_create' %}?product={{ product.pk }}" class="btn btn-success flex-grow-1">
+                    <a href="{% url 'purchase_create' %}?product={{ product.pk }}" class="btn btn-success flex-grow-1">
                         <i class="las la-plus"></i> Stock In
                     </a>
                 </div>
@@ -97,37 +97,28 @@
         </div>
     </div>
 
-    <div class="col-lg-8">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">Available Stock by Batch</h5>
+                <h5 class="card-title mb-0">Available Stock</h5>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-striped align-middle mb-0">
                         <thead>
                             <tr>
-                                <th>Batch #</th>
                                 <th>Warehouse</th>
-                                <th>Buy Price</th>
                                 <th>Quantity</th>
-                                <th>Value</th>
-                                <th>Purchase Date</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for batch in available_batches %}
+                            {% for stock in stocks %}
                             <tr>
-                                <td><a href="{% url 'batch_detail' batch.pk %}">{{ batch.batch_number }}</a></td>
-                                <td>{{ batch.warehouse.name }}</td>
-                                <td>{{ CURRENCY_SYMBOL }}{{ batch.buy_price|floatformat:2 }}</td>
-                                <td><span class="badge bg-primary">{{ batch.quantity }}</span></td>
-                                <td>{{ CURRENCY_SYMBOL }}{{ batch.total_value|floatformat:2 }}</td>
-                                <td>{{ batch.purchase_date|date:"M d, Y" }}</td>
+                                <td>{{ stock.warehouse.name }}</td>
+                                <td><span class="badge bg-primary">{{ stock.quantity }}</span></td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">No stock available</td>
+                                <td colspan="2" class="text-center text-muted py-4">No stock available</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -135,40 +126,5 @@
                 </div>
             </div>
         </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Batch History</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th>Batch #</th>
-                                <th>Warehouse</th>
-                                <th>Initial</th>
-                                <th>Remaining</th>
-                                <th>Sold</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for batch in all_batches %}
-                            <tr>
-                                <td><small>{{ batch.batch_number }}</small></td>
-                                <td><small>{{ batch.warehouse.code }}</small></td>
-                                <td>{{ batch.initial_quantity }}</td>
-                                <td>{{ batch.quantity }}</td>
-                                <td>{{ batch.sold_quantity }}</td>
-                                <td><small>{{ batch.purchase_date|date:"M d, Y" }}</small></td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 {% endblock %}

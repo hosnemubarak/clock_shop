@@ -2,7 +2,8 @@ from django import forms
 from django.utils import timezone
 from .models import Sale, SaleItem
 from apps.customers.models import Customer
-from apps.inventory.models import Product, Batch
+from apps.inventory.models import Product
+from apps.warehouse.models import Warehouse
 
 
 class SaleForm(forms.ModelForm):
@@ -36,14 +37,14 @@ class SaleForm(forms.ModelForm):
 
 
 class SaleItemForm(forms.Form):
-    """Form for adding items to a sale with manual batch selection."""
+    """Form for adding items to a sale with manual stock selection."""
     product = forms.ModelChoiceField(
         queryset=Product.objects.filter(is_active=True, total_stock__gt=0),
         widget=forms.Select(attrs={'class': 'form-select product-select'})
     )
-    batch = forms.ModelChoiceField(
-        queryset=Batch.objects.filter(quantity__gt=0),
-        widget=forms.Select(attrs={'class': 'form-select batch-select'})
+    warehouse = forms.ModelChoiceField(
+        queryset=Warehouse.objects.filter(is_active=True),
+        widget=forms.Select(attrs={'class': 'form-select warehouse-select'})
     )
     quantity = forms.IntegerField(
         min_value=1,
@@ -64,13 +65,17 @@ class SaleItemForm(forms.Form):
     
     def clean(self):
         cleaned_data = super().clean()
-        batch = cleaned_data.get('batch')
+        warehouse = cleaned_data.get('warehouse')
+        product = cleaned_data.get('product')
         quantity = cleaned_data.get('quantity')
         
-        if batch and quantity:
-            if quantity > batch.quantity:
+        if warehouse and product and quantity:
+            from apps.inventory.models import ProductStock
+            stock = ProductStock.objects.filter(product=product, warehouse=warehouse).first()
+            if not stock or quantity > stock.quantity:
+                stock_qty = stock.quantity if stock else 0
                 raise forms.ValidationError(
-                    f'Requested quantity ({quantity}) exceeds available stock ({batch.quantity}) in batch {batch.batch_number}.'
+                    f'Requested quantity ({quantity}) exceeds available stock ({stock_qty}) in {warehouse.name}.'
                 )
         
         return cleaned_data

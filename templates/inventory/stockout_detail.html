@@ -105,7 +105,7 @@
                             <tr>
                                 <th>#</th>
                                 <th>Product</th>
-                                <th>Batch</th>
+                                <!-- Removed batch column -->
                                 <th class="text-center">Quantity</th>
                                 <th class="text-end">Unit Cost</th>
                                 <th class="text-end">Total Cost</th>
@@ -116,11 +116,11 @@
                             <tr>
                                 <td>{{ forloop.counter }}</td>
                                 <td>
-                                    <a href="{% url 'product_detail' item.batch.product.pk %}">
-                                        {{ item.batch.product.sku }}
+                                    <a href="{% url 'product_detail' item.product.pk %}">
+                                        {{ item.product.sku }}
                                     </a>
                                 </td>
-                                <td><code>{{ item.batch.batch_number }}</code></td>
+                                <!-- Removed batch cell -->
                                 <td class="text-center">{{ item.quantity }}</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.cost_price|floatformat:2 }}</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.total_cost|floatformat:2 }}</td>
@@ -243,7 +243,7 @@
 <script>
 {% if stockout.status == 'completed' %}
 function confirmCancelStockout() {
-    const message = `Are you sure you want to cancel this stock out?\n\nReference: {{ stockout.stockout_number }}\nWarehouse: {{ stockout.warehouse.name }}\nTotal Items: {{ stockout.total_quantity }} units\n\nAll stock will be restored to the original batches.`;
+    const message = `Are you sure you want to cancel this stock out?\n\nReference: {{ stockout.stockout_number }}\nWarehouse: {{ stockout.warehouse.name }}\nTotal Items: {{ stockout.total_quantity }} units\n\nAll stock will be restored to the original products.`;
     showDangerModal(
         message,
         'Cancel Stock Out',

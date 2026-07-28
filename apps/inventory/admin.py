@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Brand, Product, Batch, Purchase, PurchaseItem, StockOut, StockOutItem
+from .models import Category, Brand, Product, ProductStock, Purchase, PurchaseItem, StockOut, StockOutItem
 
 
 @admin.register(Category)
@@ -49,22 +49,20 @@ class ProductAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(Batch)
-class BatchAdmin(admin.ModelAdmin):
-    list_display = ['batch_number', 'product', 'warehouse', 'buy_price', 'quantity', 'initial_quantity', 'purchase_date', 'supplier']
-    list_filter = ['warehouse', 'purchase_date', 'product__category']
-    search_fields = ['batch_number', 'product__sku', 'product__brand__name', 'supplier']
-    readonly_fields = ['batch_number', 'created_at', 'updated_at']
-    ordering = ['-purchase_date', '-created_at']
+@admin.register(ProductStock)
+class ProductStockAdmin(admin.ModelAdmin):
+    list_display = ['product', 'warehouse', 'quantity', 'created_at']
+    list_filter = ['warehouse']
+    search_fields = ['product__sku', 'product__brand__name']
+    readonly_fields = ['created_at', 'updated_at']
     list_per_page = 25
     autocomplete_fields = ['product', 'warehouse']
-    date_hierarchy = 'purchase_date'
 
 
 class PurchaseItemInline(admin.TabularInline):
     model = PurchaseItem
     extra = 0
-    readonly_fields = ['batch', 'product', 'quantity', 'unit_price']
+    readonly_fields = ['product', 'warehouse', 'quantity', 'unit_price']
     can_delete = False
 
 
@@ -83,7 +81,7 @@ class PurchaseAdmin(admin.ModelAdmin):
 class StockOutItemInline(admin.TabularInline):
     model = StockOutItem
     extra = 0
-    readonly_fields = ['batch', 'quantity', 'cost_price']
+    readonly_fields = ['product', 'quantity', 'cost_price']
     can_delete = False
 
 

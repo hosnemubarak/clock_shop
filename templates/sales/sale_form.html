@@ -25,7 +25,7 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Product</th>
-                                    <th>Batch</th>
+                                    <th>Warehouse</th>
                                     <th width="80">Qty</th>
                                     <th width="120">Price</th>
                                     <th width="120">Total</th>
@@ -70,7 +70,7 @@
                                 <!-- Inventory Item Form -->
                                 <div class="tab-pane active" id="inventoryTab" role="tabpanel">
                                     <div id="inventoryItemForm">
-                                        <!-- Row 1: Product and Batch -->
+                                        <!-- Row 1: Product and Warehouse -->
                                         <div class="row g-3 mb-3">
                                             <div class="col-md-6">
                                                 <label class="form-label fw-medium">Product <span class="text-danger">*</span></label>
@@ -82,9 +82,9 @@
                                                 </select>
                                             </div>
                                             <div class="col-md-6">
-                                                <label class="form-label fw-medium">Batch <span class="text-danger">*</span></label>
-                                                <select class="form-select" id="newBatch">
-                                                    <option value="">Select Batch</option>
+                                                <label class="form-label fw-medium">Warehouse <span class="text-danger">*</span></label>
+                                                <select class="form-select" id="newWarehouse">
+                                                    <option value="">Select Warehouse</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -107,7 +107,7 @@
                                                 </button>
                                             </div>
                                         </div>
-                                        <div id="batchInfo" class="mt-2 small"></div>
+                                        <div id="stockInfo" class="mt-2 small"></div>
                                     </div>
                                 </div>
 
@@ -206,9 +206,9 @@
 <script>
 let items = [];
 let itemIndex = 0;
-let batchesData = {};
+let stockData = {};
 let productSelect = null;
-let batchSelect = null;
+let warehouseSelect = null;
 let customerSelect = null;
 
 // Initialize Tom Select for searchable dropdowns
@@ -218,16 +218,16 @@ document.addEventListener('DOMContentLoaded', function() {
         placeholder: 'Search or select product...',
         allowEmptyOption: true,
         onChange: function(value) {
-            loadBatches(value);
+            loadStocks(value);
         }
     });
     
-    // Batch dropdown
-    batchSelect = new TomSelect('#newBatch', {
-        placeholder: 'Select batch...',
+    // Warehouse dropdown
+    warehouseSelect = new TomSelect('#newWarehouse', {
+        placeholder: 'Select warehouse...',
         allowEmptyOption: true,
         onChange: function(value) {
-            updateBatchInfo(value);
+            updateStockInfo(value);
         }
     });
     
@@ -247,16 +247,16 @@ function toggleItemType(type) {
     // Bootstrap tabs handle the visibility automatically
 }
 
-function loadBatches(productId) {
+function loadStocks(productId) {
     const priceInput = document.getElementById('newPrice');
-    const batchInfo = document.getElementById('batchInfo');
+    const stockInfo = document.getElementById('stockInfo');
     
-    // Clear batch dropdown
-    batchSelect.clear();
-    batchSelect.clearOptions();
-    batchSelect.addOption({value: '', text: 'Select Batch'});
-    batchInfo.innerHTML = '';
-    batchSelect.enable();  // Re-enable batch select
+    // Clear warehouse dropdown
+    warehouseSelect.clear();
+    warehouseSelect.clearOptions();
+    warehouseSelect.addOption({value: '', text: 'Select Warehouse'});
+    stockInfo.innerHTML = '';
+    warehouseSelect.enable();  // Re-enable warehouse select
     
     if (!productId) return;
     
@@ -269,7 +269,7 @@ function loadBatches(productId) {
     fetch(`/sales/api/products/${productId}/`)
         .then(response => response.json())
         .then(data => {
-            batchesData = {};
+            stockData = {};
             
             // Build warehouse availability display
             let warehouseHtml = '';
@@ -284,9 +284,9 @@ function loadBatches(productId) {
             }
             
             // Check if product has no shop stock but has warehouse stock
-            if (data.batches.length === 0 && data.warehouse_stock > 0) {
-                batchSelect.disable();  // Disable batch selection
-                batchInfo.innerHTML = `
+            if (data.stocks.length === 0 && data.warehouse_stock > 0) {
+                warehouseSelect.disable();  // Disable warehouse selection
+                stockInfo.innerHTML = `
                     ${warehouseHtml}
                     <div class="alert alert-warning mb-0 mt-2">
                         <i class="las la-exclamation-triangle me-1"></i>
@@ -299,9 +299,9 @@ function loadBatches(productId) {
                 return;
             }
             
-            if (data.batches.length === 0) {
-                batchSelect.disable();  // Disable batch selection
-                batchInfo.innerHTML = `
+            if (data.stocks.length === 0) {
+                warehouseSelect.disable();  // Disable warehouse selection
+                stockInfo.innerHTML = `
                     <div class="alert alert-danger mb-0 mt-2">
                         <i class="las la-times-circle me-1"></i>
                         No stock available for this product.
@@ -309,14 +309,14 @@ function loadBatches(productId) {
                 return;
             }
             
-            data.batches.forEach(batch => {
-                batchesData[batch.id] = batch;
-                batchSelect.addOption({
-                    value: batch.id,
-                    text: `${batch.batch_number} - ${batch.warehouse} (${batch.quantity} avail) @ {{ CURRENCY_SYMBOL }}${batch.buy_price}`
+            data.stocks.forEach(stock => {
+                stockData[stock.warehouse_id] = stock;
+                warehouseSelect.addOption({
+                    value: stock.warehouse_id,
+                    text: `${stock.warehouse} (${stock.quantity} avail) @ {{ CURRENCY_SYMBOL }}${stock.average_cost}`
                 });
             });
-            batchSelect.refreshOptions(false);
+            warehouseSelect.refreshOptions(false);
             
             // Show warehouse availability and shop stock info
             let infoHtml = warehouseHtml;
@@ -327,16 +327,16 @@ function loadBatches(productId) {
                         ${data.shop_stock} units available for sale (${data.warehouse_stock} more in warehouses)
                     </div>`;
             }
-            batchInfo.innerHTML = infoHtml;
+            stockInfo.innerHTML = infoHtml;
         });
 }
 
-function updateBatchInfo(batchId) {
-    const info = document.getElementById('batchInfo');
+function updateStockInfo(warehouseId) {
+    const info = document.getElementById('stockInfo');
     
-    if (batchId && batchesData[batchId]) {
-        const batch = batchesData[batchId];
-        info.innerHTML = `<i class="las la-info-circle"></i> Available: ${batch.quantity} units | Cost: {{ CURRENCY_SYMBOL }}${batch.buy_price} | Purchased: ${batch.purchase_date}`;
+    if (warehouseId && stockData[warehouseId]) {
+        const stock = stockData[warehouseId];
+        info.innerHTML = `<i class="las la-info-circle"></i> Available: ${stock.quantity} units | Cost: {{ CURRENCY_SYMBOL }}${stock.average_cost}`;
     } else {
         info.innerHTML = '';
     }
@@ -344,7 +344,7 @@ function updateBatchInfo(batchId) {
 
 function addItem() {
     const productId = productSelect.getValue();
-    const batchId = batchSelect.getValue();
+    const warehouseId = warehouseSelect.getValue();
     const qty = parseInt(document.getElementById('newQty').value);
     const price = parseFloat(document.getElementById('newPrice').value);
     
@@ -353,8 +353,8 @@ function addItem() {
         return;
     }
     
-    if (!batchId) {
-        showValidationModal('Please select a batch for this product.', 'Batch Required');
+    if (!warehouseId) {
+        showValidationModal('Please select a warehouse for this product.', 'Warehouse Required');
         return;
     }
     
@@ -368,9 +368,9 @@ function addItem() {
         return;
     }
     
-    const batch = batchesData[batchId];
-    if (qty > batch.quantity) {
-        showValidationModal(`Only ${batch.quantity} units available in this batch. Please reduce the quantity.`, 'Insufficient Stock');
+    const stock = stockData[warehouseId];
+    if (qty > stock.quantity) {
+        showValidationModal(`Only ${stock.quantity} units available in this warehouse. Please reduce the quantity.`, 'Insufficient Stock');
         return;
     }
     
@@ -380,8 +380,8 @@ function addItem() {
         index: itemIndex++,
         product_id: productId,
         product_sku: productOption.dataset.sku,
-        batch_id: batchId,
-        batch_number: batch.batch_number,
+        warehouse_id: warehouseId,
+        warehouse_name: stock.warehouse,
         quantity: qty,
         unit_price: price,
         discount: 0,
@@ -390,19 +390,19 @@ function addItem() {
     
     items.push(item);
     
-    // Update available quantity in batch data
-    batchesData[batchId].quantity -= qty;
+    // Update available quantity in stock data
+    stockData[warehouseId].quantity -= qty;
     
     renderItems();
     
     // Reset using Tom Select
     productSelect.clear();
-    batchSelect.clear();
-    batchSelect.clearOptions();
-    batchSelect.addOption({value: '', text: 'Select Batch'});
+    warehouseSelect.clear();
+    warehouseSelect.clearOptions();
+    warehouseSelect.addOption({value: '', text: 'Select Warehouse'});
     document.getElementById('newQty').value = '1';
     document.getElementById('newPrice').value = '';
-    document.getElementById('batchInfo').innerHTML = '';
+    document.getElementById('stockInfo').innerHTML = '';
 }
 
 function addCustomItem() {
@@ -429,8 +429,8 @@ function addCustomItem() {
         index: itemIndex++,
         product_id: null,
         product_sku: description,
-        batch_id: null,
-        batch_number: 'CUSTOM',
+        warehouse_id: null,
+        warehouse_name: 'CUSTOM',
         quantity: qty,
         unit_price: price,
         discount: 0,
@@ -448,8 +448,8 @@ function addCustomItem() {
 
 function removeItem(index) {
     const item = items.find(i => i.index === index);
-    if (item && !item.is_custom && item.batch_id && batchesData[item.batch_id]) {
-        batchesData[item.batch_id].quantity += item.quantity;
+    if (item && !item.is_custom && item.warehouse_id && stockData[item.warehouse_id]) {
+        stockData[item.warehouse_id].quantity += item.quantity;
     }
     items = items.filter(i => i.index !== index);
     renderItems();
@@ -463,16 +463,16 @@ function renderItems() {
     items.forEach(item => {
         const lineTotal = item.quantity * item.unit_price;
         subtotal += lineTotal;
-        const batchBadge = item.is_custom 
+        const warehouseBadge = item.is_custom 
             ? '<span class="badge bg-warning-subtle text-warning">CUSTOM</span>' 
-            : `<code>${escapeHtml(item.batch_number)}</code>`;
+            : `<code>${escapeHtml(item.warehouse_name)}</code>`;
         const rowClass = item.is_custom ? 'table-warning' : '';
         // Properly escape JSON for HTML attribute
         const itemJson = JSON.stringify(item).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
         html += `
             <tr class="${rowClass}">
                 <td>${escapeHtml(item.product_sku)}</td>
-                <td>${batchBadge}</td>
+                <td>${warehouseBadge}</td>
                 <td>${item.quantity}</td>
                 <td>{{ CURRENCY_SYMBOL }}${item.unit_price.toFixed(2)}</td>
                 <td>{{ CURRENCY_SYMBOL }}${lineTotal.toFixed(2)}</td>

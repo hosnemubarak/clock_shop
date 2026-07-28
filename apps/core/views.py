@@ -10,7 +10,7 @@ from decimal import Decimal
 
 from .models import AuditLog, SystemSettings
 from .forms import SystemSettingsForm
-from apps.inventory.models import Product, Batch
+from apps.inventory.models import Product, ProductStock
 from apps.sales.models import Sale, SaleItem
 from apps.customers.models import Customer, Payment
 from apps.warehouse.models import Warehouse
@@ -46,7 +46,7 @@ def dashboard(request):
     # Inventory metrics
     total_products = Product.objects.filter(is_active=True).count()
 
-    total_product_quantity = Batch.objects.filter(
+    total_product_quantity = ProductStock.objects.filter(
         quantity__gt=0
     ).aggregate(total=Sum('quantity'))['total'] or 0
     
@@ -55,7 +55,7 @@ def dashboard(request):
     db_settings = SystemSettings.get_settings()
     low_stock_threshold = db_settings.low_stock_threshold or 5
     
-    low_stock_products = Batch.objects.filter(
+    low_stock_products = ProductStock.objects.filter(
         quantity__gt=0,
         quantity__lte=low_stock_threshold
     ).values('product').distinct().count()
@@ -73,7 +73,7 @@ def dashboard(request):
     recent_sales = Sale.objects.select_related('customer').order_by('-sale_date')[:10]
     
     # Low stock alerts
-    low_stock_batches = Batch.objects.filter(
+    low_stock_items = ProductStock.objects.filter(
         quantity__gt=0,
         quantity__lte=low_stock_threshold
     ).select_related('product', 'warehouse').order_by('quantity')[:10]
@@ -105,7 +105,7 @@ def dashboard(request):
         'total_dues': total_dues,
         'total_warehouses': total_warehouses,
         'recent_sales': recent_sales,
-        'low_stock_batches': low_stock_batches,
+        'low_stock_items': low_stock_items,
         'paid_count': paid_count,
         'partial_count': partial_count,
         'unpaid_count': unpaid_count,

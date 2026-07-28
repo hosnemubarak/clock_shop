@@ -130,7 +130,7 @@ class Sale(TimeStampedModel):
 class SaleItem(TimeStampedModel):
     """
     Individual items in a sale.
-    Links directly to a batch for COGS tracking.
+    Links directly to a product stock for COGS tracking.
     Supports custom entries for old dues, legacy items, etc.
     """
     sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name='items')
@@ -139,11 +139,11 @@ class SaleItem(TimeStampedModel):
         related_name='sale_items',
         null=True, blank=True  # Null for custom items
     )
-    batch = models.ForeignKey(
-        'inventory.Batch', on_delete=models.PROTECT,
+    warehouse = models.ForeignKey(
+        'warehouse.Warehouse', on_delete=models.PROTECT,
         related_name='sale_items',
-        help_text='Specific batch this item was sold from',
-        null=True, blank=True  # Null for custom items
+        help_text='Warehouse fulfilled from',
+        null=True, blank=True
     )
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     unit_price = models.DecimalField(
@@ -154,7 +154,7 @@ class SaleItem(TimeStampedModel):
     cost_price = models.DecimalField(
         max_digits=12, decimal_places=2,
         validators=[MinValueValidator(Decimal('0.00'))],
-        help_text='Cost price from batch (for profit calculation)'
+        help_text='Cost price for profit calculation'
     )
     discount = models.DecimalField(
         max_digits=12, decimal_places=2,
@@ -192,9 +192,9 @@ class SaleItem(TimeStampedModel):
         return self.total_price - self.total_cost
     
     def save(self, *args, **kwargs):
-        # Auto-set cost price from batch if not set
-        if not self.cost_price and self.batch:
-            self.cost_price = self.batch.buy_price
+        # Auto-set cost price from product average cost if not set
+        if not self.cost_price and self.product:
+            self.cost_price = self.product.average_cost
         super().save(*args, **kwargs)
 
 

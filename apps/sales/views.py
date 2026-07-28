@@ -13,7 +13,8 @@ import datetime
 
 from .models import Sale, SaleItem
 from .forms import SaleForm, SaleItemForm, PaymentForm
-from apps.inventory.models import Product, Batch
+from apps.inventory.models import Product, ProductStock
+from apps.warehouse.models import Warehouse
 from apps.customers.models import Customer, Payment
 from apps.core.utils import create_audit_log
 
@@ -85,7 +86,7 @@ def sale_detail(request, pk):
     """View sale/invoice details."""
     sale = get_object_or_404(
         Sale.objects.select_related('customer', 'created_by').prefetch_related(
-            'items__product', 'items__batch'
+            'items__product', 'items__warehouse'
         ),
         pk=pk
     )
@@ -133,11 +134,10 @@ def sale_create(request):
                 is_custom = item.get('is_custom', False)
                 
                 if is_custom:
-                    # Custom item - no product/batch, just description
+                    # Custom item - no product/stock, just description
                     sale_item = SaleItem.objects.create(
                         sale=sale,
                         product=None,
-                        batch=None,
                         quantity=quantity,
                         unit_price=unit_price,
                         cost_price=Decimal('0'),  # No cost for custom items
@@ -149,17 +149,19 @@ def sale_create(request):
                 else:
                     # Regular inventory item
                     product = Product.objects.get(pk=item['product_id'])
-                    batch = Batch.objects.select_for_update().get(pk=item['batch_id'])
+                    warehouse = Warehouse.objects.get(pk=item['warehouse_id'])
                     
-                    # Validate batch is from a shop warehouse
-                    if not batch.warehouse.is_shop:
+                    # Validate warehouse is a shop
+                    if not warehouse.is_shop:
                         messages.error(request, f'Product "{product.display_name}" can only be sold from shop locations. Please transfer stock from warehouse to shop first.')
                         sale.delete()
                         return redirect('sale_create')
                     
+                    stock = ProductStock.objects.select_for_update().get(product=product, warehouse=warehouse)
+                    
                     # Validate stock
-                    if quantity > batch.quantity:
-                        messages.error(request, f'Insufficient stock in batch {batch.batch_number}')
+                    if quantity > stock.quantity:
+                        messages.error(request, f'Insufficient stock for {product.display_name} in {warehouse.name}')
                         sale.delete()
                         return redirect('sale_create')
                     
@@ -167,16 +169,16 @@ def sale_create(request):
                     sale_item = SaleItem.objects.create(
                         sale=sale,
                         product=product,
-                        batch=batch,
+                        warehouse=warehouse,
                         quantity=quantity,
                         unit_price=unit_price,
-                        cost_price=batch.buy_price,
+                        cost_price=product.average_cost,
                         discount=discount,
                     )
                     
-                    # Update batch quantity
-                    batch.quantity -= quantity
-                    batch.save()
+                    # Update stock
+                    stock.quantity -= quantity
+                    stock.save()
                     product.update_total_stock()
                     
                     subtotal += sale_item.total_price
@@ -227,12 +229,12 @@ def sale_cancel(request, pk):
             messages.error(request, 'Cannot cancel a sale with payments. Process refund first.')
         else:
             with transaction.atomic():
-                # Restore stock to batches (skip custom items)
+                # Restore stock (skip custom items)
                 for item in sale.items.all():
-                    if not item.is_custom and item.batch and item.product:
-                        batch = item.batch
-                        batch.quantity += item.quantity
-                        batch.save()
+                    if not item.is_custom and item.warehouse and item.product:
+                        stock, _ = ProductStock.objects.get_or_create(product=item.product, warehouse=item.warehouse, defaults={'quantity': 0})
+                        stock.quantity += item.quantity
+                        stock.save()
                         item.product.update_total_stock()
                 
                 # Update customer balance
@@ -300,7 +302,7 @@ def sale_print(request, pk):
     """Print-friendly invoice view."""
     sale = get_object_or_404(
         Sale.objects.select_related('customer', 'created_by').prefetch_related(
-            'items__product', 'items__batch'
+            'items__product', 'items__warehouse'
         ),
         pk=pk
     )
@@ -322,20 +324,20 @@ def pos_view(request):
 
 @login_required
 def api_product_info(request, product_id):
-    """API endpoint to get product info with available batches from SHOP warehouses only."""
+    """API endpoint to get product info with available stock from SHOP warehouses only."""
     from apps.warehouse.models import Warehouse
     
     product = get_object_or_404(Product, pk=product_id)
     
-    # Only get batches from shop warehouses (is_shop=True)
-    batches = Batch.objects.filter(
+    # Only get stocks from shop warehouses (is_shop=True)
+    stocks = ProductStock.objects.filter(
         product=product,
         quantity__gt=0,
         warehouse__is_shop=True  # Only shop warehouses
-    ).select_related('warehouse').order_by('purchase_date')
+    ).select_related('warehouse').order_by('warehouse__name')
     
     # Get stock breakdown by warehouse (all warehouses for display)
-    all_batches = Batch.objects.filter(
+    all_stocks = ProductStock.objects.filter(
         product=product,
         quantity__gt=0
     ).select_related('warehouse').values(
@@ -349,7 +351,7 @@ def api_product_info(request, product_id):
         'warehouse_name': w['warehouse__name'],
         'is_shop': w['warehouse__is_shop'],
         'quantity': w['total_qty']
-    } for w in all_batches]
+    } for w in all_stocks]
     
     # Check if product has stock in non-shop warehouses (for guidance message)
     warehouse_stock = sum(w['quantity'] for w in warehouse_availability if not w['is_shop'])
@@ -366,16 +368,14 @@ def api_product_info(request, product_id):
         'shop_stock': shop_stock,  # Stock available in shops
         'warehouse_stock': warehouse_stock,  # Stock in non-shop warehouses
         'warehouse_availability': warehouse_availability,  # Detailed breakdown
-        'batches': [{
-            'id': b.id,
-            'batch_number': b.batch_number,
-            'quantity': b.quantity,
-            'buy_price': str(b.buy_price),
-            'warehouse': b.warehouse.name,
-            'warehouse_id': b.warehouse.id,
-            'is_shop': b.warehouse.is_shop,
-            'purchase_date': b.purchase_date.strftime('%Y-%m-%d'),
-        } for b in batches]
+        'stocks': [{
+            'id': s.id,
+            'quantity': s.quantity,
+            'average_cost': str(product.average_cost),
+            'warehouse': s.warehouse.name,
+            'warehouse_id': s.warehouse.id,
+            'is_shop': s.warehouse.is_shop,
+        } for s in stocks]
     }
     
     return JsonResponse(data)

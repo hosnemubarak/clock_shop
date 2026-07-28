@@ -49,7 +49,7 @@
         </a>
     </div>
     <div class="col-xl-4 col-md-4">
-        <a href="{% url 'batch_create' %}" class="text-decoration-none">
+        <a href="{% url 'purchase_create' %}" class="text-decoration-none">
             <div class="card card-animate bg-success">
                 <div class="card-body text-center p-3">
                     <i class="las la-box text-white fs-1"></i>
@@ -295,14 +295,14 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for batch in low_stock_batches %}
+                            {% for item in low_stock_items %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'product_detail' batch.product.pk %}">{{ batch.product.sku }}</a>
+                                    <a href="{% url 'product_detail' item.product.pk %}">{{ item.product.sku }}</a>
                                 </td>
-                                <td><small>{{ batch.warehouse.code }}</small></td>
+                                <td><small>{{ item.warehouse.code }}</small></td>
                                 <td>
-                                    <span class="badge bg-danger">{{ batch.quantity }}</span>
+                                    <span class="badge bg-danger">{{ item.quantity }}</span>
                                 </td>
                             </tr>
                             {% empty %}

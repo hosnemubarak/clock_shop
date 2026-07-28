@@ -7,8 +7,8 @@ from django.http import JsonResponse
 from decimal import Decimal
 from datetime import date
 
-from .models import Product, Category, Brand, Batch, Purchase, PurchaseItem, StockOut, StockOutItem
-from .forms import (ProductForm, CategoryForm, BrandForm, BatchForm, 
+from .models import Product, Category, Brand, ProductStock, Purchase, PurchaseItem, StockOut, StockOutItem
+from .forms import (ProductForm, CategoryForm, BrandForm, 
                     PurchaseForm, PurchaseItemForm, StockOutForm)
 from apps.warehouse.models import Warehouse
 from apps.core.utils import create_audit_log
@@ -75,15 +75,13 @@ def product_list(request):
 
 @login_required
 def product_detail(request, pk):
-    """View product details with batch information."""
+    """View product details with stock information."""
     product = get_object_or_404(Product, pk=pk)
-    batches = product.batches.select_related('warehouse').filter(quantity__gt=0)
-    all_batches = product.batches.select_related('warehouse').all()[:20]
+    stocks = product.stocks.select_related('warehouse').all()
     
     context = {
         'product': product,
-        'available_batches': batches,
-        'all_batches': all_batches,
+        'stocks': stocks,
     }
     return render(request, 'inventory/product_detail.html', context)
 
@@ -132,11 +130,11 @@ def product_delete(request, pk):
     product = get_object_or_404(Product, pk=pk)
     
     if request.method == 'POST':
-        if product.batches.exists():
+        if product.stocks.filter(quantity__gt=0).exists():
             messages.error(
                 request, 
-                'Cannot delete this product because it has existing stock batches. '
-                'Please delete or transfer all stock batches before attempting to delete the product.'
+                'Cannot delete this product because it has existing stock. '
+                'Please stock out all quantities before attempting to delete the product.'
             )
         else:
             display_name = product.display_name
@@ -258,77 +256,7 @@ def brand_edit(request, pk):
     })
 
 
-@login_required
-def batch_list(request):
-    """List all batches with filtering."""
-    batches = Batch.objects.select_related('product', 'warehouse').all()
-    
-    # Search
-    search = request.GET.get('search', '')
-    if search:
-        batches = batches.filter(
-            Q(batch_number__icontains=search) |
-            Q(product__sku__icontains=search) |
-            Q(product__brand__name__icontains=search) |
-            Q(supplier__icontains=search)
-        )
-    
-    # Warehouse filter
-    warehouse_id = request.GET.get('warehouse')
-    if warehouse_id:
-        batches = batches.filter(warehouse_id=warehouse_id)
-    
-    # Stock filter
-    stock_filter = request.GET.get('stock')
-    if stock_filter == 'available':
-        batches = batches.filter(quantity__gt=0)
-    elif stock_filter == 'depleted':
-        batches = batches.filter(quantity=0)
-    
-    paginator = Paginator(batches, 10)
-    page = request.GET.get('page')
-    batches = paginator.get_page(page)
-    
-    warehouses = Warehouse.objects.filter(is_active=True)
-    
-    context = {
-        'batches': batches,
-        'warehouses': warehouses,
-        'search': search,
-        'warehouse_filter': warehouse_id,
-        'stock_filter': stock_filter,
-    }
-    return render(request, 'inventory/batch_list.html', context)
 
-
-@login_required
-def batch_create(request):
-    """Create a new batch (stock in)."""
-    if request.method == 'POST':
-        form = BatchForm(request.POST)
-        if form.is_valid():
-            batch = form.save()
-            create_audit_log(request, 'STOCK_IN', batch, {
-                'quantity': batch.quantity,
-                'buy_price': str(batch.buy_price),
-                'warehouse': batch.warehouse.name
-            })
-            messages.success(request, f'Batch "{batch.batch_number}" created with {batch.quantity} units.')
-            return redirect('batch_list')
-    else:
-        initial_data = {'purchase_date': date.today()}
-        if 'product' in request.GET:
-            initial_data['product'] = request.GET['product']
-        form = BatchForm(initial=initial_data)
-    
-    return render(request, 'inventory/batch_form.html', {'form': form, 'title': 'Add Stock (New Batch)'})
-
-
-@login_required
-def batch_detail(request, pk):
-    """View batch details."""
-    batch = get_object_or_404(Batch.objects.select_related('product', 'warehouse'), pk=pk)
-    return render(request, 'inventory/batch_detail.html', {'batch': batch})
 
 
 @login_required
@@ -368,22 +296,23 @@ def purchase_create(request):
                 quantity = int(item['quantity'])
                 unit_price = Decimal(item['unit_price'])
                 
-                # Create batch
-                batch = Batch.objects.create(
+                # Add stock to ProductStock
+                stock, created = ProductStock.objects.get_or_create(
                     product=product,
                     warehouse=warehouse,
-                    buy_price=unit_price,
-                    initial_quantity=quantity,
-                    quantity=quantity,
-                    purchase_date=purchase.purchase_date,
-                    supplier=purchase.supplier,
+                    defaults={'quantity': 0}
                 )
+                stock.quantity += quantity
+                stock.save()
+                
+                # Recalculate WAC
+                product.recalculate_average_cost(quantity, unit_price)
                 
                 # Create purchase item
                 PurchaseItem.objects.create(
                     purchase=purchase,
-                    batch=batch,
                     product=product,
+                    warehouse=warehouse,
                     quantity=quantity,
                     unit_price=unit_price,
                 )
@@ -412,29 +341,27 @@ def purchase_create(request):
 def purchase_detail(request, pk):
     """View purchase details."""
     purchase = get_object_or_404(
-        Purchase.objects.select_related('created_by').prefetch_related('items__product', 'items__batch'),
+        Purchase.objects.select_related('created_by').prefetch_related('items__product', 'items__warehouse'),
         pk=pk
     )
     return render(request, 'inventory/purchase_detail.html', {'purchase': purchase})
 
 
 @login_required
-def api_product_batches(request, product_id):
-    """API endpoint to get available batches for a product."""
+def api_product_stocks(request, product_id):
+    """API endpoint to get available stocks for a product."""
     warehouse_id = request.GET.get('warehouse')
-    batches = Batch.objects.filter(product_id=product_id, quantity__gt=0)
+    stocks = ProductStock.objects.filter(product_id=product_id, quantity__gt=0)
     
     if warehouse_id:
-        batches = batches.filter(warehouse_id=warehouse_id)
+        stocks = stocks.filter(warehouse_id=warehouse_id)
     
     data = [{
-        'id': b.id,
-        'batch_number': b.batch_number,
-        'quantity': b.quantity,
-        'buy_price': str(b.buy_price),
-        'warehouse': b.warehouse.name,
-        'purchase_date': b.purchase_date.strftime('%Y-%m-%d'),
-    } for b in batches]
+        'id': s.id,
+        'quantity': s.quantity,
+        'warehouse': s.warehouse.name,
+        'average_cost': str(s.product.average_cost),
+    } for s in stocks]
     
     return JsonResponse(data, safe=False)
 
@@ -509,12 +436,12 @@ def stockout_create(request):
             
             # Create stock out items
             for item in items_list:
-                batch = Batch.objects.get(pk=item['batch_id'])
+                product = Product.objects.get(pk=item['product_id'])
                 StockOutItem.objects.create(
                     stockout=stockout,
-                    batch=batch,
+                    product=product,
                     quantity=int(item['quantity']),
-                    cost_price=batch.buy_price
+                    cost_price=product.average_cost
                 )
             
             # Complete the stock out immediately
@@ -552,7 +479,7 @@ def stockout_detail(request, pk):
     """View stock out details."""
     stockout = get_object_or_404(
         StockOut.objects.select_related('warehouse', 'created_by').prefetch_related(
-            'items__batch__product', 'items__batch__warehouse'
+            'items__product'
         ),
         pk=pk
     )
@@ -578,22 +505,20 @@ def stockout_cancel(request, pk):
 
 
 @login_required
-def api_warehouse_batches(request, warehouse_id):
-    """API endpoint to get available batches for a warehouse."""
+def api_warehouse_stocks(request, warehouse_id):
+    """API endpoint to get available stocks for a warehouse."""
     product_id = request.GET.get('product')
-    batches = Batch.objects.filter(warehouse_id=warehouse_id, quantity__gt=0).select_related('product')
+    stocks = ProductStock.objects.filter(warehouse_id=warehouse_id, quantity__gt=0).select_related('product')
     
     if product_id:
-        batches = batches.filter(product_id=product_id)
+        stocks = stocks.filter(product_id=product_id)
     
     data = [{
-        'id': b.id,
-        'batch_number': b.batch_number,
-        'product_id': b.product_id,
-        'product_name': b.product.display_name,
-        'quantity': b.quantity,
-        'buy_price': str(b.buy_price),
-        'purchase_date': b.purchase_date.strftime('%Y-%m-%d'),
-    } for b in batches]
+        'id': s.id,
+        'product_id': s.product_id,
+        'product_name': s.product.display_name,
+        'quantity': s.quantity,
+        'average_cost': str(s.product.average_cost),
+    } for s in stocks]
     
     return JsonResponse(data, safe=False)

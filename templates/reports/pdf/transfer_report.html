@@ -52,7 +52,7 @@
                 <td>{{ transfer.get_status_display }}</td>
                 <td>
                     {% for item in transfer.items.all %}
-                        {{ item.source_batch.product.name }} (x{{ item.quantity }}){% if not forloop.last %}, {% endif %}
+                        {{ item.product.display_name }} (x{{ item.quantity }}){% if not forloop.last %}, {% endif %}
                     {% endfor %}
                 </td>
             </tr>

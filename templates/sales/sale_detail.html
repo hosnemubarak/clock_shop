@@ -32,7 +32,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Product</th>
-                                <th>Batch</th>
+                                <th>Warehouse</th>
                                 <th class="text-center">Qty</th>
                                 <th class="text-end">Price</th>
                                 <th class="text-end">Total</th>
@@ -53,7 +53,7 @@
                                     {% if item.is_custom %}
                                         <span class="badge bg-warning-subtle text-warning">CUSTOM</span>
                                     {% else %}
-                                        <code>{{ item.batch.batch_number }}</code>
+                                        <code>{{ item.warehouse.code }}</code>
                                     {% endif %}
                                 </td>
                                 <td class="text-center">{{ item.quantity }}</td>
@@ -235,7 +235,7 @@
 <script>
 function confirmCancelSale() {
     showConfirmModal(
-        'Are you sure you want to cancel this sale? Stock will be restored to the original batches.',
+        'Are you sure you want to cancel this sale? Stock will be restored to the original warehouse stock.',
         'Cancel Sale',
         function() {
             document.getElementById('cancelSaleForm').submit();

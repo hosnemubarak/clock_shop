@@ -52,11 +52,6 @@
                     </div>
                     {% endif %}
 
-                    {% if batch_search %}<input type="hidden" name="batch_search" value="{{ batch_search }}">{% endif %}
-                    {% if batch_stock %}<input type="hidden" name="batch_stock" value="{{ batch_stock }}">{% endif %}
-                    {% if purchase_from %}<input type="hidden" name="purchase_from" value="{{ purchase_from }}">{% endif %}
-                    {% if purchase_to %}<input type="hidden" name="purchase_to" value="{{ purchase_to }}">{% endif %}
-                    {% if batches.number %}<input type="hidden" name="batch_page" value="{{ batches.number }}">{% endif %}
                 </form>
             </div>
             <div class="card-body">
@@ -140,84 +135,4 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                    <h5 class="card-title mb-0">All Batches in Warehouse</h5>
-                </div>
-                <form method="get" class="row g-3 align-items-end">
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <label class="form-label small text-muted">Search</label>
-                        <input type="text" name="batch_search" class="form-control" placeholder="Batch #, SKU, brand, supplier..." value="{{ batch_search }}">
-                    </div>
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <label class="form-label small text-muted">Stock</label>
-                        <select name="batch_stock" class="form-select">
-                            <option value="">All Stock</option>
-                            <option value="available" {% if batch_stock == 'available' %}selected{% endif %}>Available Only</option>
-                            <option value="depleted" {% if batch_stock == 'depleted' %}selected{% endif %}>Out of Stock</option>
-                        </select>
-                    </div>
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <label class="form-label small text-muted">Purchase From</label>
-                        <input type="date" name="purchase_from" class="form-control" value="{{ purchase_from }}">
-                    </div>
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <label class="form-label small text-muted">Purchase To</label>
-                        <input type="date" name="purchase_to" class="form-control" value="{{ purchase_to }}">
-                    </div>
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <button type="submit" class="btn btn-primary w-100">Filter</button>
-                    </div>
-                    {% if batch_search or batch_stock or purchase_from or purchase_to %}
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <a href="?{% for key, value in request.GET.items %}{% if key != 'batch_search' and key != 'batch_stock' and key != 'purchase_from' and key != 'purchase_to' and key != 'batch_page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}" class="btn btn-outline-secondary w-100">Clear</a>
-                    </div>
-                    {% endif %}
-
-                    {% if product_search %}<input type="hidden" name="product_search" value="{{ product_search }}">{% endif %}
-                    {% if stock_summary.number %}<input type="hidden" name="product_page" value="{{ stock_summary.number }}">{% endif %}
-                </form>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm mb-0">
-                        <thead>
-                            <tr>
-                                <th>Batch</th>
-                                <th>Product</th>
-                                <th>Buy Price</th>
-                                <th>Qty</th>
-                                <th>Value</th>
-                                <th>Purchase Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for batch in batches %}
-                            <tr>
-                                <td><a href="{% url 'batch_detail' batch.pk %}">{{ batch.batch_number }}</a></td>
-                                <td>{{ batch.product.sku }}</td>
-                                <td>{{ CURRENCY_SYMBOL }}{{ batch.buy_price|floatformat:2 }}</td>
-                                <td>{{ batch.quantity }}</td>
-                                <td>{{ CURRENCY_SYMBOL }}{{ batch.total_value|floatformat:2 }}</td>
-                                <td>{{ batch.purchase_date|date:"M d, Y" }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="6" class="text-center text-muted">No batches</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-
-                {% with page_obj=batches page_param='batch_page' %}
-                {% include 'includes/pagination.html' %}
-                {% endwith %}
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}

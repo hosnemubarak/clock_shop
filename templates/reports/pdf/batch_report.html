@@ -1,7 +1,7 @@
 {% extends 'reports/pdf/base.html' %}
 
-{% block title %}Batch Analysis Report{% endblock %}
-{% block report_title %}Batch Analysis Report{% endblock %}
+{% block title %}Stock Detail Report{% endblock %}
+{% block report_title %}Stock Detail Report{% endblock %}
 
 {% block filters %}
     {% if selected_warehouse %}
@@ -22,35 +22,29 @@
 {% endblock %}
 
 {% block content %}
-    <h3>Batch Details</h3>
+    <h3>Stock Details</h3>
     <table>
         <thead>
             <tr>
-                <th>Batch #</th>
                 <th>Product</th>
                 <th>Warehouse</th>
-                <th>Purchase Date</th>
-                <th class="text-right">Age (Days)</th>
                 <th class="text-right">Quantity</th>
-                <th class="text-right">Buy Price</th>
+                <th class="text-right">Avg Unit Cost</th>
                 <th class="text-right">Total Value</th>
             </tr>
         </thead>
         <tbody>
-            {% for item in batch_data %}
+            {% for item in stock_data %}
             <tr>
-                <td>{{ item.batch.batch_number }}</td>
-                <td>{{ item.batch.product.name }}</td>
-                <td>{{ item.batch.warehouse.name }}</td>
-                <td>{{ item.batch.purchase_date|date:"M d, Y" }}</td>
-                <td class="text-right">{{ item.age_days }}</td>
-                <td class="text-right">{{ item.batch.quantity }}</td>
-                <td class="text-right">{{ item.batch.buy_price|default:"0.00" }}</td>
+                <td>{{ item.stock.product.display_name }}</td>
+                <td>{{ item.stock.warehouse.name }}</td>
+                <td class="text-right">{{ item.stock.quantity }}</td>
+                <td class="text-right">{{ item.stock.product.average_cost|default:"0.00" }}</td>
                 <td class="text-right">{{ item.value|default:"0.00" }}</td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="8" class="text-center">No batches found.</td>
+                <td colspan="5" class="text-center">No stock found.</td>
             </tr>
             {% endfor %}
         </tbody>

@@ -16,5 +16,5 @@ urlpatterns = [
     path('transfers/<int:pk>/cancel/', views.transfer_cancel, name='transfer_cancel'),
     
     # API
-    path('api/<int:warehouse_id>/batches/', views.api_warehouse_batches, name='api_warehouse_batches'),
+    path('api/<int:warehouse_id>/stocks/', views.api_warehouse_stocks, name='api_warehouse_stocks'),
 ]

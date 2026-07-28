@@ -10,7 +10,7 @@ import json
 
 from .models import Warehouse, StockTransfer, StockTransferItem
 from .forms import WarehouseForm, StockTransferForm
-from apps.inventory.models import Batch, Product
+from apps.inventory.models import ProductStock, Product
 from apps.core.utils import create_audit_log
 
 
@@ -51,77 +51,29 @@ def warehouse_detail(request, pk):
     """View warehouse details with stock information."""
     warehouse = get_object_or_404(Warehouse, pk=pk)
     
-    # Base querysets
-    available_batches = Batch.objects.filter(
+    stocks = ProductStock.objects.filter(
         warehouse=warehouse,
         quantity__gt=0
     ).select_related('product', 'product__brand')
-    all_batches = Batch.objects.filter(
-        warehouse=warehouse
-    ).select_related('product', 'product__brand')
 
-    # Product summary filters (stock summary by product)
+    # Product search
     product_search = request.GET.get('product_search', request.GET.get('search', ''))
-    stock_batches = available_batches
     if product_search:
-        stock_batches = stock_batches.filter(
+        stocks = stocks.filter(
             Q(product__sku__icontains=product_search) |
             Q(product__brand__name__icontains=product_search)
         )
     
-    # Stock summary by product
-    stock_summary = stock_batches.values(
-        'product__id', 'product__sku', 'product__brand__name'
-    ).annotate(
-        total_quantity=Sum('quantity'),
-        total_value=Sum(F('quantity') * F('buy_price'))
-    ).order_by('product__sku')
+    stock_paginator = Paginator(stocks, 10)
+    stock_page = request.GET.get('page')
+    stocks = stock_paginator.get_page(stock_page)
 
-    product_paginator = Paginator(stock_summary, 10)
-    product_page = request.GET.get('product_page', request.GET.get('page'))
-    stock_summary = product_paginator.get_page(product_page)
-
-    # Batch list filters (All Batches in Warehouse)
-    batch_search = request.GET.get('batch_search', '')
-    batch_stock = request.GET.get('batch_stock', '')
-    purchase_from = request.GET.get('purchase_from', '')
-    purchase_to = request.GET.get('purchase_to', '')
-
-    batches = all_batches
-    if batch_search:
-        batches = batches.filter(
-            Q(batch_number__icontains=batch_search) |
-            Q(product__sku__icontains=batch_search) |
-            Q(product__brand__name__icontains=batch_search) |
-            Q(supplier__icontains=batch_search)
-        )
-
-    if batch_stock == 'available':
-        batches = batches.filter(quantity__gt=0)
-    elif batch_stock == 'depleted':
-        batches = batches.filter(quantity=0)
-
-    if purchase_from:
-        batches = batches.filter(purchase_date__gte=purchase_from)
-    if purchase_to:
-        batches = batches.filter(purchase_date__lte=purchase_to)
-
-    batches = batches.order_by('-purchase_date', '-created_at')
-    batch_paginator = Paginator(batches, 10)
-    batch_page = request.GET.get('batch_page')
-    batches = batch_paginator.get_page(batch_page)
-    
     context = {
         'warehouse': warehouse,
-        'batches': batches,
-        'stock_summary': stock_summary,
+        'stocks': stocks,
         'total_value': warehouse.get_total_stock_value(),
         'total_items': warehouse.get_total_items(),
         'product_search': product_search,
-        'batch_search': batch_search,
-        'batch_stock': batch_stock,
-        'purchase_from': purchase_from,
-        'purchase_to': purchase_to,
     }
     return render(request, 'warehouse/warehouse_detail.html', context)
 
@@ -215,17 +167,18 @@ def transfer_create(request):
             
             for item_json in items_data:
                 item = json.loads(item_json)
-                batch = Batch.objects.get(pk=item['batch_id'])
+                product = Product.objects.get(pk=item['product_id'])
                 quantity = int(item['quantity'])
                 
-                if quantity > batch.quantity:
-                    messages.error(request, f'Insufficient stock in batch {batch.batch_number}')
+                stock = ProductStock.objects.get(product=product, warehouse=transfer.source_warehouse)
+                if quantity > stock.quantity:
+                    messages.error(request, f'Insufficient stock for {product.display_name}')
                     transfer.delete()
                     return redirect('transfer_create')
                 
                 StockTransferItem.objects.create(
                     transfer=transfer,
-                    source_batch=batch,
+                    product=product,
                     quantity=quantity,
                 )
             
@@ -253,7 +206,7 @@ def transfer_detail(request, pk):
     transfer = get_object_or_404(
         StockTransfer.objects.select_related(
             'source_warehouse', 'destination_warehouse', 'created_by'
-        ).prefetch_related('items__source_batch__product'),
+        ).prefetch_related('items__product'),
         pk=pk
     )
     return render(request, 'warehouse/transfer_detail.html', {'transfer': transfer})
@@ -300,21 +253,19 @@ def transfer_cancel(request, pk):
 
 
 @login_required
-def api_warehouse_batches(request, warehouse_id):
-    """API endpoint to get batches in a warehouse."""
-    batches = Batch.objects.filter(
+def api_warehouse_stocks(request, warehouse_id):
+    """API endpoint to get stocks in a warehouse."""
+    stocks = ProductStock.objects.filter(
         warehouse_id=warehouse_id,
         quantity__gt=0
     ).select_related('product')
     
     data = [{
-        'id': b.id,
-        'batch_number': b.batch_number,
-        'product_id': b.product.id,
-        'product_sku': b.product.sku,
-        'quantity': b.quantity,
-        'buy_price': str(b.buy_price),
-        'purchase_date': b.purchase_date.strftime('%Y-%m-%d'),
-    } for b in batches]
+        'id': s.id,
+        'product_id': s.product.id,
+        'product_sku': s.product.sku,
+        'quantity': s.quantity,
+        'average_cost': str(s.product.average_cost),
+    } for s in stocks]
     
     return JsonResponse(data, safe=False)

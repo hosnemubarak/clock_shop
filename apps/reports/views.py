@@ -7,7 +7,7 @@ from django.utils import timezone
 from datetime import timedelta, date
 from decimal import Decimal
 
-from apps.inventory.models import Product, Batch, Category
+from apps.inventory.models import Product, ProductStock, Category
 from apps.sales.models import Sale, SaleItem
 from apps.customers.models import Customer, Payment
 from apps.warehouse.models import Warehouse, StockTransfer
@@ -51,7 +51,7 @@ def sales_report(request):
     # Filter by shop if selected (based on sale items' batch warehouse)
     if shop_id:
         sales = sales.filter(
-            items__batch__warehouse_id=shop_id,
+            items__warehouse_id=shop_id,
             items__is_custom=False
         ).distinct()
     
@@ -109,7 +109,7 @@ def sales_report(request):
                 status='completed',
                 sale_date__date__gte=date_from,
                 sale_date__date__lte=date_to,
-                items__batch__warehouse=shop,
+                items__warehouse=shop,
                 items__is_custom=False
             ).distinct().aggregate(
                 total=Sum('total_amount'),
@@ -206,7 +206,7 @@ def profit_report(request):
     
     # Apply shop filter
     if shop_id:
-        base_filter['batch__warehouse_id'] = shop_id
+        base_filter['warehouse_id'] = shop_id
     
     # Apply category filter
     if category_id:
@@ -253,14 +253,14 @@ def profit_report(request):
     
     # Profit by warehouse/shop (exclude custom items)
     warehouse_filter = base_filter.copy()
-    warehouse_filter['batch__isnull'] = False
+    warehouse_filter['warehouse__isnull'] = False
     if 'product__isnull' in warehouse_filter:
         del warehouse_filter['product__isnull']
     
     profit_by_warehouse = SaleItem.objects.filter(
         **warehouse_filter
     ).values(
-        'batch__warehouse__name', 'batch__warehouse__is_shop'
+        'warehouse__name', 'warehouse__is_shop'
     ).annotate(
         revenue=Sum(F('quantity') * F('unit_price')),
         cost=Sum(F('quantity') * F('cost_price')),
@@ -353,18 +353,18 @@ def stock_report(request):
     stock_filter = request.GET.get('stock_filter', 'all')
     
     # Stock by product
-    batches = Batch.objects.filter(quantity__gt=0)
+    stocks = ProductStock.objects.filter(quantity__gt=0)
     
     if warehouse_id:
-        batches = batches.filter(warehouse_id=warehouse_id)
+        stocks = stocks.filter(warehouse_id=warehouse_id)
     
-    stock_summary = batches.values(
+    stock_summary = stocks.values(
         'product__id', 'product__sku', 'product__brand__name',
         'product__category__name', 'product__default_selling_price'
     ).annotate(
         total_quantity=Sum('quantity'),
-        total_value=Sum(F('quantity') * F('buy_price')),
-        avg_cost=Avg('buy_price'),
+        total_value=Sum(F('quantity') * F('product__average_cost')),
+        avg_cost=Avg('product__average_cost'),
     ).order_by('product__sku')
     
     if category_id:
@@ -377,35 +377,35 @@ def stock_report(request):
         stock_summary = stock_summary.filter(total_quantity=0)
     
     # Stock by warehouse
-    stock_by_warehouse = Batch.objects.filter(
+    stock_by_warehouse = ProductStock.objects.filter(
         quantity__gt=0
     ).values(
         'warehouse__name', 'warehouse__code'
     ).annotate(
         total_items=Sum('quantity'),
-        total_value=Sum(F('quantity') * F('buy_price')),
+        total_value=Sum(F('quantity') * F('product__average_cost')),
     ).order_by('warehouse__name')
     
     # Stock by category
-    stock_by_category = Batch.objects.filter(
+    stock_by_category = ProductStock.objects.filter(
         quantity__gt=0
     ).values(
         'product__category__name'
     ).annotate(
         total_items=Sum('quantity'),
-        total_value=Sum(F('quantity') * F('buy_price')),
+        total_value=Sum(F('quantity') * F('product__average_cost')),
     ).order_by('-total_value')
     
     # Low stock alerts
-    low_stock = Batch.objects.filter(
+    low_stock = ProductStock.objects.filter(
         quantity__gt=0,
         quantity__lte=10
     ).select_related('product', 'warehouse').order_by('quantity')[:20]
     
     # Totals
-    totals = Batch.objects.filter(quantity__gt=0).aggregate(
+    totals = ProductStock.objects.filter(quantity__gt=0).aggregate(
         total_items=Sum('quantity'),
-        total_value=Sum(F('quantity') * F('buy_price')),
+        total_value=Sum(F('quantity') * F('product__average_cost')),
     )
     
     warehouses = Warehouse.objects.filter(is_active=True)
@@ -479,7 +479,7 @@ def transfer_report(request):
     
     transfers = StockTransfer.objects.select_related(
         'source_warehouse', 'destination_warehouse', 'created_by'
-    ).prefetch_related('items__source_batch__product')
+    ).prefetch_related('items__product')
     
     if date_from:
         transfers = transfers.filter(transfer_date__date__gte=date_from)
@@ -517,7 +517,7 @@ def transfer_report(request):
         headers = ['ID', 'Date', 'Source', 'Destination', 'Status', 'Items']
         data = []
         for t in transfers:
-            items_str = ", ".join([f"{item.source_batch.product.name} (x{item.quantity})" for item in t.items.all()])
+            items_str = ", ".join([f"{item.product.display_name} (x{item.quantity})" for item in t.items.all()])
             data.append([
                 t.id,
                 t.transfer_date.strftime('%Y-%m-%d'),
@@ -559,7 +559,7 @@ def dead_stock_report(request):
     ).values_list('product_id', flat=True).distinct()
     
     # Batches of products not sold recently
-    dead_stock = Batch.objects.filter(
+    dead_stock = ProductStock.objects.filter(
         quantity__gt=0
     ).exclude(
         product_id__in=recently_sold
@@ -568,8 +568,8 @@ def dead_stock_report(request):
     # Calculate total dead stock value
     dead_stock_summary = dead_stock.aggregate(
         total_items=Sum('quantity'),
-        total_value=Sum(F('quantity') * F('buy_price')),
-        batch_count=Count('id'),
+        total_value=Sum(F('quantity') * F('product__average_cost')),
+        stock_count=Count('id'),
     )
     
     # Slow moving products (sold but low quantity, exclude custom items)
@@ -604,15 +604,15 @@ def dead_stock_report(request):
     elif export == 'excel':
         headers = ['SKU', 'Brand', 'Category', 'Warehouse', 'Quantity', 'Buy Price', 'Total Value']
         data = []
-        for batch in dead_stock:
+        for stock in dead_stock:
             data.append([
-                batch.product.sku,
-                batch.product.brand.name if batch.product.brand else '-',
-                batch.product.category.name if batch.product.category else '-',
-                batch.warehouse.name,
-                batch.quantity,
-                batch.buy_price,
-                batch.quantity * batch.buy_price
+                stock.product.sku,
+                stock.product.brand.name if stock.product.brand else '-',
+                stock.product.category.name if stock.product.category else '-',
+                stock.warehouse.name,
+                stock.quantity,
+                stock.product.average_cost,
+                stock.quantity * stock.product.average_cost
             ])
             
         filters_dict = {
@@ -633,41 +633,35 @@ def dead_stock_report(request):
 
 @login_required
 def batch_report(request):
-    """Detailed batch analysis report."""
+    """Detailed stock report."""
     warehouse_id = request.GET.get('warehouse')
     product_id = request.GET.get('product')
     
-    batches = Batch.objects.select_related('product', 'warehouse').all()
+    stocks = ProductStock.objects.select_related('product', 'warehouse').all()
     
     if warehouse_id:
-        batches = batches.filter(warehouse_id=warehouse_id)
+        stocks = stocks.filter(warehouse_id=warehouse_id)
     if product_id:
-        batches = batches.filter(product_id=product_id)
+        stocks = stocks.filter(product_id=product_id)
     
-    # Batch age analysis
-    today = timezone.now().date()
-    batch_data = []
-    for batch in batches.filter(quantity__gt=0)[:100]:
-        age_days = (today - batch.purchase_date).days
-        batch_data.append({
-            'batch': batch,
-            'age_days': age_days,
-            'value': batch.quantity * batch.buy_price,
+    stock_data_list = []
+    for stock in stocks.filter(quantity__gt=0)[:100]:
+        stock_data_list.append({
+            'stock': stock,
+            'age_days': 0, # not applicable anymore
+            'value': stock.quantity * stock.product.average_cost,
         })
     
-    # Sort by age
-    batch_data.sort(key=lambda x: -x['age_days'])
-    
-    # Paginate batch data
-    paginator = Paginator(batch_data, 20)
+    # Paginate stock data
+    paginator = Paginator(stock_data_list, 20)
     page = request.GET.get('page')
-    batch_data_page = paginator.get_page(page)
+    stock_data_page = paginator.get_page(page)
     
     warehouses = Warehouse.objects.filter(is_active=True)
     products = Product.objects.filter(is_active=True)
     
     context = {
-        'batch_data': batch_data_page,
+        'stock_data': stock_data_page,
         'warehouses': warehouses,
         'products': products,
         'selected_warehouse': warehouse_id,
@@ -676,21 +670,18 @@ def batch_report(request):
     
     export = request.GET.get('export')
     if export == 'pdf':
-        context['batch_data'] = batch_data
-        return generate_pdf('reports/pdf/batch_report.html', context, 'Batch_Report')
+        context['stock_data'] = stock_data_list
+        return generate_pdf('reports/pdf/batch_report.html', context, 'Stock_Detail_Report')
     elif export == 'excel':
-        headers = ['Batch ID', 'Product', 'Warehouse', 'Purchase Date', 'Age (Days)', 'Quantity', 'Buy Price', 'Value']
+        headers = ['Product', 'Warehouse', 'Quantity', 'WAC', 'Value']
         data = []
-        for item in batch_data:
-            b = item['batch']
+        for item in stock_data_list:
+            b = item['stock']
             data.append([
-                b.batch_number,
-                b.product.name,
+                b.product.display_name,
                 b.warehouse.name,
-                b.purchase_date.strftime('%Y-%m-%d'),
-                item['age_days'],
                 b.quantity,
-                b.buy_price,
+                b.product.average_cost,
                 item['value']
             ])
             
@@ -702,6 +693,6 @@ def batch_report(request):
             try: filters_dict['Product'] = products.get(id=product_id).name
             except: pass
         
-        return generate_excel('Batch_Report', 'Batch Report', filters_dict, headers, data)
+        return generate_excel('Stock_Detail_Report', 'Stock Detail Report', filters_dict, headers, data)
 
     return render(request, 'reports/batch_report.html', context)

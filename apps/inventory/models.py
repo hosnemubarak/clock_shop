@@ -46,6 +46,10 @@ class Product(TimeStampedModel):
     
     # Computed fields (updated via signals or methods)
     total_stock = models.PositiveIntegerField(default=0)
+    average_cost = models.DecimalField(
+        max_digits=12, decimal_places=2, default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
     
     class Meta:
         ordering = ['sku']
@@ -66,82 +70,33 @@ class Product(TimeStampedModel):
         return self.display_name
     
     def update_total_stock(self):
-        """Update total stock from all batches."""
-        self.total_stock = self.batches.filter(quantity__gt=0).aggregate(
+        """Update total stock from all warehouse stocks."""
+        self.total_stock = self.stocks.aggregate(
             total=models.Sum('quantity')
         )['total'] or 0
         self.save(update_fields=['total_stock'])
-    
-    def get_available_batches(self, warehouse=None):
-        """Get batches with available stock."""
-        batches = self.batches.filter(quantity__gt=0)
-        if warehouse:
-            batches = batches.filter(warehouse=warehouse)
-        return batches.order_by('purchase_date')
-    
-    def get_average_cost(self):
-        """Calculate weighted average cost from all batches."""
-        batches = self.batches.filter(quantity__gt=0)
-        total_value = sum(b.quantity * b.buy_price for b in batches)
-        total_qty = sum(b.quantity for b in batches)
-        if total_qty > 0:
-            return total_value / total_qty
-        return Decimal('0.00')
+        
+    def recalculate_average_cost(self, new_qty, new_price):
+        """Recalculate average cost when new stock is added."""
+        total_value = (self.total_stock * self.average_cost) + (Decimal(new_qty) * Decimal(new_price))
+        new_total_qty = self.total_stock + new_qty
+        if new_total_qty > 0:
+            self.average_cost = total_value / new_total_qty
+            self.save(update_fields=['average_cost'])
 
 
-class Batch(TimeStampedModel):
-    """
-    Batch model for tracking purchases.
-    Each purchase creates a new batch with its own buy price.
-    """
-    batch_number = models.CharField(max_length=50, unique=True)
-    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='batches')
-    warehouse = models.ForeignKey(
-        'warehouse.Warehouse', on_delete=models.PROTECT, 
-        related_name='batches'
-    )
-    buy_price = models.DecimalField(
-        max_digits=12, decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.00'))],
-        help_text='Purchase price per unit'
-    )
-    initial_quantity = models.PositiveIntegerField(help_text='Original quantity purchased')
-    quantity = models.PositiveIntegerField(help_text='Current available quantity')
-    purchase_date = models.DateField()
-    supplier = models.CharField(max_length=200, blank=True)
-    notes = models.TextField(blank=True)
+class ProductStock(TimeStampedModel):
+    """Tracks quantity of a product in a specific warehouse."""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='stocks')
+    warehouse = models.ForeignKey('warehouse.Warehouse', on_delete=models.CASCADE, related_name='product_stocks')
+    quantity = models.PositiveIntegerField(default=0)
     
     class Meta:
-        ordering = ['-purchase_date', '-created_at']
-        verbose_name_plural = 'Batches'
-    
+        unique_together = ('product', 'warehouse')
+        verbose_name_plural = 'Product Stocks'
+        
     def __str__(self):
-        return f"{self.batch_number} - {self.product.display_name} ({self.quantity} units)"
-    
-    def save(self, *args, **kwargs):
-        if not self.batch_number:
-            # Auto-generate batch number
-            import datetime
-            prefix = datetime.date.today().strftime('%Y%m%d')
-            last_batch = Batch.objects.filter(
-                batch_number__startswith=prefix
-            ).order_by('-batch_number').first()
-            if last_batch:
-                last_num = int(last_batch.batch_number[-4:])
-                self.batch_number = f"{prefix}{last_num + 1:04d}"
-            else:
-                self.batch_number = f"{prefix}0001"
-        super().save(*args, **kwargs)
-    
-    @property
-    def total_value(self):
-        """Total value of remaining stock."""
-        return self.quantity * self.buy_price
-    
-    @property
-    def sold_quantity(self):
-        """Quantity that has been sold."""
-        return self.initial_quantity - self.quantity
+        return f"{self.product.display_name} in {self.warehouse.code} ({self.quantity})"
 
 
 class Purchase(TimeStampedModel):
@@ -183,8 +138,8 @@ class Purchase(TimeStampedModel):
 class PurchaseItem(TimeStampedModel):
     """Individual items in a purchase order."""
     purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE, related_name='items')
-    batch = models.OneToOneField(Batch, on_delete=models.CASCADE, related_name='purchase_item')
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    warehouse = models.ForeignKey('warehouse.Warehouse', on_delete=models.PROTECT, related_name='purchase_items', null=True, blank=True)
     quantity = models.PositiveIntegerField()
     unit_price = models.DecimalField(
         max_digits=12, decimal_places=2,
@@ -278,22 +233,26 @@ class StockOut(TimeStampedModel):
             total_value = Decimal('0.00')
             
             for item in self.items.select_for_update():
-                batch = Batch.objects.select_for_update().get(pk=item.batch_id)
+                stock, created = ProductStock.objects.select_for_update().get_or_create(
+                    product=item.product,
+                    warehouse=self.warehouse,
+                    defaults={'quantity': 0}
+                )
                 
-                if batch.quantity < item.quantity:
-                    raise ValueError(f'Insufficient stock in batch {batch.batch_number}')
+                if stock.quantity < item.quantity:
+                    raise ValueError(f'Insufficient stock for {item.product.display_name}')
                 
-                # Reduce batch quantity
-                batch.quantity -= item.quantity
-                batch.save()
+                # Reduce quantity
+                stock.quantity -= item.quantity
+                stock.save()
                 
-                # Calculate value
-                item.cost_price = batch.buy_price
+                # Calculate value using average_cost
+                item.cost_price = item.product.average_cost
                 item.save()
-                total_value += item.quantity * batch.buy_price
+                total_value += item.quantity * item.cost_price
                 
                 # Update product total stock
-                batch.product.update_total_stock()
+                item.product.update_total_stock()
             
             self.total_value = total_value
             self.status = 'completed'
@@ -312,10 +271,14 @@ class StockOut(TimeStampedModel):
             if self.status == 'completed':
                 # Restore stock for completed stock outs
                 for item in self.items.all():
-                    batch = Batch.objects.select_for_update().get(pk=item.batch_id)
-                    batch.quantity += item.quantity
-                    batch.save()
-                    batch.product.update_total_stock()
+                    stock, created = ProductStock.objects.select_for_update().get_or_create(
+                        product=item.product,
+                        warehouse=self.warehouse,
+                        defaults={'quantity': 0}
+                    )
+                    stock.quantity += item.quantity
+                    stock.save()
+                    item.product.update_total_stock()
             
             self.status = 'cancelled'
             self.save()
@@ -329,23 +292,19 @@ class StockOut(TimeStampedModel):
 class StockOutItem(TimeStampedModel):
     """Individual items in a stock out operation."""
     stockout = models.ForeignKey(StockOut, on_delete=models.CASCADE, related_name='items')
-    batch = models.ForeignKey(Batch, on_delete=models.PROTECT, related_name='stockout_items')
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='stockout_items', null=True, blank=True)
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     cost_price = models.DecimalField(
         max_digits=12, decimal_places=2,
         default=Decimal('0.00'),
-        help_text='Cost price per unit at time of stock out'
+        help_text='Cost price per unit at time of stock out (Avg Cost)'
     )
     
     class Meta:
         ordering = ['id']
     
     def __str__(self):
-        return f"{self.batch.product.display_name} x {self.quantity}"
-    
-    @property
-    def product(self):
-        return self.batch.product
+        return f"{self.product.display_name} x {self.quantity}"
     
     @property
     def total_cost(self):

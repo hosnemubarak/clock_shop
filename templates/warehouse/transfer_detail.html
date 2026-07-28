@@ -37,7 +37,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Product</th>
-                                <th>Batch</th>
+                                <!-- No Batch column -->
                                 <th class="text-center">Quantity</th>
                                 <th class="text-end">Unit Cost</th>
                                 <th class="text-end">Total</th>
@@ -47,7 +47,7 @@
                             {% for item in transfer.items.all %}
                             <tr>
                                 <td>{{ item.product.sku }}</td>
-                                <td><code>{{ item.source_batch.batch_number }}</code></td>
+                                <!-- No Batch cell -->
                                 <td class="text-center">{{ item.quantity }}</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.unit_cost|floatformat:2 }}</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.total_cost|floatformat:2 }}</td>

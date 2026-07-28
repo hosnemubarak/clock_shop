@@ -1,7 +1,7 @@
 from django import forms
 from django.utils import timezone
 from .models import Warehouse, StockTransfer, StockTransferItem
-from apps.inventory.models import Batch
+from apps.inventory.models import Product, ProductStock
 
 
 class WarehouseForm(forms.ModelForm):
@@ -50,9 +50,9 @@ class StockTransferForm(forms.ModelForm):
 
 class StockTransferItemForm(forms.Form):
     """Form for adding items to a transfer."""
-    batch = forms.ModelChoiceField(
-        queryset=Batch.objects.filter(quantity__gt=0),
-        widget=forms.Select(attrs={'class': 'form-select batch-select'})
+    product = forms.ModelChoiceField(
+        queryset=Product.objects.filter(is_active=True),
+        widget=forms.Select(attrs={'class': 'form-select product-select'})
     )
     quantity = forms.IntegerField(
         min_value=1,
@@ -61,21 +61,19 @@ class StockTransferItemForm(forms.Form):
     
     def __init__(self, *args, source_warehouse=None, **kwargs):
         super().__init__(*args, **kwargs)
-        if source_warehouse:
-            self.fields['batch'].queryset = Batch.objects.filter(
-                warehouse=source_warehouse,
-                quantity__gt=0
-            ).select_related('product')
+        self.source_warehouse = source_warehouse
     
     def clean(self):
         cleaned_data = super().clean()
-        batch = cleaned_data.get('batch')
+        product = cleaned_data.get('product')
         quantity = cleaned_data.get('quantity')
         
-        if batch and quantity:
-            if quantity > batch.quantity:
+        if product and quantity and hasattr(self, 'source_warehouse') and self.source_warehouse:
+            stock = ProductStock.objects.filter(product=product, warehouse=self.source_warehouse).first()
+            if not stock or quantity > stock.quantity:
+                stock_qty = stock.quantity if stock else 0
                 raise forms.ValidationError(
-                    f'Requested quantity ({quantity}) exceeds available stock ({batch.quantity}).'
+                    f'Requested quantity ({quantity}) exceeds available stock ({stock_qty}) in source warehouse.'
                 )
         
         return cleaned_data

@@ -19,10 +19,6 @@ urlpatterns = [
     path('brands/create/', views.brand_create, name='brand_create'),
     path('brands/<int:pk>/edit/', views.brand_edit, name='brand_edit'),
     
-    # Batches
-    path('batches/', views.batch_list, name='batch_list'),
-    path('batches/create/', views.batch_create, name='batch_create'),
-    path('batches/<int:pk>/', views.batch_detail, name='batch_detail'),
     
     # Purchases
     path('purchases/', views.purchase_list, name='purchase_list'),
@@ -36,6 +32,6 @@ urlpatterns = [
     path('stockout/<int:pk>/cancel/', views.stockout_cancel, name='stockout_cancel'),
     
     # API
-    path('api/products/<int:product_id>/batches/', views.api_product_batches, name='api_product_batches'),
-    path('api/warehouses/<int:warehouse_id>/batches/', views.api_warehouse_batches, name='api_warehouse_batches'),
+    path('api/products/<int:product_id>/stocks/', views.api_product_stocks, name='api_product_stocks'),
+    path('api/warehouses/<int:warehouse_id>/stocks/', views.api_warehouse_stocks, name='api_warehouse_stocks'),
 ]

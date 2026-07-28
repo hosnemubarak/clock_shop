@@ -73,18 +73,18 @@
     </div>
 </div>
 
-<!-- Batch Selection Modal -->
-<div class="modal fade" id="batchModal" tabindex="-1" aria-hidden="true">
+<!-- Stock Selection Modal -->
+<div class="modal fade" id="stockModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-primary-subtle">
                 <h5 class="modal-title text-primary">
-                    <i class="las la-box me-1"></i> Select Batch
+                    <i class="las la-box me-1"></i> Select Warehouse
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div id="batchList"></div>
+                <div id="stockList"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">
@@ -115,23 +115,23 @@ function selectProduct(productId, productName, defaultPrice) {
     fetch(`/sales/api/products/${productId}/`)
         .then(response => response.json())
         .then(data => {
-            if (data.batches.length === 0) {
-                showValidationModal('No stock available for this product', 'Out of Stock');
+            if (data.stocks.length === 0) {
+                showValidationModal('No stock available for this product in shop warehouses', 'Out of Stock');
                 return;
             }
             
-            let html = '<p>Available batches for <strong>' + productName + '</strong>:</p>';
+            let html = '<p>Available stocks for <strong>' + productName + '</strong>:</p>';
             html += '<div class="list-group">';
-            data.batches.forEach(batch => {
+            data.stocks.forEach(stock => {
                 html += `
-                    <a href="{% url 'sale_create' %}?product=${productId}&batch=${batch.id}" class="list-group-item list-group-item-action">
+                    <a href="{% url 'sale_create' %}?product=${productId}&warehouse=${stock.warehouse_id}" class="list-group-item list-group-item-action">
                         <div class="d-flex justify-content-between">
                             <div>
-                                <strong>${batch.batch_number}</strong><br>
-                                <small class="text-muted">${batch.warehouse} | Cost: {{ CURRENCY_SYMBOL }}${batch.buy_price}</small>
+                                <strong>${stock.warehouse}</strong><br>
+                                <small class="text-muted">Cost: {{ CURRENCY_SYMBOL }}${stock.average_cost}</small>
                             </div>
                             <div class="text-end">
-                                <span class="badge bg-primary">${batch.quantity} avail</span>
+                                <span class="badge bg-primary">${stock.quantity} avail</span>
                             </div>
                         </div>
                     </a>
@@ -139,8 +139,8 @@ function selectProduct(productId, productName, defaultPrice) {
             });
             html += '</div>';
             
-            document.getElementById('batchList').innerHTML = html;
-            new bootstrap.Modal(document.getElementById('batchModal')).show();
+            document.getElementById('stockList').innerHTML = html;
+            new bootstrap.Modal(document.getElementById('stockModal')).show();
         });
 }
 </script>

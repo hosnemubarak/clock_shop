@@ -24,7 +24,7 @@
                         <thead>
                             <tr>
                                 <th>Product</th>
-                                <th>Batch #</th>
+                                <th>Warehouse</th>
                                 <th>Qty</th>
                                 <th>Unit Price</th>
                                 <th>Total</th>
@@ -34,7 +34,7 @@
                             {% for item in purchase.items.all %}
                             <tr>
                                 <td>{{ item.product.sku }}</td>
-                                <td><code>{{ item.batch.batch_number }}</code></td>
+                                <td>{{ item.warehouse.name }}</td>
                                 <td>{{ item.quantity }}</td>
                                 <td>{{ CURRENCY_SYMBOL }}{{ item.unit_price|floatformat:2 }}</td>
                                 <td>{{ CURRENCY_SYMBOL }}{{ item.total_price|floatformat:2 }}</td>

@@ -64,11 +64,11 @@
                 <div class="card-body">
                     <div class="alert alert-soft-warning border-0 mb-3">
                         <i class="las la-exclamation-triangle me-2"></i>
-                        Select a warehouse first, then choose products and batches to remove from stock.
+                        Select a warehouse first, then choose products to remove from stock.
                     </div>
                     
                     <div class="row g-3 align-items-end">
-                        <div class="col-md-4">
+                        <div class="col-md-5">
                             <label class="form-label">Product</label>
                             <select class="form-select" id="productSelect">
                                 <option value="">Select Product...</option>
@@ -78,16 +78,11 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Batch</label>
-                            <select class="form-select" id="batchSelect" disabled>
-                                <option value="">Select Batch</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
                             <label class="form-label">Available</label>
                             <input type="text" class="form-control" id="availableQty" readonly placeholder="-">
+                            <input type="hidden" id="unitCost" value="0">
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <label class="form-label">Quantity <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="quantityInput" min="1" value="1">
                         </div>
@@ -97,7 +92,7 @@
                             </button>
                         </div>
                     </div>
-                    <div id="batchInfo" class="mt-2 small text-muted"></div>
+                    <div id="stockInfo" class="mt-2 small text-muted"></div>
                 </div>
             </div>
             
@@ -112,7 +107,7 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Product</th>
-                                    <th>Batch</th>
+                                    <!-- No Batch column -->
                                     <th class="text-center">Qty</th>
                                     <th class="text-end">Unit Cost</th>
                                     <th class="text-end">Total</th>
@@ -121,14 +116,14 @@
                             </thead>
                             <tbody id="itemsTableBody">
                                 <tr id="emptyRow">
-                                    <td colspan="6" class="text-center text-muted py-4">
+                                    <td colspan="5" class="text-center text-muted py-4">
                                         No items added yet
                                     </td>
                                 </tr>
                             </tbody>
                             <tfoot class="table-light">
                                 <tr>
-                                    <th colspan="4" class="text-end">Total Value:</th>
+                                    <th colspan="3" class="text-end">Total Value:</th>
                                     <th class="text-end" id="totalValue">{{ CURRENCY_SYMBOL }}0.00</th>
                                     <th></th>
                                 </tr>
@@ -198,93 +193,73 @@
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 <script>
 let items = [];
-let productSelect, batchSelect;
+let productSelect;
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Tom Select for product
     productSelect = new TomSelect('#productSelect', {
         placeholder: 'Search products...',
         onChange: function(value) {
-            loadBatches(value);
+            loadStock(value);
         }
     });
     
     // Warehouse change handler
     document.getElementById('id_warehouse').addEventListener('change', function() {
         productSelect.clear();
-        document.getElementById('batchSelect').innerHTML = '<option value="">Select Batch</option>';
-        document.getElementById('batchSelect').disabled = true;
         document.getElementById('availableQty').value = '';
-        document.getElementById('batchInfo').innerHTML = '';
+        document.getElementById('unitCost').value = '0';
+        document.getElementById('stockInfo').innerHTML = '';
     });
 });
 
-function loadBatches(productId) {
+function loadStock(productId) {
     const warehouseId = document.getElementById('id_warehouse').value;
-    const batchSelect = document.getElementById('batchSelect');
     
     if (!productId || !warehouseId) {
-        batchSelect.innerHTML = '<option value="">Select warehouse first</option>';
-        batchSelect.disabled = true;
+        document.getElementById('availableQty').value = '';
+        document.getElementById('unitCost').value = '0';
         return;
     }
     
-    fetch(`/inventory/api/warehouses/${warehouseId}/batches/?product=${productId}`)
+    fetch(`/inventory/api/warehouses/${warehouseId}/stocks/?product=${productId}`)
         .then(response => response.json())
         .then(data => {
-            batchSelect.innerHTML = '<option value="">Select Batch</option>';
-            data.forEach(batch => {
-                batchSelect.innerHTML += `<option value="${batch.id}" 
-                    data-qty="${batch.quantity}" 
-                    data-price="${batch.buy_price}"
-                    data-number="${batch.batch_number}">
-                    ${batch.batch_number} (${batch.quantity} units @ {{ CURRENCY_SYMBOL }}${batch.buy_price})
-                </option>`;
-            });
-            batchSelect.disabled = data.length === 0;
-            
             if (data.length === 0) {
-                document.getElementById('batchInfo').innerHTML = '<span class="text-warning">No stock available for this product in selected warehouse</span>';
+                document.getElementById('stockInfo').innerHTML = '<span class="text-warning">No stock available for this product in selected warehouse</span>';
+                document.getElementById('availableQty').value = '0';
+                document.getElementById('unitCost').value = '0';
             } else {
-                document.getElementById('batchInfo').innerHTML = '';
+                const stock = data[0];
+                document.getElementById('stockInfo').innerHTML = '';
+                document.getElementById('availableQty').value = stock.quantity;
+                document.getElementById('unitCost').value = stock.average_cost;
+                document.getElementById('quantityInput').max = stock.quantity;
             }
         });
 }
 
-document.getElementById('batchSelect').addEventListener('change', function() {
-    const selected = this.options[this.selectedIndex];
-    if (selected.value) {
-        document.getElementById('availableQty').value = selected.dataset.qty;
-        document.getElementById('quantityInput').max = selected.dataset.qty;
-    } else {
-        document.getElementById('availableQty').value = '';
-    }
-});
-
 function addItem() {
     const productEl = document.getElementById('productSelect');
-    const batchEl = document.getElementById('batchSelect');
     const qtyEl = document.getElementById('quantityInput');
     
     const productId = productEl.value;
-    const batchId = batchEl.value;
     const quantity = parseInt(qtyEl.value);
+    const availableQty = parseInt(document.getElementById('availableQty').value) || 0;
+    const unitCost = parseFloat(document.getElementById('unitCost').value) || 0;
     
-    if (!productId || !batchId || !quantity) {
-        showValidationModal('Please select product, batch and enter quantity', 'Missing Information');
+    if (!productId || !quantity) {
+        showValidationModal('Please select product and enter quantity', 'Missing Information');
         return;
     }
-    
-    const batchOption = batchEl.options[batchEl.selectedIndex];
-    const availableQty = parseInt(batchOption.dataset.qty);
     
     if (quantity > availableQty) {
         showValidationModal(`Cannot remove more than available quantity (${availableQty})`, 'Insufficient Stock');
         return;
     }
     
-    // Check if batch already added
-    const existingIndex = items.findIndex(i => i.batch_id == batchId);
+    // Check if product already added
+    const existingIndex = items.findIndex(i => i.product_id == productId);
     if (existingIndex >= 0) {
         const newQty = items[existingIndex].quantity + quantity;
         if (newQty > availableQty) {
@@ -294,12 +269,10 @@ function addItem() {
         items[existingIndex].quantity = newQty;
     } else {
         items.push({
-            batch_id: batchId,
             product_id: productId,
             product_sku: productEl.options[productEl.selectedIndex].dataset.sku,
-            batch_number: batchOption.dataset.number,
             quantity: quantity,
-            unit_cost: parseFloat(batchOption.dataset.price),
+            unit_cost: unitCost,
             available: availableQty
         });
     }
@@ -308,10 +281,9 @@ function addItem() {
     
     // Reset form
     productSelect.clear();
-    batchEl.innerHTML = '<option value="">Select Batch</option>';
-    batchEl.disabled = true;
     qtyEl.value = 1;
     document.getElementById('availableQty').value = '';
+    document.getElementById('unitCost').value = '0';
 }
 
 function removeItem(index) {
@@ -325,7 +297,7 @@ function renderItems() {
     
     if (items.length === 0) {
         tbody.innerHTML = `<tr id="emptyRow">
-            <td colspan="6" class="text-center text-muted py-4">No items added yet</td>
+            <td colspan="5" class="text-center text-muted py-4">No items added yet</td>
         </tr>`;
         document.getElementById('submitBtn').disabled = true;
     } else {
@@ -334,7 +306,6 @@ function renderItems() {
             const total = item.quantity * item.unit_cost;
             tbody.innerHTML += `<tr>
                 <td>${item.product_sku}</td>
-                <td><code>${item.batch_number}</code></td>
                 <td class="text-center">${item.quantity}</td>
                 <td class="text-end">{{ CURRENCY_SYMBOL }}${item.unit_cost.toFixed(2)}</td>
                 <td class="text-end">{{ CURRENCY_SYMBOL }}${total.toFixed(2)}</td>

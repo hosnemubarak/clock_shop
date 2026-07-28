@@ -1,5 +1,5 @@
 from django import forms
-from .models import Product, Category, Brand, Batch, Purchase, PurchaseItem, StockOut
+from .models import Product, Category, Brand, Purchase, PurchaseItem, StockOut
 from apps.warehouse.models import Warehouse
 
 
@@ -41,28 +41,7 @@ class ProductForm(forms.ModelForm):
         }
 
 
-class BatchForm(forms.ModelForm):
-    class Meta:
-        model = Batch
-        fields = ['product', 'warehouse', 'buy_price', 'initial_quantity', 
-                  'purchase_date', 'supplier', 'notes']
-        widgets = {
-            'product': forms.Select(attrs={'class': 'form-select'}),
-            'warehouse': forms.Select(attrs={'class': 'form-select'}),
-            'buy_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'e.g. 150.00'}),
-            'initial_quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': '1', 'placeholder': 'e.g. 25'}),
-            'purchase_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'supplier': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. ABC Clock Suppliers'}),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'e.g. Invoice #12345'}),
-        }
-    
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        instance.quantity = instance.initial_quantity
-        if commit:
-            instance.save()
-            instance.product.update_total_stock()
-        return instance
+
 
 
 class PurchaseForm(forms.ModelForm):
@@ -104,8 +83,12 @@ class StockAdjustmentForm(forms.Form):
         ('remove', 'Remove Stock'),
     ]
     
-    batch = forms.ModelChoiceField(
-        queryset=Batch.objects.filter(quantity__gt=0),
+    product = forms.ModelChoiceField(
+        queryset=Product.objects.filter(is_active=True),
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    warehouse = forms.ModelChoiceField(
+        queryset=Warehouse.objects.filter(is_active=True),
         widget=forms.Select(attrs={'class': 'form-select'})
     )
     adjustment_type = forms.ChoiceField(

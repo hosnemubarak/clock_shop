@@ -194,7 +194,7 @@
                         <tbody>
                             {% for w in profit_by_warehouse %}
                             <tr>
-                                <td>{{ w.batch__warehouse__name|default:"Unknown" }}</td>
+                                <td>{{ w.warehouse__name|default:"Unknown" }}</td>
                                 <td class="text-end text-success">{{ CURRENCY_SYMBOL }}{{ w.profit|floatformat:2 }}</td>
                             </tr>
                             {% endfor %}

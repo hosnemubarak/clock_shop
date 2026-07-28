@@ -6,7 +6,7 @@ from .models import Sale, SaleItem, SaleReturn, SaleReturnItem
 class SaleItemInline(admin.TabularInline):
     model = SaleItem
     extra = 0
-    readonly_fields = ['product', 'batch', 'quantity', 'unit_price', 'cost_price', 'discount', 'is_custom', 'custom_description']
+    readonly_fields = ['product', 'warehouse', 'quantity', 'unit_price', 'cost_price', 'discount', 'is_custom', 'custom_description']
     can_delete = False
     
     def has_add_permission(self, request, obj=None):

@@ -30,7 +30,7 @@ class WarehouseAdmin(admin.ModelAdmin):
 class StockTransferItemInline(admin.TabularInline):
     model = StockTransferItem
     extra = 0
-    readonly_fields = ['source_batch', 'destination_batch', 'quantity']
+    readonly_fields = ['product', 'quantity']
     can_delete = False
     
     def has_add_permission(self, request, obj=None):
