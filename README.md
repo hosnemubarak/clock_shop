@@ -140,10 +140,13 @@ python manage.py migrate
 # 7. Create admin user
 python manage.py createsuperuser
 
-# 8. (Optional) Load demo data
+# 8. Setup default walk-in customer
+python manage.py setup_walkin_customer
+
+# 9. (Optional) Load demo data
 python manage.py loaddata fixtures/demo_data.json
 
-# 9. Start development server
+# 10. Start development server
 python manage.py runserver
 ```
 
