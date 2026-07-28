@@ -253,11 +253,18 @@ function saveNewCustomer() {
     .then(result => {
         if (result.status === 'success') {
             const select = document.getElementById(targetCustomerSelectId);
-            const option = document.createElement('option');
-            option.value = result.customer.id;
-            option.text = result.customer.name + (result.customer.phone ? ' - ' + result.customer.phone : '');
-            select.add(option);
-            select.value = result.customer.id;
+            const text = result.customer.name + (result.customer.phone ? ' - ' + result.customer.phone : '');
+            
+            if (select.tomselect) {
+                select.tomselect.addOption({value: result.customer.id, text: text});
+                select.tomselect.addItem(result.customer.id);
+            } else {
+                const option = document.createElement('option');
+                option.value = result.customer.id;
+                option.text = text;
+                select.add(option);
+                select.value = result.customer.id;
+            }
             
             newCustomerModal.hide();
         } else {
