@@ -188,8 +188,17 @@
                 
                 <div class="mb-3">
                     <label class="form-label">Amount Paid ({{ CURRENCY_SYMBOL }})</label>
-                    <input type="number" id="checkoutPaid" class="form-control form-control-lg text-end" value="0.00" step="0.01" min="0">
+                    <input type="number" id="checkoutPaid" class="form-control form-control-lg text-end" value="0.00" step="0.01" min="0" oninput="calculateChange()">
                     <div class="form-text">Leave as 0.00 for pending/credit sales.</div>
+                </div>
+                
+                <div class="card bg-light mt-2">
+                    <div class="card-body py-2">
+                        <div class="d-flex justify-content-between fw-bold fs-5">
+                            <span id="changeLabel">Change:</span>
+                            <span id="checkoutChange" class="text-primary">{{ CURRENCY_SYMBOL }}0.00</span>
+                        </div>
+                    </div>
                 </div>
                 
             </div>
@@ -432,7 +441,27 @@ function openCheckout() {
     const totalText = document.getElementById('summaryTotal').textContent.replace(/[^0-9.]/g, '');
     document.getElementById('checkoutFinalTotal').textContent = '{{ CURRENCY_SYMBOL }}' + totalText;
     document.getElementById('checkoutPaid').value = totalText;
+    calculateChange();
     checkoutModal.show();
+}
+
+function calculateChange() {
+    const finalTotal = parseFloat(document.getElementById('checkoutFinalTotal').textContent.replace(/[^0-9.-]+/g, '')) || 0;
+    const paid = parseFloat(document.getElementById('checkoutPaid').value) || 0;
+    const diff = paid - finalTotal;
+    
+    const changeEl = document.getElementById('checkoutChange');
+    const changeLabel = document.getElementById('changeLabel');
+    
+    if (diff >= 0) {
+        changeLabel.textContent = 'Change to Return:';
+        changeEl.className = 'text-success';
+        changeEl.textContent = '{{ CURRENCY_SYMBOL }}' + diff.toFixed(2);
+    } else {
+        changeLabel.textContent = 'Amount Due:';
+        changeEl.className = 'text-danger';
+        changeEl.textContent = '{{ CURRENCY_SYMBOL }}' + Math.abs(diff).toFixed(2);
+    }
 }
 
 function processCheckout() {
