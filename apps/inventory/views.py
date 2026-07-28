@@ -133,7 +133,11 @@ def product_delete(request, pk):
     
     if request.method == 'POST':
         if product.batches.exists():
-            messages.error(request, 'Cannot delete product with existing batches.')
+            messages.error(
+                request, 
+                'Cannot delete this product because it has existing stock batches. '
+                'Please delete or transfer all stock batches before attempting to delete the product.'
+            )
         else:
             display_name = product.display_name
             create_audit_log(request, 'DELETE', product)
