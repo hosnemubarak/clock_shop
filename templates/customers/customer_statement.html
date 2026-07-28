@@ -34,7 +34,9 @@
                             </div>
                             <div class="col-md-auto ms-auto d-flex gap-2">
                         <button type="submit" class="btn btn-primary"><i class="las la-filter me-1"></i> Filter</button>
+                        {% if date_from or date_to %}
                         <a href="{{ request.path }}" class="btn btn-soft-danger"><i class="las la-times me-1"></i> Clear</a>
+                        {% endif %}
                     </div>
                         </form>
                     </div>

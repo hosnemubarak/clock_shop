@@ -46,9 +46,11 @@
                     <div class="col-xl-3 col-lg-4 col-md-6">
                         <button type="submit" class="btn btn-primary w-100">Filter</button>
                     </div>
+                    {% if product_search %}
                     <div class="col-xl-3 col-lg-4 col-md-6">
                         <a href="?{% for key, value in request.GET.items %}{% if key != 'product_search' and key != 'search' and key != 'product_page' and key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}" class="btn btn-outline-secondary w-100">Clear</a>
                     </div>
+                    {% endif %}
 
                     {% if batch_search %}<input type="hidden" name="batch_search" value="{{ batch_search }}">{% endif %}
                     {% if batch_stock %}<input type="hidden" name="batch_stock" value="{{ batch_stock }}">{% endif %}
@@ -169,9 +171,11 @@
                     <div class="col-xl-3 col-lg-4 col-md-6">
                         <button type="submit" class="btn btn-primary w-100">Filter</button>
                     </div>
+                    {% if batch_search or batch_stock or purchase_from or purchase_to %}
                     <div class="col-xl-3 col-lg-4 col-md-6">
                         <a href="?{% for key, value in request.GET.items %}{% if key != 'batch_search' and key != 'batch_stock' and key != 'purchase_from' and key != 'purchase_to' and key != 'batch_page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}" class="btn btn-outline-secondary w-100">Clear</a>
                     </div>
+                    {% endif %}
 
                     {% if product_search %}<input type="hidden" name="product_search" value="{{ product_search }}">{% endif %}
                     {% if stock_summary.number %}<input type="hidden" name="product_page" value="{{ stock_summary.number }}">{% endif %}

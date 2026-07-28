@@ -49,9 +49,11 @@
                     <div class="col-xl-3 col-lg-4 col-md-6">
                         <button type="submit" class="btn btn-primary w-100">Filter</button>
                     </div>
+                    {% if selected_action or selected_user %}
                     <div class="col-xl-3 col-lg-4 col-md-6">
                         <a href="{% url 'audit_logs' %}" class="btn btn-outline-secondary w-100">Clear</a>
                     </div>
+                    {% endif %}
                 </form>
             </div>
             <div class="card-body">
