@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -349,3 +350,40 @@ def api_customer_sales(request, customer_id):
     } for s in sales]
     
     return JsonResponse(data, safe=False)
+
+
+@login_required
+def api_customer_create(request):
+    """API endpoint to create a customer inline."""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            name = data.get('name', '').strip()
+            
+            if not name:
+                return JsonResponse({'status': 'error', 'message': 'Customer name is required.'}, status=400)
+                
+            customer = Customer.objects.create(
+                name=name,
+                phone=data.get('phone', '').strip(),
+                email=data.get('email', '').strip(),
+                address=data.get('address', '').strip()
+            )
+            
+            create_audit_log(request, 'CUSTOMER', customer, {
+                'action': 'inline_create',
+                'name': name
+            })
+            
+            return JsonResponse({
+                'status': 'success',
+                'customer': {
+                    'id': customer.id,
+                    'name': customer.name,
+                    'phone': customer.phone
+                }
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
