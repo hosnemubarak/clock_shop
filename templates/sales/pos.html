@@ -3,10 +3,40 @@
 {% block title %}POS | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
+<style>
+    /* Premium UI Tweaks */
+    .pos-product-card {
+        transition: all 0.2s ease-in-out;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .pos-product-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
+        border-color: var(--bs-primary) !important;
+    }
+    .sticky-cart {
+        position: sticky;
+        top: 80px; /* Adjust based on navbar height */
+        z-index: 100;
+    }
+    .cart-item-row {
+        transition: background-color 0.15s;
+    }
+    .cart-item-row:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+
 <div class="row">
     <div class="col-12">
-        <div class="page-title-box">
+        <div class="page-title-box d-flex align-items-center justify-content-between">
             <h4 class="mb-0">Point of Sale</h4>
+            <div class="page-title-right">
+                <span class="badge bg-primary-subtle text-primary fs-6 py-2 px-3 rounded-pill">
+                    <i class="las la-store me-1"></i> Retail Register
+                </span>
+            </div>
         </div>
     </div>
 </div>
@@ -21,17 +51,21 @@
                 <div class="row" id="productGrid">
                     {% for product in products %}
                     <div class="col-md-3 col-sm-4 mb-3 product-item" data-name="{{ product.sku|lower }}" data-sku="{{ product.sku|lower }}">
-                        <div class="card border h-100 cursor-pointer" onclick="selectProduct({{ product.id }}, '{{ product.sku|escapejs }}', {{ product.default_selling_price }})">
-                            <div class="card-body text-center p-3">
-                                <div class="avatar-sm mx-auto mb-2">
-                                    <div class="avatar-title bg-light rounded">
-                                        <i class="las la-clock fs-3 text-muted"></i>
+                        <div class="card border pos-product-card h-100 cursor-pointer" onclick="selectProduct({{ product.id }}, '{{ product.sku|escapejs }}', {{ product.default_selling_price }})">
+                            <div class="card-body text-center p-3 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="avatar-md mx-auto mb-3">
+                                        <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-2 shadow-sm">
+                                            <i class="las la-box"></i>
+                                        </div>
                                     </div>
+                                    <h6 class="mb-1 text-truncate fw-bold">{{ product.sku }}</h6>
+                                    <small class="text-muted d-block mb-2">{{ product.category.name|default:"Uncategorized" }}</small>
                                 </div>
-                                <h6 class="mb-1 text-truncate">{{ product.sku }}</h6>
-                                <small class="text-muted">{{ product.category.name }}</small>
-                                <div class="mt-2">
-                                    <span class="badge bg-primary">{{ CURRENCY_SYMBOL }}{{ product.default_selling_price }}</span>
+                                <div>
+                                    <span class="badge bg-success-subtle text-success fs-6 px-3 py-2 rounded-pill shadow-sm">
+                                        {{ CURRENCY_SYMBOL }}{{ product.default_selling_price }}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -47,37 +81,42 @@
     </div>
     
     <div class="col-lg-4">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="card-title mb-0 text-white"><i class="las la-shopping-cart me-1"></i> Current Sale</h5>
+        <div class="card sticky-cart shadow-sm border-0">
+            <div class="card-header bg-dark text-white rounded-top">
+                <h5 class="card-title mb-0 text-white d-flex align-items-center">
+                    <i class="las la-shopping-cart fs-3 me-2"></i> Current Sale
+                </h5>
             </div>
             <div class="card-body p-0">
-                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                    <table class="table table-sm table-borderless table-striped mb-0">
-                        <thead class="table-light">
+                <div class="table-responsive" style="max-height: 450px; overflow-y: auto;">
+                    <table class="table table-sm table-borderless mb-0 align-middle">
+                        <thead class="table-light sticky-top">
                             <tr>
-                                <th>Item</th>
-                                <th class="text-center">Qty</th>
-                                <th class="text-end">Price</th>
-                                <th></th>
+                                <th class="ps-3 py-2">Item</th>
+                                <th class="text-center py-2">Qty</th>
+                                <th class="text-end py-2">Price</th>
+                                <th class="pe-3 py-2"></th>
                             </tr>
                         </thead>
                         <tbody id="cartItems">
-                            <tr><td colspan="4" class="text-center text-muted py-4">No items added</td></tr>
+                            <tr><td colspan="4" class="text-center text-muted py-5">
+                                <i class="las la-shopping-basket fs-1 mb-2 d-block text-light"></i>
+                                Cart is empty
+                            </td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-            <div class="card-footer">
-                <div class="d-flex justify-content-between fs-5 fw-bold mb-3">
-                    <span>Total:</span>
-                    <span id="cartTotal">{{ CURRENCY_SYMBOL }}0.00</span>
+            <div class="card-footer bg-white border-top shadow-sm z-1">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted text-uppercase fw-bold ls-1 fs-6">Total Due</span>
+                    <span id="cartTotal" class="fs-2 fw-bolder text-dark">{{ CURRENCY_SYMBOL }}0.00</span>
                 </div>
                 <div class="d-grid gap-2">
-                    <button type="button" id="btnCheckout" class="btn btn-success btn-lg" disabled onclick="openCheckout()">
-                        <i class="las la-check-circle me-1"></i> Checkout
+                    <button type="button" id="btnCheckout" class="btn btn-primary btn-lg rounded-pill shadow-sm fs-5 py-3" disabled onclick="openCheckout()">
+                        <i class="las la-credit-card me-1"></i> Charge Total
                     </button>
-                    <button type="button" class="btn btn-outline-danger" onclick="clearCart()">
+                    <button type="button" class="btn btn-light rounded-pill text-danger hover-danger" onclick="clearCart()">
                         <i class="las la-trash me-1"></i> Clear Cart
                     </button>
                 </div>
