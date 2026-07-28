@@ -12,7 +12,7 @@ from .models import AuditLog, SystemSettings
 from .forms import SystemSettingsForm
 from apps.inventory.models import Product, Batch
 from apps.sales.models import Sale, SaleItem
-from apps.customers.models import Customer
+from apps.customers.models import Customer, Payment
 from apps.warehouse.models import Warehouse
 
 
@@ -30,6 +30,11 @@ def dashboard(request):
     total_sales_month = Sale.objects.filter(
         sale_date__date__gte=month_start
     ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+    
+    # Cash Collection
+    today_cash_collection = Payment.objects.filter(
+        payment_date__date=today
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
     
     # Profit calculation
     profit_month = SaleItem.objects.filter(
@@ -91,6 +96,7 @@ def dashboard(request):
     context = {
         'total_sales_today': total_sales_today,
         'total_sales_month': total_sales_month,
+        'today_cash_collection': today_cash_collection,
         'profit_month': profit_month,
         'total_products': total_products,
         'total_product_quantity': total_product_quantity,

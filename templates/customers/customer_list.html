@@ -19,24 +19,51 @@
     <div class="col-xl-4 col-md-6 mb-3">
         <div class="card card-animate h-100 mb-0">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Total Customers</p>
-                <h4 class="fs-22 fw-semibold mt-4 text-primary">{{ total_customers|intcomma }}</h4>
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="fw-medium text-muted mb-0">Total Customers</p>
+                        <h4 class="fs-22 fw-semibold mt-3 mb-0 text-primary">{{ total_customers|intcomma }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-primary-subtle text-primary rounded fs-3">
+                            <i class="las la-users"></i>
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-xl-4 col-md-6 mb-3">
         <div class="card card-animate h-100 mb-0">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Total Purchases</p>
-                <h4 class="fs-22 fw-semibold mt-4 text-success">{{ CURRENCY_SYMBOL }}{{ total_purchases|floatformat:2|intcomma }}</h4>
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="fw-medium text-muted mb-0">Total Purchases</p>
+                        <h4 class="fs-22 fw-semibold mt-3 mb-0 text-success">{{ CURRENCY_SYMBOL }}{{ total_purchases|floatformat:2|intcomma }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-success-subtle text-success rounded fs-3">
+                            <i class="las la-shopping-cart"></i>
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-xl-4 col-md-6 mb-3">
         <div class="card card-animate h-100 mb-0">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Total Outstanding</p>
-                <h4 class="fs-22 fw-semibold mt-4 text-danger">{{ CURRENCY_SYMBOL }}{{ total_due|floatformat:2|intcomma }}</h4>
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="fw-medium text-muted mb-0">Total Outstanding</p>
+                        <h4 class="fs-22 fw-semibold mt-3 mb-0 text-danger">{{ CURRENCY_SYMBOL }}{{ total_due|floatformat:2|intcomma }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-danger-subtle text-danger rounded fs-3">
+                            <i class="las la-file-invoice-dollar"></i>
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -47,18 +74,19 @@
         <div class="card">
             <div class="card-header">
                 <form method="get" class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
                         <input type="text" name="search" class="form-control" placeholder="Search customers..." value="{{ search }}">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
                         <select name="due" class="form-select">
                             <option value="">All Customers</option>
                             <option value="has_due">With Outstanding</option>
                             <option value="no_due">No Outstanding</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    <div class="col-md-auto ms-auto d-flex gap-2">
+                        <button type="submit" class="btn btn-primary"><i class="las la-filter me-1"></i> Filter</button>
+                        <a href="{{ request.path }}" class="btn btn-soft-danger"><i class="las la-times me-1"></i> Clear</a>
                     </div>
                 </form>
             </div>

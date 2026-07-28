@@ -36,7 +36,7 @@
         <div class="card">
             <div class="card-header">
                 <form method="get" class="row g-3">
-                    <div class="col-md-3">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
                         <select name="warehouse" class="form-select">
                             <option value="">All Warehouses</option>
                             {% for w in warehouses %}
@@ -44,7 +44,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
                         <select name="category" class="form-select">
                             <option value="">All Categories</option>
                             {% for c in categories %}
@@ -52,15 +52,16 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
                         <select name="stock_filter" class="form-select">
                             <option value="all">All Stock</option>
                             <option value="low" {% if stock_filter == 'low' %}selected{% endif %}>Low Stock (≤10)</option>
                             <option value="out" {% if stock_filter == 'out' %}selected{% endif %}>Out of Stock</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    <div class="col-md-auto ms-auto d-flex gap-2">
+                        <button type="submit" class="btn btn-primary"><i class="las la-filter me-1"></i> Filter</button>
+                        <a href="{{ request.path }}" class="btn btn-soft-danger"><i class="las la-times me-1"></i> Clear</a>
                     </div>
                 </form>
             </div>

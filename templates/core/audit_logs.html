@@ -22,10 +22,10 @@
         <div class="card">
             <div class="card-header">
                 <form method="get" class="row g-3">
-                    <div class="col-md-3">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
                         <input type="text" name="search" class="form-control" placeholder="Search logs..." value="{{ search }}">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
                         <select name="action" class="form-select">
                             <option value="">All Actions</option>
                             <option value="CREATE" {% if selected_action == 'CREATE' %}selected{% endif %}>Create</option>
@@ -38,7 +38,7 @@
                             <option value="TRANSFER" {% if selected_action == 'TRANSFER' %}selected{% endif %}>Transfer</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
                         <select name="user" class="form-select">
                             <option value="">All Users</option>
                             {% for user in users %}
@@ -46,10 +46,10 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
                         <button type="submit" class="btn btn-primary w-100">Filter</button>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
                         <a href="{% url 'audit_logs' %}" class="btn btn-outline-secondary w-100">Clear</a>
                     </div>
                 </form>

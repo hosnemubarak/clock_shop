@@ -40,13 +40,13 @@
         <div class="card">
             <div class="card-header">
                 <form method="get" class="row g-3 align-items-center">
-                    <div class="col-md-6">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
                         <input type="text" name="product_search" class="form-control" placeholder="Search products in this warehouse..." value="{{ product_search }}">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
                         <button type="submit" class="btn btn-primary w-100">Filter</button>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
                         <a href="?{% for key, value in request.GET.items %}{% if key != 'product_search' and key != 'search' and key != 'product_page' and key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}" class="btn btn-outline-secondary w-100">Clear</a>
                     </div>
 
@@ -146,11 +146,11 @@
                     <h5 class="card-title mb-0">All Batches in Warehouse</h5>
                 </div>
                 <form method="get" class="row g-3 align-items-end">
-                    <div class="col-md-3">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
                         <label class="form-label small text-muted">Search</label>
                         <input type="text" name="batch_search" class="form-control" placeholder="Batch #, SKU, brand, supplier..." value="{{ batch_search }}">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
                         <label class="form-label small text-muted">Stock</label>
                         <select name="batch_stock" class="form-select">
                             <option value="">All Stock</option>
@@ -158,18 +158,18 @@
                             <option value="depleted" {% if batch_stock == 'depleted' %}selected{% endif %}>Out of Stock</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
                         <label class="form-label small text-muted">Purchase From</label>
                         <input type="date" name="purchase_from" class="form-control" value="{{ purchase_from }}">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
                         <label class="form-label small text-muted">Purchase To</label>
                         <input type="date" name="purchase_to" class="form-control" value="{{ purchase_to }}">
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
                         <button type="submit" class="btn btn-primary w-100">Filter</button>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-xl-3 col-lg-4 col-md-6">
                         <a href="?{% for key, value in request.GET.items %}{% if key != 'batch_search' and key != 'batch_stock' and key != 'purchase_from' and key != 'purchase_to' and key != 'batch_page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}" class="btn btn-outline-secondary w-100">Clear</a>
                     </div>
 

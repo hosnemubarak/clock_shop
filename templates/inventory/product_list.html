@@ -34,14 +34,14 @@
             <div class="card-body">
                 <form method="get" id="filterForm">
                     <div class="row g-3">
-                        <div class="col-md-3">
+                        <div class="col-xl-3 col-lg-4 col-md-6">
                             <label class="form-label small text-muted">Search</label>
                             <div class="input-group">
                                 <input type="text" name="search" class="form-control" placeholder="SKU, name, brand..." value="{{ search }}">
                                 <button type="submit" class="btn btn-primary"><i class="las la-search"></i></button>
                             </div>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-xl-3 col-lg-4 col-md-6">
                             <label class="form-label small text-muted">Category</label>
                             <select name="category" class="form-select" onchange="document.getElementById('filterForm').submit()">
                                 <option value="">All Categories</option>
@@ -50,7 +50,7 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-xl-3 col-lg-4 col-md-6">
                             <label class="form-label small text-muted">Brand</label>
                             <select name="brand" class="form-select" onchange="document.getElementById('filterForm').submit()">
                                 <option value="">All Brands</option>
@@ -59,7 +59,7 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-xl-3 col-lg-4 col-md-6">
                             <label class="form-label small text-muted">Stock</label>
                             <select name="stock" class="form-select" onchange="document.getElementById('filterForm').submit()">
                                 <option value="">All Stock</option>
@@ -68,7 +68,7 @@
                                 <option value="out" {% if selected_stock == 'out' %}selected{% endif %}>Out of Stock</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-xl-3 col-lg-4 col-md-6">
                             <label class="form-label small text-muted">Status</label>
                             <select name="status" class="form-select" onchange="document.getElementById('filterForm').submit()">
                                 <option value="">All Status</option>
@@ -76,9 +76,9 @@
                                 <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
                             </select>
                         </div>
-                        <div class="col-md-1 d-flex align-items-end">
-                            <a href="{% url 'product_list' %}" class="btn btn-outline-secondary w-100" title="Clear Filters">
-                                <i class="las la-times"></i>
+                        <div class="col-xl-3 col-lg-4 col-md-6 d-flex align-items-end">
+                            <a href="{% url 'product_list' %}" class="btn btn-soft-danger w-100" title="Clear Filters">
+                                <i class="las la-times me-1"></i> Clear Filters
                             </a>
                         </div>
                     </div>
