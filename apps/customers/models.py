@@ -60,6 +60,8 @@ class Customer(TimeStampedModel):
         ]
     
     def __str__(self):
+        if self.phone:
+            return f"{self.name} - {self.phone}"
         return self.name
     
     def clean(self):
