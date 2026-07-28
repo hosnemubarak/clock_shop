@@ -367,3 +367,137 @@ def api_product_info(request, product_id):
     }
     
     return JsonResponse(data)
+
+
+@login_required
+@transaction.atomic
+def pos_checkout(request):
+    """API endpoint to process a POS checkout."""
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+        
+    import json
+    from decimal import Decimal
+    from django.utils import timezone
+    from apps.sales.models import Sale, SaleItem
+    from apps.customers.models import Customer, Payment
+    from apps.warehouse.models import Warehouse
+    from apps.inventory.models import Product, ProductStock
+    from apps.core.utils import create_audit_log
+    
+    try:
+        data = json.loads(request.body)
+        
+        shop = Warehouse.objects.filter(is_shop=True).first()
+        if not shop:
+            return JsonResponse({'status': 'error', 'message': 'No shop warehouse configured.'}, status=400)
+            
+        items = data.get('items', [])
+        if not items:
+            return JsonResponse({'status': 'error', 'message': 'Cart is empty.'}, status=400)
+            
+        customer_id = data.get('customer_id')
+        discount_amount = Decimal(str(data.get('discount_amount', '0') or '0'))
+        payment_amount = Decimal(str(data.get('payment_amount', '0') or '0'))
+        payment_method = data.get('payment_method', 'cash')
+        
+        customer = None
+        if customer_id:
+            customer = Customer.objects.get(pk=customer_id)
+            
+        # Create Sale
+        sale = Sale.objects.create(
+            customer=customer,
+            sale_date=timezone.now(),
+            discount_amount=discount_amount,
+            notes=data.get('notes', ''),
+            created_by=request.user,
+            status='completed' if payment_amount > 0 else 'pending'
+        )
+        
+        subtotal = Decimal('0')
+        total_cost = Decimal('0')
+        
+        for item_data in items:
+            product = Product.objects.get(pk=item_data['product_id'])
+            quantity = int(item_data['quantity'])
+            unit_price = Decimal(str(item_data['unit_price']))
+            
+            # Stock check
+            stock = ProductStock.objects.select_for_update().get(product=product, warehouse=shop)
+            if quantity > stock.quantity:
+                raise ValueError(f'Insufficient stock for {product.display_name}')
+                
+            # Create SaleItem
+            sale_item = SaleItem.objects.create(
+                sale=sale,
+                product=product,
+                warehouse=shop,
+                quantity=quantity,
+                unit_price=unit_price,
+                cost_price=product.average_cost,
+                discount=Decimal('0')
+            )
+            
+            # Update Stock
+            stock.quantity -= quantity
+            stock.save()
+            product.update_total_stock()
+            
+            subtotal += sale_item.total_price
+            total_cost += sale_item.total_cost
+            
+        # Finalize Sale Totals
+        sale.subtotal = subtotal
+        sale.total_cost = total_cost
+        sale.total_amount = subtotal - discount_amount
+        
+        # Determine status based on payment
+        if payment_amount >= sale.total_amount:
+            sale.status = 'paid'
+        elif payment_amount > 0:
+            sale.status = 'partial'
+            
+        sale.save()
+        
+        # Customer Balance
+        if customer:
+            customer.total_purchases += sale.total_amount
+            customer.total_due += sale.total_amount
+            customer.save()
+            
+        # Create Payment
+        if payment_amount > 0:
+            Payment.objects.create(
+                customer=customer,
+                sale=sale,
+                amount=payment_amount,
+                payment_date=timezone.now(),
+                payment_method=payment_method,
+                reference_number=f'POS-{sale.invoice_number}',
+                collected_by=request.user,
+                notes='POS Checkout Payment'
+            )
+            
+            if customer:
+                customer.total_paid += payment_amount
+                customer.total_due -= payment_amount
+                customer.save()
+                
+            sale.paid_amount = payment_amount
+            sale.save()
+            
+        create_audit_log(request, 'SALE', sale, {
+            'action': 'pos_checkout',
+            'total': str(sale.total_amount),
+            'paid': str(payment_amount)
+        })
+        
+        return JsonResponse({
+            'status': 'success',
+            'sale_id': sale.id,
+            'message': 'Sale completed successfully.'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
