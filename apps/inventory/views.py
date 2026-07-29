@@ -94,7 +94,42 @@ def product_create(request):
         if form.is_valid():
             product = form.save()
             create_audit_log(request, 'CREATE', product)
-            messages.success(request, f'Product "{product.display_name}" created successfully.')
+            
+            # Handle initial stock
+            initial_stock = form.cleaned_data.get('initial_stock')
+            initial_cost_price = form.cleaned_data.get('initial_cost_price')
+            initial_warehouse = form.cleaned_data.get('initial_warehouse')
+            
+            if initial_stock and initial_warehouse:
+                if initial_cost_price is None:
+                    initial_cost_price = Decimal('0.00')
+                    
+                # Create a Purchase to record the initial stock
+                from apps.inventory.models import Purchase, PurchaseItem
+                from django.utils import timezone
+                
+                purchase = Purchase.objects.create(
+                    supplier='Initial Stock',
+                    purchase_date=timezone.now().date(),
+                    total_amount=initial_stock * initial_cost_price,
+                    notes=f'Initial stock during product creation',
+                    created_by=request.user
+                )
+                
+                PurchaseItem.objects.create(
+                    purchase=purchase,
+                    product=product,
+                    warehouse=initial_warehouse,
+                    quantity=initial_stock,
+                    unit_price=initial_cost_price
+                )
+                
+                # Update product stock and average cost
+                product.add_stock(initial_stock, initial_cost_price, initial_warehouse.id)
+                messages.success(request, f'Product "{product.display_name}" created with {initial_stock} initial stock.')
+            else:
+                messages.success(request, f'Product "{product.display_name}" created successfully.')
+                
             return redirect('product_list')
     else:
         form = ProductForm()

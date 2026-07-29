@@ -26,6 +26,24 @@ class BrandForm(forms.ModelForm):
 
 
 class ProductForm(forms.ModelForm):
+    initial_stock = forms.IntegerField(
+        required=False,
+        min_value=1,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Optional: e.g. 50'})
+    )
+    initial_cost_price = forms.DecimalField(
+        required=False,
+        min_value=0,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Optional: Cost per unit'})
+    )
+    initial_warehouse = forms.ModelChoiceField(
+        queryset=Warehouse.objects.filter(is_active=True),
+        required=False,
+        empty_label="Select Warehouse",
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
     class Meta:
         model = Product
         fields = ['sku', 'brand', 'category', 'description', 
@@ -38,6 +56,16 @@ class ProductForm(forms.ModelForm):
             'default_selling_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'e.g. 299.99'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        initial_stock = cleaned_data.get('initial_stock')
+        initial_warehouse = cleaned_data.get('initial_warehouse')
+        
+        if initial_stock and not initial_warehouse:
+            self.add_error('initial_warehouse', 'Warehouse is required when adding initial stock.')
+            
+        return cleaned_data
 
 
 

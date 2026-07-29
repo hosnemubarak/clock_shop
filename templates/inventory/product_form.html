@@ -74,6 +74,38 @@
                     </div>
                 </div>
             </div>
+            
+            {% if not form.instance.pk %}
+            <!-- Initial Stock -->
+            <div class="card mt-3">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0"><i class="las la-boxes me-2"></i>Initial Stock (Optional)</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small">You can add initial stock to this product immediately upon creation. This will automatically generate an opening stock purchase record.</p>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="id_initial_stock" class="form-label">Quantity</label>
+                            {{ form.initial_stock }}
+                            {% if form.initial_stock.errors %}<div class="text-danger small">{{ form.initial_stock.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="id_initial_cost_price" class="form-label">Unit Cost Price</label>
+                            <div class="input-group">
+                                <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
+                                {{ form.initial_cost_price }}
+                            </div>
+                            {% if form.initial_cost_price.errors %}<div class="text-danger small">{{ form.initial_cost_price.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="id_initial_warehouse" class="form-label">Warehouse</label>
+                            {{ form.initial_warehouse }}
+                            {% if form.initial_warehouse.errors %}<div class="text-danger small">{{ form.initial_warehouse.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
         <div class="col-lg-4">
