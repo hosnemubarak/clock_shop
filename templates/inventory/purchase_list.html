@@ -8,7 +8,8 @@
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
             <h4 class="mb-sm-0">Stock In Records</h4>
-            <div class="page-title-right">
+            <div class="page-title-right d-flex gap-2">
+                <a href="{% url 'stockout_list' %}" class="btn btn-outline-danger"><i class="las la-minus-circle"></i> Stock Out</a>
                 <a href="{% url 'purchase_create' %}" class="btn btn-success"><i class="las la-plus"></i> Add Stock</a>
             </div>
         </div>
