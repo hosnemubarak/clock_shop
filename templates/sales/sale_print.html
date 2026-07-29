@@ -4,7 +4,11 @@
 <head>
     <title>Invoice {{ sale.invoice_number }}</title>
     <style>
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0 auto; padding: 20px; font-size: 14px; max-width: 800px; color: #333; line-height: 1.5; }
+        html, body { height: 100%; }
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0 auto; padding: 20px; font-size: 14px; max-width: 800px; color: #333; line-height: 1.5; display: flex; flex-direction: column; }
+        .main-content { flex: 1 0 auto; }
+        .bottom-content { flex-shrink: 0; }
+        
         .header { text-align: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid #333; }
         .header h1 { margin: 0 0 5px 0; font-size: 28px; text-transform: uppercase; letter-spacing: 1px; }
         .header p { margin: 0; color: #666; }
@@ -38,7 +42,8 @@
         <a href="{% url 'sale_detail' sale.pk %}" style="margin-left: 10px;">Back to Invoice</a>
     </div>
 
-    <div class="header">
+    <div class="main-content">
+        <div class="header">
         <h1>{{ SHOP_NAME }}</h1>
         {% if SHOP_ADDRESS %}
         <p>{{ SHOP_ADDRESS|linebreaksbr }}</p>
@@ -90,9 +95,11 @@
             {% endfor %}
         </tbody>
     </table>
+    </div> <!-- end main-content -->
 
-    <div class="totals">
-        <table>
+    <div class="bottom-content">
+        <div class="totals">
+            <table>
             <tr>
                 <td>Subtotal:</td>
                 <td class="text-right">{{ CURRENCY_SYMBOL }}{{ sale.subtotal|floatformat:2|intcomma }}</td>
@@ -152,5 +159,6 @@
         {% endif %}
         <p>Thank you for your business!</p>
     </div>
+    </div> <!-- end bottom-content -->
 </body>
 </html>
