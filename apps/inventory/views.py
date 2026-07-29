@@ -125,7 +125,17 @@ def product_create(request):
                 )
                 
                 # Update product stock and average cost
-                product.add_stock(initial_stock, initial_cost_price, initial_warehouse.id)
+                from apps.inventory.models import ProductStock
+                stock, created = ProductStock.objects.get_or_create(
+                    product=product,
+                    warehouse=initial_warehouse,
+                    defaults={'quantity': 0}
+                )
+                stock.quantity += initial_stock
+                stock.save()
+                
+                product.recalculate_average_cost(initial_stock, initial_cost_price)
+                
                 messages.success(request, f'Product "{product.display_name}" created with {initial_stock} initial stock.')
             else:
                 messages.success(request, f'Product "{product.display_name}" created successfully.')
