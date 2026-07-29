@@ -46,24 +46,21 @@ def sale_list(request):
     date_from = request.GET.get('date_from')
     date_to = request.GET.get('date_to')
     if date_from:
-        sales = sales.filter(sale_date__date__gte=date_from)
+        sales = sales.filter(sale_date__gte=date_from)
     if date_to:
-        sales = sales.filter(sale_date__date__lte=date_to)
+        sales = sales.filter(sale_date__lte=date_to)
         
     # Date shortcuts
     date_filter = request.GET.get('date_filter')
     if date_filter == 'today':
         today = timezone.localtime().date()
-        start_of_day = timezone.make_aware(datetime.datetime.combine(today, datetime.time.min))
-        end_of_day = timezone.make_aware(datetime.datetime.combine(today, datetime.time.max))
-        sales = sales.filter(sale_date__range=(start_of_day, end_of_day))
+        sales = sales.filter(sale_date=today)
         date_from = today.strftime('%Y-%m-%d')
         date_to = today.strftime('%Y-%m-%d')
     elif date_filter == 'this_month':
         today = timezone.localtime().date()
-        start_of_month = timezone.make_aware(datetime.datetime.combine(today.replace(day=1), datetime.time.min))
-        end_of_day = timezone.make_aware(datetime.datetime.combine(today, datetime.time.max))
-        sales = sales.filter(sale_date__range=(start_of_month, end_of_day))
+        start_of_month = today.replace(day=1)
+        sales = sales.filter(sale_date__range=(start_of_month, today))
         date_from = start_of_month.date().strftime('%Y-%m-%d')
         date_to = today.strftime('%Y-%m-%d')
     
@@ -193,7 +190,7 @@ def sale_create(request):
             if not items_data:
                 messages.error(request, 'Please add at least one item to the sale.')
     else:
-        form = SaleForm(initial={'sale_date': timezone.now()})
+        form = SaleForm(initial={'sale_date': timezone.now().date()})
     
     context = {
         'form': form,
@@ -410,9 +407,12 @@ def pos_checkout(request):
         sale_date_str = data.get('sale_date')
         if sale_date_str:
             parsed = parse_datetime(sale_date_str) or parse_date(sale_date_str)
-            sale_date = parsed if parsed else timezone.now()
+            if hasattr(parsed, 'date'):
+                sale_date = parsed.date()
+            else:
+                sale_date = parsed if parsed else timezone.now().date()
         else:
-            sale_date = timezone.now()
+            sale_date = timezone.now().date()
             
         sale = Sale.objects.create(
             customer=customer,

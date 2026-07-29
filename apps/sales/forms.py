@@ -12,9 +12,9 @@ class SaleForm(forms.ModelForm):
         fields = ['customer', 'sale_date', 'discount_amount', 'notes']
         widgets = {
             'customer': forms.Select(attrs={'class': 'form-select'}),
-            'sale_date': forms.DateTimeInput(attrs={
+            'sale_date': forms.DateInput(attrs={
                 'class': 'form-control',
-                'type': 'datetime-local'
+                'type': 'date'
             }),
             'discount_amount': forms.NumberInput(attrs={
                 'class': 'form-control',

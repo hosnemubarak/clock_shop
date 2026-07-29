@@ -23,7 +23,7 @@ class Sale(TimeStampedModel):
         'customers.Customer', on_delete=models.PROTECT,
         related_name='sales', null=True, blank=True
     )
-    sale_date = models.DateTimeField()
+    sale_date = models.DateField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='completed')
     payment_status = models.CharField(
         max_length=20, choices=PAYMENT_STATUS_CHOICES, default='unpaid'
