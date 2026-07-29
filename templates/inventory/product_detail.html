@@ -3,80 +3,11 @@
 
 {% block title %}{{ product.display_name }} | {{ SHOP_NAME }}{% endblock %}
 
-{% block extra_css %}
-<style>
-    .product-card {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        border: none;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    }
-    .product-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    }
-    .product-header-bg {
-        background: linear-gradient(135deg, rgba(var(--bs-primary-rgb), 0.1) 0%, rgba(var(--bs-info-rgb), 0.1) 100%);
-        border-radius: 12px 12px 0 0;
-        padding: 2rem 1.5rem 4rem 1.5rem;
-        position: relative;
-    }
-    .product-avatar-wrapper {
-        margin-top: -3.5rem;
-        position: relative;
-        z-index: 1;
-    }
-    .product-avatar {
-        width: 100px;
-        height: 100px;
-        border-radius: 20px;
-        background: #fff;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto;
-    }
-    .product-avatar i {
-        font-size: 3rem;
-        background: linear-gradient(135deg, var(--bs-primary), var(--bs-info));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    .info-list-group .list-group-item {
-        border-left: none;
-        border-right: none;
-        padding: 1rem 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: transparent;
-    }
-    .info-list-group .list-group-item:first-child { border-top: none; }
-    .info-list-group .list-group-item:last-child { border-bottom: none; }
-    
-    .stock-progress-container {
-        margin-bottom: 1.5rem;
-    }
-    .stock-progress-container:last-child {
-        margin-bottom: 0;
-    }
-    .progress-bar-animated-custom {
-        transition: width 1s ease-in-out;
-    }
-    .stock-card {
-        border-radius: 10px;
-        border: 1px solid rgba(0,0,0,0.05);
-        background: #f8f9fa;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="row mb-3">
+<div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0 fw-bold">Product Details</h4>
+            <h4 class="mb-sm-0">Product Details</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
                     <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
@@ -89,130 +20,108 @@
 </div>
 
 <div class="row">
-    <!-- Left Column: Product Info -->
     <div class="col-lg-4">
-        <div class="card product-card mb-4 overflow-hidden">
-            <div class="product-header-bg text-center">
-                {% if product.is_active %}
-                <span class="badge bg-success position-absolute top-0 end-0 m-3 shadow-sm">Active</span>
-                {% else %}
-                <span class="badge bg-danger position-absolute top-0 end-0 m-3 shadow-sm">Inactive</span>
-                {% endif %}
-            </div>
-            
-            <div class="card-body pt-0">
-                <div class="product-avatar-wrapper mb-3">
-                    <div class="product-avatar">
-                        <i class="las la-box"></i>
+        <div class="card">
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="avatar-xl mx-auto">
+                        <div class="avatar-title bg-light rounded">
+                            <i class="las la-box fs-1 text-muted"></i>
+                        </div>
                     </div>
                 </div>
+                <h5 class="text-center">{{ product.display_name }}</h5>
+                <p class="text-center text-muted">SKU: <code>{{ product.sku }}</code></p>
                 
-                <h5 class="text-center fw-bold mb-1">{{ product.display_name }}</h5>
-                <p class="text-center text-muted fs-13 mb-4">SKU: <span class="badge bg-light text-dark border">{{ product.sku }}</span></p>
-                
-                <ul class="list-group info-list-group mb-4">
-                    <li class="list-group-item">
-                        <span class="text-muted"><i class="las la-tags me-2"></i>Category</span>
-                        <span class="fw-medium">{{ product.category.name }}</span>
-                    </li>
-                    <li class="list-group-item">
-                        <span class="text-muted"><i class="las la-copyright me-2"></i>Brand</span>
-                        <span class="fw-medium">{{ product.brand.name|default:"-" }}</span>
-                    </li>
-                    <li class="list-group-item">
-                        <span class="text-muted"><i class="las la-money-bill me-2"></i>Selling Price</span>
-                        <span class="fw-bold text-success">{{ CURRENCY_SYMBOL }}{{ product.default_selling_price|floatformat:2 }}</span>
-                    </li>
-                    <li class="list-group-item">
-                        <span class="text-muted"><i class="las la-coins me-2"></i>Avg. Cost</span>
-                        <span class="fw-medium">{{ CURRENCY_SYMBOL }}{{ product.get_average_cost|floatformat:2 }}</span>
-                    </li>
-                    <li class="list-group-item">
-                        <span class="text-muted"><i class="las la-cubes me-2"></i>Total Stock</span>
-                        <span>
-                            {% if product.total_stock == 0 %}
-                            <span class="badge bg-danger-subtle text-danger fs-12 px-2 py-1">Out of Stock</span>
-                            {% elif product.total_stock <= 10 %}
-                            <span class="badge bg-warning-subtle text-warning fs-12 px-2 py-1">{{ product.total_stock }} units</span>
-                            {% else %}
-                            <span class="badge bg-success-subtle text-success fs-12 px-2 py-1">{{ product.total_stock }} units</span>
-                            {% endif %}
-                        </span>
-                    </li>
-                </ul>
+                <div class="table-responsive">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td class="text-muted">Category</td>
+                            <td class="fw-medium">{{ product.category.name }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Brand</td>
+                            <td class="fw-medium">{{ product.brand.name|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Selling Price</td>
+                            <td class="fw-medium">{{ CURRENCY_SYMBOL }}{{ product.default_selling_price|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Total Stock</td>
+                            <td>
+                                {% if product.total_stock == 0 %}
+                                <span class="badge bg-danger">Out of Stock</span>
+                                {% elif product.total_stock <= 10 %}
+                                <span class="badge bg-warning">{{ product.total_stock }} units</span>
+                                {% else %}
+                                <span class="badge bg-success">{{ product.total_stock }} units</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Avg. Cost</td>
+                            <td class="fw-medium">{{ CURRENCY_SYMBOL }}{{ product.get_average_cost|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Status</td>
+                            <td>
+                                {% if product.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
                 
                 {% if product.description %}
-                <div class="mb-4">
-                    <h6 class="fs-12 text-muted text-uppercase mb-2">Description</h6>
-                    <p class="text-muted mb-0 fs-13">{{ product.description }}</p>
-                </div>
+                <hr>
+                <p class="text-muted mb-0">{{ product.description }}</p>
                 {% endif %}
                 
-                <div class="d-flex gap-2">
+                <div class="mt-4 d-flex gap-2">
                     <a href="{% url 'product_edit' product.pk %}" class="btn btn-outline-primary flex-grow-1">
-                        <i class="las la-pen me-1"></i> Edit
+                        <i class="las la-pen"></i> Edit
                     </a>
-                    <button type="button" class="btn btn-primary flex-grow-1 shadow-sm" 
+                    <button type="button" class="btn btn-primary flex-grow-1" 
                             onclick="openQuickAddStockModal({{ product.pk }}, '{{ product.display_name|escapejs }}', '{{ product.average_cost|default_if_none:'0.00' }}')">
-                        <i class="las la-bolt me-1"></i> Quick Stock
+                        <i class="las la-plus"></i> Quick Stock
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Right Column: Stock Breakdown & Activity -->
     <div class="col-lg-8">
-        <div class="card product-card mb-4">
-            <div class="card-header bg-transparent border-bottom-0 pt-4 pb-2">
-                <h5 class="card-title mb-0 fw-bold"><i class="las la-warehouse text-primary me-2"></i>Stock Across Warehouses</h5>
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Available Stock</h5>
             </div>
             <div class="card-body">
-                {% if stocks %}
-                    <div class="row g-4">
-                    {% for stock in stocks %}
-                        <div class="col-md-6">
-                            <div class="stock-card p-3 h-100">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h6 class="mb-0 fw-semibold">{{ stock.warehouse.name }}</h6>
-                                    <span class="badge bg-primary rounded-pill px-3">{{ stock.quantity }} units</span>
-                                </div>
-                                <div class="progress" style="height: 6px;">
-                                    {% widthratio stock.quantity product.total_stock 100 as percentage %}
-                                    <div class="progress-bar bg-primary rounded progress-bar-animated-custom" role="progressbar" 
-                                         style="width: {% if product.total_stock > 0 %}{{ percentage }}{% else %}0{% endif %}%;" 
-                                         aria-valuenow="{{ stock.quantity }}" aria-valuemin="0" aria-valuemax="{{ product.total_stock }}"></div>
-                                </div>
-                                <div class="mt-2 text-end">
-                                    <small class="text-muted">{% if product.total_stock > 0 %}{{ percentage }}{% else %}0{% endif %}% of total stock</small>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="text-center py-5">
-                        <div class="avatar-lg mx-auto mb-3">
-                            <div class="avatar-title bg-light text-muted rounded-circle fs-2">
-                                <i class="las la-box-open"></i>
-                            </div>
-                        </div>
-                        <h6 class="fw-medium">No Stock Available</h6>
-                        <p class="text-muted mb-4">This product is currently out of stock in all warehouses.</p>
-                        <button type="button" class="btn btn-primary" onclick="openQuickAddStockModal({{ product.pk }}, '{{ product.display_name|escapejs }}', '{{ product.average_cost|default_if_none:'0.00' }}')">
-                            Add Initial Stock
-                        </button>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-        
-        <!-- Placeholder for future charts -->
-        <div class="card product-card border border-dashed shadow-none bg-light">
-            <div class="card-body text-center py-5">
-                <i class="las la-chart-bar text-muted fs-1 mb-2"></i>
-                <h6 class="text-muted fw-medium">Analytics Integration Coming Soon</h6>
-                <p class="text-muted fs-13 mb-0">Sales trends and inventory velocity will appear here.</p>
+                <div class="table-responsive" style="min-height: 300px;">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Warehouse</th>
+                                <th>Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stock in stocks %}
+                            <tr>
+                                <td>{{ stock.warehouse.name }}</td>
+                                <td><span class="badge bg-primary">{{ stock.quantity }}</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2" class="text-center text-muted py-4">No stock available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -221,9 +130,9 @@
 <!-- Quick Add Stock Modal -->
 <div class="modal fade" id="quickAddStockModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-light border-0">
-                <h5 class="modal-title fw-bold">Quick Add Stock: <span id="qasProductName" class="text-primary"></span></h5>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Add Stock: <span id="qasProductName"></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -231,7 +140,7 @@
                     {% csrf_token %}
                     <input type="hidden" id="qasProductId">
                     <div class="mb-3">
-                        <label class="form-label fw-medium">Warehouse <span class="text-danger">*</span></label>
+                        <label class="form-label">Warehouse <span class="text-danger">*</span></label>
                         <select id="qasWarehouse" class="form-select" required>
                             <option value="">Select Warehouse...</option>
                             {% for warehouse in warehouses %}
@@ -241,40 +150,40 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-medium">Quantity <span class="text-danger">*</span></label>
+                            <label class="form-label">Quantity <span class="text-danger">*</span></label>
                             <input type="number" id="qasQuantity" class="form-control" min="1" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-medium">Unit Cost Price <span class="text-danger">*</span></label>
+                            <label class="form-label">Unit Cost Price <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <span class="input-group-text bg-light">{{ CURRENCY_SYMBOL }}</span>
+                                <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
                                 <input type="number" id="qasUnitPrice" class="form-control" step="0.01" min="0" required>
                             </div>
                         </div>
                     </div>
                     
-                    <hr class="my-4 border-dashed">
-                    <h6 class="text-muted mb-3 fs-12 text-uppercase fw-bold">Supplier Details</h6>
+                    <hr class="my-3">
+                    <h6 class="text-muted mb-3 fs-12 text-uppercase">Supplier Details</h6>
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-medium">Supplier <span class="text-danger">*</span></label>
+                            <label class="form-label">Supplier <span class="text-danger">*</span></label>
                             <input type="text" id="qasSupplier" class="form-control" placeholder="e.g. ABC Distributors" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label fw-medium">Purchase Date <span class="text-danger">*</span></label>
+                            <label class="form-label">Purchase Date <span class="text-danger">*</span></label>
                             <input type="date" id="qasPurchaseDate" class="form-control" required>
                         </div>
                     </div>
-                    <div class="mb-2">
-                        <label class="form-label fw-medium">Notes</label>
-                        <textarea id="qasNotes" class="form-control bg-light border-0" rows="2" placeholder="e.g. Invoice #12345"></textarea>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea id="qasNotes" class="form-control" rows="2" placeholder="e.g. Invoice #12345"></textarea>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer border-0 bg-light">
-                <button type="button" class="btn btn-ghost-danger" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" id="btnQuickAddStock" class="btn btn-primary shadow-sm" onclick="submitQuickAddStock()">Add Stock</button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="btnQuickAddStock" class="btn btn-primary" onclick="submitQuickAddStock()">Add Stock</button>
             </div>
         </div>
     </div>
