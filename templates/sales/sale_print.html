@@ -1,140 +1,602 @@
 {% load humanize %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice {{ sale.invoice_number }}</title>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0 auto; padding: 20px; font-size: 14px; max-width: 800px; color: #333; line-height: 1.5; }
-        .header { text-align: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid #333; }
-        .header h1 { margin: 0 0 5px 0; font-size: 28px; text-transform: uppercase; letter-spacing: 1px; }
-        .header p { margin: 0; color: #666; }
-        .invoice-info { display: flex; justify-content: space-between; margin-bottom: 30px; }
-        .invoice-info div { width: 48%; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        th { background: #f9f9f9; text-transform: uppercase; font-size: 12px; color: #555; letter-spacing: 0.5px; }
-        .text-right { text-align: right; }
-        .totals { margin-top: 30px; }
-        .totals table { width: 350px; margin-left: auto; }
-        .totals td { border: none; padding: 8px 12px; }
-        .totals tr:last-child { font-weight: bold; font-size: 16px; border-top: 2px solid #333; }
-        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #888; border-top: 1px solid #eee; padding-top: 10px; }
+        :root {
+            --primary-dark: #0a1930;
+            --border-color: #d1d5db;
+            --text-color: #000;
+        }
+
+        @page { 
+            size: A4; 
+            margin: 0; 
+        }
         
-        /* Hide browser headers/footers and adjust physical margins */
-        @page { size: auto; margin: 0mm; }
-        @media print { 
-            body { padding: 10mm 5mm 5mm 5mm; max-width: none; }
-            .no-print { display: none !important; } 
+        body { 
+            font-family: Arial, Helvetica, sans-serif; 
+            color: var(--text-color);
+            line-height: 1.4;
+            margin: 0;
+            padding: 0;
+            background-color: #f3f4f6;
+            font-size: 13px;
+        }
+
+        .print-container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: white;
+            padding: 15mm 15mm;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .text-right { text-align: right !important; }
+        .text-center { text-align: center !important; }
+        .font-bold { font-weight: bold; }
+        
+        /* Header */
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .shop-info h1 {
+            color: var(--primary-dark);
+            margin: 0 0 10px 0;
+            font-size: 26px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        
+        .shop-info p {
+            margin: 0 0 3px 0;
+            font-size: 13px;
+        }
+
+        .shop-contact {
+            margin-top: 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .shop-contact i {
+            margin-right: 5px;
+        }
+
+        .invoice-title-block {
+            text-align: right;
+            width: 300px;
+        }
+
+        .invoice-title-block h2 {
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--primary-dark);
+            margin: 0 0 5px 0;
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--primary-dark);
+            padding-bottom: 5px;
+        }
+
+        .invoice-no-pill {
+            background-color: var(--primary-dark);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            display: inline-block;
+            text-align: center;
+            margin-top: 10px;
+            width: 80%;
+        }
+        
+        .invoice-no-pill .label {
+            font-size: 11px;
+            display: block;
+            margin-bottom: 2px;
+        }
+        
+        .invoice-no-pill .number {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .header-divider {
+            border-top: 2px solid var(--primary-dark);
+            margin: 15px 0 25px 0;
+        }
+
+        /* Bill To Section */
+        .bill-to-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .bill-to-box {
+            border: 1px solid var(--primary-dark);
+            border-radius: 5px;
+            padding: 15px;
+            width: 65%;
+            position: relative;
+        }
+
+        .bill-to-badge {
+            position: absolute;
+            top: -12px;
+            left: 15px;
+            background: var(--primary-dark);
+            color: white;
+            padding: 2px 15px;
+            font-weight: bold;
+            font-size: 14px;
+            border-radius: 3px;
+        }
+        
+        .bill-to-badge::after {
+            content: '';
+            position: absolute;
+            right: -10px;
+            top: 0;
+            width: 0;
+            height: 0;
+            border-top: 24px solid var(--primary-dark);
+            border-right: 10px solid transparent;
+        }
+
+        .customer-table {
+            width: 100%;
+        }
+        
+        .customer-table td {
+            padding: 4px 0;
+            vertical-align: top;
+        }
+        
+        .customer-table td:first-child {
+            font-weight: bold;
+            width: 80px;
+        }
+        
+        .customer-table td:nth-child(2) {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .customer-table td:last-child {
+            font-weight: bold;
+        }
+
+        .date-box {
+            display: flex;
+            align-items: flex-start;
+            padding-top: 10px;
+        }
+        
+        .date-box i {
+            font-size: 18px;
+            margin-right: 8px;
+            color: var(--text-color);
+        }
+
+        /* Items Table */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+        }
+
+        .items-table th, .items-table td {
+            border: 1px solid var(--border-color);
+            padding: 8px 10px;
+        }
+
+        .items-table th {
+            background-color: var(--primary-dark);
+            color: white;
+            font-weight: normal;
+            font-size: 12px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        .items-table th.qty-header {
+            padding: 0;
+        }
+        
+        .qty-split {
+            display: flex;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .qty-split div {
+            flex: 1;
+            padding: 5px;
+        }
+        
+        .qty-split div:first-child {
+            border-right: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .items-table td {
+            text-align: center;
+        }
+        
+        .items-table td.text-left {
+            text-align: left;
+        }
+
+        .items-table td:nth-child(3) {
+            text-align: left;
+        }
+
+        /* Totals */
+        .totals-row {
+            display: flex;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            margin-bottom: 20px;
+        }
+        
+        .totals-left {
+            flex: 1;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .total-qty-block {
+            display: flex;
+        }
+        
+        .total-qty-label {
+            font-weight: bold;
+            width: 150px;
+        }
+        
+        .total-qty-value {
+            font-weight: bold;
+            text-align: center;
+            flex: 1;
+        }
+
+        .note-block {
+            margin-top: 20px;
+        }
+
+        .totals-right {
+            width: 320px;
+            border-left: 1px solid var(--border-color);
+        }
+        
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .summary-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .summary-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .summary-table td:first-child {
+            font-weight: normal;
+        }
+        
+        .summary-table td:last-child {
+            text-align: right;
+            font-weight: bold;
+        }
+        
+        .summary-bg-dark {
+            background-color: var(--primary-dark);
+            color: white;
+        }
+        .summary-bg-dark td:first-child {
+            font-weight: bold;
+        }
+        .summary-bg-dark td {
+            font-size: 14px;
+            border-bottom: none;
+        }
+        
+        .grand-total-row {
+            background-color: var(--primary-dark);
+            color: white;
+        }
+        
+        .grand-total-row td {
+            padding: 10px 12px;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        .in-words {
+            display: flex;
+            align-items: flex-start;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .in-words-icon {
+            background: var(--primary-dark);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 14px;
+        }
+        
+        .outstanding-box {
+            text-align: center;
+            padding: 8px;
+            border-top: 1px dashed var(--primary-dark);
+            border-bottom: 1px dashed var(--primary-dark);
+            margin-bottom: 40px;
+            font-weight: bold;
+        }
+        
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+            margin-bottom: 30px;
+        }
+        
+        .signature-box {
+            text-align: center;
+            width: 25%;
+        }
+        
+        .signature-line {
+            border-top: 1px dashed var(--primary-dark);
+            margin-top: 40px;
+            padding-top: 5px;
+            font-weight: bold;
+        }
+
+        .footer-message {
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .footer-message i {
+            font-size: 10px;
+            margin: 0 10px;
+        }
+
+        @media print {
+            body { background: white; }
+            .print-container { 
+                padding: 10mm 15mm; 
+                box-shadow: none; 
+            }
+            .no-print { display: none !important; }
+        }
+        
+        /* Screen Only UI */
+        @media screen {
+            .print-container {
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+                margin-top: 2rem;
+                margin-bottom: 2rem;
+            }
+            .controls-bar {
+                max-width: 210mm;
+                margin: 2rem auto 0 auto;
+                text-align: right;
+            }
+            .btn {
+                padding: 8px 16px;
+                border-radius: 4px;
+                background: #fff;
+                border: 1px solid #ccc;
+                cursor: pointer;
+                text-decoration: none;
+                color: #333;
+                display: inline-block;
+            }
+            .btn-primary {
+                background: var(--primary-dark);
+                color: white;
+                border-color: var(--primary-dark);
+            }
         }
     </style>
 </head>
 <body>
-    <div class="no-print" style="margin-bottom: 20px;">
-        <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer;">Print Invoice</button>
-        <a href="{% url 'sale_detail' sale.pk %}" style="margin-left: 10px;">Back to Invoice</a>
+    <div class="no-print controls-bar">
+        <a href="{% url 'sale_detail' sale.pk %}" class="btn">Back to Invoice</a>
+        <button onclick="window.print()" class="btn btn-primary">Print Invoice</button>
     </div>
 
-    <div class="header">
-        <h1>{{ SHOP_NAME }}</h1>
-        {% if SHOP_ADDRESS %}
-        <p>{{ SHOP_ADDRESS|linebreaksbr }}</p>
-        {% else %}
-        <p>Retail Clock Shop</p>
-        {% endif %}
-    </div>
+    <div class="print-container">
+        <!-- Header -->
+        <header class="invoice-header">
+            <div class="shop-info">
+                <h1>{{ SHOP_NAME }}</h1>
+                {% if SHOP_ADDRESS %}
+                    {{ SHOP_ADDRESS|linebreaks }}
+                {% else %}
+                    <p>Retail Clock Shop</p>
+                {% endif %}
+                <!-- Optional: Add contact info here if you have it in settings later -->
+                <!-- <div class="shop-contact">
+                    <i class="fas fa-phone"></i> 0123456789 | <i class="fas fa-envelope"></i> email@example.com
+                </div> -->
+            </div>
+            
+            <div class="invoice-title-block">
+                <h2>SALES INVOICE</h2>
+                <div class="invoice-no-pill">
+                    <span class="label">INVOICE NO</span>
+                    <span class="number">{{ sale.invoice_number }}</span>
+                </div>
+            </div>
+        </header>
 
-    <div class="invoice-info">
-        <div>
-            <strong>Invoice To:</strong><br>
-            {% if sale.customer %}
-            {{ sale.customer.name }}<br>
-            {% if sale.customer.phone %}{{ sale.customer.phone }}<br>{% endif %}
-            {% if sale.customer.address %}{{ sale.customer.address }}{% endif %}
-            {% else %}
-            Walk-in Customer
-            {% endif %}
-        </div>
-        <div style="text-align: right;">
-            <strong>Invoice #:</strong> {{ sale.invoice_number }}<br>
-            <strong>Date:</strong> {{ sale.sale_date|date:"F d, Y" }}<br>
-            <strong>Status:</strong> 
-            {% if sale.payment_status == 'paid' %}Paid
-            {% elif sale.payment_status == 'partial' %}Partially Paid
-            {% else %}Unpaid{% endif %}
-        </div>
-    </div>
+        <div class="header-divider"></div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Product</th>
-                <th>SKU</th>
-                <th class="text-right">Qty</th>
-                <th class="text-right">Price</th>
-                <th class="text-right">Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in sale.items.all %}
-            <tr>
-                <td>{% if item.is_custom %}{{ item.custom_description }} <em>(Custom)</em>{% else %}{{ item.product.sku }}{% endif %}</td>
-                <td>{% if item.is_custom %}-{% else %}{{ item.product.sku }}{% endif %}</td>
-                <td class="text-right">{{ item.quantity }}</td>
-                <td class="text-right">{{ CURRENCY_SYMBOL }}{{ item.unit_price|floatformat:2 }}</td>
-                <td class="text-right">{{ CURRENCY_SYMBOL }}{{ item.total_price|floatformat:2 }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <!-- Bill To Section -->
+        <section class="bill-to-section">
+            <div class="bill-to-box">
+                <div class="bill-to-badge">BILL TO</div>
+                <table class="customer-table">
+                    <tr>
+                        <td>Customer</td>
+                        <td>:</td>
+                        <td>{% if sale.customer %}{{ sale.customer.name }}{% else %}Walk-in Customer{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <td>Address</td>
+                        <td>:</td>
+                        <td>{% if sale.customer and sale.customer.address %}{{ sale.customer.address }}{% else %} - {% endif %}</td>
+                    </tr>
+                    <tr>
+                        <td>Mobile / ID</td>
+                        <td>:</td>
+                        <td>{% if sale.customer and sale.customer.phone %}{{ sale.customer.phone }}{% else %} - {% endif %}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="date-box">
+                <i class="far fa-calendar-alt"></i>
+                <table class="customer-table" style="width: auto;">
+                    <tr>
+                        <td>Date</td>
+                        <td>:</td>
+                        <td>{{ sale.sale_date|date:"d-M-Y"|upper }}</td>
+                    </tr>
+                </table>
+            </div>
+        </section>
 
-    <div class="totals">
-        <table>
-            <tr>
-                <td>Subtotal:</td>
-                <td class="text-right">{{ CURRENCY_SYMBOL }}{{ sale.subtotal|floatformat:2|intcomma }}</td>
-            </tr>
-            {% if sale.discount_amount > 0 %}
-            <tr>
-                <td>Discount:</td>
-                <td class="text-right">-{{ CURRENCY_SYMBOL }}{{ sale.discount_amount|floatformat:2|intcomma }}</td>
-            </tr>
-            {% endif %}
-            {% if sale.tax_amount > 0 %}
-            <tr>
-                <td>Tax:</td>
-                <td class="text-right">{{ CURRENCY_SYMBOL }}{{ sale.tax_amount|floatformat:2|intcomma }}</td>
-            </tr>
-            {% endif %}
-            <tr>
-                <td>Total:</td>
-                <td class="text-right">{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2|intcomma }}</td>
-            </tr>
-            <tr style="border-top: 1px solid #eee; font-weight: normal; font-size: 14px;">
-                <td>Paid:</td>
-                <td class="text-right">{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2|intcomma }}</td>
-            </tr>
-            {% if sale.due_amount > 0 %}
-            <tr style="color: #d9534f;">
-                <td>Balance Due:</td>
-                <td class="text-right">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2|intcomma }}</td>
-            </tr>
-            {% endif %}
+        <!-- Items Table -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width: 5%;">SL.</th>
+                    <th rowspan="2" style="width: 15%;">Item Code</th>
+                    <th rowspan="2" style="width: 40%;">Products Name / Description Of Goods</th>
+                    <th colspan="2" class="qty-header">Quantity</th>
+                    <th rowspan="2" style="width: 12%;">Unit Price</th>
+                    <th rowspan="2" style="width: 13%;">Total Amount</th>
+                </tr>
+                <tr>
+                    <th style="width: 7.5%; border-top: 1px solid rgba(255,255,255,0.2);">Qty</th>
+                    <th style="width: 7.5%; border-top: 1px solid rgba(255,255,255,0.2);">Unit</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in sale.items.all %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{% if item.is_custom %} - {% else %}{{ item.product.sku }}{% endif %}</td>
+                    <td class="text-left">
+                        {% if item.is_custom %}
+                            {{ item.custom_description }}
+                        {% else %}
+                            {% if item.product.brand %}{{ item.product.brand.name }} - {% endif %}{{ item.product.category.name|default:"Clock" }}
+                        {% endif %}
+                    </td>
+                    <td>{{ item.quantity }}</td>
+                    <td>Pcs</td>
+                    <td class="text-right">{{ item.unit_price|floatformat:2|intcomma }}</td>
+                    <td class="text-right">{{ item.total_price|floatformat:2|intcomma }}</td>
+                </tr>
+                {% endfor %}
+                
+                <!-- Empty rows to pad the table if needed (optional) -->
+                <tr><td colspan="7" style="border-bottom: none; border-top: none; color: transparent;">-</td></tr>
+                <tr><td colspan="7" style="border-bottom: none; border-top: none; color: transparent;">-</td></tr>
+            </tbody>
         </table>
-    </div>
 
-    {% if sale.notes %}
-    <div style="margin-top: 30px;">
-        <strong>Notes:</strong> {{ sale.notes }}
-    </div>
-    {% endif %}
+        <!-- Totals & Notes -->
+        <div class="totals-row">
+            <div class="totals-left">
+                <!-- We calculate total quantity using a custom approach since we don't have a direct property for it, we can sum it up or just show the item count -->
+                <div class="total-qty-block">
+                    <div class="total-qty-label">Total Items:</div>
+                    <div class="total-qty-value">{{ sale.items.count }}</div>
+                </div>
+                
+                <div class="note-block">
+                    <strong>Note :</strong><br>
+                    {{ sale.notes|default:"-" }}
+                </div>
+            </div>
+            
+            <div class="totals-right">
+                <table class="summary-table">
+                    <tr class="summary-bg-dark">
+                        <td>Total Amount</td>
+                        <td>{{ sale.subtotal|floatformat:2|intcomma }}</td>
+                    </tr>
+                    <tr>
+                        <td>Discount (-)</td>
+                        <td>{{ sale.discount_amount|floatformat:2|intcomma }}</td>
+                    </tr>
+                    <tr>
+                        <td>Tax (+)</td>
+                        <td>{{ sale.tax_amount|floatformat:2|intcomma }}</td>
+                    </tr>
+                    <tr class="grand-total-row">
+                        <td>Grand Total</td>
+                        <td>{{ sale.total_amount|floatformat:2|intcomma }}</td>
+                    </tr>
+                    <!-- Showing paid and due as well -->
+                    <tr>
+                        <td>Paid Amount</td>
+                        <td>{{ sale.paid_amount|floatformat:2|intcomma }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
 
-    <div class="footer">
-        {% if SHOP_ADDRESS %}
-        <p>{{ SHOP_NAME }} - {{ SHOP_ADDRESS|linebreaksbr }}</p>
-        {% else %}
-        <p>{{ SHOP_NAME }} - Retail Clock Shop</p>
+        {% if sale.due_amount > 0 %}
+        <div class="outstanding-box">
+            Outstanding Amount (including this invoice) #{{ CURRENCY_SYMBOL }}: {{ sale.due_amount|floatformat:2|intcomma }}/= Only.
+        </div>
         {% endif %}
-        <p>Thank you for your business!</p>
+
+        <!-- Signatures -->
+        <div class="signatures">
+            <div class="signature-box">
+                <div class="signature-line">Received by</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line">Prepared & Checked by</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line">Sales Authority</div>
+            </div>
+        </div>
+
+        <div class="footer-message">
+            <i class="fas fa-star"></i> Thank you for your business! <i class="fas fa-star"></i>
+        </div>
     </div>
 </body>
 </html>
