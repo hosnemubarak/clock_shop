@@ -440,15 +440,28 @@ def api_quick_add_stock(request, product_id):
             
         warehouse = get_object_or_404(Warehouse, pk=warehouse_id)
         
+        supplier = data.get('supplier') or 'Quick Stock Adjustment'
+        purchase_date_str = data.get('purchase_date')
+        notes = data.get('notes') or f'Quick stock addition for {product.display_name}'
+        
+        from django.utils import timezone
+        import datetime
+        
+        purchase_date = timezone.now().date()
+        if purchase_date_str:
+            try:
+                purchase_date = datetime.datetime.strptime(purchase_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+                
         # Create a Purchase to record the initial stock
         from apps.inventory.models import Purchase, PurchaseItem
-        from django.utils import timezone
         
         purchase = Purchase.objects.create(
-            supplier='Quick Stock Adjustment',
-            purchase_date=timezone.now().date(),
+            supplier=supplier,
+            purchase_date=purchase_date,
             total_amount=quantity * unit_price,
-            notes=f'Quick stock addition for {product.display_name}',
+            notes=notes,
             created_by=request.user
         )
         

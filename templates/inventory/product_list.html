@@ -208,6 +208,24 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <hr class="my-3">
+                    <h6 class="text-muted mb-3 fs-12 text-uppercase">Supplier Details (Optional)</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Supplier</label>
+                            <input type="text" id="qasSupplier" class="form-control" placeholder="e.g. ABC Distributors">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Purchase Date</label>
+                            <input type="date" id="qasPurchaseDate" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea id="qasNotes" class="form-control" rows="2" placeholder="e.g. Invoice #12345"></textarea>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -227,6 +245,13 @@ function openQuickAddStockModal(productId, productName, averageCost) {
     document.getElementById('qasUnitPrice').value = averageCost;
     document.getElementById('qasQuantity').value = '';
     document.getElementById('qasWarehouse').value = '';
+    document.getElementById('qasSupplier').value = '';
+    
+    // Set default purchase date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('qasPurchaseDate').value = today;
+    
+    document.getElementById('qasNotes').value = '';
     
     // Convert comma decimal to point if necessary, though averageCost is usually standard string
     
@@ -238,6 +263,9 @@ function submitQuickAddStock() {
     const warehouseId = document.getElementById('qasWarehouse').value;
     const quantity = document.getElementById('qasQuantity').value;
     const unitPrice = document.getElementById('qasUnitPrice').value;
+    const supplier = document.getElementById('qasSupplier').value;
+    const purchaseDate = document.getElementById('qasPurchaseDate').value;
+    const notes = document.getElementById('qasNotes').value;
     
     if (!warehouseId || !quantity || !unitPrice) {
         alert('Please fill out all required fields.');
@@ -258,7 +286,10 @@ function submitQuickAddStock() {
         body: JSON.stringify({
             warehouse_id: warehouseId,
             quantity: quantity,
-            unit_price: unitPrice
+            unit_price: unitPrice,
+            supplier: supplier,
+            purchase_date: purchaseDate,
+            notes: notes
         })
     })
     .then(response => response.json())
