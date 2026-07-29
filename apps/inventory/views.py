@@ -101,6 +101,9 @@ def product_create(request):
             initial_stock = form.cleaned_data.get('initial_stock')
             initial_cost_price = form.cleaned_data.get('initial_cost_price')
             initial_warehouse = form.cleaned_data.get('initial_warehouse')
+            initial_stock_supplier = form.cleaned_data.get('initial_stock_supplier')
+            initial_stock_date = form.cleaned_data.get('initial_stock_date')
+            initial_stock_notes = form.cleaned_data.get('initial_stock_notes')
             
             if initial_stock and initial_warehouse:
                 if initial_cost_price is None:
@@ -111,10 +114,10 @@ def product_create(request):
                 from django.utils import timezone
                 
                 purchase = Purchase.objects.create(
-                    supplier='Initial Stock',
-                    purchase_date=timezone.now().date(),
+                    supplier=initial_stock_supplier,
+                    purchase_date=initial_stock_date,
                     total_amount=initial_stock * initial_cost_price,
-                    notes=f'Initial stock during product creation',
+                    notes=initial_stock_notes or f'Initial stock during product creation',
                     created_by=request.user
                 )
                 

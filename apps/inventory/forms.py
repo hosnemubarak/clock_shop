@@ -43,6 +43,19 @@ class ProductForm(forms.ModelForm):
         empty_label="Select Warehouse",
         widget=forms.Select(attrs={'class': 'form-select'})
     )
+    initial_stock_supplier = forms.CharField(
+        max_length=200,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. ABC Distributors'})
+    )
+    initial_stock_date = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )
+    initial_stock_notes = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Optional notes...'})
+    )
 
     class Meta:
         model = Product
@@ -61,9 +74,16 @@ class ProductForm(forms.ModelForm):
         cleaned_data = super().clean()
         initial_stock = cleaned_data.get('initial_stock')
         initial_warehouse = cleaned_data.get('initial_warehouse')
+        initial_stock_supplier = cleaned_data.get('initial_stock_supplier')
+        initial_stock_date = cleaned_data.get('initial_stock_date')
         
-        if initial_stock and not initial_warehouse:
-            self.add_error('initial_warehouse', 'Warehouse is required when adding initial stock.')
+        if initial_stock:
+            if not initial_warehouse:
+                self.add_error('initial_warehouse', 'Warehouse is required when adding initial stock.')
+            if not initial_stock_supplier:
+                self.add_error('initial_stock_supplier', 'Supplier is required when adding initial stock.')
+            if not initial_stock_date:
+                self.add_error('initial_stock_date', 'Stock Date is required when adding initial stock.')
             
         return cleaned_data
 

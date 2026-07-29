@@ -98,10 +98,27 @@
                             {% if form.initial_cost_price.errors %}<div class="text-danger small">{{ form.initial_cost_price.errors.0 }}</div>{% endif %}
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="id_initial_warehouse" class="form-label">Warehouse</label>
+                            <label for="id_initial_warehouse" class="form-label">Warehouse <span class="text-danger">*</span></label>
                             {{ form.initial_warehouse }}
                             {% if form.initial_warehouse.errors %}<div class="text-danger small">{{ form.initial_warehouse.errors.0 }}</div>{% endif %}
                         </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_initial_stock_supplier" class="form-label">Supplier <span class="text-danger">*</span></label>
+                            {{ form.initial_stock_supplier }}
+                            {% if form.initial_stock_supplier.errors %}<div class="text-danger small">{{ form.initial_stock_supplier.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="id_initial_stock_date" class="form-label">Stock Date <span class="text-danger">*</span></label>
+                            {{ form.initial_stock_date }}
+                            {% if form.initial_stock_date.errors %}<div class="text-danger small">{{ form.initial_stock_date.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_initial_stock_notes" class="form-label">Notes</label>
+                        {{ form.initial_stock_notes }}
+                        {% if form.initial_stock_notes.errors %}<div class="text-danger small">{{ form.initial_stock_notes.errors.0 }}</div>{% endif %}
                     </div>
                 </div>
             </div>
