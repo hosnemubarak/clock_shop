@@ -97,6 +97,10 @@ class ProductStock(TimeStampedModel):
     def __str__(self):
         return f"{self.product.display_name} in {self.warehouse.code} ({self.quantity})"
 
+    @property
+    def total_value(self):
+        return Decimal(self.quantity) * self.product.average_cost
+
 
 class Purchase(TimeStampedModel):
     """Purchase order record."""

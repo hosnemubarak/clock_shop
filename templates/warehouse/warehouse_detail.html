@@ -65,16 +65,16 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for item in stock_summary %}
+                            {% for stock in stocks %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'product_detail' item.product__id %}" class="fw-medium">
-                                        <code>{{ item.product__sku }}</code>
-                                        {% if item.product__brand__name %} - {{ item.product__brand__name }}{% endif %}
+                                    <a href="{% url 'product_detail' stock.product.id %}" class="fw-medium">
+                                        <code>{{ stock.product.sku }}</code>
+                                        {% if stock.product.brand %} - {{ stock.product.brand.name }}{% endif %}
                                     </a>
                                 </td>
-                                <td class="text-center">{{ item.total_quantity }}</td>
-                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.total_value|floatformat:2 }}</td>
+                                <td class="text-center">{{ stock.quantity }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ stock.total_value|floatformat:2 }}</td>
                             </tr>
                             {% empty %}
                             <tr>
@@ -85,7 +85,7 @@
                     </table>
                 </div>
 
-                {% with page_obj=stock_summary page_param='product_page' %}
+                {% with page_obj=stocks page_param='page' %}
                 {% include 'includes/pagination.html' %}
                 {% endwith %}
             </div>
