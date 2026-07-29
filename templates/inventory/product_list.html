@@ -207,19 +207,17 @@
                                 <input type="number" id="qasUnitPrice" class="form-control" step="0.01" min="0" required>
                             </div>
                         </div>
-                    </div>
-                    
                     <hr class="my-3">
-                    <h6 class="text-muted mb-3 fs-12 text-uppercase">Supplier Details (Optional)</h6>
+                    <h6 class="text-muted mb-3 fs-12 text-uppercase">Supplier Details</h6>
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Supplier</label>
-                            <input type="text" id="qasSupplier" class="form-control" placeholder="e.g. ABC Distributors">
+                            <label class="form-label">Supplier <span class="text-danger">*</span></label>
+                            <input type="text" id="qasSupplier" class="form-control" placeholder="e.g. ABC Distributors" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Purchase Date</label>
-                            <input type="date" id="qasPurchaseDate" class="form-control">
+                            <label class="form-label">Purchase Date <span class="text-danger">*</span></label>
+                            <input type="date" id="qasPurchaseDate" class="form-control" required>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -267,7 +265,7 @@ function submitQuickAddStock() {
     const purchaseDate = document.getElementById('qasPurchaseDate').value;
     const notes = document.getElementById('qasNotes').value;
     
-    if (!warehouseId || !quantity || !unitPrice) {
+    if (!warehouseId || !quantity || !unitPrice || !supplier || !purchaseDate) {
         alert('Please fill out all required fields.');
         return;
     }

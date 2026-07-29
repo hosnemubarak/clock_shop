@@ -435,24 +435,22 @@ def api_quick_add_stock(request, product_id):
         quantity = int(data.get('quantity', 0))
         unit_price = Decimal(data.get('unit_price', '0.00'))
         
-        if not warehouse_id or quantity <= 0:
-            return JsonResponse({'success': False, 'error': 'Warehouse and positive quantity are required.'}, status=400)
-            
-        warehouse = get_object_or_404(Warehouse, pk=warehouse_id)
-        
-        supplier = data.get('supplier') or 'Quick Stock Adjustment'
+        supplier = data.get('supplier')
         purchase_date_str = data.get('purchase_date')
         notes = data.get('notes') or f'Quick stock addition for {product.display_name}'
+        
+        if not warehouse_id or quantity <= 0 or not supplier or not purchase_date_str:
+            return JsonResponse({'success': False, 'error': 'Warehouse, positive quantity, supplier, and purchase date are required.'}, status=400)
+        
+        warehouse = get_object_or_404(Warehouse, pk=warehouse_id)
         
         from django.utils import timezone
         import datetime
         
-        purchase_date = timezone.now().date()
-        if purchase_date_str:
-            try:
-                purchase_date = datetime.datetime.strptime(purchase_date_str, '%Y-%m-%d').date()
-            except ValueError:
-                pass
+        try:
+            purchase_date = datetime.datetime.strptime(purchase_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return JsonResponse({'success': False, 'error': 'Invalid purchase date format.'}, status=400)
                 
         # Create a Purchase to record the initial stock
         from apps.inventory.models import Purchase, PurchaseItem
