@@ -4,7 +4,8 @@
 <head>
     <title>Invoice {{ sale.invoice_number }}</title>
     <style>
-        html, body { height: 100%; }
+        * { box-sizing: border-box; }
+        html, body { height: 100%; margin: 0; }
         body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0 auto; padding: 20px; font-size: 14px; max-width: 800px; color: #333; line-height: 1.5; display: flex; flex-direction: column; }
         .main-content { flex: 1 0 auto; display: flex; flex-direction: column; }
         .main-content > table { flex: 1 0 auto; margin-bottom: 0; }
@@ -32,7 +33,8 @@
         /* Hide browser headers/footers and adjust physical margins */
         @page { size: auto; margin: 0mm; }
         @media print { 
-            body { padding: 10mm 5mm 5mm 5mm; max-width: none; }
+            html, body { height: 99vh; } /* slight reduction to prevent overflowing */
+            body { padding: 10mm 5mm 5mm 5mm; max-width: none; overflow: hidden; }
             .no-print { display: none !important; } 
         }
     </style>
