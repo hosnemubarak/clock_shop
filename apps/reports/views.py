@@ -44,8 +44,8 @@ def sales_report(request):
     # Base queryset
     sales = Sale.objects.filter(
         status='completed',
-        sale_date__date__gte=date_from,
-        sale_date__date__lte=date_to
+        sale_date__gte=date_from,
+        sale_date__lte=date_to
     )
     
     # Filter by shop if selected (based on sale items' batch warehouse)
@@ -89,8 +89,8 @@ def sales_report(request):
     # Top selling products (exclude custom items)
     top_products = SaleItem.objects.filter(
         sale__status='completed',
-        sale__sale_date__date__gte=date_from,
-        sale__sale_date__date__lte=date_to,
+        sale__sale_date__gte=date_from,
+        sale__sale_date__lte=date_to,
         is_custom=False,
         product__isnull=False
     ).values(
@@ -107,8 +107,8 @@ def sales_report(request):
         for shop in shops:
             shop_total = Sale.objects.filter(
                 status='completed',
-                sale_date__date__gte=date_from,
-                sale_date__date__lte=date_to,
+                sale_date__gte=date_from,
+                sale_date__lte=date_to,
                 items__warehouse=shop,
                 items__is_custom=False
             ).distinct().aggregate(
@@ -194,8 +194,8 @@ def profit_report(request):
     # Base filter for all queries
     base_filter = {
         'sale__status': 'completed',
-        'sale__sale_date__date__gte': date_from,
-        'sale__sale_date__date__lte': date_to,
+        'sale__sale_date__gte': date_from,
+        'sale__sale_date__lte': date_to,
         'is_custom': False,
         'product__isnull': False,
     }
@@ -552,7 +552,7 @@ def dead_stock_report(request):
     # Get batches that haven't been sold recently
     # First, get products that have been sold recently (exclude custom items)
     recently_sold = SaleItem.objects.filter(
-        sale__sale_date__date__gte=threshold_date,
+        sale__sale_date__gte=threshold_date,
         sale__status='completed',
         is_custom=False,
         product__isnull=False
@@ -574,7 +574,7 @@ def dead_stock_report(request):
     
     # Slow moving products (sold but low quantity, exclude custom items)
     slow_moving = SaleItem.objects.filter(
-        sale__sale_date__date__gte=threshold_date,
+        sale__sale_date__gte=threshold_date,
         sale__status='completed',
         is_custom=False,
         product__isnull=False

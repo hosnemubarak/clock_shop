@@ -170,10 +170,10 @@ def customer_statement(request, pk):
     payments = customer.payments.all()
     
     if date_from:
-        sales = sales.filter(sale_date__date__gte=date_from)
+        sales = sales.filter(sale_date__gte=date_from)
         payments = payments.filter(payment_date__date__gte=date_from)
     if date_to:
-        sales = sales.filter(sale_date__date__lte=date_to)
+        sales = sales.filter(sale_date__lte=date_to)
         payments = payments.filter(payment_date__date__lte=date_to)
     
     # Combine and sort transactions

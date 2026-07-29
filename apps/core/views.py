@@ -24,11 +24,11 @@ def dashboard(request):
     
     # Sales metrics
     total_sales_today = Sale.objects.filter(
-        sale_date__date=today
+        sale_date=today
     ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
     
     total_sales_month = Sale.objects.filter(
-        sale_date__date__gte=month_start
+        sale_date__gte=month_start
     ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
     
     # Cash Collection
@@ -38,7 +38,7 @@ def dashboard(request):
     
     # Profit calculation
     profit_month = SaleItem.objects.filter(
-        sale__sale_date__date__gte=month_start
+        sale__sale_date__gte=month_start
     ).aggregate(
         profit=Sum(F('quantity') * (F('unit_price') - F('cost_price')))
     )['profit'] or Decimal('0')
