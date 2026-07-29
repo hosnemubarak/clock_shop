@@ -138,9 +138,11 @@
                                 </td>
                                 <td>
                                     <div class="d-flex gap-2 justify-content-center">
-                                        <a href="{% url 'purchase_create' %}?product={{ product.pk }}" class="btn btn-sm btn-soft-primary" title="Add Stock">
+                                        <button type="button" class="btn btn-sm btn-soft-primary" 
+                                                title="Add Stock" 
+                                                onclick="openQuickAddStockModal({{ product.pk }}, '{{ product.display_name|escapejs }}', '{{ product.average_cost|default_if_none:'0.00' }}')">
                                             <i class="las la-plus"></i> Add Stock
-                                        </a>
+                                        </button>
                                         <div class="dropdown">
                                             <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
                                                 <i class="las la-ellipsis-h"></i>
@@ -171,4 +173,109 @@
         </div>
     </div>
 </div>
+
+<!-- Quick Add Stock Modal -->
+<div class="modal fade" id="quickAddStockModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Add Stock: <span id="qasProductName" class="text-primary"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quickAddStockForm">
+                    <input type="hidden" id="qasProductId">
+                    <div class="mb-3">
+                        <label class="form-label">Warehouse <span class="text-danger">*</span></label>
+                        <select id="qasWarehouse" class="form-select" required>
+                            <option value="">Select Warehouse...</option>
+                            {% for warehouse in warehouses %}
+                            <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                            <input type="number" id="qasQuantity" class="form-control" min="1" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Unit Cost Price <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
+                                <input type="number" id="qasUnitPrice" class="form-control" step="0.01" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitQuickAddStock()">Add Stock</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openQuickAddStockModal(productId, productName, averageCost) {
+    document.getElementById('qasProductId').value = productId;
+    document.getElementById('qasProductName').textContent = productName;
+    document.getElementById('qasUnitPrice').value = averageCost;
+    document.getElementById('qasQuantity').value = '';
+    document.getElementById('qasWarehouse').value = '';
+    
+    // Convert comma decimal to point if necessary, though averageCost is usually standard string
+    
+    new bootstrap.Modal(document.getElementById('quickAddStockModal')).show();
+}
+
+function submitQuickAddStock() {
+    const productId = document.getElementById('qasProductId').value;
+    const warehouseId = document.getElementById('qasWarehouse').value;
+    const quantity = document.getElementById('qasQuantity').value;
+    const unitPrice = document.getElementById('qasUnitPrice').value;
+    
+    if (!warehouseId || !quantity || !unitPrice) {
+        alert('Please fill out all required fields.');
+        return;
+    }
+    
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="las la-spinner la-spin"></i> Adding...';
+    btn.disabled = true;
+    
+    fetch(`/inventory/api/products/${productId}/quick-add-stock/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            warehouse_id: warehouseId,
+            quantity: quantity,
+            unit_price: unitPrice
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert('Error: ' + data.error);
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred.');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+</script>
 {% endblock %}

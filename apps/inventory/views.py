@@ -69,6 +69,7 @@ def product_list(request):
         'selected_brand': request.GET.get('brand', ''),
         'selected_stock': stock_filter or '',
         'selected_status': request.GET.get('status', ''),
+        'warehouses': Warehouse.objects.filter(is_active=True),
     }
     return render(request, 'inventory/product_list.html', context)
 
@@ -82,6 +83,7 @@ def product_detail(request, pk):
     context = {
         'product': product,
         'stocks': stocks,
+        'warehouses': Warehouse.objects.filter(is_active=True),
     }
     return render(request, 'inventory/product_detail.html', context)
 
@@ -416,6 +418,65 @@ def api_product_stocks(request, product_id):
     } for s in stocks]
     
     return JsonResponse(data, safe=False)
+
+
+@login_required
+def api_quick_add_stock(request, product_id):
+    """API endpoint to quickly add stock to a product."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+        
+    product = get_object_or_404(Product, pk=product_id)
+    
+    try:
+        import json
+        data = json.loads(request.body)
+        warehouse_id = data.get('warehouse_id')
+        quantity = int(data.get('quantity', 0))
+        unit_price = Decimal(data.get('unit_price', '0.00'))
+        
+        if not warehouse_id or quantity <= 0:
+            return JsonResponse({'success': False, 'error': 'Warehouse and positive quantity are required.'}, status=400)
+            
+        warehouse = get_object_or_404(Warehouse, pk=warehouse_id)
+        
+        # Create a Purchase to record the initial stock
+        from apps.inventory.models import Purchase, PurchaseItem
+        from django.utils import timezone
+        
+        purchase = Purchase.objects.create(
+            supplier='Quick Stock Adjustment',
+            purchase_date=timezone.now().date(),
+            total_amount=quantity * unit_price,
+            notes=f'Quick stock addition for {product.display_name}',
+            created_by=request.user
+        )
+        
+        PurchaseItem.objects.create(
+            purchase=purchase,
+            product=product,
+            warehouse=warehouse,
+            quantity=quantity,
+            unit_price=unit_price
+        )
+        
+        # Update product stock and average cost
+        stock, created = ProductStock.objects.get_or_create(
+            product=product,
+            warehouse=warehouse,
+            defaults={'quantity': 0}
+        )
+        stock.quantity += quantity
+        stock.save()
+        
+        product.recalculate_average_cost(quantity, unit_price)
+        
+        create_audit_log(request, 'UPDATE', product, f"Quick added {quantity} stock to {warehouse.name}")
+        
+        return JsonResponse({'success': True, 'message': f'Successfully added {quantity} stock.'})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
 
 # Stock Out Views

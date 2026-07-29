@@ -33,5 +33,6 @@ urlpatterns = [
     
     # API
     path('api/products/<int:product_id>/stocks/', views.api_product_stocks, name='api_product_stocks'),
+    path('api/products/<int:product_id>/quick-add-stock/', views.api_quick_add_stock, name='api_quick_add_stock'),
     path('api/warehouses/<int:warehouse_id>/stocks/', views.api_warehouse_stocks, name='api_warehouse_stocks'),
 ]
