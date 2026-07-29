@@ -87,6 +87,14 @@
                                         {% endif %}
                                     </td>
                                 </tr>
+                                <tr>
+                                    <td class="text-muted">Added On</td>
+                                    <td>{{ product.created_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Last Updated</td>
+                                    <td>{{ product.updated_at|date:"M d, Y H:i" }}</td>
+                                </tr>
                             </table>
                         </div>
                         
@@ -114,7 +122,9 @@
                         <thead>
                             <tr>
                                 <th>Warehouse</th>
+                                <th>Contact & Location</th>
                                 <th>Quantity</th>
+                                <th>Est. Value</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -128,11 +138,16 @@
                                         {% endif %}
                                     </a>
                                 </td>
+                                <td>
+                                    {% if stock.warehouse.phone %}<i class="las la-phone text-muted me-1"></i>{{ stock.warehouse.phone }}<br>{% endif %}
+                                    {% if stock.warehouse.address %}<small class="text-muted"><i class="las la-map-marker me-1"></i>{{ stock.warehouse.address|truncatechars:50 }}</small>{% endif %}
+                                </td>
                                 <td><span class="badge bg-primary">{{ stock.quantity }}</span></td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ stock.total_value|floatformat:2|intcomma }}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="2" class="text-center text-muted py-4">No stock available</td>
+                                <td colspan="4" class="text-center text-muted py-4">No stock available</td>
                             </tr>
                             {% endfor %}
                         </tbody>
