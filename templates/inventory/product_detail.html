@@ -23,72 +23,81 @@
     <div class="col-12 mb-4">
         <div class="card h-100">
             <div class="card-body">
-                <div class="text-center mb-4">
-                    <div class="avatar-xl mx-auto">
-                        <div class="avatar-title bg-light rounded">
-                            <i class="las la-box fs-1 text-muted"></i>
+                <div class="row align-items-center">
+                    <!-- Left side: Avatar, Title, Buttons -->
+                    <div class="col-md-4 text-center border-end-md mb-4 mb-md-0">
+                        <div class="avatar-xl mx-auto mb-3">
+                            <div class="avatar-title bg-light rounded">
+                                <i class="las la-box fs-1 text-muted"></i>
+                            </div>
+                        </div>
+                        <h5>{{ product.display_name }}</h5>
+                        <p class="text-muted mb-4">SKU: <code>{{ product.sku }}</code></p>
+                        
+                        <div class="d-flex gap-2 justify-content-center px-3">
+                            <a href="{% url 'product_edit' product.pk %}" class="btn btn-outline-primary flex-grow-1">
+                                <i class="las la-pen"></i> Edit
+                            </a>
+                            <button type="button" class="btn btn-primary flex-grow-1" 
+                                    onclick="openQuickAddStockModal({{ product.pk }}, '{{ product.display_name|escapejs }}', '{{ product.average_cost|default_if_none:'0.00' }}')">
+                                <i class="las la-plus"></i> Quick Stock
+                            </button>
                         </div>
                     </div>
-                </div>
-                <h5 class="text-center">{{ product.display_name }}</h5>
-                <p class="text-center text-muted">SKU: <code>{{ product.sku }}</code></p>
-                
-                <div class="table-responsive">
-                    <table class="table table-borderless mb-0">
-                        <tr>
-                            <td class="text-muted">Category</td>
-                            <td class="fw-medium">{{ product.category.name }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Brand</td>
-                            <td class="fw-medium">{{ product.brand.name|default:"-" }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Selling Price</td>
-                            <td class="fw-medium">{{ CURRENCY_SYMBOL }}{{ product.default_selling_price|floatformat:2 }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Total Stock</td>
-                            <td>
-                                {% if product.total_stock == 0 %}
-                                <span class="badge bg-danger">Out of Stock</span>
-                                {% elif product.total_stock <= 10 %}
-                                <span class="badge bg-warning">{{ product.total_stock }} units</span>
-                                {% else %}
-                                <span class="badge bg-success">{{ product.total_stock }} units</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Avg. Cost</td>
-                            <td class="fw-medium">{{ CURRENCY_SYMBOL }}{{ product.get_average_cost|floatformat:2 }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Status</td>
-                            <td>
-                                {% if product.is_active %}
-                                <span class="badge bg-success">Active</span>
-                                {% else %}
-                                <span class="badge bg-danger">Inactive</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                
-                {% if product.description %}
-                <hr>
-                <p class="text-muted mb-0">{{ product.description }}</p>
-                {% endif %}
-                
-                <div class="mt-4 d-flex gap-2">
-                    <a href="{% url 'product_edit' product.pk %}" class="btn btn-outline-primary flex-grow-1">
-                        <i class="las la-pen"></i> Edit
-                    </a>
-                    <button type="button" class="btn btn-primary flex-grow-1" 
-                            onclick="openQuickAddStockModal({{ product.pk }}, '{{ product.display_name|escapejs }}', '{{ product.average_cost|default_if_none:'0.00' }}')">
-                        <i class="las la-plus"></i> Quick Stock
-                    </button>
+                    
+                    <!-- Right side: Details Table -->
+                    <div class="col-md-8">
+                        <div class="table-responsive">
+                            <table class="table table-borderless mb-0">
+                                <tr>
+                                    <td class="text-muted" style="width: 30%;">Category</td>
+                                    <td class="fw-medium">{{ product.category.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Brand</td>
+                                    <td class="fw-medium">{{ product.brand.name|default:"-" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Selling Price</td>
+                                    <td class="fw-medium">{{ CURRENCY_SYMBOL }}{{ product.default_selling_price|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Total Stock</td>
+                                    <td>
+                                        {% if product.total_stock == 0 %}
+                                        <span class="badge bg-danger">Out of Stock</span>
+                                        {% elif product.total_stock <= 10 %}
+                                        <span class="badge bg-warning">{{ product.total_stock }} units</span>
+                                        {% else %}
+                                        <span class="badge bg-success">{{ product.total_stock }} units</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Avg. Cost</td>
+                                    <td class="fw-medium">{{ CURRENCY_SYMBOL }}{{ product.get_average_cost|floatformat:2 }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Status</td>
+                                    <td>
+                                        {% if product.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        {% if product.description %}
+                        <hr class="my-3">
+                        <div class="px-2">
+                            <h6 class="text-muted mb-2 fs-12 text-uppercase">Description</h6>
+                            <p class="text-muted mb-0 fs-14">{{ product.description }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
