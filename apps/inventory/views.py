@@ -193,7 +193,7 @@ def product_delete(request, pk):
             except ProtectedError:
                 messages.error(
                     request, 
-                    f'Cannot delete "{display_name}" because it has associated transaction history (e.g. purchases or stock outs). '
+                    f'Cannot delete "{display_name}" because it has associated transaction history (e.g. stock additions or stock outs). '
                     'To remove it from the catalog, please mark it as inactive instead.'
                 )
     
@@ -378,7 +378,7 @@ def purchase_create(request):
             purchase.save()
             
             create_audit_log(request, 'CREATE', purchase, {'total': str(total)})
-            messages.success(request, f'Purchase "{purchase.purchase_number}" created.')
+            messages.success(request, f'Stock In record "{purchase.purchase_number}" created.')
             return redirect('purchase_list')
     else:
         form = PurchaseForm(initial={'purchase_date': date.today()})

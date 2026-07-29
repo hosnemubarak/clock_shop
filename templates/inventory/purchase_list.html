@@ -7,7 +7,7 @@
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Purchase Orders</h4>
+            <h4 class="mb-sm-0">Stock In Records</h4>
             <div class="page-title-right">
                 <a href="{% url 'purchase_create' %}" class="btn btn-success"><i class="las la-plus"></i> New Purchase</a>
             </div>
@@ -49,7 +49,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-4">No purchases found</td>
+                                <td colspan="7" class="text-center text-muted py-4">No records found</td>
                             </tr>
                             {% endfor %}
                         </tbody>

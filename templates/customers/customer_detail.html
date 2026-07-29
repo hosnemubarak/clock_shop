@@ -52,7 +52,7 @@
             </div>
             <div class="card-body">
                 <div class="d-flex justify-content-between mb-3">
-                    <span class="text-muted">Total Purchases</span>
+                    <span class="text-muted">Total Spend</span>
                     <span class="fw-medium">{{ CURRENCY_SYMBOL }}{{ customer.total_purchases|floatformat:2|intcomma }}</span>
                 </div>
                 <div class="d-flex justify-content-between mb-3">
@@ -114,7 +114,7 @@
 
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title mb-0">Recent Purchases</h5>
+                <h5 class="card-title mb-0">Recent Orders</h5>
             </div>
             <div class="card-body">
                 <div class="table-responsive" style="min-height: 300px;">
@@ -144,7 +144,7 @@
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="4" class="text-center text-muted">No purchases</td></tr>
+                            <tr><td colspan="4" class="text-center text-muted">No records</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>

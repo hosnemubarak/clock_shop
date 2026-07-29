@@ -216,7 +216,7 @@
                             <input type="text" id="qasSupplier" class="form-control" placeholder="e.g. ABC Distributors" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Purchase Date <span class="text-danger">*</span></label>
+                            <label class="form-label">Stock Date <span class="text-danger">*</span></label>
                             <input type="date" id="qasPurchaseDate" class="form-control" required>
                         </div>
                     </div>
@@ -245,7 +245,7 @@ function openQuickAddStockModal(productId, productName, averageCost) {
     document.getElementById('qasWarehouse').value = '';
     document.getElementById('qasSupplier').value = '';
     
-    // Set default purchase date to today
+    // Set default Stock Date to today
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('qasPurchaseDate').value = today;
     
