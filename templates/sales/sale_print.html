@@ -28,7 +28,11 @@
 
     <div class="header">
         <h1>{{ SHOP_NAME }}</h1>
+        {% if SHOP_ADDRESS %}
+        <p>{{ SHOP_ADDRESS|linebreaksbr }}</p>
+        {% else %}
         <p>Retail Clock Shop</p>
+        {% endif %}
     </div>
 
     <div class="invoice-info">
@@ -117,8 +121,12 @@
     {% endif %}
 
     <div class="footer">
-        <p>Thank you for your business!</p>
+        {% if SHOP_ADDRESS %}
+        <p>{{ SHOP_NAME }} - {{ SHOP_ADDRESS|linebreaksbr }}</p>
+        {% else %}
         <p>{{ SHOP_NAME }} - Retail Clock Shop</p>
+        {% endif %}
+        <p>Thank you for your business!</p>
     </div>
 </body>
 </html>

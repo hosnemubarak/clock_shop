@@ -48,6 +48,17 @@
                         </div>
                     </div>
                     
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label class="form-label fw-medium">{{ form.shop_address.label }}</label>
+                            {{ form.shop_address }}
+                            <small class="text-muted">{{ form.shop_address.help_text }}</small>
+                            {% if form.shop_address.errors %}
+                            <div class="text-danger small">{{ form.shop_address.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
                     <hr class="my-4">
                     <h6 class="text-primary mb-3"><i class="las la-box me-1"></i> Inventory Settings</h6>
                     

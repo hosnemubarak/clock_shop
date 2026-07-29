@@ -9,6 +9,7 @@ class SystemSettingsForm(forms.ModelForm):
         model = SystemSettings
         fields = [
             'shop_name',
+            'shop_address',
             'currency_symbol',
             'license_expiry_date',
             'low_stock_threshold',
@@ -18,6 +19,11 @@ class SystemSettingsForm(forms.ModelForm):
             'shop_name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter shop name'
+            }),
+            'shop_address': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter full shop address',
+                'rows': 3
             }),
             'currency_symbol': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -40,6 +46,7 @@ class SystemSettingsForm(forms.ModelForm):
         }
         labels = {
             'shop_name': 'Shop Name',
+            'shop_address': 'Shop Address',
             'currency_symbol': 'Currency Symbol',
             'license_expiry_date': 'License/Server Expiry Date',
             'low_stock_threshold': 'Low Stock Threshold',
@@ -47,6 +54,7 @@ class SystemSettingsForm(forms.ModelForm):
         }
         help_texts = {
             'shop_name': 'Leave blank to use environment variable (SHOP_NAME)',
+            'shop_address': 'Address printed on invoices and reports',
             'currency_symbol': 'Symbol displayed before prices',
             'license_expiry_date': 'Date when server/license expires',
             'low_stock_threshold': 'Products at or below this stock level are flagged as low stock',

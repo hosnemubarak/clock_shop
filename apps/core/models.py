@@ -52,6 +52,10 @@ class SystemSettings(models.Model):
         blank=True,
         help_text='Shop name displayed across the system'
     )
+    shop_address = models.TextField(
+        blank=True,
+        help_text='Shop address used on invoices and reports'
+    )
     license_expiry_date = models.DateField(
         null=True,
         blank=True,
