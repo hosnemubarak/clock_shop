@@ -38,10 +38,6 @@ class ProductAdmin(admin.ModelAdmin):
         ('Stock & Status', {
             'fields': ('total_stock', 'is_active')
         }),
-        ('Media', {
-            'fields': ('image',),
-            'classes': ('collapse',)
-        }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',)

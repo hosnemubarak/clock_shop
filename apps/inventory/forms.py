@@ -29,14 +29,13 @@ class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
         fields = ['sku', 'brand', 'category', 'description', 
-                  'default_selling_price', 'image', 'is_active']
+                  'default_selling_price', 'is_active']
         widgets = {
             'sku': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. CLK-001'}),
             'brand': forms.Select(attrs={'class': 'form-select'}),
             'category': forms.Select(attrs={'class': 'form-select'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'e.g. Traditional wooden pendulum clock with hourly chime'}),
             'default_selling_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'e.g. 299.99'}),
-            'image': forms.FileInput(attrs={'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 

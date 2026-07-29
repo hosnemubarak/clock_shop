@@ -41,7 +41,6 @@ class Product(TimeStampedModel):
         max_digits=12, decimal_places=2,
         validators=[MinValueValidator(Decimal('0.00'))]
     )
-    image = models.ImageField(upload_to='products/', blank=True, null=True)
     is_active = models.BooleanField(default=True)
     
     # Computed fields (updated via signals or methods)
