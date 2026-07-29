@@ -14,8 +14,8 @@
             <h4 class="mb-sm-0">New Stock Out</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'stockout_list' %}">Stock Out</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'inventory:stockout_list' %}">Stock Out</a></li>
                     <li class="breadcrumb-item active">New</li>
                 </ol>
             </div>
@@ -160,7 +160,7 @@
                         <button type="submit" class="btn btn-danger" id="submitBtn" disabled>
                             <i class="las la-check me-1"></i> Complete Stock Out
                         </button>
-                        <a href="{% url 'stockout_list' %}" class="btn btn-light">
+                        <a href="{% url 'inventory:stockout_list' %}" class="btn btn-light">
                             <i class="las la-times me-1"></i> Cancel
                         </a>
                     </div>

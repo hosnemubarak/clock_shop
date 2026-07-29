@@ -4,7 +4,7 @@
     <!-- LOGO -->
     <div class="navbar-brand-box">
         <!-- Dark Logo-->
-        <a href="{% url 'dashboard' %}" class="logo logo-dark">
+        <a href="{% url 'core:dashboard' %}" class="logo logo-dark">
             <span class="logo-sm">
                 <img src="{% static 'images/logo.png' %}" alt="" height="30">
             </span>
@@ -13,7 +13,7 @@
             </span>
         </a>
         <!-- Light Logo-->
-        <a href="{% url 'dashboard' %}" class="logo logo-light">
+        <a href="{% url 'core:dashboard' %}" class="logo logo-light">
             <span class="logo-sm">
                 <img src="{% static 'images/logo.png' %}" alt="" height="30">
             </span>
@@ -36,7 +36,7 @@
                 
                 <!-- Dashboard -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'dashboard' %}">
+                    <a class="nav-link menu-link" href="{% url 'core:dashboard' %}">
                         <i class="las la-tachometer-alt"></i> <span data-key="t-dashboard">Dashboard</span>
                     </a>
                 </li>
@@ -51,17 +51,17 @@
                     <div class="collapse menu-dropdown" id="sidebarInventory">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="{% url 'product_list' %}" class="nav-link" data-key="t-products">Products</a>
+                                <a href="{% url 'inventory:product_list' %}" class="nav-link" data-key="t-products">Products</a>
                             </li>
 
                             <li class="nav-item">
-                                <a href="{% url 'category_list' %}" class="nav-link" data-key="t-categories">Categories</a>
+                                <a href="{% url 'inventory:category_list' %}" class="nav-link" data-key="t-categories">Categories</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'brand_list' %}" class="nav-link" data-key="t-brands">Brands</a>
+                                <a href="{% url 'inventory:brand_list' %}" class="nav-link" data-key="t-brands">Brands</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'purchase_list' %}" class="nav-link" data-key="t-purchases">Stock In</a>
+                                <a href="{% url 'inventory:purchase_list' %}" class="nav-link" data-key="t-purchases">Stock In</a>
                             </li>
                         </ul>
                     </div>
@@ -69,35 +69,35 @@
 
                 <!-- Sales -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'sale_list' %}">
+                    <a class="nav-link menu-link" href="{% url 'sales:sale_list' %}">
                         <i class="las la-shopping-cart"></i> <span data-key="t-sales">Sales</span>
                     </a>
                 </li>
 
                 <!-- Customers -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'customer_list' %}">
+                    <a class="nav-link menu-link" href="{% url 'customers:customer_list' %}">
                         <i class="las la-users"></i> <span data-key="t-customers">Customers</span>
                     </a>
                 </li>
 
                 <!-- Payments -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'payment_list' %}">
+                    <a class="nav-link menu-link" href="{% url 'customers:payment_list' %}">
                         <i class="las la-money-bill-wave"></i> <span data-key="t-payments">Payments</span>
                     </a>
                 </li>
 
                 <!-- Warehouse -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'warehouse_list' %}">
+                    <a class="nav-link menu-link" href="{% url 'warehouse:warehouse_list' %}">
                         <i class="las la-warehouse"></i> <span data-key="t-warehouses">Warehouses</span>
                     </a>
                 </li>
 
                 <!-- Transfers -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'transfer_list' %}">
+                    <a class="nav-link menu-link" href="{% url 'warehouse:transfer_list' %}">
                         <i class="las la-exchange-alt"></i> <span data-key="t-transfers">Transfers</span>
                     </a>
                 </li>
@@ -112,23 +112,23 @@
                     <div class="collapse menu-dropdown" id="sidebarReports">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="{% url 'sales_report' %}" class="nav-link" data-key="t-sales-report">Sales Report</a>
+                                <a href="{% url 'reports:sales_report' %}" class="nav-link" data-key="t-sales-report">Sales Report</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'profit_report' %}" class="nav-link" data-key="t-profit-report">Profit Report</a>
+                                <a href="{% url 'reports:profit_report' %}" class="nav-link" data-key="t-profit-report">Profit Report</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'stock_report' %}" class="nav-link" data-key="t-stock-report">Stock Report</a>
+                                <a href="{% url 'reports:stock_report' %}" class="nav-link" data-key="t-stock-report">Stock Report</a>
                             </li>
 
                             <li class="nav-item">
-                                <a href="{% url 'transfer_report' %}" class="nav-link" data-key="t-transfer-history">Transfer History</a>
+                                <a href="{% url 'reports:transfer_report' %}" class="nav-link" data-key="t-transfer-history">Transfer History</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'dead_stock_report' %}" class="nav-link" data-key="t-dead-stock">Dead Stock</a>
+                                <a href="{% url 'reports:dead_stock_report' %}" class="nav-link" data-key="t-dead-stock">Dead Stock</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'batch_report' %}" class="nav-link" data-key="t-stock-detail">Stock Detail Report</a>
+                                <a href="{% url 'reports:batch_report' %}" class="nav-link" data-key="t-stock-detail">Stock Detail Report</a>
                             </li>
                         </ul>
                     </div>
@@ -136,7 +136,7 @@
 
                 <!-- Audit Logs -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'audit_logs' %}">
+                    <a class="nav-link menu-link" href="{% url 'core:audit_logs' %}">
                         <i class="las la-history"></i> <span data-key="t-audit-logs">Audit Logs</span>
                     </a>
                 </li>
@@ -144,7 +144,7 @@
                 <!-- System Settings (Superuser only) -->
                 {% if request.user.is_superuser %}
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'system_settings' %}">
+                    <a class="nav-link menu-link" href="{% url 'core:system_settings' %}">
                         <i class="las la-cog"></i> <span data-key="t-settings">System Settings</span>
                     </a>
                 </li>

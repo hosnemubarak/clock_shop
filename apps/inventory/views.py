@@ -145,7 +145,7 @@ def product_create(request):
             else:
                 messages.success(request, f'Product "{product.display_name}" created successfully.')
                 
-            return redirect('product_list')
+            return redirect('inventory:product_list')
     else:
         form = ProductForm()
     
@@ -163,7 +163,7 @@ def product_edit(request, pk):
             product = form.save()
             create_audit_log(request, 'UPDATE', product)
             messages.success(request, f'Product "{product.display_name}" updated successfully.')
-            return redirect('product_detail', pk=product.pk)
+            return redirect('inventory:product_detail', pk=product.pk)
     else:
         form = ProductForm(instance=product)
     
@@ -192,7 +192,7 @@ def product_delete(request, pk):
                 product.delete()
                 create_audit_log(request, 'DELETE', product)
                 messages.success(request, f'Product "{display_name}" deleted successfully.')
-                return redirect('product_list')
+                return redirect('inventory:product_list')
             except ProtectedError:
                 messages.error(
                     request, 
@@ -229,7 +229,7 @@ def category_create(request):
             category = form.save()
             create_audit_log(request, 'CREATE', category)
             messages.success(request, f'Category "{category.name}" created.')
-            return redirect('category_list')
+            return redirect('inventory:category_list')
     else:
         form = CategoryForm()
     
@@ -247,7 +247,7 @@ def category_edit(request, pk):
             category = form.save()
             create_audit_log(request, 'UPDATE', category)
             messages.success(request, f'Category "{category.name}" updated.')
-            return redirect('category_list')
+            return redirect('inventory:category_list')
     else:
         form = CategoryForm(instance=category)
     
@@ -284,7 +284,7 @@ def brand_create(request):
             brand = form.save()
             create_audit_log(request, 'CREATE', brand)
             messages.success(request, f'Brand "{brand.name}" created.')
-            return redirect('brand_list')
+            return redirect('inventory:brand_list')
     else:
         form = BrandForm()
     
@@ -302,7 +302,7 @@ def brand_edit(request, pk):
             brand = form.save()
             create_audit_log(request, 'UPDATE', brand)
             messages.success(request, f'Brand "{brand.name}" updated.')
-            return redirect('brand_list')
+            return redirect('inventory:brand_list')
     else:
         form = BrandForm(instance=brand)
     
@@ -340,16 +340,34 @@ def purchase_create(request):
         
         if form.is_valid() and items_data:
             import json
+            parsed_items = []
+            try:
+                for item_json in items_data:
+                    parsed_items.append(json.loads(item_json))
+            except ValueError:
+                messages.error(request, 'Invalid items data format.')
+                return redirect('inventory:purchase_create')
+                
             purchase = form.save(commit=False)
             purchase.created_by = request.user
             purchase.total_amount = Decimal('0')
             purchase.save()
             
             total = Decimal('0')
-            for item_json in items_data:
-                item = json.loads(item_json)
-                product = Product.objects.get(pk=item['product_id'])
-                warehouse = Warehouse.objects.get(pk=item['warehouse_id'])
+            
+            # Prefetch to prevent N+1
+            product_ids = [item['product_id'] for item in parsed_items]
+            warehouse_ids = [item['warehouse_id'] for item in parsed_items]
+            products_map = {p.id: p for p in Product.objects.filter(id__in=product_ids)}
+            warehouses_map = {w.id: w for w in Warehouse.objects.filter(id__in=warehouse_ids)}
+            
+            for item in parsed_items:
+                product = products_map.get(int(item['product_id']))
+                warehouse = warehouses_map.get(int(item['warehouse_id']))
+                
+                if not product or not warehouse:
+                    continue
+                    
                 quantity = int(item['quantity'])
                 unit_price = Decimal(item['unit_price'])
                 
@@ -382,7 +400,7 @@ def purchase_create(request):
             
             create_audit_log(request, 'CREATE', purchase, {'total': str(total)})
             messages.success(request, f'Stock In record "{purchase.purchase_number}" created.')
-            return redirect('purchase_list')
+            return redirect('inventory:purchase_list')
     else:
         form = PurchaseForm(initial={'purchase_date': date.today()})
     
@@ -554,7 +572,7 @@ def stockout_create(request):
         
         try:
             items_list = json.loads(items_data)
-        except json.JSONDecodeError:
+        except ValueError:
             items_list = []
         
         if form.is_valid() and items_list:
@@ -563,14 +581,18 @@ def stockout_create(request):
             stockout.save()
             
             # Create stock out items
+            product_ids = [item['product_id'] for item in items_list]
+            products_map = {p.id: p for p in Product.objects.filter(id__in=product_ids)}
+            
             for item in items_list:
-                product = Product.objects.get(pk=item['product_id'])
-                StockOutItem.objects.create(
-                    stockout=stockout,
-                    product=product,
-                    quantity=int(item['quantity']),
-                    cost_price=product.average_cost
-                )
+                product = products_map.get(int(item['product_id']))
+                if product:
+                    StockOutItem.objects.create(
+                        stockout=stockout,
+                        product=product,
+                        quantity=int(item['quantity']),
+                        cost_price=product.average_cost
+                    )
             
             # Complete the stock out immediately
             try:
@@ -584,9 +606,9 @@ def stockout_create(request):
             except ValueError as e:
                 messages.error(request, str(e))
                 stockout.delete()
-                return redirect('stockout_create')
+                return redirect('inventory:stockout_create')
             
-            return redirect('stockout_detail', pk=stockout.pk)
+            return redirect('inventory:stockout_detail', pk=stockout.pk)
         else:
             if not items_list:
                 messages.error(request, 'Please add at least one item.')
@@ -629,7 +651,7 @@ def stockout_cancel(request, pk):
         except ValueError as e:
             messages.error(request, str(e))
     
-    return redirect('stockout_detail', pk=pk)
+    return redirect('inventory:stockout_detail', pk=pk)
 
 
 @login_required

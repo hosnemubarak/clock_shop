@@ -1,7 +1,10 @@
-from django.db import models
+import datetime
+from django.db import models, transaction, IntegrityError
 from django.core.validators import MinValueValidator
+from django.utils import timezone
 from decimal import Decimal
 from apps.core.models import TimeStampedModel
+from apps.core.utils import save_with_sequential_number
 
 
 class Category(TimeStampedModel):
@@ -63,11 +66,6 @@ class Product(TimeStampedModel):
             return f"{self.sku} - {self.brand.name}"
         return self.sku
     
-    @property
-    def dropdown_display(self):
-        """Returns SKU + Brand Name for dropdown displays (same as display_name)."""
-        return self.display_name
-    
     def update_total_stock(self):
         """Update total stock from all warehouse stocks."""
         self.total_stock = self.stocks.aggregate(
@@ -86,8 +84,8 @@ class Product(TimeStampedModel):
 
 class ProductStock(TimeStampedModel):
     """Tracks quantity of a product in a specific warehouse."""
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='stocks')
-    warehouse = models.ForeignKey('warehouse.Warehouse', on_delete=models.CASCADE, related_name='product_stocks')
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='stocks')
+    warehouse = models.ForeignKey('warehouse.Warehouse', on_delete=models.PROTECT, related_name='product_stocks')
     quantity = models.PositiveIntegerField(default=0)
     
     class Meta:
@@ -124,18 +122,7 @@ class Purchase(TimeStampedModel):
         return f"{self.purchase_number} - {self.supplier}"
     
     def save(self, *args, **kwargs):
-        if not self.purchase_number:
-            import datetime
-            prefix = f"PO{datetime.date.today().strftime('%Y%m%d')}"
-            last = Purchase.objects.filter(
-                purchase_number__startswith=prefix
-            ).order_by('-purchase_number').first()
-            if last:
-                last_num = int(last.purchase_number[-4:])
-                self.purchase_number = f"{prefix}{last_num + 1:04d}"
-            else:
-                self.purchase_number = f"{prefix}0001"
-        super().save(*args, **kwargs)
+        save_with_sequential_number(self, 'purchase_number', 'PO', *args, **kwargs)
 
 
 class PurchaseItem(TimeStampedModel):
@@ -165,30 +152,28 @@ class StockOut(TimeStampedModel):
     Stock Out record for non-sale inventory reductions.
     Used for damage, loss, expired goods, internal use, adjustments, etc.
     """
-    REASON_CHOICES = [
-        ('damage', 'Damaged'),
-        ('loss', 'Lost/Theft'),
-        ('expired', 'Expired'),
-        ('internal', 'Internal Use'),
-        ('adjustment', 'Stock Adjustment'),
-        ('return_supplier', 'Return to Supplier'),
-        ('sample', 'Sample/Display'),
-        ('other', 'Other'),
-    ]
-    
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('completed', 'Completed'),
-        ('cancelled', 'Cancelled'),
-    ]
+    class Reason(models.TextChoices):
+        DAMAGE = 'damage', 'Damaged'
+        LOSS = 'loss', 'Lost/Theft'
+        EXPIRED = 'expired', 'Expired'
+        INTERNAL = 'internal', 'Internal Use'
+        ADJUSTMENT = 'adjustment', 'Stock Adjustment'
+        RETURN_SUPPLIER = 'return_supplier', 'Return to Supplier'
+        SAMPLE = 'sample', 'Sample/Display'
+        OTHER = 'other', 'Other'
+        
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        COMPLETED = 'completed', 'Completed'
+        CANCELLED = 'cancelled', 'Cancelled'
     
     stockout_number = models.CharField(max_length=50, unique=True)
     warehouse = models.ForeignKey(
         'warehouse.Warehouse', on_delete=models.PROTECT,
         related_name='stock_outs'
     )
-    reason = models.CharField(max_length=20, choices=REASON_CHOICES)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    reason = models.CharField(max_length=20, choices=Reason.choices)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     stockout_date = models.DateTimeField()
     completed_date = models.DateTimeField(null=True, blank=True)
     notes = models.TextField(blank=True, help_text='Additional details about the stock out')
@@ -211,31 +196,17 @@ class StockOut(TimeStampedModel):
         return f"{self.stockout_number} - {self.get_reason_display()}"
     
     def save(self, *args, **kwargs):
-        if not self.stockout_number:
-            import datetime
-            prefix = f"OUT{datetime.date.today().strftime('%Y%m%d')}"
-            last = StockOut.objects.filter(
-                stockout_number__startswith=prefix
-            ).order_by('-stockout_number').first()
-            if last:
-                last_num = int(last.stockout_number[-4:])
-                self.stockout_number = f"{prefix}{last_num + 1:04d}"
-            else:
-                self.stockout_number = f"{prefix}0001"
-        super().save(*args, **kwargs)
+        save_with_sequential_number(self, 'stockout_number', 'OUT', *args, **kwargs)
     
     def complete_stockout(self):
         """Complete the stock out and reduce inventory."""
-        from django.utils import timezone
-        from django.db import transaction
-        
         if self.status != 'pending':
             raise ValueError('Stock out is not pending')
         
         with transaction.atomic():
             total_value = Decimal('0.00')
             
-            for item in self.items.select_for_update():
+            for item in self.items.order_by('product_id').select_for_update():
                 stock, created = ProductStock.objects.select_for_update().get_or_create(
                     product=item.product,
                     warehouse=self.warehouse,
@@ -264,9 +235,6 @@ class StockOut(TimeStampedModel):
     
     def cancel_stockout(self):
         """Cancel the stock out. If completed, restore stock."""
-        from django.utils import timezone
-        from django.db import transaction
-        
         if self.status == 'cancelled':
             raise ValueError('Stock out is already cancelled')
         

@@ -12,7 +12,7 @@
             <i class="ri-{% if EXPIRY_ALERT.critical %}error-warning{% else %}alarm-warning{% endif %}-line label-icon"></i>
             <strong>{{ EXPIRY_ALERT.message }}</strong>
             {% if request.user.is_superuser %}
-            <a href="{% url 'system_settings' %}" class="alert-link ms-2">
+            <a href="{% url 'core:system_settings' %}" class="alert-link ms-2">
                 <i class="las la-cog"></i> Update Settings
             </a>
             {% endif %}
@@ -28,7 +28,7 @@
             <h4 class="mb-sm-0">Dashboard</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Home</a></li>
                     <li class="breadcrumb-item active">Dashboard</li>
                 </ol>
             </div>
@@ -39,7 +39,7 @@
 <!-- Quick Actions -->
 <div class="row mb-3">
     <div class="col-xl-4 col-md-4">
-        <a href="{% url 'sale_create' %}" class="text-decoration-none">
+        <a href="{% url 'sales:sale_create' %}" class="text-decoration-none">
             <div class="card card-animate bg-primary">
                 <div class="card-body text-center p-3">
                     <i class="las la-cart-plus text-white fs-1"></i>
@@ -49,7 +49,7 @@
         </a>
     </div>
     <div class="col-xl-4 col-md-4">
-        <a href="{% url 'purchase_create' %}" class="text-decoration-none">
+        <a href="{% url 'inventory:purchase_create' %}" class="text-decoration-none">
             <div class="card card-animate bg-success">
                 <div class="card-body text-center p-3">
                     <i class="las la-box text-white fs-1"></i>
@@ -59,7 +59,7 @@
         </a>
     </div>
     <div class="col-xl-4 col-md-4">
-        <a href="{% url 'payment_create' %}" class="text-decoration-none">
+        <a href="{% url 'customers:payment_create' %}" class="text-decoration-none">
             <div class="card card-animate bg-info">
                 <div class="card-body text-center p-3">
                     <i class="las la-money-bill-wave text-white fs-1"></i>
@@ -73,7 +73,7 @@
 <!-- Stats Cards -->
 <div class="row">
     <div class="col-xl-4 col-md-6 mb-3">
-        <a href="{% url 'sale_list' %}?date_filter=today" class="text-decoration-none d-block h-100">
+        <a href="{% url 'sales:sale_list' %}?date_filter=today" class="text-decoration-none d-block h-100">
             <div class="card card-animate h-100 mb-0">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -98,7 +98,7 @@
     </div>
 
     <div class="col-xl-4 col-md-6 mb-3">
-        <a href="{% url 'payment_list' %}?date_from={% now 'Y-m-d' %}&date_to={% now 'Y-m-d' %}" class="text-decoration-none d-block h-100">
+        <a href="{% url 'customers:payment_list' %}?date_from={% now 'Y-m-d' %}&date_to={% now 'Y-m-d' %}" class="text-decoration-none d-block h-100">
             <div class="card card-animate h-100 mb-0">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -123,7 +123,7 @@
     </div>
 
     <div class="col-xl-4 col-md-6 mb-3">
-        <a href="{% url 'sale_list' %}?date_filter=this_month" class="text-decoration-none d-block h-100">
+        <a href="{% url 'sales:sale_list' %}?date_filter=this_month" class="text-decoration-none d-block h-100">
             <div class="card card-animate h-100 mb-0">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -148,7 +148,7 @@
     </div>
 
     <div class="col-xl-4 col-md-6 mb-3">
-        <a href="{% url 'customer_list' %}" class="text-decoration-none d-block h-100">
+        <a href="{% url 'customers:customer_list' %}" class="text-decoration-none d-block h-100">
             <div class="card card-animate h-100 mb-0">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
@@ -172,7 +172,7 @@
         </a>
     </div>
     <div class="col-xl-4 col-md-6 mb-3">
-        <a href="{% url 'product_list' %}" class="text-decoration-none d-block h-100">
+        <a href="{% url 'inventory:product_list' %}" class="text-decoration-none d-block h-100">
             <div class="card card-animate h-100 mb-0">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
@@ -196,7 +196,7 @@
 
     
     <div class="col-xl-4 col-md-6 mb-3">
-        <a href="{% url 'warehouse_list' %}" class="text-decoration-none d-block h-100">
+        <a href="{% url 'warehouse:warehouse_list' %}" class="text-decoration-none d-block h-100">
             <div class="card card-animate h-100 mb-0">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
@@ -225,7 +225,7 @@
             <div class="card-header align-items-center d-flex">
                 <h4 class="card-title mb-0 flex-grow-1">Recent Sales</h4>
                 <div class="flex-shrink-0">
-                    <a href="{% url 'sale_list' %}" class="btn btn-soft-primary btn-sm">View All</a>
+                    <a href="{% url 'sales:sale_list' %}" class="btn btn-soft-primary btn-sm">View All</a>
                 </div>
             </div>
             <div class="card-body">
@@ -243,7 +243,7 @@
                         <tbody>
                             {% for sale in recent_sales %}
                             <tr>
-                                <td><a href="{% url 'sale_detail' sale.pk %}" class="fw-medium">{{ sale.invoice_number }}</a></td>
+                                <td><a href="{% url 'sales:sale_detail' sale.pk %}" class="fw-medium">{{ sale.invoice_number }}</a></td>
                                 <td>{{ sale.customer.name|default:"Walk-in" }}</td>
                                 <td>{{ sale.sale_date|date:"M d, Y" }}</td>
                                 <td>{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
@@ -281,7 +281,7 @@
                     {% endif %}
                 </h4>
                 <div class="flex-shrink-0">
-                    <a href="{% url 'stock_report' %}?stock_filter=low" class="btn btn-soft-warning btn-sm">View All</a>
+                    <a href="{% url 'reports:stock_report' %}?stock_filter=low" class="btn btn-soft-warning btn-sm">View All</a>
                 </div>
             </div>
             <div class="card-body">
@@ -298,7 +298,7 @@
                             {% for item in low_stock_items %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'product_detail' item.product.pk %}">{{ item.product.sku }}</a>
+                                    <a href="{% url 'inventory:product_detail' item.product.pk %}">{{ item.product.sku }}</a>
                                 </td>
                                 <td><small>{{ item.warehouse.code }}</small></td>
                                 <td>

@@ -9,7 +9,7 @@
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
             <h4 class="mb-sm-0">Customers</h4>
             <div class="page-title-right">
-                <a href="{% url 'customer_create' %}" class="btn btn-success"><i class="las la-plus"></i> Add Customer</a>
+                <a href="{% url 'customers:customer_create' %}" class="btn btn-success"><i class="las la-plus"></i> Add Customer</a>
             </div>
         </div>
     </div>
@@ -110,7 +110,7 @@
                             {% for customer in customers %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'customer_detail' customer.pk %}" class="fw-medium">{{ customer.name }}</a>
+                                    <a href="{% url 'customers:customer_detail' customer.pk %}" class="fw-medium">{{ customer.name }}</a>
                                 </td>
                                 <td>{{ customer.phone|default:"-" }}</td>
                                 <td>{{ CURRENCY_SYMBOL }}{{ customer.total_purchases|floatformat:2 }}</td>
@@ -131,12 +131,12 @@
                                             <i class="las la-ellipsis-h"></i>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a class="dropdown-item" href="{% url 'customer_detail' customer.pk %}"><i class="las la-eye me-2"></i>View</a></li>
-                                            <li><a class="dropdown-item" href="{% url 'customer_edit' customer.pk %}"><i class="las la-pen me-2"></i>Edit</a></li>
+                                            <li><a class="dropdown-item" href="{% url 'customers:customer_detail' customer.pk %}"><i class="las la-eye me-2"></i>View</a></li>
+                                            <li><a class="dropdown-item" href="{% url 'customers:customer_edit' customer.pk %}"><i class="las la-pen me-2"></i>Edit</a></li>
                                             {% if customer.total_due > 0 %}
-                                            <li><a class="dropdown-item" href="{% url 'payment_create' %}?customer={{ customer.pk }}"><i class="las la-money-bill me-2"></i>Receive Payment</a></li>
+                                            <li><a class="dropdown-item" href="{% url 'customers:payment_create' %}?customer={{ customer.pk }}"><i class="las la-money-bill me-2"></i>Receive Payment</a></li>
                                             {% endif %}
-                                            <li><a class="dropdown-item" href="{% url 'customer_statement' customer.pk %}"><i class="las la-file-alt me-2"></i>Statement</a></li>
+                                            <li><a class="dropdown-item" href="{% url 'customers:customer_statement' customer.pk %}"><i class="las la-file-alt me-2"></i>Statement</a></li>
                                         </ul>
                                     </div>
                                 </td>

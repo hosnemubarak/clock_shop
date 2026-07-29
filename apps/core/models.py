@@ -4,25 +4,24 @@ from django.contrib.auth.models import User
 
 class AuditLog(models.Model):
     """Audit log for tracking all system changes."""
-    ACTION_CHOICES = [
-        ('CREATE', 'Create'),
-        ('UPDATE', 'Update'),
-        ('DELETE', 'Delete'),
-        ('TRANSFER', 'Transfer'),
-        ('SALE', 'Sale'),
-        ('PAYMENT', 'Payment'),
-        ('STOCK_IN', 'Stock In'),
-        ('STOCK_OUT', 'Stock Out'),
-    ]
+    class Action(models.TextChoices):
+        CREATE = 'CREATE', 'Create'
+        UPDATE = 'UPDATE', 'Update'
+        DELETE = 'DELETE', 'Delete'
+        TRANSFER = 'TRANSFER', 'Transfer'
+        SALE = 'SALE', 'Sale'
+        PAYMENT = 'PAYMENT', 'Payment'
+        STOCK_IN = 'STOCK_IN', 'Stock In'
+        STOCK_OUT = 'STOCK_OUT', 'Stock Out'
     
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    action = models.CharField(max_length=20, choices=Action.choices)
     model_name = models.CharField(max_length=100)
     object_id = models.PositiveIntegerField(null=True, blank=True)
     object_repr = models.CharField(max_length=255)
     changes = models.JSONField(default=dict, blank=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
     
     class Meta:
         ordering = ['-timestamp']

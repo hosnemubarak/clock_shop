@@ -10,8 +10,8 @@
             <h4 class="mb-sm-0">Stock Out Records</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Inventory</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'inventory:product_list' %}">Inventory</a></li>
                     <li class="breadcrumb-item active">Stock Out</li>
                 </ol>
             </div>
@@ -58,7 +58,7 @@
                         </select>
                     </div>
                     <div class="col-md-3 text-end">
-                        <a href="{% url 'stockout_create' %}" class="btn btn-danger">
+                        <a href="{% url 'inventory:stockout_create' %}" class="btn btn-danger">
                             <i class="las la-minus-circle me-1"></i> New Stock Out
                         </a>
                     </div>
@@ -84,7 +84,7 @@
                             {% for stockout in stockouts %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'stockout_detail' stockout.pk %}" class="fw-medium">
+                                    <a href="{% url 'inventory:stockout_detail' stockout.pk %}" class="fw-medium">
                                         {{ stockout.stockout_number }}
                                     </a>
                                 </td>
@@ -108,7 +108,7 @@
                                 </td>
                                 <td>{{ stockout.created_by.username|default:"-" }}</td>
                                 <td class="text-center">
-                                    <a href="{% url 'stockout_detail' stockout.pk %}" class="btn btn-sm btn-soft-primary">
+                                    <a href="{% url 'inventory:stockout_detail' stockout.pk %}" class="btn btn-sm btn-soft-primary">
                                         <i class="las la-eye"></i>
                                     </a>
                                 </td>

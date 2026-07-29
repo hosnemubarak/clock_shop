@@ -5,7 +5,7 @@
             <div class="d-flex">
                 <!-- LOGO -->
                 <div class="navbar-brand-box horizontal-logo">
-                    <a href="{% url 'dashboard' %}" class="logo logo-dark">
+                    <a href="{% url 'core:dashboard' %}" class="logo logo-dark">
                         <span class="logo-sm">
                             <img src="{% static 'images/logo.png' %}" alt="" height="22">
                         </span>
@@ -14,7 +14,7 @@
                         </span>
                     </a>
 
-                    <a href="{% url 'dashboard' %}" class="logo logo-light">
+                    <a href="{% url 'core:dashboard' %}" class="logo logo-light">
                         <span class="logo-sm">
                             <img src="{% static 'images/logo.png' %}" alt="" height="22">
                         </span>
@@ -98,7 +98,7 @@
                     <div class="dropdown-menu dropdown-menu-end">
                         <!-- System Settings (Superuser only) -->
                         {% if user.is_superuser %}
-                        <a class="dropdown-item" href="{% url 'system_settings' %}">
+                        <a class="dropdown-item" href="{% url 'core:system_settings' %}">
                             <i class="bx bx-cog fs-15 align-middle me-1"></i>
                             <span>System Settings</span>
                         </a>
@@ -115,7 +115,7 @@
                         <div class="dropdown-divider"></div>
 
                         <!-- Logout -->
-                        <a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                        <a class="dropdown-item text-danger" href="{% url 'core:logout' %}">
                             <i class="bx bx-power-off fs-15 align-middle me-1 text-danger"></i>
                             <span>Logout</span>
                         </a>

@@ -9,7 +9,7 @@
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
             <h4 class="mb-sm-0">Invoice: {{ sale.invoice_number }}</h4>
             <div class="page-title-right">
-                <a href="{% url 'sale_print' sale.pk %}" class="btn btn-primary" target="_blank">
+                <a href="{% url 'sales:sale_print' sale.pk %}" class="btn btn-primary" target="_blank">
                     <i class="las la-print"></i> Print
                 </a>
             </div>
@@ -46,7 +46,7 @@
                                         {{ item.custom_description }}
                                         <br><small class="text-muted">Custom Entry</small>
                                     {% else %}
-                                        <a href="{% url 'product_detail' item.product.pk %}">{{ item.product.sku }}</a>
+                                        <a href="{% url 'inventory:product_detail' item.product.pk %}">{{ item.product.sku }}</a>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -151,7 +151,7 @@
                         <td class="text-muted">Customer</td>
                         <td>
                             {% if sale.customer %}
-                            <a href="{% url 'customer_detail' sale.customer.pk %}">{{ sale.customer.name }}</a>
+                            <a href="{% url 'customers:customer_detail' sale.customer.pk %}">{{ sale.customer.name }}</a>
                             {% else %}
                             Walk-in Customer
                             {% endif %}
@@ -188,7 +188,7 @@
                 <h5 class="card-title mb-0">Receive Payment</h5>
             </div>
             <div class="card-body">
-                <form method="post" action="{% url 'sale_payment' sale.pk %}">
+                <form method="post" action="{% url 'sales:sale_payment' sale.pk %}">
                     {% csrf_token %}
                     <div class="mb-3">
                         <label class="form-label">Amount (Due: {{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2 }})</label>
@@ -218,7 +218,7 @@
         {% if sale.status == 'completed' and sale.paid_amount == 0 %}
         <div class="card border-danger">
             <div class="card-body">
-                <form method="post" action="{% url 'sale_cancel' sale.pk %}" id="cancelSaleForm">
+                <form method="post" action="{% url 'sales:sale_cancel' sale.pk %}" id="cancelSaleForm">
                     {% csrf_token %}
                     <button type="button" class="btn btn-outline-danger w-100" onclick="confirmCancelSale()">
                         <i class="las la-times"></i> Cancel Sale

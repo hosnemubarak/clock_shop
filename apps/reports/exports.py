@@ -119,3 +119,23 @@ def generate_excel(filename, title, filters_dict, headers, data, totals=None):
     response['Content-Disposition'] = f'attachment; filename="{filename}.xlsx"'
     wb.save(response)
     return response
+
+
+def handle_export(request, context, filename, pdf_template=None, excel_title=None, 
+                  filters_dict=None, headers=None, data_func=None, totals=None):
+    """
+    Helper to handle standard export patterns in report views.
+    Returns HttpResponse if export is requested, None otherwise.
+    """
+    export = request.GET.get('export')
+    if not export:
+        return None
+        
+    if export == 'pdf' and pdf_template:
+        return generate_pdf(pdf_template, context, filename)
+        
+    elif export == 'excel' and headers and data_func:
+        data = data_func() if callable(data_func) else data_func
+        return generate_excel(filename, excel_title, filters_dict, headers, data, totals)
+        
+    return None

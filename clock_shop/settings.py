@@ -14,9 +14,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security settings - Override these in production
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-clock-shop-secret-key-change-in-production')
 
-DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+if not DEBUG and SECRET_KEY == 'django-insecure-clock-shop-secret-key-change-in-production':
+    raise ValueError("SECRET_KEY must be set in production!")
+
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # CSRF trusted origins - Load from environment variable
 # Format: comma-separated list of origins (e.g., "http://127.0.0.1:*,http://localhost:*,https://yourdomain.com")
@@ -54,6 +57,17 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# Production Security Settings
+if not DEBUG:
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 ROOT_URLCONF = 'clock_shop.urls'
 
@@ -146,6 +160,16 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+
+# =============================================================================
+# CACHE CONFIGURATION
+# =============================================================================
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'clock-shop-cache',
+    }
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},

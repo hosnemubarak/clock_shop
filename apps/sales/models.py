@@ -1,32 +1,32 @@
-from django.db import models
+import datetime
+from django.db import models, transaction, IntegrityError
 from django.core.validators import MinValueValidator
 from decimal import Decimal
 from apps.core.models import TimeStampedModel
 
+from apps.core.utils import save_with_sequential_number
 
 class Sale(TimeStampedModel):
     """Sale/Invoice record."""
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('completed', 'Completed'),
-        ('cancelled', 'Cancelled'),
-    ]
-    
-    PAYMENT_STATUS_CHOICES = [
-        ('unpaid', 'Unpaid'),
-        ('partial', 'Partially Paid'),
-        ('paid', 'Fully Paid'),
-    ]
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        COMPLETED = 'completed', 'Completed'
+        CANCELLED = 'cancelled', 'Cancelled'
+        
+    class PaymentStatus(models.TextChoices):
+        UNPAID = 'unpaid', 'Unpaid'
+        PARTIAL = 'partial', 'Partially Paid'
+        PAID = 'paid', 'Fully Paid'
     
     invoice_number = models.CharField(max_length=50, unique=True)
     customer = models.ForeignKey(
         'customers.Customer', on_delete=models.PROTECT,
         related_name='sales', null=True, blank=True
     )
-    sale_date = models.DateField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='completed')
+    sale_date = models.DateField(db_index=True)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.COMPLETED)
     payment_status = models.CharField(
-        max_length=20, choices=PAYMENT_STATUS_CHOICES, default='unpaid'
+        max_length=20, choices=PaymentStatus.choices, default=PaymentStatus.UNPAID
     )
     
     # Amounts
@@ -76,18 +76,7 @@ class Sale(TimeStampedModel):
         return f"{self.invoice_number}"
     
     def save(self, *args, **kwargs):
-        if not self.invoice_number:
-            import datetime
-            prefix = f"INV{datetime.date.today().strftime('%Y%m%d')}"
-            last = Sale.objects.filter(
-                invoice_number__startswith=prefix
-            ).order_by('-invoice_number').first()
-            if last:
-                last_num = int(last.invoice_number[-4:])
-                self.invoice_number = f"{prefix}{last_num + 1:04d}"
-            else:
-                self.invoice_number = f"{prefix}0001"
-        super().save(*args, **kwargs)
+        save_with_sequential_number(self, 'invoice_number', 'INV', *args, **kwargs)
     
     @property
     def due_amount(self):
@@ -193,7 +182,7 @@ class SaleItem(TimeStampedModel):
     
     def save(self, *args, **kwargs):
         # Auto-set cost price from product average cost if not set
-        if not self.cost_price and self.product:
+        if self.cost_price is None and self.product:
             self.cost_price = self.product.average_cost
         super().save(*args, **kwargs)
 
@@ -220,18 +209,7 @@ class SaleReturn(TimeStampedModel):
         return f"{self.return_number} - {self.sale.invoice_number}"
     
     def save(self, *args, **kwargs):
-        if not self.return_number:
-            import datetime
-            prefix = f"RET{datetime.date.today().strftime('%Y%m%d')}"
-            last = SaleReturn.objects.filter(
-                return_number__startswith=prefix
-            ).order_by('-return_number').first()
-            if last:
-                last_num = int(last.return_number[-4:])
-                self.return_number = f"{prefix}{last_num + 1:04d}"
-            else:
-                self.return_number = f"{prefix}0001"
-        super().save(*args, **kwargs)
+        save_with_sequential_number(self, 'return_number', 'RET', *args, **kwargs)
 
 
 class SaleReturnItem(TimeStampedModel):

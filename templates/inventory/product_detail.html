@@ -10,8 +10,8 @@
             <h4 class="mb-sm-0">Product Details</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Products</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'inventory:product_list' %}">Products</a></li>
                     <li class="breadcrumb-item active">{{ product.sku }}</li>
                 </ol>
             </div>
@@ -35,7 +35,7 @@
                         <p class="text-muted mb-4">SKU: <code>{{ product.sku }}</code></p>
                         
                         <div class="d-flex gap-2 justify-content-center px-3">
-                            <a href="{% url 'product_edit' product.pk %}" class="btn btn-outline-primary flex-grow-1">
+                            <a href="{% url 'inventory:product_edit' product.pk %}" class="btn btn-outline-primary flex-grow-1">
                                 <i class="las la-pen"></i> Edit
                             </a>
                             <button type="button" class="btn btn-primary flex-grow-1" 
@@ -130,7 +130,7 @@
                             {% for stock in stocks %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'warehouse_detail' stock.warehouse.pk %}" class="text-decoration-none">
+                                    <a href="{% url 'warehouse:warehouse_detail' stock.warehouse.pk %}" class="text-decoration-none">
                                         {{ stock.warehouse.name }}
                                         {% if stock.warehouse.is_shop %}
                                         <span class="badge bg-soft-primary text-primary ms-1">Shop</span>

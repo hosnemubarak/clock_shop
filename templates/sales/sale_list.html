@@ -9,7 +9,7 @@
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
             <h4 class="mb-sm-0">Sales</h4>
             <div class="page-title-right">
-                <a href="{% url 'sale_create' %}" class="btn btn-success"><i class="las la-plus"></i> New Sale</a>
+                <a href="{% url 'sales:sale_create' %}" class="btn btn-success"><i class="las la-plus"></i> New Sale</a>
             </div>
         </div>
     </div>
@@ -63,7 +63,7 @@
                         <tbody>
                             {% for sale in sales %}
                             <tr>
-                                <td><a href="{% url 'sale_detail' sale.pk %}" class="fw-medium">{{ sale.invoice_number }}</a></td>
+                                <td><a href="{% url 'sales:sale_detail' sale.pk %}" class="fw-medium">{{ sale.invoice_number }}</a></td>
                                 <td>{{ sale.customer.name|default:"Walk-in" }}</td>
                                 <td>{{ sale.sale_date|date:"M d, Y" }}</td>
                                 <td>{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
@@ -84,10 +84,10 @@
                                             <i class="las la-ellipsis-h"></i>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a class="dropdown-item" href="{% url 'sale_detail' sale.pk %}"><i class="las la-eye me-2"></i>View</a></li>
-                                            <li><a class="dropdown-item" href="{% url 'sale_print' sale.pk %}" target="_blank"><i class="las la-print me-2"></i>Print</a></li>
+                                            <li><a class="dropdown-item" href="{% url 'sales:sale_detail' sale.pk %}"><i class="las la-eye me-2"></i>View</a></li>
+                                            <li><a class="dropdown-item" href="{% url 'sales:sale_print' sale.pk %}" target="_blank"><i class="las la-print me-2"></i>Print</a></li>
                                             {% if sale.due_amount > 0 %}
-                                            <li><a class="dropdown-item" href="{% url 'sale_detail' sale.pk %}#payment"><i class="las la-money-bill me-2"></i>Receive Payment</a></li>
+                                            <li><a class="dropdown-item" href="{% url 'sales:sale_detail' sale.pk %}#payment"><i class="las la-money-bill me-2"></i>Receive Payment</a></li>
                                             {% endif %}
                                         </ul>
                                     </div>

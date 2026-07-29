@@ -89,7 +89,7 @@
                         <tbody>
                             {% for t in transfers %}
                             <tr>
-                                <td><a href="{% url 'transfer_detail' t.pk %}">{{ t.transfer_number }}</a></td>
+                                <td><a href="{% url 'warehouse:transfer_detail' t.pk %}">{{ t.transfer_number }}</a></td>
                                 <td>{{ t.source_warehouse.name }}</td>
                                 <td>{{ t.destination_warehouse.name }}</td>
                                 <td>{{ t.items.count }}</td>

@@ -10,8 +10,8 @@
             <h4 class="mb-sm-0">Stock Out Details</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'stockout_list' %}">Stock Out</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'inventory:stockout_list' %}">Stock Out</a></li>
                     <li class="breadcrumb-item active">{{ stockout.stockout_number }}</li>
                 </ol>
             </div>
@@ -116,7 +116,7 @@
                             <tr>
                                 <td>{{ forloop.counter }}</td>
                                 <td>
-                                    <a href="{% url 'product_detail' item.product.pk %}">
+                                    <a href="{% url 'inventory:product_detail' item.product.pk %}">
                                         {{ item.product.sku }}
                                     </a>
                                 </td>
@@ -178,7 +178,7 @@
             
             {% if stockout.status == 'completed' %}
             <div class="card-footer">
-                <form method="post" action="{% url 'stockout_cancel' stockout.pk %}" id="cancelStockoutForm" style="display: none;">
+                <form method="post" action="{% url 'inventory:stockout_cancel' stockout.pk %}" id="cancelStockoutForm" style="display: none;">
                     {% csrf_token %}
                 </form>
                 <button type="button" class="btn btn-outline-danger w-100" onclick="confirmCancelStockout()">
@@ -195,10 +195,10 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
-                    <a href="{% url 'stockout_list' %}" class="btn btn-soft-primary">
+                    <a href="{% url 'inventory:stockout_list' %}" class="btn btn-soft-primary">
                         <i class="las la-list me-1"></i> Back to List
                     </a>
-                    <a href="{% url 'stockout_create' %}" class="btn btn-danger">
+                    <a href="{% url 'inventory:stockout_create' %}" class="btn btn-danger">
                         <i class="las la-plus me-1"></i> New Stock Out
                     </a>
                 </div>

@@ -159,10 +159,22 @@ def audit_logs(request):
 
 def register(request):
     """User registration view."""
+    from django.core.cache import cache
+    
+    ip = request.META.get('REMOTE_ADDR')
+    cache_key = f'register_attempts_{ip}'
+    attempts = cache.get(cache_key, 0)
+    
+    if attempts >= 10:
+        messages.error(request, 'Too many registration attempts. Please try again later.')
+        return render(request, 'core/register.html')
+        
     if request.user.is_authenticated:
-        return redirect('dashboard')
+        return redirect('core:dashboard')
     
     if request.method == 'POST':
+        cache.set(cache_key, attempts + 1, 3600)
+        
         username = request.POST.get('username', '').strip()
         email = request.POST.get('email', '').strip()
         password1 = request.POST.get('password1', '')
@@ -214,7 +226,7 @@ def register(request):
         user.save()
         
         messages.success(request, 'Your account has been created successfully! Please wait for admin approval before you can login.')
-        return redirect('login')
+        return redirect('core:login')
     
     return render(request, 'core/register.html')
 
@@ -237,7 +249,7 @@ def system_settings(request):
             settings.updated_by = request.user
             settings.save()
             messages.success(request, 'System settings updated successfully.')
-            return redirect('system_settings')
+            return redirect('core:system_settings')
     else:
         form = SystemSettingsForm(instance=settings)
     

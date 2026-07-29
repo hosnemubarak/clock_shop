@@ -110,7 +110,7 @@ def customer_create(request):
             customer = form.save()
             create_audit_log(request, 'CREATE', customer)
             messages.success(request, f'Customer "{customer.name}" created.')
-            return redirect('customer_detail', pk=customer.pk)
+            return redirect('customers:customer_detail', pk=customer.pk)
     else:
         form = CustomerForm()
     
@@ -128,7 +128,7 @@ def customer_edit(request, pk):
             customer = form.save()
             create_audit_log(request, 'UPDATE', customer)
             messages.success(request, f'Customer "{customer.name}" updated.')
-            return redirect('customer_detail', pk=customer.pk)
+            return redirect('customers:customer_detail', pk=customer.pk)
     else:
         form = CustomerForm(instance=customer)
     
@@ -153,7 +153,7 @@ def customer_add_note(request, pk):
             note.save()
             messages.success(request, 'Note added.')
     
-    return redirect('customer_detail', pk=pk)
+    return redirect('customers:customer_detail', pk=pk)
 
 
 @login_required
@@ -289,9 +289,9 @@ def payment_create(request):
             
             messages.success(request, f'Payment of {payment.amount} recorded.')
             if payment.customer:
-                return redirect('customer_detail', pk=payment.customer.pk)
+                return redirect('customers:customer_detail', pk=payment.customer.pk)
             else:
-                return redirect('payment_list')
+                return redirect('customers:payment_list')
     else:
         form = PaymentForm(customer=customer)
     

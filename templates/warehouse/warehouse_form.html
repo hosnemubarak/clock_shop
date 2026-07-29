@@ -9,8 +9,8 @@
             <h4 class="mb-sm-0">{{ title }}</h4>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'warehouse_list' %}">Warehouses</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_list' %}">Warehouses</a></li>
                     <li class="breadcrumb-item active">{{ title }}</li>
                 </ol>
             </nav>
@@ -75,7 +75,7 @@
                         <button type="submit" class="btn btn-success">
                             <i class="las la-save me-1"></i> Save Warehouse
                         </button>
-                        <a href="{% url 'warehouse_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <a href="{% url 'warehouse:warehouse_list' %}" class="btn btn-outline-secondary">Cancel</a>
                     </div>
                 </form>
             </div>
@@ -104,12 +104,12 @@
             <div class="card-body">
                 <ul class="list-unstyled mb-0">
                     <li class="mb-2">
-                        <a href="{% url 'warehouse_list' %}" class="text-decoration-none">
+                        <a href="{% url 'warehouse:warehouse_list' %}" class="text-decoration-none">
                             <i class="las la-list me-1"></i> View All Warehouses
                         </a>
                     </li>
                     <li>
-                        <a href="{% url 'transfer_list' %}" class="text-decoration-none">
+                        <a href="{% url 'warehouse:transfer_list' %}" class="text-decoration-none">
                             <i class="las la-exchange-alt me-1"></i> Stock Transfers
                         </a>
                     </li>

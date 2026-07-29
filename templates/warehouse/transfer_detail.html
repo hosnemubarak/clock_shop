@@ -10,8 +10,8 @@
             <h4 class="mb-sm-0">Transfer: {{ transfer.transfer_number }}</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'transfer_list' %}">Transfers</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:transfer_list' %}">Transfers</a></li>
                     <li class="breadcrumb-item active">{{ transfer.transfer_number }}</li>
                 </ol>
             </div>
@@ -73,11 +73,11 @@
                     </tr>
                     <tr>
                         <td class="text-muted">From</td>
-                        <td><a href="{% url 'warehouse_detail' transfer.source_warehouse.pk %}">{{ transfer.source_warehouse.name }}</a></td>
+                        <td><a href="{% url 'warehouse:warehouse_detail' transfer.source_warehouse.pk %}">{{ transfer.source_warehouse.name }}</a></td>
                     </tr>
                     <tr>
                         <td class="text-muted">To</td>
-                        <td><a href="{% url 'warehouse_detail' transfer.destination_warehouse.pk %}">{{ transfer.destination_warehouse.name }}</a></td>
+                        <td><a href="{% url 'warehouse:warehouse_detail' transfer.destination_warehouse.pk %}">{{ transfer.destination_warehouse.name }}</a></td>
                     </tr>
                     <tr>
                         <td class="text-muted">Date</td>
@@ -105,13 +105,13 @@
         {% if transfer.status == 'pending' %}
         <div class="card">
             <div class="card-body">
-                <form method="post" action="{% url 'transfer_complete' transfer.pk %}" id="completeForm">
+                <form method="post" action="{% url 'warehouse:transfer_complete' transfer.pk %}" id="completeForm">
                     {% csrf_token %}
                     <button type="button" class="btn btn-success w-100 mb-2" onclick="confirmComplete()">
                         <i class="las la-check"></i> Complete Transfer
                     </button>
                 </form>
-                <form method="post" action="{% url 'transfer_cancel' transfer.pk %}" id="cancelForm">
+                <form method="post" action="{% url 'warehouse:transfer_cancel' transfer.pk %}" id="cancelForm">
                     {% csrf_token %}
                     <button type="button" class="btn btn-outline-danger w-100" onclick="confirmCancel()">
                         <i class="las la-times"></i> Cancel Transfer

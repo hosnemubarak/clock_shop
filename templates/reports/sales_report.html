@@ -46,7 +46,7 @@
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary"><i class="las la-filter"></i> Filter</button>
                             {% if request.GET %}
-                            <a href="{% url 'sales_report' %}" class="btn btn-soft-danger"><i class="las la-times"></i> Clear</a>
+                            <a href="{% url 'reports:sales_report' %}" class="btn btn-soft-danger"><i class="las la-times"></i> Clear</a>
                             {% endif %}
                             <button type="submit" name="export" value="pdf" class="btn btn-outline-danger" formtarget="_blank"><i class="las la-file-pdf"></i> PDF</button>
                             <button type="submit" name="export" value="excel" class="btn btn-outline-success"><i class="las la-file-excel"></i> Excel</button>

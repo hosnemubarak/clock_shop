@@ -9,7 +9,7 @@
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
             <h4 class="mb-sm-0">Payments</h4>
             <div class="page-title-right">
-                <a href="{% url 'payment_create' %}" class="btn btn-success"><i class="las la-plus"></i> Receive Payment</a>
+                <a href="{% url 'customers:payment_create' %}" class="btn btn-success"><i class="las la-plus"></i> Receive Payment</a>
             </div>
         </div>
     </div>
@@ -57,7 +57,7 @@
                                 <td>{{ payment.payment_date|date:"M d, Y H:i" }}</td>
                                 <td>
                                     {% if payment.customer %}
-                                    <a href="{% url 'customer_detail' payment.customer.pk %}">{{ payment.customer.name }}</a>
+                                    <a href="{% url 'customers:customer_detail' payment.customer.pk %}">{{ payment.customer.name }}</a>
                                     {% else %}
                                     Walk-in Customer
                                     {% endif %}
@@ -66,7 +66,7 @@
                                 <td>{{ payment.get_payment_method_display }}</td>
                                 <td>
                                     {% if payment.sale %}
-                                    <a href="{% url 'sale_detail' payment.sale.pk %}">{{ payment.sale.invoice_number }}</a>
+                                    <a href="{% url 'sales:sale_detail' payment.sale.pk %}">{{ payment.sale.invoice_number }}</a>
                                     {% else %}-{% endif %}
                                 </td>
                                 <td>{{ payment.reference|default:"-" }}</td>

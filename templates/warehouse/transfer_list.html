@@ -10,8 +10,8 @@
             <h4 class="mb-sm-0">Stock Transfers</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'warehouse_list' %}">Warehouses</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_list' %}">Warehouses</a></li>
                     <li class="breadcrumb-item active">Transfers</li>
                 </ol>
             </div>
@@ -52,7 +52,7 @@
                             </div>
                             <div class="col-xl-3 col-lg-4 col-md-6">
                                 {% if request.GET.status or request.GET.source or request.GET.destination %}
-                                <a href="{% url 'transfer_list' %}" class="btn btn-soft-secondary w-100">
+                                <a href="{% url 'warehouse:transfer_list' %}" class="btn btn-soft-secondary w-100">
                                     <i class="las la-times"></i> Clear
                                 </a>
                                 {% endif %}
@@ -60,7 +60,7 @@
                         </form>
                     </div>
                     <div class="col-md-4 text-end">
-                        <a href="{% url 'transfer_create' %}" class="btn btn-success">
+                        <a href="{% url 'warehouse:transfer_create' %}" class="btn btn-success">
                             <i class="las la-plus"></i> New Transfer
                         </a>
                     </div>
@@ -84,7 +84,7 @@
                             {% for transfer in transfers %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'transfer_detail' transfer.pk %}" class="fw-medium">
+                                    <a href="{% url 'warehouse:transfer_detail' transfer.pk %}" class="fw-medium">
                                         {{ transfer.transfer_number }}
                                     </a>
                                 </td>
@@ -113,17 +113,17 @@
                                             <i class="las la-ellipsis-h"></i>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a class="dropdown-item" href="{% url 'transfer_detail' transfer.pk %}"><i class="las la-eye me-2"></i>View Details</a></li>
+                                            <li><a class="dropdown-item" href="{% url 'warehouse:transfer_detail' transfer.pk %}"><i class="las la-eye me-2"></i>View Details</a></li>
                                             {% if transfer.status == 'pending' %}
                                             <li><hr class="dropdown-divider"></li>
                                             <li>
-                                                <form method="post" action="{% url 'transfer_complete' transfer.pk %}" class="d-inline">
+                                                <form method="post" action="{% url 'warehouse:transfer_complete' transfer.pk %}" class="d-inline">
                                                     {% csrf_token %}
                                                     <button type="submit" class="dropdown-item text-success"><i class="las la-check me-2"></i>Complete</button>
                                                 </form>
                                             </li>
                                             <li>
-                                                <form method="post" action="{% url 'transfer_cancel' transfer.pk %}" class="d-inline">
+                                                <form method="post" action="{% url 'warehouse:transfer_cancel' transfer.pk %}" class="d-inline">
                                                     {% csrf_token %}
                                                     <button type="submit" class="dropdown-item text-danger"><i class="las la-times me-2"></i>Cancel</button>
                                                 </form>
@@ -139,7 +139,7 @@
                                     <i class="las la-exchange-alt fs-1 d-block mb-2"></i>
                                     No transfers found
                                     <br>
-                                    <a href="{% url 'transfer_create' %}" class="btn btn-primary btn-sm mt-2">Create First Transfer</a>
+                                    <a href="{% url 'warehouse:transfer_create' %}" class="btn btn-primary btn-sm mt-2">Create First Transfer</a>
                                 </td>
                             </tr>
                             {% endfor %}

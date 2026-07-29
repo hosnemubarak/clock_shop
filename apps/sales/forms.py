@@ -1,7 +1,7 @@
 from django import forms
 from django.utils import timezone
 from .models import Sale, SaleItem
-from apps.customers.models import Customer
+from apps.customers.models import Customer, Payment
 from apps.inventory.models import Product
 from apps.warehouse.models import Warehouse
 
@@ -102,13 +102,7 @@ class PaymentForm(forms.Form):
         })
     )
     payment_method = forms.ChoiceField(
-        choices=[
-            ('cash', 'Cash'),
-            ('card', 'Card'),
-            ('bank_transfer', 'Bank Transfer'),
-            ('mobile_payment', 'Mobile Payment'),
-            ('cheque', 'Cheque'),
-        ],
+        choices=Payment.PaymentMethod.choices,
         widget=forms.Select(attrs={'class': 'form-select'})
     )
     reference = forms.CharField(

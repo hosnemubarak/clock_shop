@@ -9,8 +9,8 @@
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
             <h4 class="mb-sm-0">Customer Details</h4>
             <div class="page-title-right">
-                <a href="{% url 'customer_edit' customer.pk %}" class="btn btn-primary"><i class="las la-pen"></i> Edit</a>
-                <a href="{% url 'customer_statement' customer.pk %}" class="btn btn-info"><i class="las la-file-alt"></i> Statement</a>
+                <a href="{% url 'customers:customer_edit' customer.pk %}" class="btn btn-primary"><i class="las la-pen"></i> Edit</a>
+                <a href="{% url 'customers:customer_statement' customer.pk %}" class="btn btn-info"><i class="las la-file-alt"></i> Statement</a>
             </div>
         </div>
     </div>
@@ -69,7 +69,7 @@
                 
                 {% if customer.total_due > 0 %}
                 <hr>
-                <a href="{% url 'payment_create' %}?customer={{ customer.pk }}" class="btn btn-success w-100">
+                <a href="{% url 'customers:payment_create' %}?customer={{ customer.pk }}" class="btn btn-success w-100">
                     <i class="las la-money-bill"></i> Receive Payment
                 </a>
                 {% endif %}
@@ -98,7 +98,7 @@
                         <tbody>
                             {% for sale in unpaid_invoices %}
                             <tr>
-                                <td><a href="{% url 'sale_detail' sale.pk %}">{{ sale.invoice_number }}</a></td>
+                                <td><a href="{% url 'sales:sale_detail' sale.pk %}">{{ sale.invoice_number }}</a></td>
                                 <td>{{ sale.sale_date|date:"M d, Y" }}</td>
                                 <td>{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
                                 <td>{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2 }}</td>
@@ -130,7 +130,7 @@
                         <tbody>
                             {% for sale in purchases %}
                             <tr>
-                                <td><a href="{% url 'sale_detail' sale.pk %}">{{ sale.invoice_number }}</a></td>
+                                <td><a href="{% url 'sales:sale_detail' sale.pk %}">{{ sale.invoice_number }}</a></td>
                                 <td>{{ sale.sale_date|date:"M d, Y" }}</td>
                                 <td>{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
                                 <td>

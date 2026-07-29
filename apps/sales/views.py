@@ -113,7 +113,7 @@ def sale_create(request):
     
     if not shop:
         messages.error(request, 'No shop warehouse configured. Please configure a shop warehouse first.')
-        return redirect('dashboard')
+        return redirect('core:dashboard')
     
     
     if request.method == 'POST':
@@ -121,6 +121,14 @@ def sale_create(request):
         items_data = request.POST.getlist('items')
         
         if form.is_valid() and items_data:
+            parsed_items = []
+            try:
+                for item_json in items_data:
+                    parsed_items.append(json.loads(html.unescape(item_json)))
+            except ValueError:
+                messages.error(request, 'Invalid items data format.')
+                return redirect('sales:sale_create')
+                
             sale = form.save(commit=False)
             sale.created_by = request.user
             sale.save()
@@ -128,27 +136,35 @@ def sale_create(request):
             total_cost = Decimal('0')
             subtotal = Decimal('0')
             
-            for item_json in items_data:
-                # Unescape HTML entities before parsing JSON
-                item = json.loads(html.unescape(item_json))
+            product_ids = [item['product_id'] for item in parsed_items]
+            products_map = {p.id: p for p in Product.objects.filter(id__in=product_ids)}
+            stocks_map = {s.product_id: s for s in ProductStock.objects.select_for_update().filter(product_id__in=product_ids, warehouse=shop)}
+            
+            stocks_to_update = []
+            sale_items_to_create = []
+            
+            for item in parsed_items:
                 quantity = int(item['quantity'])
                 unit_price = Decimal(item['unit_price'])
                 discount = Decimal(item.get('discount', '0'))
                 
                 # Regular inventory item
-                product = Product.objects.get(pk=item['product_id'])
+                product = products_map.get(int(item['product_id']))
+                if not product:
+                    continue
+                    
                 warehouse = shop
                 
-                stock = ProductStock.objects.select_for_update().get(product=product, warehouse=warehouse)
+                stock = stocks_map.get(product.id)
                 
                 # Validate stock
-                if quantity > stock.quantity:
+                if not stock or quantity > stock.quantity:
                     messages.error(request, f'Insufficient stock for {product.display_name} in {warehouse.name}')
                     sale.delete()
-                    return redirect('sale_create')
+                    return redirect('sales:sale_create')
                 
                 # Create sale item
-                sale_item = SaleItem.objects.create(
+                sale_items_to_create.append(SaleItem(
                     sale=sale,
                     product=product,
                     warehouse=warehouse,
@@ -156,13 +172,19 @@ def sale_create(request):
                     unit_price=unit_price,
                     cost_price=product.average_cost,
                     discount=discount,
-                )
+                ))
                 
                 # Update stock
                 stock.quantity -= quantity
-                stock.save()
-                product.update_total_stock()
+                stocks_to_update.append(stock)
+            
+            SaleItem.objects.bulk_create(sale_items_to_create)
+            ProductStock.objects.bulk_update(stocks_to_update, ['quantity'])
+            
+            for stock in stocks_to_update:
+                stock.product.update_total_stock()
                 
+            for sale_item in sale_items_to_create:
                 subtotal += sale_item.total_price
                 total_cost += sale_item.total_cost
             
@@ -185,7 +207,7 @@ def sale_create(request):
             })
             
             messages.success(request, f'Sale "{sale.invoice_number}" created successfully.')
-            return redirect('sale_detail', pk=sale.pk)
+            return redirect('sales:sale_detail', pk=sale.pk)
         else:
             if not items_data:
                 messages.error(request, 'Please add at least one item to the sale.')
@@ -232,7 +254,7 @@ def sale_cancel(request, pk):
                 create_audit_log(request, 'SALE', sale, {'action': 'cancelled'})
                 messages.success(request, f'Sale "{sale.invoice_number}" cancelled.')
     
-    return redirect('sale_detail', pk=sale.pk)
+    return redirect('sales:sale_detail', pk=sale.pk)
 
 
 @login_required
@@ -279,7 +301,7 @@ def sale_payment(request, pk):
         else:
             messages.error(request, 'Invalid payment data.')
     
-    return redirect('sale_detail', pk=sale.pk)
+    return redirect('sales:sale_detail', pk=sale.pk)
 
 
 @login_required
@@ -383,117 +405,13 @@ def pos_checkout(request):
     from apps.core.utils import create_audit_log
     
     try:
-        data = json.loads(request.body)
-        
-        shop = Warehouse.objects.filter(is_shop=True).first()
-        if not shop:
-            return JsonResponse({'status': 'error', 'message': 'No shop warehouse configured.'}, status=400)
+        try:
+            data = json.loads(request.body)
+        except ValueError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON data.'}, status=400)
             
-        items = data.get('items', [])
-        if not items:
-            return JsonResponse({'status': 'error', 'message': 'Cart is empty.'}, status=400)
-            
-        customer_id = data.get('customer_id')
-        discount_amount = Decimal(str(data.get('discount_amount', '0') or '0'))
-        payment_amount = Decimal(str(data.get('payment_amount', '0') or '0'))
-        payment_method = data.get('payment_method', 'cash')
-        
-        customer = None
-        if customer_id:
-            customer = Customer.objects.get(pk=customer_id)
-            
-        # Create Sale
-        from django.utils.dateparse import parse_datetime, parse_date
-        sale_date_str = data.get('sale_date')
-        if sale_date_str:
-            parsed = parse_datetime(sale_date_str) or parse_date(sale_date_str)
-            if hasattr(parsed, 'date'):
-                sale_date = parsed.date()
-            else:
-                sale_date = parsed if parsed else timezone.now().date()
-        else:
-            sale_date = timezone.now().date()
-            
-        sale = Sale.objects.create(
-            customer=customer,
-            sale_date=sale_date,
-            discount_amount=discount_amount,
-            notes=data.get('notes', ''),
-            created_by=request.user,
-            status='completed' if payment_amount > 0 else 'pending'
-        )
-        
-        subtotal = Decimal('0')
-        total_cost = Decimal('0')
-        
-        for item_data in items:
-            product = Product.objects.get(pk=item_data['product_id'])
-            quantity = int(item_data['quantity'])
-            unit_price = Decimal(str(item_data['unit_price']))
-            
-            # Stock check
-            stock = ProductStock.objects.select_for_update().get(product=product, warehouse=shop)
-            if quantity > stock.quantity:
-                raise ValueError(f'Insufficient stock for {product.display_name}')
-                
-            # Create SaleItem
-            sale_item = SaleItem.objects.create(
-                sale=sale,
-                product=product,
-                warehouse=shop,
-                quantity=quantity,
-                unit_price=unit_price,
-                cost_price=product.average_cost,
-                discount=Decimal('0')
-            )
-            
-            # Update Stock
-            stock.quantity -= quantity
-            stock.save()
-            product.update_total_stock()
-            
-            subtotal += sale_item.total_price
-            total_cost += sale_item.total_cost
-            
-        # Finalize Sale Totals
-        sale.subtotal = subtotal
-        sale.total_cost = total_cost
-        sale.total_amount = subtotal - discount_amount
-        
-        # Determine status based on payment
-        if payment_amount >= sale.total_amount:
-            sale.status = 'paid'
-        elif payment_amount > 0:
-            sale.status = 'partial'
-            
-        sale.save()
-        
-        # Customer Balance
-        if customer:
-            customer.total_purchases += sale.total_amount
-            customer.total_due += sale.total_amount
-            customer.save()
-            
-        # Create Payment
-        if payment_amount > 0:
-            Payment.objects.create(
-                customer=customer,
-                sale=sale,
-                amount=payment_amount,
-                payment_date=timezone.now(),
-                payment_method=payment_method,
-                reference=f'POS-{sale.invoice_number}',
-                received_by=request.user,
-                notes='POS Checkout Payment'
-            )
-            
-            if customer:
-                customer.total_paid += payment_amount
-                customer.total_due -= payment_amount
-                customer.save()
-                
-            sale.paid_amount = payment_amount
-            sale.save()
+        from apps.sales.services import SaleService
+        sale, payment_amount = SaleService.create_from_pos(data, request.user)
             
         create_audit_log(request, 'SALE', sale, {
             'action': 'pos_checkout',
@@ -507,5 +425,7 @@ def pos_checkout(request):
             'message': 'Sale completed successfully.'
         })
         
-    except Exception as e:
+    except ValueError as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred.'}, status=500)

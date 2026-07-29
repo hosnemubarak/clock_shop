@@ -1,6 +1,6 @@
 from django.db import models
 from django.db.models import Q
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from decimal import Decimal
 from apps.core.models import TimeStampedModel
@@ -8,8 +8,12 @@ from apps.core.models import TimeStampedModel
 
 class Customer(TimeStampedModel):
     """Customer model for retail clock shop."""
-    name = models.CharField(max_length=200)
-    phone = models.CharField(max_length=20, blank=True)
+    name = models.CharField(max_length=200, db_index=True)
+    phone_regex = RegexValidator(
+        regex=r'^\+?1?\d{9,15}$',
+        message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed."
+    )
+    phone = models.CharField(validators=[phone_regex], max_length=20, blank=True)
     email = models.EmailField(blank=True)
     address = models.TextField(blank=True)
     
@@ -117,21 +121,20 @@ class Customer(TimeStampedModel):
 
 class Payment(TimeStampedModel):
     """Payment record for tracking customer payments."""
-    PAYMENT_METHOD_CHOICES = [
-        ('cash', 'Cash'),
-        ('card', 'Card'),
-        ('bank_transfer', 'Bank Transfer'),
-        ('mobile_payment', 'Mobile Payment'),
-        ('cheque', 'Cheque'),
-    ]
-    
+    class PaymentMethod(models.TextChoices):
+        CASH = 'cash', 'Cash'
+        CARD = 'card', 'Card'
+        BANK_TRANSFER = 'bank_transfer', 'Bank Transfer'
+        MOBILE_PAYMENT = 'mobile_payment', 'Mobile Payment'
+        CHEQUE = 'cheque', 'Cheque'
+
     customer = models.ForeignKey(
         Customer, on_delete=models.PROTECT,
         related_name='payments',
         null=True, blank=True
     )
     sale = models.ForeignKey(
-        'sales.Sale', on_delete=models.SET_NULL,
+        'sales.Sale', on_delete=models.PROTECT,
         null=True, blank=True, related_name='payments',
         help_text='Specific invoice this payment is for (optional)'
     )
@@ -139,9 +142,9 @@ class Payment(TimeStampedModel):
         max_digits=12, decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))]
     )
-    payment_date = models.DateTimeField(auto_now_add=True)
+    payment_date = models.DateTimeField(auto_now_add=True, db_index=True)
     payment_method = models.CharField(
-        max_length=20, choices=PAYMENT_METHOD_CHOICES, default='cash'
+        max_length=20, choices=PaymentMethod.choices, default=PaymentMethod.CASH
     )
     reference = models.CharField(
         max_length=100, blank=True,
@@ -159,17 +162,6 @@ class Payment(TimeStampedModel):
     def __str__(self):
         customer_name = self.customer.name if self.customer else 'Walk-in'
         return f"Payment of {self.amount} from {customer_name}"
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        if self.sale:
-            self.sale.recalculate_paid_amount()
-            
-    def delete(self, *args, **kwargs):
-        sale = self.sale
-        super().delete(*args, **kwargs)
-        if sale:
-            sale.recalculate_paid_amount()
 
 
 class CustomerNote(TimeStampedModel):

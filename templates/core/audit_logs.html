@@ -9,7 +9,7 @@
             <h4 class="mb-sm-0">Audit Logs</h4>
             <div class="page-title-right">
                 <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
                     <li class="breadcrumb-item active">Audit Logs</li>
                 </ol>
             </div>
@@ -51,7 +51,7 @@
                     </div>
                     {% if selected_action or selected_user %}
                     <div class="col-xl-3 col-lg-4 col-md-6">
-                        <a href="{% url 'audit_logs' %}" class="btn btn-outline-secondary w-100">Clear</a>
+                        <a href="{% url 'core:audit_logs' %}" class="btn btn-outline-secondary w-100">Clear</a>
                     </div>
                     {% endif %}
                 </form>

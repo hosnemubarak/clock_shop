@@ -137,40 +137,53 @@ def sales_report(request):
         'shop_sales': shop_sales,
     }
     
-    export = request.GET.get('export')
-    if export == 'pdf':
-        return generate_pdf('reports/pdf/sales_report.html', context, 'Sales_Report')
-    elif export == 'excel':
-        headers = ['Period', 'Sales', 'Cost', 'Profit', 'Transactions']
-        data = []
-        for row in sales_data:
-            data.append([
+    from .exports import handle_export
+    
+    def get_excel_data():
+        return [
+            [
                 row['period'].strftime('%Y-%m-%d') if hasattr(row['period'], 'strftime') else row['period'],
                 row['total'],
                 row['cost'],
                 row['profit'],
                 row['count']
-            ])
-            
-        filters_dict = {
-            'Date From': date_from,
-            'Date To': date_to,
-            'Group By': group_by.title()
-        }
-        if shop_id:
-            try:
-                filters_dict['Shop'] = shops.get(id=shop_id).name
-            except Exception:
-                pass
-                
-        totals = [
-            'Total',
-            summary['total_sales'],
-            summary['total_cost'],
-            summary['total_profit'],
-            summary['count']
+            ] for row in sales_data[:10000]
         ]
-        return generate_excel('Sales_Report', 'Sales Report', filters_dict, headers, data, totals)
+        
+    filters_dict = {
+        'Date From': date_from,
+        'Date To': date_to,
+        'Group By': group_by.title()
+    }
+    if shop_id:
+        try:
+            filters_dict['Shop'] = shops.get(id=shop_id).name
+        except Exception:
+            pass
+            
+    totals = [
+        'Total',
+        summary['total_sales'],
+        summary['total_cost'],
+        summary['total_profit'],
+        summary['count']
+    ]
+    
+    context['sales_by_period_export'] = sales_data[:10000]  # Used by PDF template
+    
+    export_response = handle_export(
+        request=request,
+        context=context,
+        filename='Sales_Report',
+        pdf_template='reports/pdf/sales_report.html',
+        excel_title='Sales Report',
+        filters_dict=filters_dict,
+        headers=['Period', 'Sales', 'Cost', 'Profit', 'Transactions'],
+        data_func=get_excel_data,
+        totals=totals
+    )
+    if export_response:
+        return export_response
 
     return render(request, 'reports/sales_report.html', context)
 
@@ -562,7 +575,7 @@ def dead_stock_report(request):
     dead_stock = ProductStock.objects.filter(
         quantity__gt=0
     ).exclude(
-        product_id__in=recently_sold
+        product_id__in=list(recently_sold)
     ).select_related('product', 'warehouse').order_by('-quantity')
     
     # Calculate total dead stock value

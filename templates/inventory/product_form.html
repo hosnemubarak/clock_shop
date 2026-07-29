@@ -9,8 +9,8 @@
             <h4 class="mb-sm-0">{{ title }}</h4>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Products</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'inventory:product_list' %}">Products</a></li>
                     <li class="breadcrumb-item active">{{ title }}</li>
                 </ol>
             </nav>
@@ -151,7 +151,7 @@
                         <button type="submit" class="btn btn-success">
                             <i class="las la-save me-1"></i> Save Product
                         </button>
-                        <a href="{% url 'product_list' %}" class="btn btn-outline-secondary">
+                        <a href="{% url 'inventory:product_list' %}" class="btn btn-outline-secondary">
                             <i class="las la-times me-1"></i> Cancel
                         </a>
                     </div>
@@ -166,12 +166,12 @@
                 <div class="card-body">
                     <ul class="list-unstyled mb-0">
                         <li class="mb-2">
-                            <a href="{% url 'category_create' %}" class="text-decoration-none">
+                            <a href="{% url 'inventory:category_create' %}" class="text-decoration-none">
                                 <i class="las la-plus me-1"></i> Add New Category
                             </a>
                         </li>
                         <li>
-                            <a href="{% url 'brand_create' %}" class="text-decoration-none">
+                            <a href="{% url 'inventory:brand_create' %}" class="text-decoration-none">
                                 <i class="las la-plus me-1"></i> Add New Brand
                             </a>
                         </li>

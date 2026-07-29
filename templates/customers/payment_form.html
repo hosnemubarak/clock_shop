@@ -9,8 +9,8 @@
             <h4 class="mb-sm-0">Receive Payment</h4>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'payment_list' %}">Payments</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'customers:payment_list' %}">Payments</a></li>
                     <li class="breadcrumb-item active">New Payment</li>
                 </ol>
             </nav>
@@ -103,7 +103,7 @@
                                                 <input type="radio" name="sale" value="{{ sale.id }}" class="form-check-input invoice-radio" data-due="{{ sale.due_amount }}">
                                             </div>
                                         </td>
-                                        <td><a href="{% url 'sale_detail' sale.pk %}" target="_blank">{{ sale.invoice_number }}</a></td>
+                                        <td><a href="{% url 'sales:sale_detail' sale.pk %}" target="_blank">{{ sale.invoice_number }}</a></td>
                                         <td>{{ sale.sale_date|date:"M d, Y" }}</td>
                                         <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
                                         <td class="text-end text-success">{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2 }}</td>
@@ -165,7 +165,7 @@
                         <button type="submit" class="btn btn-success">
                             <i class="las la-check"></i> Record Payment
                         </button>
-                        <a href="{% url 'payment_list' %}" class="btn btn-light">Cancel</a>
+                        <a href="{% url 'customers:payment_list' %}" class="btn btn-light">Cancel</a>
                     </div>
                 </form>
             </div>

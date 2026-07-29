@@ -17,7 +17,11 @@ from apps.core.utils import create_audit_log
 @login_required
 def warehouse_list(request):
     """List all warehouses."""
-    warehouses = Warehouse.objects.all()
+    # Base queryset with annotations for stock value and items
+    warehouses = Warehouse.objects.annotate(
+        stock_value=Sum(F('stocks__quantity') * F('stocks__product__average_cost')),
+        total_items=Sum('stocks__quantity')
+    )
     
     # Search
     search = request.GET.get('search', '')
@@ -29,14 +33,10 @@ def warehouse_list(request):
     total_warehouses = warehouses.count()
     active_shops = warehouses.filter(is_shop=True, is_active=True).count()
 
-    paginator = Paginator(warehouses, 10)
+    paginator = Paginator(warehouses.order_by('name'), 10)
     page = request.GET.get('page')
     warehouses = paginator.get_page(page)
 
-    # Calculate stock info for current page only
-    for warehouse in warehouses:
-        warehouse.stock_value = warehouse.get_total_stock_value()
-        warehouse.total_items = warehouse.get_total_items()
     
     return render(request, 'warehouse/warehouse_list.html', {
         'warehouses': warehouses,
@@ -87,7 +87,7 @@ def warehouse_create(request):
             warehouse = form.save()
             create_audit_log(request, 'CREATE', warehouse)
             messages.success(request, f'Warehouse "{warehouse.name}" created.')
-            return redirect('warehouse_list')
+            return redirect('warehouse:warehouse_list')
     else:
         form = WarehouseForm()
     
@@ -105,7 +105,7 @@ def warehouse_edit(request, pk):
             warehouse = form.save()
             create_audit_log(request, 'UPDATE', warehouse)
             messages.success(request, f'Warehouse "{warehouse.name}" updated.')
-            return redirect('warehouse_detail', pk=warehouse.pk)
+            return redirect('warehouse:warehouse_detail', pk=warehouse.pk)
     else:
         form = WarehouseForm(instance=warehouse)
     
@@ -161,20 +161,40 @@ def transfer_create(request):
         items_data = request.POST.getlist('items')
         
         if form.is_valid() and items_data:
+            parsed_items = []
+            try:
+                for item_json in items_data:
+                    parsed_items.append(json.loads(item_json))
+            except ValueError:
+                messages.error(request, 'Invalid items data format.')
+                return redirect('warehouse:transfer_create')
+
             transfer = form.save(commit=False)
             transfer.created_by = request.user
             transfer.save()
             
-            for item_json in items_data:
-                item = json.loads(item_json)
-                product = Product.objects.get(pk=item['product_id'])
+            product_ids = [item['product_id'] for item in parsed_items]
+            products_map = {p.id: p for p in Product.objects.filter(id__in=product_ids)}
+            stocks_map = {
+                s.product_id: s 
+                for s in ProductStock.objects.filter(
+                    product_id__in=product_ids, 
+                    warehouse=transfer.source_warehouse
+                )
+            }
+            
+            for item in parsed_items:
+                product = products_map.get(int(item['product_id']))
+                if not product:
+                    continue
+                    
                 quantity = int(item['quantity'])
+                stock = stocks_map.get(product.id)
                 
-                stock = ProductStock.objects.get(product=product, warehouse=transfer.source_warehouse)
-                if quantity > stock.quantity:
+                if not stock or quantity > stock.quantity:
                     messages.error(request, f'Insufficient stock for {product.display_name}')
                     transfer.delete()
-                    return redirect('transfer_create')
+                    return redirect('warehouse:transfer_create')
                 
                 StockTransferItem.objects.create(
                     transfer=transfer,
@@ -189,7 +209,7 @@ def transfer_create(request):
             })
             
             messages.success(request, f'Transfer "{transfer.transfer_number}" created.')
-            return redirect('transfer_detail', pk=transfer.pk)
+            return redirect('warehouse:transfer_detail', pk=transfer.pk)
     else:
         form = StockTransferForm(initial={'transfer_date': timezone.now()})
     
@@ -232,7 +252,7 @@ def transfer_complete(request, pk):
             except ValueError as e:
                 messages.error(request, str(e))
     
-    return redirect('transfer_detail', pk=transfer.pk)
+    return redirect('warehouse:transfer_detail', pk=transfer.pk)
 
 
 @login_required
@@ -249,7 +269,7 @@ def transfer_cancel(request, pk):
             create_audit_log(request, 'TRANSFER', transfer, {'action': 'cancelled'})
             messages.success(request, f'Transfer "{transfer.transfer_number}" cancelled.')
     
-    return redirect('transfer_detail', pk=transfer.pk)
+    return redirect('warehouse:transfer_detail', pk=transfer.pk)
 
 
 @login_required

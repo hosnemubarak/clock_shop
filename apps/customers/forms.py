@@ -68,7 +68,7 @@ class QuickPaymentForm(forms.Form):
         widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
     )
     payment_method = forms.ChoiceField(
-        choices=Payment.PAYMENT_METHOD_CHOICES,
+        choices=Payment.PaymentMethod.choices,
         widget=forms.Select(attrs={'class': 'form-select'})
     )
     reference = forms.CharField(
