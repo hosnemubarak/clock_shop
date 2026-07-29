@@ -120,7 +120,14 @@
                         <tbody>
                             {% for stock in stocks %}
                             <tr>
-                                <td>{{ stock.warehouse.name }}</td>
+                                <td>
+                                    <a href="{% url 'warehouse_detail' stock.warehouse.pk %}" class="text-decoration-none">
+                                        {{ stock.warehouse.name }}
+                                        {% if stock.warehouse.is_shop %}
+                                        <span class="badge bg-soft-primary text-primary ms-1">Shop</span>
+                                        {% endif %}
+                                    </a>
+                                </td>
                                 <td><span class="badge bg-primary">{{ stock.quantity }}</span></td>
                             </tr>
                             {% empty %}
