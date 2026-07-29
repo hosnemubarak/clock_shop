@@ -31,29 +31,66 @@
     {% endif %}
     
     <div class="row">
-        <div class="col-12 mb-4">
-            <div class="card">
-                <div class="card-header">
+        <!-- Left Column: Main Workspace -->
+        <div class="col-lg-8">
+            <!-- Add Item Form -->
+            <div class="card bg-light-subtle border mb-3">
+                <div class="card-body p-3">
+                    <div id="inventoryItemForm" class="row g-2 align-items-end">
+                        <div class="col-md-5">
+                            <label class="form-label fw-medium mb-1">Product <span class="text-danger">*</span></label>
+                            <select class="form-select" id="newProduct">
+                                <option value="">Search or select product...</option>
+                                {% for p in products %}
+                                <option value="{{ p.id }}" data-sku="{{ p.sku }}" data-price="{{ p.default_selling_price }}">{{ p.sku }} ({{ p.total_stock }} in stock)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2 col-4">
+                            <label class="form-label fw-medium mb-1">Qty</label>
+                            <input type="number" class="form-control" id="newQty" min="1" value="1">
+                        </div>
+                        <div class="col-md-3 col-5">
+                            <label class="form-label fw-medium mb-1">Price</label>
+                            <div class="input-group">
+                                <span class="input-group-text px-2">{{ CURRENCY_SYMBOL }}</span>
+                                <input type="number" class="form-control" id="newPrice" step="0.01">
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-3">
+                            <button type="button" class="btn btn-primary w-100" onclick="addItem()">
+                                <i class="las la-plus fw-bold"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                    <div id="stockInfo" class="mt-2 small"></div>
+                </div>
+            </div>
+
+            <!-- Cart Table -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom">
                     <h5 class="card-title mb-0">Sale Items</h5>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive" style="min-height: 300px;">
-                        <table class="table align-middle" id="itemsTable">
-                            <thead class="table-light">
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="min-height: 200px;">
+                        <table class="table table-hover align-middle mb-0" id="itemsTable">
+                            <thead class="table-light text-muted small text-uppercase">
                                 <tr>
-                                    <th>Product</th>
-                                    <th width="80">Qty</th>
-                                    <th width="120">Price</th>
-                                    <th width="120">Total</th>
+                                    <th class="ps-3">Product</th>
+                                    <th width="80" class="text-center">Qty</th>
+                                    <th width="120" class="text-end">Price</th>
+                                    <th width="120" class="text-end pe-3">Total</th>
                                     <th width="50"></th>
                                 </tr>
                             </thead>
                             <tbody id="itemsBody">
+                                <!-- Items will be dynamically inserted here -->
                             </tbody>
-                            <tfoot>
+                            <tfoot class="bg-light-subtle">
                                 <tr>
                                     <td colspan="3" class="text-end fw-bold">Subtotal:</td>
-                                    <td class="fw-bold" id="subtotal">{{ CURRENCY_SYMBOL }}0.00</td>
+                                    <td class="text-end fw-bold pe-3 fs-5" id="subtotal">{{ CURRENCY_SYMBOL }}0.00</td>
                                     <td></td>
                                 </tr>
                             </tfoot>
@@ -62,90 +99,42 @@
                 </div>
             </div>
         </div>
-    </div>
-    
-    <div class="row">
-        <div class="col-lg-7">
-                    <!-- Item Form -->
-                    <div class="card bg-light-subtle border h-100">
-                        <div class="card-header border-bottom-0 pb-0">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h6 class="card-title mb-0"><i class="las la-plus-circle me-1"></i> Add Item</h6>
-                            </div>
-                        </div>
-                        <div class="card-body pt-3">
-                            <div id="inventoryItemForm">
-                                <!-- Row 1: Product -->
-                                <div class="row g-3 mb-3">
-                                    <div class="col-12">
-                                        <label class="form-label fw-medium">Product <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="newProduct">
-                                            <option value="">Search or select product...</option>
-                                            {% for p in products %}
-                                            <option value="{{ p.id }}" data-sku="{{ p.sku }}" data-price="{{ p.default_selling_price }}">{{ p.sku }} ({{ p.total_stock }} in stock)</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                </div>
-                                <!-- Row 2: Qty, Price, Add Button -->
-                                <div class="row g-3 align-items-end">
-                                    <div class="col-4 col-md-3">
-                                        <label class="form-label fw-medium">Qty</label>
-                                        <input type="number" class="form-control" id="newQty" min="1" value="1">
-                                    </div>
-                                    <div class="col-5 col-md-4">
-                                        <label class="form-label fw-medium">Price</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
-                                            <input type="number" class="form-control" id="newPrice" step="0.01">
-                                        </div>
-                                    </div>
-                                    <div class="col-3 col-md-2">
-                                        <button type="button" class="btn btn-primary w-100" onclick="addItem()">
-                                            <i class="las la-plus fs-18"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div id="stockInfo" class="mt-2 small"></div>
-                            </div>
-                        </div>
-                    </div>
-        </div>
         
-        <div class="col-lg-5">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Sale Details</h5>
+        <!-- Right Column: Summary & Checkout -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-primary sticky-top" style="top: 80px;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0 text-white">Sale Summary</h5>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <label class="form-label d-flex justify-content-between align-items-center">
-                            <span>Customer</span>
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="openNewCustomerModal('id_customer')">
+                        <label class="form-label d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-medium">Customer</span>
+                            <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" onclick="openNewCustomerModal('id_customer')">
                                 <i class="las la-plus"></i> New
                             </button>
                         </label>
                         {{ form.customer }}
-                        <small class="text-muted">Leave empty for walk-in customer</small>
+                        <small class="text-muted d-block mt-1">Leave empty for walk-in customer</small>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Sale Date</label>
+                        <label class="form-label fw-medium mb-1">Sale Date</label>
                         {{ form.sale_date }}
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Notes</label>
+                        <label class="form-label fw-medium mb-1">Notes</label>
                         {{ form.notes }}
                     </div>
                     
-                    <hr>
-                    <div class="d-flex justify-content-between fw-bold fs-5">
-                        <span>Total:</span>
-                        <span id="summaryTotal">{{ CURRENCY_SYMBOL }}0.00</span>
+                    <hr class="border-secondary opacity-25 my-4">
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <span class="fs-5 text-muted">Total Due</span>
+                        <span id="summaryTotal" class="fs-2 fw-bold text-dark">{{ CURRENCY_SYMBOL }}0.00</span>
                     </div>
                     
-                    <hr>
-                    <button type="button" class="btn btn-success w-100 btn-lg" onclick="openCheckout()">
-                        <i class="las la-check"></i> Complete Sale
+                    <button type="button" class="btn btn-success w-100 btn-lg shadow-sm" onclick="openCheckout()">
+                        <i class="las la-check-circle fs-4 me-1 align-middle"></i> Complete Sale
                     </button>
                 </div>
             </div>
@@ -424,10 +413,10 @@ function renderItems() {
         const itemJson = JSON.stringify(item).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
         html += `
             <tr>
-                <td>${escapeHtml(item.product_sku)}</td>
-                <td>${item.quantity}</td>
-                <td>{{ CURRENCY_SYMBOL }}${item.unit_price.toFixed(2)}</td>
-                <td>{{ CURRENCY_SYMBOL }}${lineTotal.toFixed(2)}</td>
+                <td class="ps-3 fw-medium">${escapeHtml(item.product_sku)}</td>
+                <td class="text-center">${item.quantity}</td>
+                <td class="text-end text-muted">{{ CURRENCY_SYMBOL }}${item.unit_price.toFixed(2)}</td>
+                <td class="text-end fw-medium pe-3">{{ CURRENCY_SYMBOL }}${lineTotal.toFixed(2)}</td>
                 <td>
                     <button type="button" class="btn btn-soft-danger btn-sm" onclick="removeItem(${item.index})">
                         <i class="las la-times"></i>
@@ -439,6 +428,7 @@ function renderItems() {
     });
     
     document.getElementById('subtotal').textContent = '{{ CURRENCY_SYMBOL }}' + subtotal.toFixed(2);
+    tbody.innerHTML = html;
     
     updateTotals();
 }
