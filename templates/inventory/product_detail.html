@@ -226,7 +226,7 @@ function submitQuickAddStock() {
     const notes = document.getElementById('qasNotes').value;
     
     if (!warehouseId || !quantity || !unitPrice || !supplier || !purchaseDate) {
-        alert('Please fill out all required fields.');
+        showValidationModal('Please fill out all required fields.');
         return;
     }
     
@@ -255,14 +255,14 @@ function submitQuickAddStock() {
         if (data.success) {
             window.location.reload();
         } else {
-            alert('Error: ' + data.error);
+            showValidationModal(data.error, 'Error');
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred.');
+        showValidationModal('An error occurred.', 'Error');
         btn.innerHTML = originalText;
         btn.disabled = false;
     });
