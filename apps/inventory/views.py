@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, ProtectedError
 from django.http import JsonResponse
 from decimal import Decimal
 from datetime import date
@@ -183,10 +183,17 @@ def product_delete(request, pk):
             )
         else:
             display_name = product.display_name
-            create_audit_log(request, 'DELETE', product)
-            product.delete()
-            messages.success(request, f'Product "{display_name}" deleted successfully.')
-            return redirect('product_list')
+            try:
+                product.delete()
+                create_audit_log(request, 'DELETE', product)
+                messages.success(request, f'Product "{display_name}" deleted successfully.')
+                return redirect('product_list')
+            except ProtectedError:
+                messages.error(
+                    request, 
+                    f'Cannot delete "{display_name}" because it has associated transaction history (e.g. purchases or stock outs). '
+                    'To remove it from the catalog, please mark it as inactive instead.'
+                )
     
     return render(request, 'inventory/product_confirm_delete.html', {'product': product})
 
