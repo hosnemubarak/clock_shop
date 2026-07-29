@@ -184,6 +184,7 @@
             </div>
             <div class="modal-body">
                 <form id="quickAddStockForm">
+                    {% csrf_token %}
                     <input type="hidden" id="qasProductId">
                     <div class="mb-3">
                         <label class="form-label">Warehouse <span class="text-danger">*</span></label>
@@ -211,7 +212,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitQuickAddStock()">Add Stock</button>
+                <button type="button" id="btnQuickAddStock" class="btn btn-primary" onclick="submitQuickAddStock()">Add Stock</button>
             </div>
         </div>
     </div>
@@ -243,7 +244,7 @@ function submitQuickAddStock() {
         return;
     }
     
-    const btn = event.target;
+    const btn = document.getElementById('btnQuickAddStock');
     const originalText = btn.innerHTML;
     btn.innerHTML = '<i class="las la-spinner la-spin"></i> Adding...';
     btn.disabled = true;

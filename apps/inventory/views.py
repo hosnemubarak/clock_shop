@@ -471,7 +471,7 @@ def api_quick_add_stock(request, product_id):
         
         product.recalculate_average_cost(quantity, unit_price)
         
-        create_audit_log(request, 'UPDATE', product, f"Quick added {quantity} stock to {warehouse.name}")
+        create_audit_log(request, 'UPDATE', product, {'notes': f"Quick added {quantity} stock to {warehouse.name}"})
         
         return JsonResponse({'success': True, 'message': f'Successfully added {quantity} stock.'})
         
