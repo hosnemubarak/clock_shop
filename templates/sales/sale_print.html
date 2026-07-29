@@ -6,7 +6,8 @@
     <style>
         html, body { height: 100%; }
         body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 0 auto; padding: 20px; font-size: 14px; max-width: 800px; color: #333; line-height: 1.5; display: flex; flex-direction: column; }
-        .main-content { flex: 1 0 auto; }
+        .main-content { flex: 1 0 auto; display: flex; flex-direction: column; }
+        .main-content > table { flex: 1 0 auto; margin-bottom: 0; }
         .bottom-content { flex-shrink: 0; }
         
         .header { text-align: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid #333; }
@@ -93,13 +94,18 @@
                 <td class="text-right">{{ CURRENCY_SYMBOL }}{{ item.total_price|floatformat:2 }}</td>
             </tr>
             {% endfor %}
+            <tr style="height: 100%;">
+                <td style="border-bottom: none;"></td>
+                <td style="border-bottom: none;"></td>
+                <td style="border-bottom: none;"></td>
+                <td style="border-bottom: none;"></td>
+                <td style="border-bottom: none;"></td>
+            </tr>
         </tbody>
     </table>
-    </div> <!-- end main-content -->
 
-    <div class="bottom-content">
-        <div class="totals">
-            <table>
+    <div class="totals" style="margin-top: 0; border-top: none;">
+        <table style="margin-top: 0;">
             <tr>
                 <td>Subtotal:</td>
                 <td class="text-right">{{ CURRENCY_SYMBOL }}{{ sale.subtotal|floatformat:2|intcomma }}</td>
@@ -132,7 +138,9 @@
             {% endif %}
         </table>
     </div>
+    </div> <!-- end main-content -->
 
+    <div class="bottom-content">
     {% if sale.notes %}
     <div style="margin-top: 30px;">
         <strong>Notes:</strong> {{ sale.notes }}
