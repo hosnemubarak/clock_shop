@@ -43,7 +43,7 @@
                     <div class="col-md-6">
                         <table class="table table-borderless mb-0">
                             <tr>
-                                <td class="text-muted" style="width: 140px;">Reference:</td>
+                                <td class="text-muted w-140px" >Reference:</td>
                                 <td class="fw-medium">{{ stockout.stockout_number }}</td>
                             </tr>
                             <tr>
@@ -67,7 +67,7 @@
                     <div class="col-md-6">
                         <table class="table table-borderless mb-0">
                             <tr>
-                                <td class="text-muted" style="width: 140px;">Created By:</td>
+                                <td class="text-muted w-140px" >Created By:</td>
                                 <td>{{ stockout.created_by.username|default:"-" }}</td>
                             </tr>
                             <tr>
@@ -99,7 +99,7 @@
                 <h5 class="card-title mb-0"><i class="las la-list me-1"></i> Items Removed</h5>
             </div>
             <div class="card-body">
-                <div class="table-responsive" style="min-height: 300px;">
+                <div class="table-responsive min-h-300" >
                     <table class="table table-bordered align-middle mb-0">
                         <thead class="table-light">
                             <tr>
@@ -178,7 +178,7 @@
             
             {% if stockout.status == 'completed' %}
             <div class="card-footer">
-                <form method="post" action="{% url 'inventory:stockout_cancel' stockout.pk %}" id="cancelStockoutForm" style="display: none;">
+                <form method="post" action="{% url 'inventory:stockout_cancel' stockout.pk %}" id="cancelStockoutForm" class="d-none">
                     {% csrf_token %}
                 </form>
                 <button type="button" class="btn btn-outline-danger w-100" onclick="confirmCancelStockout()">

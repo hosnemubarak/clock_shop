@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.cache import cache
 
 
 class AuditLog(models.Model):
@@ -88,12 +89,23 @@ class SystemSettings(models.Model):
     def __str__(self):
         return 'System Settings'
     
+    CACHE_KEY = 'core:system_settings'
+
     @classmethod
     def get_settings(cls):
         """Get or create the singleton settings instance."""
+        # The global context processor calls this on every template render, which
+        # was one query per request. The cache is per-process (LocMemCache), so a
+        # save() in one gunicorn worker cannot invalidate its peers -- hence the
+        # short timeout, which bounds how long a stale value can be served.
+        cached = cache.get(cls.CACHE_KEY)
+        if cached is not None:
+            return cached
         settings, created = cls.objects.get_or_create(pk=1)
+        cache.set(cls.CACHE_KEY, settings, 60)
         return settings
-    
+
     def save(self, *args, **kwargs):
         self.pk = 1  # Ensure singleton
         super().save(*args, **kwargs)
+        cache.delete(self.CACHE_KEY)

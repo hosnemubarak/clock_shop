@@ -1,0 +1,66 @@
+/* Custom Utility Classes */
+
+.min-h-300 {
+    min-height: 300px;
+}
+
+.min-h-200 {
+    min-height: 200px;
+}
+
+.border-bottom-none {
+    border-bottom: none !important;
+}
+
+.icon-120 {
+    font-size: 120px;
+}
+
+.z-1070 {
+    z-index: 1070;
+}
+
+.z-1060 {
+    z-index: 1060;
+}
+
+.text-slate {
+    color: #475569;
+}
+
+.table-header-dark {
+    font-weight: 500;
+    color: #0f172a;
+}
+
+.table-header-dark-sm {
+    font-weight: 500;
+    color: #0f172a;
+    font-size: 14px;
+}
+
+.w-50px { width: 50px; }
+.w-60px { width: 60px; }
+.w-100px { width: 100px; }
+.w-120px { width: 120px; }
+.w-140px { width: 140px; }
+.w-30-pct { width: 30%; }
+
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+}
+
+.max-h-450-scroll {
+    max-height: 450px;
+    overflow-y: auto;
+}
+
+.sticky-top-80 {
+    top: 80px;
+}
+
+.mb-20px {
+    margin-bottom: 20px;
+}

@@ -2,10 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import Q, Sum, F
 from django.http import JsonResponse
 from django.utils import timezone
-from decimal import Decimal, InvalidOperation
 import json
 
 from .models import Warehouse, StockTransfer, StockTransferItem
@@ -19,8 +19,8 @@ def warehouse_list(request):
     """List all warehouses."""
     # Base queryset with annotations for stock value and items
     warehouses = Warehouse.objects.annotate(
-        stock_value=Sum(F('stocks__quantity') * F('stocks__product__average_cost')),
-        total_items=Sum('stocks__quantity')
+        stock_value=Sum(F('product_stocks__quantity') * F('product_stocks__product__average_cost')),
+        total_items=Sum('product_stocks__quantity')
     )
     
     # Search
@@ -84,7 +84,12 @@ def warehouse_create(request):
     if request.method == 'POST':
         form = WarehouseForm(request.POST)
         if form.is_valid():
-            warehouse = form.save()
+            with transaction.atomic():
+                warehouse = form.save()
+                # Nothing else enforces a single retail shop, so ticking the box
+                # here has to clear it everywhere else.
+                if warehouse.is_shop:
+                    warehouse.set_as_shop()
             create_audit_log(request, 'CREATE', warehouse)
             messages.success(request, f'Warehouse "{warehouse.name}" created.')
             return redirect('warehouse:warehouse_list')
@@ -102,7 +107,10 @@ def warehouse_edit(request, pk):
     if request.method == 'POST':
         form = WarehouseForm(request.POST, instance=warehouse)
         if form.is_valid():
-            warehouse = form.save()
+            with transaction.atomic():
+                warehouse = form.save()
+                if warehouse.is_shop:
+                    warehouse.set_as_shop()
             create_audit_log(request, 'UPDATE', warehouse)
             messages.success(request, f'Warehouse "{warehouse.name}" updated.')
             return redirect('warehouse:warehouse_detail', pk=warehouse.pk)
@@ -121,7 +129,7 @@ def transfer_list(request):
     """List all stock transfers."""
     transfers = StockTransfer.objects.select_related(
         'source_warehouse', 'destination_warehouse', 'created_by'
-    ).prefetch_related('items')
+    ).prefetch_related('items__product')
     
     # Filter by status
     status = request.GET.get('status')
@@ -161,53 +169,74 @@ def transfer_create(request):
         items_data = request.POST.getlist('items')
         
         if form.is_valid() and items_data:
-            parsed_items = []
+            # Parse and coerce the whole payload before touching the database, so
+            # malformed input can never leave a half-built transfer behind.
+            requested = {}
             try:
                 for item_json in items_data:
-                    parsed_items.append(json.loads(item_json))
-            except ValueError:
+                    item = json.loads(item_json)
+                    product_id = int(item['product_id'])
+                    quantity = int(item['quantity'])
+                    if quantity < 1:
+                        raise ValueError('Quantity must be at least 1.')
+                    # Two lines for the same product each pass an individual
+                    # stock check but together can over-draw, so merge them.
+                    requested[product_id] = requested.get(product_id, 0) + quantity
+            except (ValueError, TypeError, KeyError):
                 messages.error(request, 'Invalid items data format.')
                 return redirect('warehouse:transfer_create')
 
-            transfer = form.save(commit=False)
-            transfer.created_by = request.user
-            transfer.save()
-            
-            product_ids = [item['product_id'] for item in parsed_items]
-            products_map = {p.id: p for p in Product.objects.filter(id__in=product_ids)}
-            stocks_map = {
-                s.product_id: s 
-                for s in ProductStock.objects.filter(
-                    product_id__in=product_ids, 
-                    warehouse=transfer.source_warehouse
-                )
-            }
-            
-            for item in parsed_items:
-                product = products_map.get(int(item['product_id']))
-                if not product:
-                    continue
-                    
-                quantity = int(item['quantity'])
-                stock = stocks_map.get(product.id)
-                
-                if not stock or quantity > stock.quantity:
-                    messages.error(request, f'Insufficient stock for {product.display_name}')
-                    transfer.delete()
-                    return redirect('warehouse:transfer_create')
-                
-                StockTransferItem.objects.create(
-                    transfer=transfer,
-                    product=product,
-                    quantity=quantity,
-                )
-            
-            create_audit_log(request, 'TRANSFER', transfer, {
-                'source': transfer.source_warehouse.name,
-                'destination': transfer.destination_warehouse.name,
-                'items': len(items_data)
-            })
-            
+            try:
+                with transaction.atomic():
+                    transfer = form.save(commit=False)
+                    transfer.created_by = request.user
+                    transfer.save()
+
+                    products_map = {
+                        p.id: p for p in Product.objects.filter(id__in=requested)
+                    }
+                    # Lock the source rows before checking them. Reading unlocked
+                    # stock let two concurrent transfers both pass the check and
+                    # draw the same units twice.
+                    stocks_map = {
+                        s.product_id: s
+                        for s in ProductStock.objects.select_for_update().filter(
+                            product_id__in=requested,
+                            warehouse=transfer.source_warehouse,
+                        ).order_by('product_id')
+                    }
+
+                    items = []
+                    for product_id, quantity in requested.items():
+                        product = products_map.get(product_id)
+                        if not product:
+                            raise ValueError(f'Product {product_id} no longer exists.')
+
+                        stock = stocks_map.get(product_id)
+                        available = stock.quantity if stock else 0
+                        if quantity > available:
+                            raise ValueError(
+                                f'Insufficient stock for {product.display_name} '
+                                f'(requested {quantity}, available {available}).'
+                            )
+
+                        items.append(StockTransferItem(
+                            transfer=transfer,
+                            product=product,
+                            quantity=quantity,
+                        ))
+
+                    StockTransferItem.objects.bulk_create(items)
+
+                    create_audit_log(request, 'TRANSFER', transfer, {
+                        'source': transfer.source_warehouse.name,
+                        'destination': transfer.destination_warehouse.name,
+                        'items': len(items),
+                    })
+            except ValueError as e:
+                messages.error(request, str(e))
+                return redirect('warehouse:transfer_create')
+
             messages.success(request, f'Transfer "{transfer.transfer_number}" created.')
             return redirect('warehouse:transfer_detail', pk=transfer.pk)
     else:
@@ -274,18 +303,7 @@ def transfer_cancel(request, pk):
 
 @login_required
 def api_warehouse_stocks(request, warehouse_id):
-    """API endpoint to get stocks in a warehouse."""
-    stocks = ProductStock.objects.filter(
-        warehouse_id=warehouse_id,
-        quantity__gt=0
-    ).select_related('product')
-    
-    data = [{
-        'id': s.id,
-        'product_id': s.product.id,
-        'product_sku': s.product.sku,
-        'quantity': s.quantity,
-        'average_cost': str(s.product.average_cost),
-    } for s in stocks]
-    
-    return JsonResponse(data, safe=False)
+    """API endpoint to get stocks in a warehouse. Delegates to the inventory
+    app's superset implementation, which supports ?product= filtering."""
+    from apps.inventory.views import api_warehouse_stocks as inventory_impl
+    return inventory_impl(request, warehouse_id)

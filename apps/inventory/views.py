@@ -2,16 +2,21 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import Q, Sum, ProtectedError
 from django.http import JsonResponse
-from decimal import Decimal
-from datetime import date
+from django.utils import timezone
+from decimal import Decimal, InvalidOperation
+import json
+import logging
 
 from .models import Product, Category, Brand, ProductStock, Purchase, PurchaseItem, StockOut, StockOutItem
 from .forms import (ProductForm, CategoryForm, BrandForm, 
                     PurchaseForm, PurchaseItemForm, StockOutForm)
 from apps.warehouse.models import Warehouse
 from apps.core.utils import create_audit_log
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -94,9 +99,6 @@ def product_create(request):
     if request.method == 'POST':
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
-            product = form.save()
-            create_audit_log(request, 'CREATE', product)
-            
             # Handle initial stock
             initial_stock = form.cleaned_data.get('initial_stock')
             initial_cost_price = form.cleaned_data.get('initial_cost_price')
@@ -104,47 +106,57 @@ def product_create(request):
             initial_stock_supplier = form.cleaned_data.get('initial_stock_supplier')
             initial_stock_date = form.cleaned_data.get('initial_stock_date')
             initial_stock_notes = form.cleaned_data.get('initial_stock_notes')
-            
-            if initial_stock and initial_warehouse:
-                if initial_cost_price is None:
-                    initial_cost_price = Decimal('0.00')
-                    
-                # Create a Purchase to record the initial stock
-                from apps.inventory.models import Purchase, PurchaseItem
-                from django.utils import timezone
-                
-                purchase = Purchase.objects.create(
-                    supplier=initial_stock_supplier,
-                    purchase_date=initial_stock_date,
-                    total_amount=initial_stock * initial_cost_price,
-                    notes=initial_stock_notes or f'Initial stock during product creation',
-                    created_by=request.user
-                )
-                
-                PurchaseItem.objects.create(
-                    purchase=purchase,
-                    product=product,
-                    warehouse=initial_warehouse,
-                    quantity=initial_stock,
-                    unit_price=initial_cost_price
-                )
-                
-                # Update product stock and average cost
-                from apps.inventory.models import ProductStock
-                stock, created = ProductStock.objects.get_or_create(
-                    product=product,
-                    warehouse=initial_warehouse,
-                    defaults={'quantity': 0}
-                )
-                stock.quantity += initial_stock
-                stock.save()
-                
-                product.recalculate_average_cost(initial_stock, initial_cost_price)
-                
+            add_initial_stock = bool(initial_stock and initial_warehouse)
+
+            # One transaction for the product, its opening purchase, the stock row
+            # and both denormalised aggregates. A failure part-way through used to
+            # leave a product whose average_cost and total_stock disagreed with the
+            # PurchaseItem rows behind it.
+            with transaction.atomic():
+                product = form.save()
+                create_audit_log(request, 'CREATE', product)
+
+                if add_initial_stock:
+                    if initial_cost_price is None:
+                        initial_cost_price = Decimal('0.00')
+
+                    # Create a Purchase to record the initial stock
+                    purchase = Purchase.objects.create(
+                        supplier=initial_stock_supplier,
+                        purchase_date=initial_stock_date,
+                        total_amount=initial_stock * initial_cost_price,
+                        notes=initial_stock_notes or 'Initial stock during product creation',
+                        created_by=request.user
+                    )
+
+                    PurchaseItem.objects.create(
+                        purchase=purchase,
+                        product=product,
+                        warehouse=initial_warehouse,
+                        quantity=initial_stock,
+                        unit_price=initial_cost_price
+                    )
+
+                    stock, _ = ProductStock.objects.get_or_create(
+                        product=product,
+                        warehouse=initial_warehouse,
+                        defaults={'quantity': 0}
+                    )
+                    stock.quantity += initial_stock
+                    stock.save()
+
+                    # WAC first (it weights against the previous total_stock), then
+                    # refresh the denormalised total. Without update_total_stock()
+                    # the product stays at total_stock=0 and is invisible to the POS
+                    # and sale form, both of which filter on total_stock__gt=0.
+                    product.recalculate_average_cost(initial_stock, initial_cost_price)
+                    product.update_total_stock()
+
+            if add_initial_stock:
                 messages.success(request, f'Product "{product.display_name}" created with {initial_stock} initial stock.')
             else:
                 messages.success(request, f'Product "{product.display_name}" created successfully.')
-                
+
             return redirect('inventory:product_list')
     else:
         form = ProductForm()
@@ -339,70 +351,110 @@ def purchase_create(request):
         items_data = request.POST.getlist('items')
         
         if form.is_valid() and items_data:
-            import json
+            # Coerce the whole payload before touching the database. The old code
+            # parsed each line inside the write loop, so a malformed line #3 raised
+            # after lines #1-2 had already moved stock and shifted the average cost,
+            # with no transaction to roll any of it back.
             parsed_items = []
             try:
                 for item_json in items_data:
-                    parsed_items.append(json.loads(item_json))
-            except ValueError:
+                    item = json.loads(item_json)
+                    quantity = int(item['quantity'])
+                    if quantity < 1:
+                        raise ValueError('Quantity must be at least 1.')
+                    unit_price = Decimal(str(item['unit_price']))
+                    if unit_price < 0:
+                        raise ValueError('Unit price cannot be negative.')
+                    parsed_items.append({
+                        'product_id': int(item['product_id']),
+                        'warehouse_id': int(item['warehouse_id']),
+                        'quantity': quantity,
+                        'unit_price': unit_price,
+                    })
+            except (ValueError, TypeError, KeyError, InvalidOperation):
                 messages.error(request, 'Invalid items data format.')
                 return redirect('inventory:purchase_create')
-                
-            purchase = form.save(commit=False)
-            purchase.created_by = request.user
-            purchase.total_amount = Decimal('0')
-            purchase.save()
-            
-            total = Decimal('0')
-            
-            # Prefetch to prevent N+1
-            product_ids = [item['product_id'] for item in parsed_items]
-            warehouse_ids = [item['warehouse_id'] for item in parsed_items]
-            products_map = {p.id: p for p in Product.objects.filter(id__in=product_ids)}
-            warehouses_map = {w.id: w for w in Warehouse.objects.filter(id__in=warehouse_ids)}
-            
-            for item in parsed_items:
-                product = products_map.get(int(item['product_id']))
-                warehouse = warehouses_map.get(int(item['warehouse_id']))
-                
-                if not product or not warehouse:
-                    continue
-                    
-                quantity = int(item['quantity'])
-                unit_price = Decimal(item['unit_price'])
-                
-                # Add stock to ProductStock
-                stock, created = ProductStock.objects.get_or_create(
-                    product=product,
-                    warehouse=warehouse,
-                    defaults={'quantity': 0}
-                )
-                stock.quantity += quantity
-                stock.save()
-                
-                # Recalculate WAC
-                product.recalculate_average_cost(quantity, unit_price)
-                
-                # Create purchase item
-                PurchaseItem.objects.create(
-                    purchase=purchase,
-                    product=product,
-                    warehouse=warehouse,
-                    quantity=quantity,
-                    unit_price=unit_price,
-                )
-                
-                total += quantity * unit_price
-                product.update_total_stock()
-            
-            purchase.total_amount = total
-            purchase.save()
-            
-            create_audit_log(request, 'CREATE', purchase, {'total': str(total)})
+
+            try:
+                with transaction.atomic():
+                    purchase = form.save(commit=False)
+                    purchase.created_by = request.user
+                    purchase.total_amount = Decimal('0')
+                    purchase.save()
+
+                    # Prefetch to prevent N+1
+                    product_ids = {item['product_id'] for item in parsed_items}
+                    warehouse_ids = {item['warehouse_id'] for item in parsed_items}
+                    products_map = {p.id: p for p in Product.objects.filter(id__in=product_ids)}
+                    warehouses_map = {w.id: w for w in Warehouse.objects.filter(id__in=warehouse_ids)}
+
+                    # Lock the stock rows before reading them. Two concurrent stock-ins
+                    # on the same product used to read the same quantity and one of the
+                    # two increments was lost. The order_by keeps the lock order stable
+                    # so concurrent requests queue instead of deadlocking.
+                    stocks_map = {
+                        (s.product_id, s.warehouse_id): s
+                        for s in ProductStock.objects.select_for_update().filter(
+                            product_id__in=product_ids,
+                            warehouse_id__in=warehouse_ids,
+                        ).order_by('product_id', 'warehouse_id')
+                    }
+
+                    total = Decimal('0')
+                    items = []
+
+                    for item in parsed_items:
+                        product = products_map.get(item['product_id'])
+                        warehouse = warehouses_map.get(item['warehouse_id'])
+                        if not product or not warehouse:
+                            # Skipping the line used to bank the rest of the stock-in
+                            # against a total that did not match its own items.
+                            raise ValueError('A selected product or warehouse no longer exists.')
+
+                        quantity = item['quantity']
+                        unit_price = item['unit_price']
+
+                        key = (product.id, warehouse.id)
+                        stock = stocks_map.get(key)
+                        if stock is None:
+                            stock, _ = ProductStock.objects.get_or_create(
+                                product=product,
+                                warehouse=warehouse,
+                                defaults={'quantity': 0}
+                            )
+                            stocks_map[key] = stock
+                        stock.quantity += quantity
+                        stock.save(update_fields=['quantity'])
+
+                        # Weighted average cost first: it weights the incoming units
+                        # against the previous total_stock, so refreshing the total
+                        # before it would double-count this line's quantity.
+                        product.recalculate_average_cost(quantity, unit_price)
+                        product.update_total_stock()
+
+                        items.append(PurchaseItem(
+                            purchase=purchase,
+                            product=product,
+                            warehouse=warehouse,
+                            quantity=quantity,
+                            unit_price=unit_price,
+                        ))
+                        total += quantity * unit_price
+
+                    PurchaseItem.objects.bulk_create(items)
+
+                    purchase.total_amount = total
+                    purchase.save(update_fields=['total_amount'])
+
+                    create_audit_log(request, 'CREATE', purchase, {'total': str(total)})
+            except ValueError as e:
+                messages.error(request, str(e))
+                return redirect('inventory:purchase_create')
+
             messages.success(request, f'Stock In record "{purchase.purchase_number}" created.')
             return redirect('inventory:purchase_list')
     else:
-        form = PurchaseForm(initial={'purchase_date': date.today()})
+        form = PurchaseForm(initial={'purchase_date': timezone.localdate()})
     
     context = {
         'form': form,
@@ -449,67 +501,80 @@ def api_quick_add_stock(request, product_id):
         
     product = get_object_or_404(Product, pk=product_id)
     
+    # Coerce the whole payload before touching the database. int()/Decimal() on
+    # untrusted input used to raise from the middle of the write sequence, and
+    # InvalidOperation is not a ValueError so it escaped into the blanket handler.
     try:
-        import json
         data = json.loads(request.body)
         warehouse_id = data.get('warehouse_id')
         quantity = int(data.get('quantity', 0))
-        unit_price = Decimal(data.get('unit_price', '0.00'))
-        
+        unit_price = Decimal(str(data.get('unit_price', '0.00')))
         supplier = data.get('supplier')
         purchase_date_str = data.get('purchase_date')
-        notes = data.get('notes') or f'Quick stock addition for {product.display_name}'
-        
-        if not warehouse_id or quantity <= 0 or not supplier or not purchase_date_str:
-            return JsonResponse({'success': False, 'error': 'Warehouse, positive quantity, supplier, and purchase date are required.'}, status=400)
-        
-        warehouse = get_object_or_404(Warehouse, pk=warehouse_id)
-        
-        from django.utils import timezone
-        import datetime
-        
-        try:
-            purchase_date = datetime.datetime.strptime(purchase_date_str, '%Y-%m-%d').date()
-        except ValueError:
-            return JsonResponse({'success': False, 'error': 'Invalid purchase date format.'}, status=400)
-                
-        # Create a Purchase to record the initial stock
-        from apps.inventory.models import Purchase, PurchaseItem
-        
-        purchase = Purchase.objects.create(
-            supplier=supplier,
-            purchase_date=purchase_date,
-            total_amount=quantity * unit_price,
-            notes=notes,
-            created_by=request.user
-        )
-        
-        PurchaseItem.objects.create(
-            purchase=purchase,
-            product=product,
-            warehouse=warehouse,
-            quantity=quantity,
-            unit_price=unit_price
-        )
-        
-        # Update product stock and average cost
-        stock, created = ProductStock.objects.get_or_create(
-            product=product,
-            warehouse=warehouse,
-            defaults={'quantity': 0}
-        )
-        stock.quantity += quantity
-        stock.save()
-        
-        product.recalculate_average_cost(quantity, unit_price)
-        product.update_total_stock()
-        
-        create_audit_log(request, 'UPDATE', product, {'notes': f"Quick added {quantity} stock to {warehouse.name}"})
-        
-        return JsonResponse({'success': True, 'message': f'Successfully added {quantity} stock.'})
-        
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    except (ValueError, TypeError, AttributeError, InvalidOperation):
+        return JsonResponse({'success': False, 'error': 'Invalid request data.'}, status=400)
+
+    notes = data.get('notes') or f'Quick stock addition for {product.display_name}'
+
+    if not warehouse_id or quantity <= 0 or not supplier or not purchase_date_str:
+        return JsonResponse({'success': False, 'error': 'Warehouse, positive quantity, supplier, and purchase date are required.'}, status=400)
+
+    if unit_price < 0:
+        return JsonResponse({'success': False, 'error': 'Unit price cannot be negative.'}, status=400)
+
+    warehouse = get_object_or_404(Warehouse, pk=warehouse_id)
+
+    # datetime is not imported at module level; this import is load-bearing.
+    import datetime
+
+    try:
+        purchase_date = datetime.datetime.strptime(purchase_date_str, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        return JsonResponse({'success': False, 'error': 'Invalid purchase date format.'}, status=400)
+
+    try:
+        with transaction.atomic():
+            # Record the addition as a Purchase so the cost history stays auditable.
+            purchase = Purchase.objects.create(
+                supplier=supplier,
+                purchase_date=purchase_date,
+                total_amount=quantity * unit_price,
+                notes=notes,
+                created_by=request.user
+            )
+
+            PurchaseItem.objects.create(
+                purchase=purchase,
+                product=product,
+                warehouse=warehouse,
+                quantity=quantity,
+                unit_price=unit_price
+            )
+
+            # Lock the stock row before reading it. Two concurrent additions used
+            # to read the same quantity and one of the increments was lost.
+            stock, _ = ProductStock.objects.select_for_update().get_or_create(
+                product=product,
+                warehouse=warehouse,
+                defaults={'quantity': 0}
+            )
+            stock.quantity += quantity
+            stock.save(update_fields=['quantity'])
+
+            # Weighted average cost first: it weights the incoming units against
+            # the previous total_stock, so refreshing the total before it would
+            # double-count this quantity.
+            product.recalculate_average_cost(quantity, unit_price)
+            product.update_total_stock()
+
+            create_audit_log(request, 'UPDATE', product, {'notes': f"Quick added {quantity} stock to {warehouse.name}"})
+    except Exception:
+        # The old handler returned str(e) at status 400, which leaked internals
+        # and reported server faults as client errors.
+        logger.exception('Quick add stock failed for product %s', product_id)
+        return JsonResponse({'success': False, 'error': 'Could not add stock. Please try again.'}, status=500)
+
+    return JsonResponse({'success': True, 'message': f'Successfully added {quantity} stock.'})
 
 
 # Stock Out Views
@@ -527,17 +592,17 @@ def stockout_list(request):
         )
     
     # Warehouse filter
-    warehouse_id = request.GET.get('warehouse')
+    warehouse_id = request.GET.get('warehouse', '')
     if warehouse_id:
         stockouts = stockouts.filter(warehouse_id=warehouse_id)
-    
+
     # Reason filter
-    reason = request.GET.get('reason')
+    reason = request.GET.get('reason', '')
     if reason:
         stockouts = stockouts.filter(reason=reason)
-    
+
     # Status filter
-    status = request.GET.get('status')
+    status = request.GET.get('status', '')
     if status:
         stockouts = stockouts.filter(status=status)
     
@@ -550,9 +615,12 @@ def stockout_list(request):
     context = {
         'stockouts': stockouts,
         'warehouses': warehouses,
-        'reason_choices': StockOut.REASON_CHOICES,
-        'status_choices': StockOut.STATUS_CHOICES,
+        'reason_choices': StockOut.Reason.choices,
+        'status_choices': StockOut.Status.choices,
         'search': search,
+        'warehouse_id': warehouse_id,
+        'reason': reason,
+        'status': status,
     }
     return render(request, 'inventory/stockout_list.html', context)
 
@@ -560,66 +628,76 @@ def stockout_list(request):
 @login_required
 def stockout_create(request):
     """Create a new stock out record."""
-    from django.utils import timezone
-    import json
-    
     warehouses = Warehouse.objects.filter(is_active=True)
     products = Product.objects.filter(is_active=True, total_stock__gt=0)
-    
+
     if request.method == 'POST':
         form = StockOutForm(request.POST)
         items_data = request.POST.get('items_data', '[]')
-        
+
+        parsed_items = []
         try:
-            items_list = json.loads(items_data)
-        except ValueError:
-            items_list = []
-        
-        if form.is_valid() and items_list:
-            stockout = form.save(commit=False)
-            stockout.created_by = request.user
-            stockout.save()
-            
-            # Create stock out items
-            product_ids = [item['product_id'] for item in items_list]
-            products_map = {p.id: p for p in Product.objects.filter(id__in=product_ids)}
-            
-            for item in items_list:
-                product = products_map.get(int(item['product_id']))
-                if product:
-                    StockOutItem.objects.create(
-                        stockout=stockout,
-                        product=product,
-                        quantity=int(item['quantity']),
-                        cost_price=product.average_cost
-                    )
-            
-            # Complete the stock out immediately
-            try:
-                stockout.complete_stockout()
-                create_audit_log(request, 'STOCK_OUT', stockout, {
-                    'reason': stockout.get_reason_display(),
-                    'total_value': str(stockout.total_value),
-                    'items_count': len(items_list)
+            for item in json.loads(items_data):
+                quantity = int(item['quantity'])
+                if quantity < 1:
+                    raise ValueError('Quantity must be at least 1.')
+                parsed_items.append({
+                    'product_id': int(item['product_id']),
+                    'quantity': quantity,
                 })
-                messages.success(request, f'Stock out "{stockout.stockout_number}" completed successfully.')
+        except (ValueError, TypeError, KeyError, AttributeError):
+            messages.error(request, 'Invalid items data format.')
+            return redirect('inventory:stockout_create')
+
+        if form.is_valid() and parsed_items:
+            try:
+                with transaction.atomic():
+                    stockout = form.save(commit=False)
+                    stockout.created_by = request.user
+                    stockout.save()
+
+                    # Create stock out items
+                    product_ids = [item['product_id'] for item in parsed_items]
+                    products_map = {
+                        p.id: p for p in Product.objects.filter(id__in=product_ids)
+                    }
+
+                    for item in parsed_items:
+                        product = products_map.get(item['product_id'])
+                        if not product:
+                            raise ValueError('A selected product no longer exists.')
+                        StockOutItem.objects.create(
+                            stockout=stockout,
+                            product=product,
+                            quantity=item['quantity'],
+                            cost_price=product.average_cost
+                        )
+
+                    # Complete the stock out immediately. Any failure here rolls
+                    # back the header and its items along with the stock changes.
+                    stockout.complete_stockout()
+                    create_audit_log(request, 'STOCK_OUT', stockout, {
+                        'reason': stockout.get_reason_display(),
+                        'total_value': str(stockout.total_value),
+                        'items_count': len(parsed_items)
+                    })
             except ValueError as e:
                 messages.error(request, str(e))
-                stockout.delete()
                 return redirect('inventory:stockout_create')
-            
+
+            messages.success(request, f'Stock out "{stockout.stockout_number}" completed successfully.')
             return redirect('inventory:stockout_detail', pk=stockout.pk)
         else:
-            if not items_list:
+            if not parsed_items:
                 messages.error(request, 'Please add at least one item.')
     else:
         form = StockOutForm(initial={'stockout_date': timezone.now()})
-    
+
     context = {
         'form': form,
         'warehouses': warehouses,
         'products': products,
-        'reason_choices': StockOut.REASON_CHOICES,
+        'reason_choices': StockOut.Reason.choices,
     }
     return render(request, 'inventory/stockout_form.html', context)
 
@@ -663,10 +741,13 @@ def api_warehouse_stocks(request, warehouse_id):
     if product_id:
         stocks = stocks.filter(product_id=product_id)
     
+    # Both product_name and product_sku are emitted because two templates consume
+    # this: stockout_form.html reads neither, transfer_form.html reads product_sku.
     data = [{
         'id': s.id,
         'product_id': s.product_id,
         'product_name': s.product.display_name,
+        'product_sku': s.product.sku,
         'quantity': s.quantity,
         'average_cost': str(s.product.average_cost),
     } for s in stocks]

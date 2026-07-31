@@ -27,7 +27,7 @@
                     <h5 class="card-title mb-0">Transfer Items</h5>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive" style="min-height: 300px;">
+                    <div class="table-responsive min-h-300" >
                         <table class="table align-middle" id="itemsTable">
                             <thead class="table-light">
                                 <tr>
@@ -277,7 +277,7 @@ function renderItems() {
                 <td class="text-center">${item.quantity}</td>
                 <td class="text-end">${CURRENCY_SYMBOL}${total.toFixed(2)}</td>
                 <td class="text-center">
-                    <button type="button" class="btn btn-soft-danger btn-sm" onclick="removeItem(${item.index})">
+                    <button type="button" aria-label="Remove item" class="btn btn-soft-danger btn-sm" onclick="removeItem(${item.index})">
                         <i class="las la-times"></i>
                     </button>
                 </td>

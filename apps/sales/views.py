@@ -2,14 +2,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db.models import Q, Sum, F
+from django.db.models import Q, Sum
 from django.db import transaction
 from django.http import JsonResponse
 from django.utils import timezone
 from decimal import Decimal
 import json
 import html
-import datetime
+import logging
 
 from .models import Sale, SaleItem
 from .forms import SaleForm, SaleItemForm, PaymentForm
@@ -17,6 +17,8 @@ from apps.inventory.models import Product, ProductStock
 from apps.warehouse.models import Warehouse
 from apps.customers.models import Customer, Payment
 from apps.core.utils import create_audit_log
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -61,7 +63,7 @@ def sale_list(request):
         today = timezone.localtime().date()
         start_of_month = today.replace(day=1)
         sales = sales.filter(sale_date__range=(start_of_month, today))
-        date_from = start_of_month.date().strftime('%Y-%m-%d')
+        date_from = start_of_month.strftime('%Y-%m-%d')
         date_to = today.strftime('%Y-%m-%d')
     
     paginator = Paginator(sales, 10)
@@ -71,9 +73,11 @@ def sale_list(request):
     context = {
         'sales': sales,
         'search': search,
+        'status': status,
         'payment_status': payment_status,
         'date_from': date_from,
         'date_to': date_to,
+        'date_filter': date_filter,
     }
     return render(request, 'sales/sale_list.html', context)
 
@@ -87,14 +91,10 @@ def sale_detail(request, pk):
         ),
         pk=pk
     )
-    
-    # Get payments for this sale
-    payments = []
-    if sale.customer:
-        payments = Payment.objects.filter(
-            customer=sale.customer,
-            sale=sale
-        ).order_by('-payment_date')
+
+    # Payments are keyed on the sale itself; walk-in sales have no customer but
+    # can still carry payments, so do not filter on the customer.
+    payments = Payment.objects.filter(sale=sale).order_by('-payment_date')
     
     context = {
         'sale': sale,
@@ -104,7 +104,6 @@ def sale_detail(request, pk):
 
 
 @login_required
-@transaction.atomic
 def sale_create(request):
     """Create a new sale with manual batch selection."""
     products = Product.objects.filter(is_active=True, total_stock__gt=0)
@@ -121,98 +120,133 @@ def sale_create(request):
         items_data = request.POST.getlist('items')
         
         if form.is_valid() and items_data:
+            from apps.sales.services import _to_decimal, _to_int
+
+            # Coerce and validate the whole payload before any write. Previously
+            # this happened after sale.save(), so a bad value raised KeyError /
+            # InvalidOperation mid-transaction and escaped as an HTTP 500.
             parsed_items = []
             try:
-                for item_json in items_data:
-                    parsed_items.append(json.loads(html.unescape(item_json)))
-            except ValueError:
-                messages.error(request, 'Invalid items data format.')
+                for index, item_json in enumerate(items_data, start=1):
+                    try:
+                        item = json.loads(html.unescape(item_json))
+                    except ValueError:
+                        raise ValueError('Invalid items data format.')
+                    if not isinstance(item, dict):
+                        raise ValueError(f'Invalid cart item #{index}.')
+
+                    quantity = _to_int(item.get('quantity'), f'quantity for item #{index}')
+                    if quantity <= 0:
+                        raise ValueError(f'Quantity for item #{index} must be greater than zero.')
+
+                    unit_price = _to_decimal(item.get('unit_price'), f'unit price for item #{index}')
+                    if unit_price < 0:
+                        raise ValueError(f'Unit price for item #{index} cannot be negative.')
+
+                    discount = _to_decimal(item.get('discount'), f'discount for item #{index}')
+                    if discount < 0:
+                        raise ValueError(f'Discount for item #{index} cannot be negative.')
+
+                    parsed_items.append({
+                        'product_id': _to_int(item.get('product_id'), f'product for item #{index}'),
+                        'quantity': quantity,
+                        'unit_price': unit_price,
+                        'discount': discount,
+                    })
+            except ValueError as exc:
+                messages.error(request, str(exc))
                 return redirect('sales:sale_create')
-                
-            sale = form.save(commit=False)
-            sale.created_by = request.user
-            sale.save()
-            
-            total_cost = Decimal('0')
-            subtotal = Decimal('0')
-            
-            product_ids = [item['product_id'] for item in parsed_items]
-            products_map = {p.id: p for p in Product.objects.filter(id__in=product_ids)}
-            stocks_map = {s.product_id: s for s in ProductStock.objects.select_for_update().filter(product_id__in=product_ids, warehouse=shop)}
-            
-            stocks_to_update = []
+
             sale_items_to_create = []
-            
-            for item in parsed_items:
-                quantity = int(item['quantity'])
-                unit_price = Decimal(item['unit_price'])
-                discount = Decimal(item.get('discount', '0'))
-                
-                # Regular inventory item
-                product = products_map.get(int(item['product_id']))
-                if not product:
-                    continue
-                    
-                warehouse = shop
-                
-                stock = stocks_map.get(product.id)
-                
-                # Validate stock
-                if not stock or quantity > stock.quantity:
-                    messages.error(request, f'Insufficient stock for {product.display_name} in {warehouse.name}')
-                    sale.delete()
-                    return redirect('sales:sale_create')
-                
-                # Create sale item
-                sale_items_to_create.append(SaleItem(
-                    sale=sale,
-                    product=product,
-                    warehouse=warehouse,
-                    quantity=quantity,
-                    unit_price=unit_price,
-                    cost_price=product.average_cost,
-                    discount=discount,
-                ))
-                
-                # Update stock
-                stock.quantity -= quantity
-                stocks_to_update.append(stock)
-            
-            SaleItem.objects.bulk_create(sale_items_to_create)
-            ProductStock.objects.bulk_update(stocks_to_update, ['quantity'])
-            
-            for stock in stocks_to_update:
-                stock.product.update_total_stock()
-                
-            for sale_item in sale_items_to_create:
-                subtotal += sale_item.total_price
-                total_cost += sale_item.total_cost
-            
-            # Update sale totals
-            sale.subtotal = subtotal
-            sale.total_cost = total_cost
-            sale.total_amount = subtotal - sale.discount_amount
-            sale.save()
-            
-            # Update customer balance
-            if sale.customer:
-                sale.customer.total_purchases += sale.total_amount
-                sale.customer.total_due += sale.total_amount
-                sale.customer.save()
-            
+            try:
+                # The ValueErrors below are raised inside the block and caught
+                # outside it, so every write -- the Sale row included -- rolls
+                # back. The old code deleted the Sale by hand, which could not
+                # undo the stock decrements that had already been written.
+                with transaction.atomic():
+                    sale = form.save(commit=False)
+                    sale.created_by = request.user
+                    sale.save()
+
+                    total_cost = Decimal('0')
+                    subtotal = Decimal('0')
+
+                    # Lock the stock rows in a stable order so two concurrent
+                    # sales cannot deadlock against each other.
+                    product_ids = sorted({item['product_id'] for item in parsed_items})
+                    products_map = {p.id: p for p in Product.objects.filter(id__in=product_ids)}
+                    stocks_map = {
+                        s.product_id: s
+                        for s in ProductStock.objects.select_for_update().filter(
+                            product_id__in=product_ids, warehouse=shop
+                        ).order_by('product_id')
+                    }
+
+                    stocks_to_update = []
+
+                    for item in parsed_items:
+                        product = products_map.get(item['product_id'])
+                        if not product:
+                            raise ValueError(f"Product with ID {item['product_id']} not found.")
+
+                        quantity = item['quantity']
+                        stock = stocks_map.get(product.id)
+
+                        # Validate stock
+                        if not stock or quantity > stock.quantity:
+                            raise ValueError(
+                                f'Insufficient stock for {product.display_name} in {shop.name}'
+                            )
+
+                        # Create sale item
+                        sale_items_to_create.append(SaleItem(
+                            sale=sale,
+                            product=product,
+                            warehouse=shop,
+                            quantity=quantity,
+                            unit_price=item['unit_price'],
+                            cost_price=product.average_cost,
+                            discount=item['discount'],
+                        ))
+
+                        # Update stock
+                        stock.quantity -= quantity
+                        stocks_to_update.append(stock)
+
+                    SaleItem.objects.bulk_create(sale_items_to_create)
+                    ProductStock.objects.bulk_update(stocks_to_update, ['quantity'])
+
+                    for stock in stocks_to_update:
+                        stock.product.update_total_stock()
+
+                    for sale_item in sale_items_to_create:
+                        subtotal += sale_item.total_price
+                        total_cost += sale_item.total_cost
+
+                    # Update sale totals (mirrors Sale.calculate_totals(): tax is added
+                    # after the discount, otherwise the invoice under-charges).
+                    sale.subtotal = subtotal
+                    sale.total_cost = total_cost
+                    sale.total_amount = subtotal - sale.discount_amount + sale.tax_amount
+                    sale.save()
+                    # Sale post_save signal recalculates the customer balance.
+            except ValueError as exc:
+                messages.error(request, str(exc))
+                return redirect('sales:sale_create')
+
             create_audit_log(request, 'SALE', sale, {
                 'total': str(sale.total_amount),
-                'items': len(items_data),
+                'items': len(sale_items_to_create),
                 'customer': sale.customer.name if sale.customer else 'Walk-in'
             })
-            
+
             messages.success(request, f'Sale "{sale.invoice_number}" created successfully.')
             return redirect('sales:sale_detail', pk=sale.pk)
         else:
             if not items_data:
                 messages.error(request, 'Please add at least one item to the sale.')
     else:
-        form = SaleForm(initial={'sale_date': timezone.now().date()})
+        form = SaleForm(initial={'sale_date': timezone.localdate()})
     
     context = {
         'form': form,
@@ -242,14 +276,10 @@ def sale_cancel(request, pk):
                         stock.save()
                         item.product.update_total_stock()
                 
-                # Update customer balance
-                if sale.customer:
-                    sale.customer.total_purchases -= sale.total_amount
-                    sale.customer.total_due -= sale.due_amount
-                    sale.customer.save()
-                
-                sale.status = 'cancelled'
-                sale.save()
+                sale.status = Sale.Status.CANCELLED
+                sale.save(update_fields=['status'])
+                # Sale post_save signal recalculates the customer balance,
+                # which excludes cancelled sales.
                 
                 create_audit_log(request, 'SALE', sale, {'action': 'cancelled'})
                 messages.success(request, f'Sale "{sale.invoice_number}" cancelled.')
@@ -271,8 +301,10 @@ def sale_payment(request, pk):
                 messages.error(request, f'Payment amount exceeds due amount ({sale.due_amount}).')
             else:
                 with transaction.atomic():
-                    # Create payment record
-                    payment = Payment.objects.create(
+                    # Create payment record. The Payment post_save signal
+                    # recalculates sale.paid_amount, sale.payment_status and the
+                    # customer balance from the persisted payment rows.
+                    Payment.objects.create(
                         customer=sale.customer,
                         sale=sale,
                         amount=amount,
@@ -281,17 +313,8 @@ def sale_payment(request, pk):
                         notes=form.cleaned_data.get('notes', ''),
                         received_by=request.user,
                     )
-                    
-                    # Update customer balance
-                    if sale.customer:
-                        sale.customer.total_paid += amount
-                        sale.customer.total_due -= amount
-                        sale.customer.save()
-                    
-                    # Update sale
-                    sale.paid_amount += amount
-                    sale.update_payment_status()
-                    
+                    sale.refresh_from_db()
+
                     create_audit_log(request, 'PAYMENT', sale, {
                         'amount': str(amount),
                         'method': form.cleaned_data['payment_method']
@@ -332,8 +355,6 @@ def pos_view(request):
 @login_required
 def api_product_info(request, product_id):
     """API endpoint to get product info with available stock from SHOP warehouses only."""
-    from apps.warehouse.models import Warehouse
-    
     product = get_object_or_404(Product, pk=product_id)
     
     # Only get stocks from shop warehouses (is_shop=True)
@@ -394,16 +415,7 @@ def pos_checkout(request):
     """API endpoint to process a POS checkout."""
     if request.method != 'POST':
         return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
-        
-    import json
-    from decimal import Decimal
-    from django.utils import timezone
-    from apps.sales.models import Sale, SaleItem
-    from apps.customers.models import Customer, Payment
-    from apps.warehouse.models import Warehouse
-    from apps.inventory.models import Product, ProductStock
-    from apps.core.utils import create_audit_log
-    
+
     try:
         try:
             data = json.loads(request.body)
@@ -427,5 +439,6 @@ def pos_checkout(request):
         
     except ValueError as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-    except Exception as e:
+    except Exception:
+        logger.exception('POS checkout failed')
         return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred.'}, status=500)

@@ -1,91 +1,14 @@
-{% load humanize invoice_tags %}
+{% load humanize invoice_tags static %}
 <!DOCTYPE html>
 <html>
 <head>
     <title>Invoice {{ sale.invoice_number }}</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        
-        * { box-sizing: border-box; }
-        html, body { height: 100%; margin: 0; }
-        
-        body { 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            margin: 0 auto; 
-            padding: 20px; 
-            font-size: 13px; 
-            max-width: 800px; 
-            color: #334155; 
-            line-height: 1.5; 
-            display: flex; 
-            flex-direction: column; 
-        }
-        
-        h1, h2, h3, h4, strong, th { color: #0f172a; }
-        
-        .main-content { flex: 1 0 auto; display: flex; flex-direction: column; }
-        .main-content > table { flex: 1 0 auto; margin-bottom: 0; }
-        .bottom-content { flex-shrink: 0; }
-        
-        .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0; }
-        .header h1 { margin: 0 0 5px 0; font-size: 24px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .header p { margin: 0; color: #64748b; font-size: 13px; }
-        
-        .invoice-info { display: flex; justify-content: space-between; margin-bottom: 25px; align-items: flex-start; }
-        .bill-to-box { width: 55%; }
-        .invoice-info strong { font-weight: 600; color: #475569; display: inline-block; margin-bottom: 5px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .meta-box { width: 40%; text-align: right; }
-        
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { border-bottom: 1px solid #e2e8f0; padding: 12px 14px; text-align: left; }
-        th { 
-            background: #f8fafc; 
-            font-weight: 600; 
-            text-transform: uppercase; 
-            font-size: 11px; 
-            letter-spacing: 0.5px; 
-            border-top: 1px solid #e2e8f0; 
-            border-bottom: 2px solid #e2e8f0; 
-        }
-        td { font-size: 13px; }
-        
-        .text-right { text-align: right; }
-        
-        .totals { margin-top: 0; }
-        .totals table { width: 350px; margin-left: auto; margin-top: 0; }
-        .totals td { border: none; padding: 6px 12px; }
-        .totals-label { color: #64748b; font-weight: 500; }
-        .totals-val { font-weight: 600; color: #0f172a; }
-        .totals tr.grand-total td { 
-            font-weight: 700; 
-            font-size: 15px; 
-            border-top: 2px solid #e2e8f0; 
-            padding-top: 10px;
-            color: #0f172a; 
-        }
-        .totals tr.balance-due td { color: #ef4444; font-weight: 600; }
-        
-        .notes-section { margin-top: 25px; padding: 15px; background: #f8fafc; border-radius: 6px; border: 1px solid #f1f5f9; }
-        
-        .signatures { display: flex; justify-content: space-between; margin-top: 60px; margin-bottom: 30px; }
-        .signature-box { text-align: center; width: 28%; }
-        .signature-line { border-top: 1px solid #cbd5e1; padding-top: 8px; font-weight: 600; font-size: 12px; color: #475569; }
-        
-        .footer { margin-top: 20px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 15px; }
-        
-        /* Hide browser headers/footers and adjust physical margins */
-        @page { size: auto; margin: 0mm; }
-        @media print { 
-            html, body { height: 99vh; } /* slight reduction to prevent overflowing */
-            body { padding: 12mm 10mm 10mm 10mm; max-width: none; overflow: hidden; background: white; }
-            .no-print { display: none !important; } 
-        }
-    </style>
+    <link href="{% static 'css/print.css' %}" rel="stylesheet" type="text/css" />
 </head>
 <body>
-    <div class="no-print" style="margin-bottom: 20px;">
-        <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer; background: #0f172a; color: white; border: none; border-radius: 4px; font-weight: 500;">Print Invoice</button>
-        <a href="{% url 'sales:sale_detail' sale.pk %}" style="margin-left: 10px; color: #0f172a; text-decoration: none; font-weight: 500;">Back to Invoice</a>
+    <div class="no-print mb-20px" >
+        <button onclick="window.print()" class="print-btn">Print Invoice</button>
+        <a href="{% url 'sales:sale_detail' sale.pk %}" class="back-link">Back to Invoice</a>
     </div>
 
     <div class="main-content">
@@ -101,27 +24,27 @@
         <div class="invoice-info">
             <div class="bill-to-box">
                 {% if sale.customer %}
-                <strong>Name:</strong> <span style="font-weight: 500; color: #0f172a; font-size: 14px;">{{ sale.customer.name }}</span><br>
-                {% if sale.customer.address %}<strong>Address:</strong> <span style="color: #475569;">{{ sale.customer.address }}</span><br>{% endif %}
-                {% if sale.customer.phone %}<strong>Phone:</strong> <span style="color: #475569;">{{ sale.customer.phone }}</span><br>{% endif %}
+                <strong>Name:</strong> <span class="table-header-dark-sm">{{ sale.customer.name }}</span><br>
+                {% if sale.customer.address %}<strong>Address:</strong> <span class="text-slate">{{ sale.customer.address }}</span><br>{% endif %}
+                {% if sale.customer.phone %}<strong>Phone:</strong> <span class="text-slate">{{ sale.customer.phone }}</span><br>{% endif %}
                 {% else %}
-                <strong>Name:</strong> <span style="font-weight: 500; color: #0f172a; font-size: 14px;">Walk-in Customer</span>
+                <strong>Name:</strong> <span class="table-header-dark-sm">Walk-in Customer</span>
                 {% endif %}
             </div>
             <div class="meta-box">
-                <strong>Invoice #:</strong> <span style="font-weight: 500; color: #0f172a;">{{ sale.invoice_number }}</span><br>
+                <strong>Invoice #:</strong> <span class="table-header-dark">{{ sale.invoice_number }}</span><br>
                 <strong>Date:</strong> {{ sale.sale_date|date:"F d, Y" }}<br>
                 <strong>Status:</strong> 
-                {% if sale.payment_status == 'paid' %}<span style="color: #10b981; font-weight: 500;">Paid</span>
-                {% elif sale.payment_status == 'partial' %}<span style="color: #f59e0b; font-weight: 500;">Partially Paid</span>
-                {% else %}<span style="color: #ef4444; font-weight: 500;">Unpaid</span>{% endif %}
+                {% if sale.payment_status == 'paid' %}<span class="status-paid">Paid</span>
+                {% elif sale.payment_status == 'partial' %}<span class="status-partial">Partially Paid</span>
+                {% else %}<span class="status-unpaid">Unpaid</span>{% endif %}
             </div>
         </div>
 
         <table>
             <thead>
                 <tr>
-                    <th style="width: 5%;">SL.</th>
+                    <th class="w-5">SL.</th>
                     <th>Product</th>
                     <th>SKU</th>
                     <th class="text-right">Qty</th>
@@ -133,20 +56,20 @@
                 {% for item in sale.items.all %}
                 <tr>
                     <td>{{ forloop.counter|stringformat:"02d" }}</td>
-                    <td>{% if item.is_custom %}{{ item.custom_description }} <em>(Custom)</em>{% else %}<span style="font-weight: 500; color: #0f172a;">{{ item.product.display_name }}</span>{% endif %}</td>
+                    <td>{% if item.is_custom %}{{ item.custom_description }} <em>(Custom)</em>{% else %}<span class="table-header-dark">{{ item.product.display_name }}</span>{% endif %}</td>
                     <td>{% if item.is_custom %}-{% else %}{{ item.product.sku }}{% endif %}</td>
                     <td class="text-right">{{ item.quantity|stringformat:"02d" }}</td>
                     <td class="text-right">{{ item.unit_price|floatformat:2 }}</td>
-                    <td class="text-right" style="font-weight: 500; color: #0f172a;">{{ item.total_price|floatformat:2 }}</td>
+                    <td class="text-right table-header-dark" >{{ item.total_price|floatformat:2 }}</td>
                 </tr>
                 {% endfor %}
-                <tr style="height: 100%;">
-                    <td style="border-bottom: none;"></td>
-                    <td style="border-bottom: none;"></td>
-                    <td style="border-bottom: none;"></td>
-                    <td style="border-bottom: none;"></td>
-                    <td style="border-bottom: none;"></td>
-                    <td style="border-bottom: none;"></td>
+                <tr class="h-100">
+                    <td class="border-bottom-none"></td>
+                    <td class="border-bottom-none"></td>
+                    <td class="border-bottom-none"></td>
+                    <td class="border-bottom-none"></td>
+                    <td class="border-bottom-none"></td>
+                    <td class="border-bottom-none"></td>
                 </tr>
             </tbody>
         </table>
@@ -170,7 +93,7 @@
                 </tr>
                 {% endif %}
                 <tr class="grand-total">
-                    <td class="totals-label" style="color: #0f172a;">Total:</td>
+                    <td class="totals-label text-slate-dark">Total:</td>
                     <td class="text-right totals-val">{{ sale.total_amount|floatformat:2|intcomma }}</td>
                 </tr>
                 <tr>
@@ -179,7 +102,7 @@
                 </tr>
                 {% if sale.due_amount > 0 %}
                 <tr class="balance-due">
-                    <td class="totals-label" style="color: #ef4444;">Balance Due:</td>
+                    <td class="totals-label text-danger">Balance Due:</td>
                     <td class="text-right">{{ sale.due_amount|floatformat:2|intcomma }}</td>
                 </tr>
                 {% endif %}
@@ -188,14 +111,14 @@
     </div> <!-- end main-content -->
 
     <div class="bottom-content">
-        <div style="margin-top: 15px; font-weight: 600; color: #0f172a; font-size: 13px;">
-            <strong style="color: #475569;">IN WORDS:</strong> 
+        <div class="mt-15px fw-semibold text-slate-dark fs-13px">
+            <strong class="text-slate">IN WORDS:</strong> 
             {{ sale.total_amount|amount_in_words }}
         </div>
         
         {% if sale.notes %}
         <div class="notes-section">
-            <strong style="color: #475569;">Notes:</strong> {{ sale.notes }}
+            <strong class="text-slate">Notes:</strong> {{ sale.notes }}
         </div>
         {% endif %}
 
@@ -212,7 +135,7 @@
         </div>
 
         <div class="footer">
-            <p style="margin: 5px 0 0 0; font-size: 13px; font-weight: 600; color: #0f172a;">★ Thank you for your business! ★</p>
+            <p class="footer-text">★ Thank you for your business! ★</p>
         </div>
     </div> <!-- end bottom-content -->
 </body>

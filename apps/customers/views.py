@@ -1,17 +1,22 @@
 import json
+import logging
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, F
 from django.db import transaction, IntegrityError
 from django.http import JsonResponse
+from django.utils import timezone
 from decimal import Decimal
 
 from .models import Customer, Payment, CustomerNote
-from .forms import CustomerForm, PaymentForm, CustomerNoteForm, QuickPaymentForm
+from .forms import CustomerForm, PaymentForm, CustomerNoteForm
 from apps.sales.models import Sale
 from apps.core.utils import create_audit_log
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -88,7 +93,7 @@ def customer_detail(request, pk):
         'product__sku', 'product__brand__name'
     ).annotate(
         total_quantity=Sum('quantity'),
-        total_amount=Sum('quantity') * Sum('unit_price')
+        total_amount=Sum(F('quantity') * F('unit_price'))
     ).order_by('-total_quantity')[:10]
     
     context = {
@@ -176,6 +181,18 @@ def customer_statement(request, pk):
         sales = sales.filter(sale_date__lte=date_to)
         payments = payments.filter(payment_date__date__lte=date_to)
     
+    # Opening balance: everything before the reporting window, so the running
+    # balance carries forward instead of restarting at zero.
+    opening_balance = Decimal('0')
+    if date_from:
+        prior_sales = customer.sales.filter(
+            status='completed', sale_date__lt=date_from
+        ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+        prior_payments = customer.payments.filter(
+            payment_date__date__lt=date_from
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+        opening_balance = prior_sales - prior_payments
+
     # Combine and sort transactions
     transactions = []
     for sale in sales:
@@ -186,27 +203,31 @@ def customer_statement(request, pk):
             'debit': sale.total_amount,
             'credit': Decimal('0'),
         })
-    
+
     for payment in payments:
         transactions.append({
-            'date': payment.payment_date,
+            'date': timezone.localtime(payment.payment_date).date(),
             'type': 'Payment',
             'reference': payment.reference or f'PMT-{payment.pk}',
             'debit': Decimal('0'),
             'credit': payment.amount,
         })
-    
+
+    # sale_date is a date and payment_date a datetime; both are normalised to
+    # dates above so they are mutually comparable.
     transactions.sort(key=lambda x: x['date'])
-    
+
     # Calculate running balance
-    balance = Decimal('0')
+    balance = opening_balance
     for t in transactions:
         balance += t['debit'] - t['credit']
         t['balance'] = balance
-    
+
     context = {
         'customer': customer,
         'transactions': transactions,
+        'opening_balance': opening_balance,
+        'closing_balance': balance,
         'date_from': date_from,
         'date_to': date_to,
     }
@@ -269,18 +290,10 @@ def payment_create(request):
             payment = form.save(commit=False)
             payment.received_by = request.user
             payment.save()
-            
-            # Update customer balance
-            if payment.customer:
-                payment.customer.total_paid += payment.amount
-                payment.customer.total_due -= payment.amount
-                payment.customer.save()
-            
-            # Update sale payment status if linked to specific sale
-            if payment.sale:
-                payment.sale.paid_amount += payment.amount
-                payment.sale.update_payment_status()
-            
+            # The Payment post_save signal recalculates the linked sale's
+            # paid_amount/payment_status and the customer balance from the
+            # persisted payment rows.
+
             create_audit_log(request, 'PAYMENT', payment, {
                 'amount': str(payment.amount),
                 'customer': payment.customer.name if payment.customer else 'Walk-in',
@@ -383,6 +396,8 @@ def api_customer_create(request):
                     'phone': customer.phone
                 }
             })
+        except ValueError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON data.'}, status=400)
         except IntegrityError as e:
             error_msg = str(e)
             if 'email' in error_msg.lower():
@@ -392,7 +407,11 @@ def api_customer_create(request):
             else:
                 message = "A customer with this information already exists."
             return JsonResponse({'status': 'error', 'message': message}, status=400)
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+        except Exception:
+            logger.exception('Inline customer creation failed')
+            return JsonResponse(
+                {'status': 'error', 'message': 'Could not create the customer.'},
+                status=500,
+            )
     
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)

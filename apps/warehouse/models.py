@@ -85,21 +85,36 @@ class StockTransfer(TimeStampedModel):
     def complete_transfer(self):
         """Complete the transfer and move stock."""
         from apps.inventory.models import ProductStock
-        
+
         if self.status != 'pending':
             raise ValueError('Transfer is not pending')
-        
+
         with transaction.atomic():
+            # Re-read the transfer under a row lock. The check above races: two
+            # concurrent completions could both see 'pending' and move the stock
+            # twice.
+            locked = StockTransfer.objects.select_for_update().get(pk=self.pk)
+            if locked.status != 'pending':
+                raise ValueError('Transfer is not pending')
+
             for item in self.items.order_by('product_id').select_for_update():
-                # Get source stock
-                source_stock = ProductStock.objects.select_for_update().get(
+                if item.product_id is None:
+                    raise ValueError('Transfer contains a line with no product.')
+
+                # Get source stock. A missing row is the same business failure as
+                # an empty one, and DoesNotExist would escape the view's handler.
+                source_stock = ProductStock.objects.select_for_update().filter(
                     product=item.product,
                     warehouse=self.source_warehouse
-                )
-                
-                if source_stock.quantity < item.quantity:
-                    raise ValueError(f'Insufficient stock for {item.product.display_name} in {self.source_warehouse.name}')
-                
+                ).first()
+
+                if source_stock is None or source_stock.quantity < item.quantity:
+                    available = source_stock.quantity if source_stock else 0
+                    raise ValueError(
+                        f'Insufficient stock for {item.product.display_name} in '
+                        f'{self.source_warehouse.name} (need {item.quantity}, have {available}).'
+                    )
+
                 # Reduce source stock
                 source_stock.quantity -= item.quantity
                 source_stock.save()
@@ -134,12 +149,14 @@ class StockTransferItem(TimeStampedModel):
         ordering = ['id']
     
     def __str__(self):
-        return f"{self.product.display_name} x {self.quantity}"
-    
+        # product is nullable, so none of these can dereference it blindly.
+        name = self.product.display_name if self.product_id else '(deleted product)'
+        return f"{name} x {self.quantity}"
+
     @property
     def unit_cost(self):
-        return self.product.average_cost
-    
+        return self.product.average_cost if self.product_id else Decimal('0.00')
+
     @property
     def total_cost(self):
-        return self.quantity * self.product.average_cost
+        return self.quantity * self.unit_cost

@@ -21,22 +21,23 @@ class Command(BaseCommand):
         sale_id = options.get('sale_id')
         dry_run = options.get('dry_run', False)
         
+        from django.db.models import Sum
+        from django.db.models.functions import Coalesce
+        from decimal import Decimal
+        
         if sale_id:
             sales = Sale.objects.filter(pk=sale_id)
         else:
             sales = Sale.objects.all()
+            
+        sales = sales.annotate(
+            actual_paid_computed=Coalesce(Sum('payments__amount'), Decimal('0.00'))
+        )
         
         fixed_count = 0
         
         for sale in sales:
-            # Calculate actual paid amount from payments
-            from apps.customers.models import Payment
-            from django.db.models import Sum
-            from decimal import Decimal
-            
-            actual_paid = Payment.objects.filter(sale=sale).aggregate(
-                total=Sum('amount')
-            )['total'] or Decimal('0.00')
+            actual_paid = sale.actual_paid_computed
             
             if sale.paid_amount != actual_paid:
                 old_paid = sale.paid_amount

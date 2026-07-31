@@ -22,10 +22,12 @@ if not DEBUG and SECRET_KEY == 'django-insecure-clock-shop-secret-key-change-in-
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # CSRF trusted origins - Load from environment variable
-# Format: comma-separated list of origins (e.g., "http://127.0.0.1:*,http://localhost:*,https://yourdomain.com")
+# Format: comma-separated list of origins (e.g., "http://127.0.0.1:8000,https://yourdomain.com").
+# Django wildcards the host only ("https://*.example.com"), never the port, so a
+# "http://127.0.0.1:*" entry never matches anything -- list the port explicitly.
 CSRF_TRUSTED_ORIGINS = [
-    origin.strip() 
-    for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', 'http://127.0.0.1:*,http://localhost:*').split(',')
+    origin.strip()
+    for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', 'http://127.0.0.1:8000,http://localhost:8000').split(',')
     if origin.strip()
 ]
 
@@ -51,6 +53,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -82,6 +85,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.i18n',
                 'apps.core.context_processors.global_context',
             ],
         },
@@ -161,6 +165,12 @@ else:
         }
     }
 
+# Reuse database connections across requests instead of opening a fresh one every
+# time. Applied after the branch above so all four configurations get it. Keep this
+# below the gunicorn/DB idle timeout; 0 restores the old connect-per-request behaviour.
+DATABASES['default'].setdefault('CONN_MAX_AGE', int(os.environ.get('CONN_MAX_AGE', '60')))
+DATABASES['default'].setdefault('CONN_HEALTH_CHECKS', True)
+
 # =============================================================================
 # CACHE CONFIGURATION
 # =============================================================================
@@ -179,7 +189,14 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+LANGUAGES = [
+    ('en', 'English'),
+    ('bn', 'Bengali'),
+]
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
+TIME_ZONE = os.environ.get('TIME_ZONE', 'Asia/Dhaka')
 USE_I18N = True
 USE_TZ = True
 
@@ -187,18 +204,27 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Whitenoise settings for production
-# Using CompressedStaticFilesStorage instead of Manifest version to handle missing font references in CSS
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+# Whitenoise settings for production.
+# Using CompressedStaticFilesStorage instead of the Manifest version to handle
+# missing font references in CSS. STATICFILES_STORAGE was removed in Django 5.1,
+# so this has to be the STORAGES dict form or the setting is silently ignored.
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
+    },
+}
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'dashboard'
-LOGOUT_REDIRECT_URL = 'login'
+LOGIN_URL = 'core:login'
+LOGIN_REDIRECT_URL = 'core:dashboard'
+LOGOUT_REDIRECT_URL = 'core:login'
 
 # Business Settings
 SHOP_NAME = os.environ.get('SHOP_NAME', "Clock Shop")
@@ -227,11 +253,6 @@ LOGGING = {
             'format': '[{asctime}] {levelname} {message}',
             'style': '{',
             'datefmt': '%H:%M:%S',
-        },
-        'request': {
-            'format': '[{asctime}] {levelname} {status_code} {request.method} {request.path} {message}',
-            'style': '{',
-            'datefmt': '%Y-%m-%d %H:%M:%S',
         },
     },
     
@@ -319,36 +340,8 @@ LOGGING = {
             'level': 'DEBUG' if DEBUG else 'INFO',
             'propagate': False,
         },
-        'apps.core': {
-            'handlers': ['console', 'file', 'error_file'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': False,
-        },
-        'apps.inventory': {
-            'handlers': ['console', 'file', 'error_file'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': False,
-        },
-        'apps.sales': {
-            'handlers': ['console', 'file', 'error_file'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': False,
-        },
-        'apps.customers': {
-            'handlers': ['console', 'file', 'error_file'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': False,
-        },
-        'apps.warehouse': {
-            'handlers': ['console', 'file', 'error_file'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': False,
-        },
-        'apps.reports': {
-            'handlers': ['console', 'file', 'error_file'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': False,
-        },
+        # Per-app loggers (apps.core, apps.sales, ...) inherit from 'apps' above;
+        # declaring them explicitly with identical config added nothing.
     },
     
     # Root logger - catch-all for unconfigured loggers

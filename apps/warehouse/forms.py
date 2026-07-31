@@ -1,7 +1,5 @@
 from django import forms
-from django.utils import timezone
-from .models import Warehouse, StockTransfer, StockTransferItem
-from apps.inventory.models import Product, ProductStock
+from .models import Warehouse, StockTransfer
 
 
 class WarehouseForm(forms.ModelForm):
@@ -44,36 +42,5 @@ class StockTransferForm(forms.ModelForm):
         
         if source and destination and source == destination:
             raise forms.ValidationError('Source and destination warehouses must be different.')
-        
-        return cleaned_data
-
-
-class StockTransferItemForm(forms.Form):
-    """Form for adding items to a transfer."""
-    product = forms.ModelChoiceField(
-        queryset=Product.objects.filter(is_active=True),
-        widget=forms.Select(attrs={'class': 'form-select product-select'})
-    )
-    quantity = forms.IntegerField(
-        min_value=1,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': '1', 'placeholder': 'e.g. 10'})
-    )
-    
-    def __init__(self, *args, source_warehouse=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.source_warehouse = source_warehouse
-    
-    def clean(self):
-        cleaned_data = super().clean()
-        product = cleaned_data.get('product')
-        quantity = cleaned_data.get('quantity')
-        
-        if product and quantity and hasattr(self, 'source_warehouse') and self.source_warehouse:
-            stock = ProductStock.objects.filter(product=product, warehouse=self.source_warehouse).first()
-            if not stock or quantity > stock.quantity:
-                stock_qty = stock.quantity if stock else 0
-                raise forms.ValidationError(
-                    f'Requested quantity ({quantity}) exceeds available stock ({stock_qty}) in source warehouse.'
-                )
         
         return cleaned_data

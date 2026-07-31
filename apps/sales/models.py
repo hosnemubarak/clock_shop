@@ -86,7 +86,9 @@ class Sale(TimeStampedModel):
     @property
     def profit(self):
         """Calculate profit for this sale."""
-        return self.total_amount - self.discount_amount - self.total_cost
+        # calculate_totals() already nets discount_amount out of total_amount;
+        # subtracting it again here under-reported margin on every discounted sale.
+        return self.total_amount - self.total_cost
     
     def update_payment_status(self):
         """Update payment status based on paid amount."""

@@ -5,7 +5,6 @@ from django.contrib.auth import login
 from django.contrib import messages
 from django.db.models import Sum, Count, F
 from django.utils import timezone
-from datetime import timedelta, date
 from decimal import Decimal
 
 from .models import AuditLog, SystemSettings
@@ -19,26 +18,29 @@ from apps.warehouse.models import Warehouse
 @login_required
 def dashboard(request):
     """Main dashboard view with key metrics."""
-    today = timezone.now().date()
+    today = timezone.localtime().date()
     month_start = today.replace(day=1)
-    
-    # Sales metrics
+
+    # Sales metrics. Cancelled sales keep their amounts on the row, so every
+    # revenue/profit aggregate has to exclude them or the dashboard reports
+    # money that was never earned.
     total_sales_today = Sale.objects.filter(
-        sale_date=today
+        sale_date=today, status=Sale.Status.COMPLETED
     ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
-    
+
     total_sales_month = Sale.objects.filter(
-        sale_date__gte=month_start
+        sale_date__gte=month_start, status=Sale.Status.COMPLETED
     ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
-    
+
     # Cash Collection
     today_cash_collection = Payment.objects.filter(
         payment_date__date=today
     ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-    
+
     # Profit calculation
     profit_month = SaleItem.objects.filter(
-        sale__sale_date__gte=month_start
+        sale__sale_date__gte=month_start,
+        sale__status=Sale.Status.COMPLETED
     ).aggregate(
         profit=Sum(F('quantity') * (F('unit_price') - F('cost_price')))
     )['profit'] or Decimal('0')
@@ -69,8 +71,11 @@ def dashboard(request):
     # Warehouse metrics
     total_warehouses = Warehouse.objects.filter(is_active=True).count()
     
-    # Recent sales
-    recent_sales = Sale.objects.select_related('customer').order_by('-sale_date')[:10]
+    # Recent sales. The template's Status column renders payment_status only, so
+    # a cancelled sale would be badged "Unpaid" and look identical to a live one.
+    recent_sales = Sale.objects.select_related('customer').exclude(
+        status=Sale.Status.CANCELLED
+    ).order_by('-sale_date')[:10]
     
     # Low stock alerts
     low_stock_items = ProductStock.objects.filter(
@@ -78,10 +83,12 @@ def dashboard(request):
         quantity__lte=low_stock_threshold
     ).select_related('product', 'warehouse').order_by('quantity')[:10]
     
-    # Payment status counts for chart
-    payment_status_counts = Sale.objects.values('payment_status').annotate(
-        count=Count('id')
-    )
+    # Payment status counts for chart. Cancelling a sale leaves payment_status
+    # untouched, so without this filter voided invoices are still tallied as
+    # unpaid/partial.
+    payment_status_counts = Sale.objects.exclude(
+        status=Sale.Status.CANCELLED
+    ).values('payment_status').annotate(count=Count('id'))
     paid_count = 0
     partial_count = 0
     unpaid_count = 0

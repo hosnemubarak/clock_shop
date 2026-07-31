@@ -1,5 +1,4 @@
-import datetime
-from django.db import models, transaction, IntegrityError
+from django.db import models, transaction
 from django.core.validators import MinValueValidator
 from django.utils import timezone
 from decimal import Decimal
@@ -200,7 +199,7 @@ class StockOut(TimeStampedModel):
     
     def complete_stockout(self):
         """Complete the stock out and reduce inventory."""
-        if self.status != 'pending':
+        if self.status != self.Status.PENDING:
             raise ValueError('Stock out is not pending')
         
         with transaction.atomic():
@@ -229,19 +228,21 @@ class StockOut(TimeStampedModel):
                 item.product.update_total_stock()
             
             self.total_value = total_value
-            self.status = 'completed'
+            self.status = self.Status.COMPLETED
             self.completed_date = timezone.now()
             self.save()
     
     def cancel_stockout(self):
         """Cancel the stock out. If completed, restore stock."""
-        if self.status == 'cancelled':
+        if self.status == self.Status.CANCELLED:
             raise ValueError('Stock out is already cancelled')
         
         with transaction.atomic():
-            if self.status == 'completed':
-                # Restore stock for completed stock outs
-                for item in self.items.all():
+            if self.status == self.Status.COMPLETED:
+                # Restore stock for completed stock outs. Iterate in product order
+                # so this cannot deadlock against complete_stockout(), which locks
+                # the same rows in the same order.
+                for item in self.items.select_related('product').order_by('product_id'):
                     stock, created = ProductStock.objects.select_for_update().get_or_create(
                         product=item.product,
                         warehouse=self.warehouse,
@@ -251,7 +252,7 @@ class StockOut(TimeStampedModel):
                     stock.save()
                     item.product.update_total_stock()
             
-            self.status = 'cancelled'
+            self.status = self.Status.CANCELLED
             self.save()
     
     @property
@@ -275,8 +276,11 @@ class StockOutItem(TimeStampedModel):
         ordering = ['id']
     
     def __str__(self):
-        return f"{self.product.display_name} x {self.quantity}"
-    
+        # product is nullable, so guard the dereference: a row whose product was
+        # cleared used to raise AttributeError in the admin and in error messages.
+        name = self.product.display_name if self.product else '(deleted product)'
+        return f"{name} x {self.quantity}"
+
     @property
     def total_cost(self):
         return self.quantity * self.cost_price

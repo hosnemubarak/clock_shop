@@ -1,14 +1,15 @@
 from django.conf import settings as django_settings
-from datetime import date
+from django.utils import timezone
 
 
 def get_system_settings():
     """Get system settings from database with env fallback."""
     try:
         from .models import SystemSettings
+        from django.db.utils import OperationalError, ProgrammingError
         db_settings = SystemSettings.get_settings()
         return db_settings
-    except Exception:
+    except (OperationalError, ProgrammingError):
         return None
 
 
@@ -35,8 +36,9 @@ def global_context(request):
     else:
         currency_symbol = getattr(django_settings, 'CURRENCY_SYMBOL', '৳')
     
-    # Low stock threshold: DB value or env fallback
-    if db_settings and db_settings.low_stock_threshold:
+    # Low stock threshold: DB value or env fallback. Test against None, not
+    # truthiness -- a configured threshold of 0 is a legitimate value.
+    if db_settings and db_settings.low_stock_threshold is not None:
         low_stock_threshold = db_settings.low_stock_threshold
     else:
         low_stock_threshold = getattr(django_settings, 'LOW_STOCK_THRESHOLD', 5)
@@ -45,9 +47,11 @@ def global_context(request):
     expiry_alert = None
     days_until_expiry = None
     if db_settings and db_settings.license_expiry_date:
-        today = date.today()
+        today = timezone.localdate()
         days_until_expiry = (db_settings.license_expiry_date - today).days
-        alert_threshold = db_settings.alert_days_before_expiry or 30
+        alert_threshold = db_settings.alert_days_before_expiry
+        if alert_threshold is None:
+            alert_threshold = 30
         
         if days_until_expiry < 0:
             expiry_alert = {

@@ -9,6 +9,6 @@ def is_manager(user):
 def is_cashier(user):
     return user.is_active and (is_manager(user) or user.groups.filter(name='Cashier').exists())
 
-admin_required = user_passes_test(is_admin, login_url='/login/')
-manager_required = user_passes_test(is_manager, login_url='/login/')
-cashier_required = user_passes_test(is_cashier, login_url='/login/')
+admin_required = user_passes_test(is_admin)
+manager_required = user_passes_test(is_manager)
+cashier_required = user_passes_test(is_cashier)

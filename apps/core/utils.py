@@ -1,6 +1,6 @@
 from typing import Optional, Dict, Any
 from django.db import models, transaction, IntegrityError
-import datetime
+from django.utils import timezone
 from .models import AuditLog
 
 
@@ -37,7 +37,7 @@ def save_with_sequential_number(instance: models.Model, field_name: str, prefix:
         return
 
     model_class = instance.__class__
-    today_prefix = f"{prefix}{datetime.date.today().strftime('%Y%m%d')}"
+    today_prefix = f"{prefix}{timezone.localdate().strftime('%Y%m%d')}"
     attempts = 0
     
     while attempts < 10:

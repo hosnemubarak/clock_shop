@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Sum, Count, F, Q, Avg
-from django.db.models.functions import TruncDate, TruncMonth, TruncWeek
+from django.db.models.functions import Coalesce, TruncMonth, TruncWeek
 from django.utils import timezone
 from datetime import timedelta, date
 from decimal import Decimal
@@ -17,7 +17,7 @@ from .exports import generate_pdf, generate_excel
 @login_required
 def report_dashboard(request):
     """Main reports dashboard with overview."""
-    today = timezone.now().date()
+    today = timezone.localdate()
     month_start = today.replace(day=1)
     year_start = today.replace(month=1, day=1)
     
@@ -32,7 +32,7 @@ def report_dashboard(request):
 @login_required
 def sales_report(request):
     """Sales report with date and shop filtering."""
-    today = timezone.now().date()
+    today = timezone.localdate()
     date_from = request.GET.get('date_from', (today - timedelta(days=30)).strftime('%Y-%m-%d'))
     date_to = request.GET.get('date_to', today.strftime('%Y-%m-%d'))
     group_by = request.GET.get('group_by', 'day')
@@ -64,22 +64,30 @@ def sales_report(request):
     )
     summary['total_profit'] = (summary['total_sales'] or Decimal('0')) - (summary['total_cost'] or Decimal('0'))
     
-    # Group by period
+    # Group by period. sale_date is a DateField, so 'day' needs no Trunc — just
+    # group on the field itself. Week/month still need truncation to snap to boundaries.
     if group_by == 'day':
-        trunc_func = TruncDate('sale_date')
-    elif group_by == 'week':
-        trunc_func = TruncWeek('sale_date')
+        sales_by_period = sales.values(
+            period=F('sale_date')
+        ).annotate(
+            total=Sum('total_amount'),
+            cost=Sum('total_cost'),
+            count=Count('id')
+        ).order_by('period')
     else:
-        trunc_func = TruncMonth('sale_date')
-    
-    sales_by_period = sales.annotate(
-        period=trunc_func
-    ).values('period').annotate(
-        total=Sum('total_amount'),
-        cost=Sum('total_cost'),
-        count=Count('id')
-    ).order_by('period')
-    
+        if group_by == 'week':
+            trunc_func = TruncWeek('sale_date')
+        else:
+            trunc_func = TruncMonth('sale_date')
+
+        sales_by_period = sales.annotate(
+            period=trunc_func
+        ).values('period').annotate(
+            total=Sum('total_amount'),
+            cost=Sum('total_cost'),
+            count=Count('id')
+        ).order_by('period')
+
     # Calculate profit for each period
     sales_data = []
     for s in sales_by_period:
@@ -191,7 +199,7 @@ def sales_report(request):
 @login_required
 def profit_report(request):
     """Profit analysis report with product and shop filters."""
-    today = timezone.now().date()
+    today = timezone.localdate()
     date_from = request.GET.get('date_from', (today - timedelta(days=30)).strftime('%Y-%m-%d'))
     date_to = request.GET.get('date_to', today.strftime('%Y-%m-%d'))
     product_id = request.GET.get('product', '')
@@ -387,7 +395,33 @@ def stock_report(request):
     if stock_filter == 'low':
         stock_summary = stock_summary.filter(total_quantity__lte=10)
     elif stock_filter == 'out':
-        stock_summary = stock_summary.filter(total_quantity=0)
+        # The ProductStock base above excludes every zero row, so a
+        # total_quantity=0 predicate on it can never match. Out-of-stock has to
+        # be derived from Product instead, so products whose stock rows sum to
+        # zero AND products with no stock row at all are both reported.
+        out_products = Product.objects.filter(is_active=True).select_related(
+            'brand', 'category'
+        )
+        if category_id:
+            out_products = out_products.filter(category_id=category_id)
+
+        quantity_filter = Q(stocks__warehouse_id=warehouse_id) if warehouse_id else Q()
+        out_products = out_products.annotate(
+            on_hand=Coalesce(Sum('stocks__quantity', filter=quantity_filter), 0)
+        ).filter(on_hand=0).order_by('sku')
+
+        # Same keys as the values()/annotate() rows above so the paginator, the
+        # PDF template and the Excel export keep working unchanged.
+        stock_summary = [{
+            'product__id': p.id,
+            'product__sku': p.sku,
+            'product__brand__name': p.brand.name if p.brand else None,
+            'product__category__name': p.category.name if p.category else None,
+            'product__default_selling_price': p.default_selling_price,
+            'total_quantity': 0,
+            'total_value': Decimal('0.00'),
+            'avg_cost': p.average_cost,
+        } for p in out_products]
     
     # Stock by warehouse
     stock_by_warehouse = ProductStock.objects.filter(
@@ -560,7 +594,7 @@ def transfer_report(request):
 def dead_stock_report(request):
     """Report on slow-moving/dead stock."""
     days_threshold = int(request.GET.get('days', 90))
-    threshold_date = timezone.now().date() - timedelta(days=days_threshold)
+    threshold_date = timezone.localdate() - timedelta(days=days_threshold)
     
     # Get batches that haven't been sold recently
     # First, get products that have been sold recently (exclude custom items)
