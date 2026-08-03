@@ -26,7 +26,9 @@ class SaleForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['customer'].queryset = Customer.objects.filter(is_active=True)
+        # Empty queryset so the template doesn't render thousands of options.
+        # TomSelect will fetch customers via AJAX.
+        self.fields['customer'].queryset = Customer.objects.none()
         self.fields['customer'].required = False
         self.fields['customer'].empty_label = "Walk-in Customer (None)"
 

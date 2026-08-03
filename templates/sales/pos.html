@@ -2,6 +2,8 @@
 
 {% block title %}POS | {{ SHOP_NAME }}{% endblock %}
 
+{% block sidebar_size %}sm{% endblock %}
+
 {% block content %}
 <style>
     /* Premium UI Tweaks */
@@ -175,7 +177,7 @@
                         <option value="cash">Cash</option>
                         <option value="card">Card</option>
                         <option value="bank_transfer">Bank Transfer</option>
-                        <option value="mobile_money">Mobile Money</option>
+                        <option value="mobile_payment">Mobile Payment</option>
                     </select>
                 </div>
                 
@@ -220,6 +222,8 @@ let targetCustomerSelectId = '';
 document.addEventListener('DOMContentLoaded', function() {
     checkoutModal = new bootstrap.Modal(document.getElementById('checkoutModal'));
     newCustomerModal = new bootstrap.Modal(document.getElementById('newCustomerModal'));
+    // The shared customer modal no longer calls this inline, so bind it here.
+    document.getElementById('newCustomerSaveBtn').addEventListener('click', saveNewCustomer);
 });
 
 function openNewCustomerModal(selectId) {

@@ -30,7 +30,9 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveNewCustomer()">
+                <!-- Wired by the including page's script (id, not inline onclick) so the
+                   handler does not have to be a global. -->
+                <button type="button" class="btn btn-primary" id="newCustomerSaveBtn">
                     <i class="las la-save me-1"></i> Save
                 </button>
             </div>

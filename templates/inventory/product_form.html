@@ -25,26 +25,35 @@
             <!-- Basic Information -->
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title mb-0"><i class="las la-info-circle me-2"></i>Basic Information</h5>
+                    <h5 class="card-title mb-0"><i class="las la-info-circle me-2"></i>Basic Information & Pricing</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-12 col-md-6 col-lg-3 mb-3">
                             <label for="id_sku" class="form-label">SKU <span class="text-danger">*</span></label>
                             {{ form.sku }}
                             <small class="text-muted">Unique product identifier</small>
                             {% if form.sku.errors %}<div class="text-danger small">{{ form.sku.errors.0 }}</div>{% endif %}
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-12 col-md-6 col-lg-3 mb-3">
                             <label for="id_brand" class="form-label">Brand <span class="text-danger">*</span></label>
                             {{ form.brand }}
                             <small class="text-muted">Displays as: SKU - Brand Name</small>
                             {% if form.brand.errors %}<div class="text-danger small">{{ form.brand.errors.0 }}</div>{% endif %}
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-12 col-md-6 col-lg-3 mb-3">
                             <label for="id_category" class="form-label">Category <span class="text-danger">*</span></label>
                             {{ form.category }}
                             {% if form.category.errors %}<div class="text-danger small">{{ form.category.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-12 col-md-6 col-lg-3 mb-3">
+                            <label for="id_default_selling_price" class="form-label">Selling Price <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
+                                {{ form.default_selling_price }}
+                            </div>
+                            <small class="text-muted">Default retail price</small>
+                            {% if form.default_selling_price.errors %}<div class="text-danger small">{{ form.default_selling_price.errors.0 }}</div>{% endif %}
                         </div>
                     </div>
 
@@ -55,25 +64,7 @@
                 </div>
             </div>
 
-            <!-- Pricing & Media -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0"><i class="las la-tag me-2"></i>Pricing & Media</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="id_default_selling_price" class="form-label">Selling Price <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
-                                {{ form.default_selling_price }}
-                            </div>
-                            <small class="text-muted">Default retail price</small>
-                            {% if form.default_selling_price.errors %}<div class="text-danger small">{{ form.default_selling_price.errors.0 }}</div>{% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
+
             
             {% if not form.instance.pk %}
             <!-- Initial Stock -->

@@ -339,8 +339,58 @@ def api_customer_info(request, customer_id):
         'total_due': str(customer.total_due),
         'unpaid_invoices': list(unpaid),
     }
-    
+
+    loyalty = _customer_loyalty(customer)
+    if loyalty:
+        data['loyalty'] = loyalty
+
     return JsonResponse(data)
+
+
+@login_required
+def api_customer_search(request):
+    """API endpoint to search customers dynamically."""
+    query = request.GET.get('q', '').strip()
+    
+    customers = Customer.objects.filter(is_active=True)
+    if query:
+        customers = customers.filter(
+            Q(name__icontains=query) |
+            Q(phone__icontains=query) |
+            Q(email__icontains=query)
+        )
+        
+    # Limit results to keep it fast
+    customers = customers[:20]
+    
+    data = [{
+        'id': c.id,
+        'name': c.name,
+        'phone': c.phone or '',
+    } for c in customers]
+    
+    return JsonResponse({'results': data})
+
+
+def _customer_loyalty(customer):
+    """Loyalty payload for the sale screen, or None when the shop has no scheme.
+
+    Customer carries no loyalty column today, so this reads whatever a future
+    migration adds rather than guessing a tier from spend -- inventing
+    thresholds here would put a number on screen the shop never agreed to.
+    Add `loyalty_tier` and/or `loyalty_points` to Customer and this starts
+    populating on its own; the template and JS already handle the payload.
+    """
+    tier = getattr(customer, 'loyalty_tier', None)
+    points = getattr(customer, 'loyalty_points', None)
+
+    payload = {}
+    if tier:
+        payload['tier'] = str(tier)
+    if points is not None:
+        payload['points'] = str(points)
+
+    return payload or None
 
 
 @login_required

@@ -40,11 +40,7 @@ class Sale(TimeStampedModel):
         validators=[MinValueValidator(Decimal('0.00'))],
         default=Decimal('0.00')
     )
-    tax_amount = models.DecimalField(
-        max_digits=12, decimal_places=2,
-        validators=[MinValueValidator(Decimal('0.00'))],
-        default=Decimal('0.00')
-    )
+
     total_amount = models.DecimalField(
         max_digits=12, decimal_places=2,
         validators=[MinValueValidator(Decimal('0.00'))],
@@ -105,7 +101,7 @@ class Sale(TimeStampedModel):
         items = self.items.all()
         self.subtotal = sum(item.total_price for item in items)
         self.total_cost = sum(item.total_cost for item in items)
-        self.total_amount = self.subtotal - self.discount_amount + self.tax_amount
+        self.total_amount = self.subtotal - self.discount_amount
         self.save(update_fields=['subtotal', 'total_cost', 'total_amount'])
     
     def recalculate_paid_amount(self):

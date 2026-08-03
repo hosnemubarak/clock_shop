@@ -1,595 +1,322 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}New Sale | {{ SHOP_NAME }}{% endblock %}
 
+{% block sidebar_size %}sm{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/sale-create.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">New Sale</h4>
+{% comment %}
+  The sale screen. Nothing here submits the form: sale-create.js posts JSON to
+  sales:pos_checkout, which is the only sale-creation path. Every URL and label
+  the script needs is handed to it through data-* attributes on #salePage so the
+  script stays a plain static file with no template syntax in it.
+
+  The customer-info and receipt URLs are reversed with a 0 placeholder because
+  {% templatetag openblock %} url {% templatetag closeblock %} cannot emit a
+  non-numeric id; the script swaps the trailing "0/" for the real id.
+{% endcomment %}
+<div id="salePage"
+     class="sale-page"
+     data-search-url="{% url 'sales:api_product_search' %}"
+     data-checkout-url="{% url 'sales:pos_checkout' %}"
+     data-customer-create-url="{% url 'customers:api_customer_create' %}"
+     data-customer-search-url="{% url 'customers:api_customer_search' %}"
+     data-customer-info-url="{% url 'customers:api_customer_info' 0 %}"
+     data-receipt-url="{% url 'sales:sale_print' 0 %}"
+     data-sale-list-url="{% url 'sales:sale_list' %}"
+     data-currency="{{ CURRENCY_SYMBOL }}">
+
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">New Sale</h4>
+
+            </div>
         </div>
     </div>
-</div>
 
-<form method="post" id="saleForm">
-    {% csrf_token %}
-    
-    {% if form.errors %}
-    <div class="alert alert-danger">
-        <strong>Please correct the following errors:</strong>
-        <ul class="mb-0 mt-1">
-        {% for field in form %}
-            {% for error in field.errors %}
-                <li>{{ field.label }}: {{ error }}</li>
-            {% endfor %}
-        {% endfor %}
-        {% for error in form.non_field_errors %}
-            <li>{{ error }}</li>
-        {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
-    
-    <div class="row">
-        <!-- Left Column: Main Workspace -->
-        <div class="col-lg-8">
-            <!-- Add Item Form -->
-            <div class="card bg-light-subtle border mb-3">
-                <div class="card-body p-3">
-                    <div id="inventoryItemForm" class="row g-2 align-items-end">
-                        <div class="col-md-5">
-                            <label class="form-label fw-medium mb-1">Product <span class="text-danger">*</span></label>
-                            <select class="form-select" id="newProduct">
-                                <option value="">Search or select product...</option>
-                                {% for p in products %}
-                                <option value="{{ p.id }}" data-sku="{{ p.sku }}" data-price="{{ p.default_selling_price }}">{{ p.sku }} ({{ p.total_stock }} in stock)</option>
-                                {% endfor %}
-                            </select>
+    <form id="saleForm" novalidate>
+        {% csrf_token %}
+
+        <a href="#cartCard" class="sale-skip btn btn-sm btn-primary">Skip to sale items</a>
+
+        {# Non-blocking error region: checkout failures land here, not in a modal. #}
+        <div id="saleAlert" class="alert alert-danger d-flex align-items-start gap-2" role="alert" hidden>
+            <i class="las la-exclamation-circle fs-4 lh-1"></i>
+            <div class="flex-grow-1">
+                <span id="saleAlertText"></span>
+            </div>
+            <button type="button" class="btn-close" data-sale-dismiss-alert aria-label="Dismiss"></button>
+        </div>
+
+        <!-- 1. Customer ------------------------------------------------------->
+        <div class="card mb-3">
+            <div class="card-body py-3">
+                <div class="row g-3 align-items-end">
+                    <div class="col-lg-4 col-md-6">
+                        <label for="{{ form.customer.id_for_label }}" class="form-label fw-medium mb-1">
+                            Customer
+                        </label>
+                        <div class="d-flex gap-2">
+                            {{ form.customer }}
+                            <button type="button"
+                                    class="btn btn-outline-primary flex-shrink-0"
+                                    data-sale-action="new-customer"
+                                    title="Add a new customer">
+                                <i class="las la-user-plus"></i>
+                                <span class="d-none d-xl-inline ms-1">New</span>
+                            </button>
                         </div>
-                        <div class="col-md-2 col-4">
-                            <label class="form-label fw-medium mb-1">Qty</label>
-                            <input type="number" class="form-control" id="newQty" min="1" value="1">
-                        </div>
-                        <div class="col-md-3 col-5">
-                            <label class="form-label fw-medium mb-1">Price</label>
-                            <div class="input-group">
-                                <span class="input-group-text px-2">{{ CURRENCY_SYMBOL }}</span>
-                                <input type="number" class="form-control" id="newPrice" step="0.01">
+                    </div>
+                    <div class="col-lg-5 col-md-12">
+                        <div id="customerMetaBox" class="card border border-primary-subtle bg-primary-subtle bg-opacity-10 shadow-none mb-0 h-100" hidden>
+                            <div class="card-body p-2 d-flex align-items-center">
+                                <div class="avatar-sm flex-shrink-0 me-3">
+                                    <div class="avatar-title bg-primary text-white rounded fs-3">
+                                        <i class="las la-user"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1" id="customerMetaDetails" aria-live="polite">
+                                    <h6 class="mb-0 fs-14 text-primary" id="customerMetaName">Walk-in Customer</h6>
+                                    <p class="mb-0 text-muted small" id="customerMetaExtra">No account, no credit.</p>
+                                </div>
+                                <div class="flex-shrink-0 text-end ms-3" id="customerLoyaltyBox" hidden>
+                                    <div id="customerLoyalty" aria-live="polite"></div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-2 col-3">
-                            <button type="button" class="btn btn-primary w-100" onclick="addItem()">
-                                <i class="las la-plus fw-bold"></i> Add
-                            </button>
-                        </div>
                     </div>
-                    <div id="stockInfo" class="mt-2 small"></div>
-                </div>
-            </div>
-
-            <!-- Cart Table -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-white border-bottom">
-                    <h5 class="card-title mb-0">Sale Items</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive" style="min-height: 200px;">
-                        <table class="table table-hover align-middle mb-0" id="itemsTable">
-                            <thead class="table-light text-muted small text-uppercase">
-                                <tr>
-                                    <th class="ps-3">Product</th>
-                                    <th width="80" class="text-center">Qty</th>
-                                    <th width="120" class="text-end">Price</th>
-                                    <th width="120" class="text-end pe-3">Total</th>
-                                    <th width="50"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="itemsBody">
-                                <!-- Items will be dynamically inserted here -->
-                            </tbody>
-                            <tfoot class="bg-light-subtle">
-                                <tr>
-                                    <td colspan="3" class="text-end fw-bold">Subtotal:</td>
-                                    <td class="text-end fw-bold pe-3 fs-5" id="subtotal">{{ CURRENCY_SYMBOL }}0.00</td>
-                                    <td></td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Right Column: Summary & Checkout -->
-        <div class="col-lg-4">
-            <div class="card shadow-sm border-primary sticky-top" style="top: 80px;">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="card-title mb-0 text-white">Sale Summary</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label d-flex justify-content-between align-items-center mb-1">
-                            <span class="fw-medium">Customer</span>
-                            <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" onclick="openNewCustomerModal('id_customer')">
-                                <i class="las la-plus"></i> New
-                            </button>
+                    <div class="col-lg-3 col-md-6">
+                        <label for="{{ form.sale_date.id_for_label }}" class="form-label fw-medium mb-1">
+                            Sale Date
                         </label>
-                        {{ form.customer }}
-                        <small class="text-muted d-block mt-1">Leave empty for walk-in customer</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-medium mb-1">Sale Date</label>
                         {{ form.sale_date }}
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-medium mb-1">Notes</label>
-                        {{ form.notes }}
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-lg-8">
+                <!-- 2. Product search ------------------------------------------>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="sale-search">
+                            <label for="productSearch" class="form-label fw-medium mb-1">
+                                Add Product
+                            </label>
+                            <div class="sale-search__control">
+                                <i class="las la-search sale-search__icon" aria-hidden="true"></i>
+                                <input type="search"
+                                       class="form-control form-control-lg sale-search__input"
+                                       id="productSearch"
+                                       placeholder="Search by SKU, brand, or category&hellip;"
+                                       autocomplete="off"
+                                       role="combobox"
+                                       aria-expanded="false"
+                                       aria-autocomplete="list"
+                                       aria-controls="searchResults"
+                                       aria-describedby="searchHelp">
+                                <div class="spinner-border spinner-border-sm text-primary sale-search__spinner"
+                                     id="searchSpinner" role="status" hidden>
+                                    <span class="visually-hidden">Searching&hellip;</span>
+                                </div>
+                            </div>
+                            <div id="searchHelp" class="form-text">
+                                Results appear as you type. Press <kbd>Enter</kbd> to add the highlighted product.
+                            </div>
+                            <ul class="sale-search__results list-unstyled"
+                                id="searchResults"
+                                role="listbox"
+                                aria-label="Product search results"
+                                hidden></ul>
+                        </div>
+                        {# Screen-reader running commentary for a list that changes silently. #}
+                        <div id="searchStatus" class="visually-hidden" aria-live="polite"></div>
                     </div>
-                    
-                    <hr class="border-secondary opacity-25 my-4">
-                    
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <span class="fs-5 text-muted">Total Due</span>
-                        <span id="summaryTotal" class="fs-2 fw-bold text-dark">{{ CURRENCY_SYMBOL }}0.00</span>
+                </div>
+
+                <!-- 3. Sale items --------------------------------------------->
+                <div class="card mb-3" id="cartCard">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h5 class="card-title mb-0">Sale Items</h5>
+                        <span class="badge bg-primary-subtle text-primary" id="cartCount">0 items</span>
                     </div>
-                    
-                    <button type="button" class="btn btn-success w-100 btn-lg shadow-sm" onclick="openCheckout()">
-                        <i class="las la-check-circle fs-4 me-1 align-middle"></i> Complete Sale
-                    </button>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0 sale-cart">
+                                <caption class="visually-hidden">
+                                    Products in this sale, with quantity, discount and line total.
+                                </caption>
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col" class="ps-3">Product</th>
+                                        <th scope="col" class="text-end" style="width: 8rem;">Unit Price</th>
+                                        <th scope="col" class="text-center" style="width: 9rem;">Qty</th>
+                                        <th scope="col" class="text-end" style="width: 8rem;">Discount</th>
+                                        <th scope="col" class="text-end" style="width: 8rem;">Total</th>
+                                        <th scope="col" style="width: 3rem;">
+                                            <span class="visually-hidden">Remove</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cartBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="sale-cart__empty" id="cartEmpty">
+                            <i class="las la-box" aria-hidden="true"></i>
+                            <p class="mb-1 fw-medium">No products yet</p>
+                            <p class="mb-0 small">
+                                Search above to add the first item.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="sale-summary">
+                    <!-- 4. Payment summary --------------------------------------->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Payment</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="sale-total">
+                                <span class="sale-total__label">Subtotal</span>
+                                <span class="sale-total__value" id="sumSubtotal">{{ CURRENCY_SYMBOL }}0.00</span>
+                            </div>
+
+                            <div class="sale-total">
+                                <label class="sale-total__label mb-0" for="orderDiscount">Order discount</label>
+                                <div class="input-group input-group-sm sale-total__input">
+                                    <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
+                                    <input type="number" class="form-control text-end sale-num"
+                                           id="orderDiscount" value="0.00" step="0.01" min="0"
+                                           inputmode="decimal">
+                                </div>
+                            </div>
+
+
+
+                            <hr class="my-2">
+
+                            <div class="sale-total sale-total--grand">
+                                <span class="sale-total__label">Grand total</span>
+                                <span class="sale-total__value text-primary" id="sumGrand">{{ CURRENCY_SYMBOL }}0.00</span>
+                            </div>
+
+                            <hr class="my-2">
+
+                            <div class="sale-total">
+                                <label class="sale-total__label mb-0" for="amountPaid">Amount paid</label>
+                                <div class="input-group sale-total__input">
+                                    <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
+                                    <input type="number" class="form-control text-end sale-num"
+                                           id="amountPaid" value="0.00" step="0.01" min="0"
+                                           inputmode="decimal">
+                                </div>
+                            </div>
+
+                            <div class="sale-total">
+                                {# Flips between "Change to return" and "Amount due" as paid crosses total. #}
+                                <span class="sale-total__label" id="dueLabel">Amount due</span>
+                                <span class="sale-total__value fs-5" id="sumDue" aria-live="polite">{{ CURRENCY_SYMBOL }}0.00</span>
+                            </div>
+
+                            <button type="button" class="btn btn-sm btn-link p-0 mt-1"
+                                    data-sale-action="pay-exact">
+                                Pay exact amount
+                            </button>
+
+                            <!-- 5. Payment method ------------------------------->
+                            <fieldset class="mt-3">
+                                <legend class="form-label fw-medium mb-1 fs-6">Payment method</legend>
+                                <div class="sale-methods" role="radiogroup" aria-label="Payment method">
+                                    {% for value, label in payment_methods %}
+                                    <button type="button"
+                                            class="btn btn-sm {% if forloop.first %}btn-primary{% else %}btn-outline-primary{% endif %}"
+                                            data-method="{{ value }}"
+                                            role="radio"
+                                            aria-checked="{% if forloop.first %}true{% else %}false{% endif %}">
+                                        {{ label }}
+                                    </button>
+                                    {% endfor %}
+                                </div>
+                                <input type="hidden" id="paymentMethod" value="{{ payment_methods.0.0 }}">
+                            </fieldset>
+
+                            <div class="mt-3">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label fw-medium mb-1">
+                                    Notes <span class="text-muted fw-normal">(optional)</span>
+                                </label>
+                                {{ form.notes }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6. Actions ------------------------------------------------>
+                    <div class="sale-actions d-grid gap-2">
+                        <button type="button" class="btn btn-success btn-lg" id="btnComplete">
+                            <i class="las la-check-circle fs-5 align-middle me-1"></i>
+                            Complete Sale
+                        </button>
+                        <button type="button" class="btn btn-light" id="btnReset">
+                            Clear sale
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- Success -------------------------------------------------------------->
+    <div class="modal fade" id="saleSuccessModal" tabindex="-1" aria-labelledby="saleSuccessTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <i class="las la-check-circle text-success" style="font-size: 3.5rem;" aria-hidden="true"></i>
+                    <h5 class="mt-2 mb-1" id="saleSuccessTitle">Sale completed</h5>
+                    <p class="text-muted mb-4">
+                        Invoice <span class="fw-semibold" id="successInvoice"></span> has been created.
+                    </p>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-primary" id="btnPrintReceipt">
+                            <i class="las la-print me-1"></i> Print receipt
+                        </button>
+                        <button type="button" class="btn btn-success" id="btnNextSale">
+                            Start next sale
+                        </button>
+                        <a class="btn btn-link" id="linkViewSale" href="#">View this sale</a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</form>
 
-<!-- Checkout Modal -->
-<div class="modal fade" id="checkoutModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title text-white">
-                    <i class="las la-money-bill-wave me-1"></i> Complete Payment
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">Discount Amount ({{ CURRENCY_SYMBOL }})</label>
-                    <input type="number" id="checkoutDiscount" class="form-control" value="0.00" step="0.01" min="0" oninput="updateCheckoutTotal()">
-                </div>
-
-                <div class="card bg-light mb-3">
-                    <div class="card-body py-2">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span>Subtotal:</span>
-                            <span id="checkoutSubtotal">{{ CURRENCY_SYMBOL }}0.00</span>
-                        </div>
-                        <div class="d-flex justify-content-between fw-bold fs-5">
-                            <span>Total Due:</span>
-                            <span id="checkoutFinalTotal" class="text-danger">{{ CURRENCY_SYMBOL }}0.00</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Payment Method</label>
-                    <select id="checkoutMethod" class="form-select">
-                        <option value="cash">Cash</option>
-                        <option value="card">Card</option>
-                        <option value="bank_transfer">Bank Transfer</option>
-                        <option value="mobile_money">Mobile Money</option>
-                    </select>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">Amount Paid ({{ CURRENCY_SYMBOL }})</label>
-                    <input type="number" id="checkoutPaid" class="form-control form-control-lg text-end" value="0.00" step="0.01" min="0" oninput="calculateChange()">
-                    <div class="form-text">Leave as 0.00 for pending/credit sales.</div>
-                </div>
-                
-                <div class="card bg-light mt-2">
-                    <div class="card-body py-2">
-                        <div class="d-flex justify-content-between fw-bold fs-5">
-                            <span id="changeLabel">Change:</span>
-                            <span id="checkoutChange" class="text-primary">{{ CURRENCY_SYMBOL }}0.00</span>
-                        </div>
-                    </div>
-                </div>
-                
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" id="btnConfirmCheckout" onclick="processCheckout()">
-                    <i class="las la-check me-1"></i> Confirm Sale
-                </button>
-            </div>
-        </div>
-    </div>
+    {% include 'partials/customer_modal.html' %}
 </div>
-
-{% include 'partials/customer_modal.html' %}
 {% endblock %}
 
 {% block extra_js %}
-<script>
-let items = [];
-let itemIndex = 0;
-let stockData = {};
-let productSelect = null;
-let warehouseSelect = null;
-let customerSelect = null;
-
-// Initialize Tom Select for searchable dropdowns
-document.addEventListener('DOMContentLoaded', function() {
-    // Product dropdown
-    productSelect = new TomSelect('#newProduct', {
-        placeholder: 'Search or select product...',
-        allowEmptyOption: true,
-        onChange: function(value) {
-            loadStocks(value);
-        }
-    });
-    
-    // Customer dropdown (if exists)
-    const customerEl = document.querySelector('[name="customer"]');
-    if (customerEl && customerEl.tagName === 'SELECT') {
-        customerSelect = new TomSelect(customerEl, {
-            placeholder: 'Search customer...',
-            allowEmptyOption: true
-        });
+<style>
+    /* Force TomSelect to always be on top and clickable, overriding any theme z-index issues */
+    .ts-wrapper {
+        position: relative !important;
+        z-index: 9999 !important;
+        pointer-events: auto !important;
     }
-
-    // Pre-select from URL params
-    const urlParams = new URLSearchParams(window.location.search);
-    const preProduct = urlParams.get('product');
-    if (preProduct) {
-        productSelect.setValue(preProduct);
+    .ts-control {
+        pointer-events: auto !important;
     }
-});
-
-function loadStocks(productId) {
-    const priceInput = document.getElementById('newPrice');
-    const stockInfo = document.getElementById('stockInfo');
-    
-    stockInfo.innerHTML = '';
-    
-    if (!productId) return;
-    
-    // Get product option data
-    const productOption = document.querySelector(`#newProduct option[value="${productId}"]`);
-    if (productOption) {
-        priceInput.value = productOption.dataset.price;
+    .ts-dropdown {
+        z-index: 10000 !important;
     }
-    
-    fetch(`/sales/api/products/${productId}/`)
-        .then(response => response.json())
-        .then(data => {
-            stockData = { shop_stock: data.shop_stock };
-            
-            if (data.shop_stock === 0 && data.warehouse_stock > 0) {
-                stockInfo.innerHTML = `
-                    <div class="alert alert-warning mb-0 mt-2">
-                        <i class="las la-exclamation-triangle me-1"></i>
-                        <strong>Not available in shop!</strong><br>
-                        This product has <strong>${data.warehouse_stock} units</strong> in warehouses but none in the shop.<br>
-                        <a href="/warehouse/transfers/create/" class="alert-link">
-                            <i class="las la-exchange-alt me-1"></i>Transfer stock to the shop first
-                        </a>
-                    </div>`;
-                return;
-            }
-            
-            if (data.shop_stock === 0) {
-                stockInfo.innerHTML = `
-                    <div class="alert alert-danger mb-0 mt-2">
-                        <i class="las la-times-circle me-1"></i>
-                        No stock available for this product.
-                    </div>`;
-                return;
-            }
-            
-            let infoHtml = `<div class="text-success small fw-bold">
-                <i class="las la-check-circle me-1"></i>
-                ${data.shop_stock} units available for sale
-            </div>`;
-            
-            if (data.warehouse_stock > 0) {
-                infoHtml += `
-                    <div class="text-info small">
-                        <i class="las la-info-circle me-1"></i>
-                        (${data.warehouse_stock} more in warehouses)
-                    </div>`;
-            }
-            stockInfo.innerHTML = infoHtml;
-        });
-}
-
-function addItem() {
-    const productId = productSelect.getValue();
-    const qty = parseInt(document.getElementById('newQty').value);
-    const price = parseFloat(document.getElementById('newPrice').value);
-    
-    if (!productId) {
-        showValidationModal('Please select a product first.', 'Product Required');
-        return;
-    }
-    
-    if (!qty || qty < 1) {
-        showValidationModal('Please enter a valid quantity greater than zero.', 'Invalid Quantity');
-        return;
-    }
-    
-    if (!price || price <= 0) {
-        showValidationModal('Please enter a valid selling price.', 'Invalid Price');
-        return;
-    }
-    
-    if (qty > stockData.shop_stock) {
-        showValidationModal(`Only ${stockData.shop_stock} units available in the shop. Please reduce the quantity.`, 'Insufficient Stock');
-        return;
-    }
-    
-    const productOption = document.querySelector(`#newProduct option[value="${productId}"]`);
-    
-    const item = {
-        index: itemIndex++,
-        product_id: productId,
-        product_sku: productOption.dataset.sku,
-        quantity: qty,
-        unit_price: price,
-        discount: 0,
-        is_custom: false
-    };
-    
-    items.push(item);
-    
-    // Update available quantity in stock data
-    stockData.shop_stock -= qty;
-    
-    renderItems();
-    
-    // Reset using Tom Select
-    productSelect.clear();
-    document.getElementById('newQty').value = '1';
-    document.getElementById('newPrice').value = '';
-    document.getElementById('stockInfo').innerHTML = '';
-}
-
-function removeItem(index) {
-    const item = items.find(i => i.index === index);
-    if (item && stockData.shop_stock !== undefined) {
-        // Just remove, don't attempt to restore stock to shop_stock accurately across product switches
-    }
-    items = items.filter(i => i.index !== index);
-    renderItems();
-}
-
-function renderItems() {
-    const tbody = document.getElementById('itemsBody');
-    let html = '';
-    let subtotal = 0;
-    
-    items.forEach(item => {
-        const lineTotal = item.quantity * item.unit_price;
-        subtotal += lineTotal;
-        // Properly escape JSON for HTML attribute
-        const itemJson = JSON.stringify(item).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
-        html += `
-            <tr>
-                <td class="ps-3 fw-medium">${escapeHtml(item.product_sku)}</td>
-                <td class="text-center">${item.quantity}</td>
-                <td class="text-end text-muted">{{ CURRENCY_SYMBOL }}${item.unit_price.toFixed(2)}</td>
-                <td class="text-end fw-medium pe-3">{{ CURRENCY_SYMBOL }}${lineTotal.toFixed(2)}</td>
-                <td>
-                    <button type="button" class="btn btn-soft-danger btn-sm" onclick="removeItem(${item.index})">
-                        <i class="las la-times"></i>
-                    </button>
-                </td>
-                <input type="hidden" name="items" value="${itemJson}">
-            </tr>
-        `;
-    });
-    
-    document.getElementById('subtotal').textContent = '{{ CURRENCY_SYMBOL }}' + subtotal.toFixed(2);
-    tbody.innerHTML = html;
-    
-    updateTotals();
-}
-
-// Helper function to escape HTML entities
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function updateTotals() {
-    let subtotal = 0;
-    items.forEach(item => {
-        subtotal += item.quantity * item.unit_price;
-    });
-    
-    document.getElementById('summaryTotal').textContent = '{{ CURRENCY_SYMBOL }}' + subtotal.toFixed(2);
-}
-
-document.getElementById('saleForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-});
-
-let checkoutModal;
-let newCustomerModal;
-let targetCustomerSelectId = '';
-document.addEventListener('DOMContentLoaded', function() {
-    checkoutModal = new bootstrap.Modal(document.getElementById('checkoutModal'));
-    newCustomerModal = new bootstrap.Modal(document.getElementById('newCustomerModal'));
-});
-
-function openNewCustomerModal(selectId) {
-    targetCustomerSelectId = selectId;
-    document.getElementById('newCustomerForm').reset();
-    newCustomerModal.show();
-}
-
-function saveNewCustomer() {
-    const name = document.getElementById('newCustomerName').value.trim();
-    if (!name) {
-        showValidationModal('Customer name is required.', 'Validation Error');
-        return;
-    }
-    
-    const data = {
-        name: name,
-        phone: document.getElementById('newCustomerPhone').value.trim(),
-        email: document.getElementById('newCustomerEmail').value.trim(),
-        address: document.getElementById('newCustomerAddress').value.trim()
-    };
-    
-    // get csrf token from form
-    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    
-    fetch('/customers/api/create/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrf
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.status === 'success') {
-            const select = document.getElementById(targetCustomerSelectId);
-            const text = result.customer.name + (result.customer.phone ? ' - ' + result.customer.phone : '');
-            
-            if (select.tomselect) {
-                select.tomselect.addOption({value: result.customer.id, text: text});
-                select.tomselect.addItem(result.customer.id);
-            } else {
-                const option = document.createElement('option');
-                option.value = result.customer.id;
-                option.text = text;
-                select.add(option);
-                select.value = result.customer.id;
-            }
-            
-            newCustomerModal.hide();
-        } else {
-            showValidationModal(result.message || 'Error creating customer', 'Error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showValidationModal('Failed to create customer.', 'Error');
-    });
-}
-
-function updateCheckoutTotal() {
-    const subtotal = parseFloat(document.getElementById('summaryTotal').textContent.replace(/[^0-9.-]+/g, '')) || 0;
-    const discount = parseFloat(document.getElementById('checkoutDiscount').value) || 0;
-    const finalTotal = Math.max(0, subtotal - discount);
-    
-    document.getElementById('checkoutSubtotal').textContent = '{{ CURRENCY_SYMBOL }}' + subtotal.toFixed(2);
-    document.getElementById('checkoutFinalTotal').textContent = '{{ CURRENCY_SYMBOL }}' + finalTotal.toFixed(2);
-    document.getElementById('checkoutPaid').value = finalTotal.toFixed(2);
-    calculateChange();
-}
-
-function openCheckout() {
-    if (items.length === 0) {
-        showValidationModal('Please add at least one item to the sale before completing.', 'No Items Added');
-        return;
-    }
-
-    updateCheckoutTotal();
-    checkoutModal.show();
-}
-
-function calculateChange() {
-    const finalTotal = parseFloat(document.getElementById('checkoutFinalTotal').textContent.replace(/[^0-9.-]+/g, '')) || 0;
-    const paid = parseFloat(document.getElementById('checkoutPaid').value) || 0;
-    const diff = paid - finalTotal;
-    
-    const changeEl = document.getElementById('checkoutChange');
-    const changeLabel = document.getElementById('changeLabel');
-    
-    if (diff >= 0) {
-        changeLabel.textContent = 'Change to Return:';
-        changeEl.className = 'text-success';
-        changeEl.textContent = '{{ CURRENCY_SYMBOL }}' + diff.toFixed(2);
-    } else {
-        changeLabel.textContent = 'Amount Due:';
-        changeEl.className = 'text-danger';
-        changeEl.textContent = '{{ CURRENCY_SYMBOL }}' + Math.abs(diff).toFixed(2);
-    }
-}
-
-function processCheckout() {
-    const btn = document.getElementById('btnConfirmCheckout');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="las la-spinner la-spin me-1"></i> Processing...';
-    
-    // Gather data from main form
-    const customerId = document.querySelector('[name="customer"]').value;
-    const saleDate = document.querySelector('[name="sale_date"]').value;
-    const notes = document.querySelector('[name="notes"]').value;
-    
-    // Gather from modal
-    const discountAmount = document.getElementById('checkoutDiscount').value || '0.00';
-    const paymentMethod = document.getElementById('checkoutMethod').value;
-    const paymentAmount = document.getElementById('checkoutPaid').value;
-    
-    const payload = {
-        items: items.map(i => ({
-            product_id: i.product_id,
-            quantity: i.quantity,
-            unit_price: i.unit_price
-        })),
-        customer_id: customerId,
-        sale_date: saleDate,
-        discount_amount: discountAmount,
-        notes: notes,
-        payment_method: paymentMethod,
-        payment_amount: paymentAmount
-    };
-    
-    fetch('/sales/api/pos_checkout/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('[name="csrfmiddlewaretoken"]').value
-        },
-        body: JSON.stringify(payload)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            checkoutModal.hide();
-            Swal.fire({
-                title: 'Sale Completed!',
-                text: 'Invoice has been generated successfully.',
-                icon: 'success',
-                showCancelButton: true,
-                confirmButtonText: '<i class="las la-print"></i> Print Receipt',
-                cancelButtonText: 'New Sale',
-                confirmButtonColor: '#28a745'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.open(`/sales/${data.sale_id}/print/`, '_blank');
-                }
-                window.location.reload();
-            });
-        } else {
-            showValidationModal(data.message, 'Checkout Failed');
-        }
-    })
-    .catch(error => {
-        showValidationModal('A network error occurred.', 'Error');
-    })
-    .finally(() => {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="las la-check me-1"></i> Confirm Sale';
-    });
-}
-</script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</style>
+<script src="{% static 'js/sale-create.js' %}?v=7"></script>
 {% endblock %}

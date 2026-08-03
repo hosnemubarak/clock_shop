@@ -31,7 +31,7 @@ class SaleAdmin(admin.ModelAdmin):
             'fields': ('invoice_number', 'customer', 'sale_date', 'status')
         }),
         ('Amounts', {
-            'fields': ('subtotal', 'discount_amount', 'tax_amount', 'total_amount', 'total_cost')
+            'fields': ('subtotal', 'discount_amount', 'total_amount', 'total_cost')
         }),
         ('Payment', {
             'fields': ('paid_amount', 'payment_status')

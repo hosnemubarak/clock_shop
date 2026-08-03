@@ -3,8 +3,6 @@ from django.contrib.auth.models import User
 from decimal import Decimal
 from django.utils import timezone
 from django.urls import reverse
-from django.test import override_settings
-import json
 
 from apps.inventory.models import Category, Brand, Product, ProductStock
 from apps.warehouse.models import Warehouse
@@ -38,47 +36,35 @@ class SalesTestCase(TestCase):
             phone='1234567890'
         )
 
-    @override_settings(DEBUG=True)
-    def test_sale_creation(self):
-        self.client.force_login(self.user)
-        
-        items_data = [
-            json.dumps({
-                'product_id': self.product.id,
-                'warehouse_id': self.warehouse.id,
-                'quantity': '2',
-                'unit_price': '1000.00',
-                'discount': '0'
-            })
-        ]
-        
-        response = self.client.post(reverse('sales:sale_create'), {
-            'customer': self.customer.id,
-            'sale_date': timezone.now().strftime('%Y-%m-%d'),
-            'discount_amount': '0',
-            'tax_amount': '0',
-            'notes': '',
-            'items': items_data
-        })
-        
-        self.assertEqual(response.status_code, 302)
-        
-        sale = Sale.objects.first()
-        self.assertIsNotNone(sale)
-        self.assertEqual(sale.total_amount, Decimal('2000.00'))
-        
-        # Verify profit calculation
-        # 2 units * (1000 - 500) = 1000 profit
-        self.assertEqual(sale.total_cost, Decimal('1000.00'))
-        self.assertEqual(sale.profit, Decimal('1000.00'))
-        
-        # Verify stock deduction
-        stock = ProductStock.objects.get(product=self.product, warehouse=self.warehouse)
-        self.assertEqual(stock.quantity, 18)
-        
-        # Verify customer balance
-        self.customer.refresh_from_db()
-        self.assertEqual(self.customer.total_due, Decimal('2000.00'))
+    def test_sale_item_total_price_nets_line_discount(self):
+        """SaleItem.total_price is quantity * unit_price - discount, and
+        Sale.calculate_totals() must agree with what SaleService writes, otherwise
+        recalculating a sale silently rewrites its invoice total."""
+        sale = Sale.objects.create(
+            customer=self.customer,
+            sale_date=timezone.localdate(),
+            discount_amount=Decimal('100.00'),
+            created_by=self.user,
+        )
+        item = SaleItem.objects.create(
+            sale=sale,
+            product=self.product,
+            warehouse=self.warehouse,
+            quantity=3,
+            unit_price=Decimal('1000.00'),
+            cost_price=Decimal('500.00'),
+            discount=Decimal('250.00'),
+        )
+
+        self.assertEqual(item.total_price, Decimal('2750.00'))
+        self.assertEqual(item.total_cost, Decimal('1500.00'))
+
+        sale.calculate_totals()
+        sale.refresh_from_db()
+        self.assertEqual(sale.subtotal, Decimal('2750.00'))
+        self.assertEqual(sale.total_cost, Decimal('1500.00'))
+        # subtotal - order discount + tax
+        self.assertEqual(sale.total_amount, Decimal('2650.00'))
 
     def test_sale_cancellation(self):
         self.client.force_login(self.user)

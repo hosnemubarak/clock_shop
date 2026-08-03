@@ -60,16 +60,39 @@ class SaleService:
             if unit_price < 0:
                 raise ValueError(f'Unit price for item #{index} cannot be negative.')
 
+            # Per-line discount is an absolute amount off that line, mirroring
+            # SaleItem.total_price = quantity * unit_price - discount. Absent or
+            # blank means no discount, so an older client keeps working unchanged.
+            discount = _to_decimal(item_data.get('discount'), f'discount for item #{index}')
+            if discount < 0:
+                raise ValueError(f'Discount for item #{index} cannot be negative.')
+            if discount > quantity * unit_price:
+                raise ValueError(f'Discount for item #{index} cannot exceed the line total.')
+
             parsed_items.append({
                 'product_id': _to_int(item_data.get('product_id'), f'product for item #{index}'),
                 'quantity': quantity,
                 'unit_price': unit_price,
+                'discount': discount,
             })
 
         customer_id = data.get('customer_id')
         discount_amount = _to_decimal(data.get('discount_amount'), 'discount amount')
         payment_amount = _to_decimal(data.get('payment_amount'), 'payment amount')
         payment_method = data.get('payment_method', 'cash')
+
+        # The model validators do not fire on Model.objects.create(), so a negative
+        # order discount would inflate total_amount and a negative payment would
+        # corrupt the customer balance. Reject all three here.
+        if discount_amount < 0:
+            raise ValueError('Order discount cannot be negative.')
+        if payment_amount < 0:
+            raise ValueError('Payment amount cannot be negative.')
+
+        # choices are not enforced at the database level either, so an unknown
+        # method used to persist and then render blank on the payment reports.
+        if payment_method not in Payment.PaymentMethod.values:
+            raise ValueError(f'Unknown payment method: {payment_method!r}')
         
         customer = None
         if customer_id:
@@ -132,7 +155,7 @@ class SaleService:
                 quantity=quantity,
                 unit_price=unit_price,
                 cost_price=product.average_cost,
-                discount=Decimal('0')
+                discount=item_data['discount']
             ))
             
             # Update Stock
@@ -150,13 +173,19 @@ class SaleService:
             products_map[stock.product_id].update_total_stock()
 
         for si in sale_items_to_create:
-            subtotal += si.quantity * si.unit_price
-            total_cost += si.quantity * si.cost_price
+            # total_price nets the per-line discount, matching Sale.calculate_totals().
+            # Multiplying out by hand here would over-charge every discounted line and
+            # let a later calculate_totals() silently rewrite the invoice.
+            subtotal += si.total_price
+            total_cost += si.total_cost
             
         # Finalize Sale Totals
+        if discount_amount > subtotal:
+            raise ValueError('Order discount cannot exceed the sale subtotal.')
+
         sale.subtotal = subtotal
         sale.total_cost = total_cost
-        sale.total_amount = subtotal - discount_amount + sale.tax_amount
+        sale.total_amount = subtotal - discount_amount
         sale.save(update_fields=['subtotal', 'total_cost', 'total_amount'])
 
         # Create Payment

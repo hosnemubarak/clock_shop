@@ -1,0 +1,322 @@
+/* Sale screen (sales/create/).
+   Page-specific styles only -- anything reusable belongs in custom.css. */
+
+.sale-page {
+    --sale-sticky-offset: 1rem;
+}
+
+/* Ensure the [hidden] attribute beats Bootstrap's !important display utilities (like d-flex) */
+[hidden] {
+    display: none !important;
+}
+
+/* ---------- Product search ---------- */
+
+.sale-search {
+    position: relative;
+}
+
+.sale-search__control {
+    position: relative;
+}
+
+.sale-search__input {
+    padding-left: 2.75rem;
+    padding-right: 2.75rem;
+    font-size: 1.05rem;
+}
+
+/* Chrome/Safari draw their own clear button on type=search; it collides with
+   the spinner and cannot be styled consistently, so hide it. */
+.sale-search__input::-webkit-search-cancel-button {
+    display: none;
+}
+
+.sale-search__icon,
+.sale-search__spinner {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.sale-search__icon {
+    left: 0.9rem;
+    font-size: 1.25rem;
+    color: #5e6473;
+}
+
+.sale-search__spinner {
+    right: 1rem;
+}
+
+.sale-search__results {
+    position: absolute;
+    z-index: 1055;
+    top: calc(100% + 0.25rem);
+    left: 0;
+    right: 0;
+    max-height: 22rem;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0.25rem;
+    background: var(--vz-secondary-bg, #fff);
+    border: 1px solid var(--vz-border-color, #e9ebec);
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(30, 32, 37, 0.14);
+}
+
+.sale-search__results[hidden] {
+    display: none;
+}
+
+/* ---------- One search result ---------- */
+
+.sale-result {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+}
+
+/* Keyboard selection and hover share one look so arrow keys and the mouse
+   never disagree about which row Enter would add. */
+.sale-result:hover,
+.sale-result.is-active {
+    background: var(--vz-tertiary-bg, #f3f6f9);
+}
+
+.sale-result.is-active {
+    outline: 2px solid var(--vz-primary, #405189);
+    outline-offset: -2px;
+}
+
+.sale-result.is-disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.sale-result__body {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.sale-result__title {
+    font-weight: 600;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sale-result__meta {
+    font-size: 0.75rem;
+    color: #878a99;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sale-result__side {
+    flex: 0 0 auto;
+    text-align: right;
+    line-height: 1.3;
+}
+
+.sale-result__price {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.sale-result mark {
+    padding: 0;
+    background: rgba(255, 190, 11, 0.4);
+    color: inherit;
+    border-radius: 2px;
+}
+
+.sale-search__message {
+    padding: 0.75rem;
+    font-size: 0.8125rem;
+    color: #878a99;
+    text-align: center;
+}
+
+/* ---------- Cart ---------- */
+
+.sale-cart__empty {
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: #878a99;
+}
+
+.sale-cart__empty i {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+.sale-cart td,
+.sale-cart th {
+    vertical-align: middle;
+}
+
+/* Money columns line up digit-for-digit when scanning a long cart. */
+.sale-num {
+    font-variant-numeric: tabular-nums;
+}
+
+.sale-qty {
+    display: inline-flex;
+    align-items: center;
+    max-width: 7.5rem;
+}
+
+.sale-qty .form-control {
+    text-align: center;
+    border-radius: 0;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.sale-qty .form-control::-webkit-outer-spin-button,
+.sale-qty .form-control::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.sale-line-discount {
+    max-width: 7rem;
+    margin-left: auto;
+    text-align: right;
+}
+
+.sale-cart__row.is-over-stock .sale-qty .form-control {
+    border-color: var(--vz-danger, #f06548);
+}
+
+/* ---------- Totals panel ---------- */
+
+.sale-summary {
+    position: sticky;
+    top: var(--sale-sticky-offset);
+    max-height: calc(100vh - var(--sale-sticky-offset) - 1rem);
+    overflow-y: auto;
+}
+
+.sale-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.3rem 0;
+}
+
+.sale-total__label {
+    color: #878a99;
+}
+
+.sale-total__value {
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+}
+
+.sale-total--grand {
+    padding: 0.5rem 0;
+    font-size: 1.05rem;
+}
+
+.sale-total--grand .sale-total__label {
+    color: inherit;
+    font-weight: 600;
+}
+
+.sale-total--grand .sale-total__value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.sale-total__input {
+    max-width: 8.5rem;
+    text-align: right;
+}
+
+/* ---------- Payment method ---------- */
+
+.sale-methods {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+    gap: 0.5rem;
+}
+
+.sale-methods .btn {
+    white-space: nowrap;
+}
+
+/* ---------- Misc ---------- */
+
+.sale-hint kbd {
+    padding: 0.1rem 0.35rem;
+    font-size: 0.6875rem;
+    background: var(--vz-tertiary-bg, #f3f6f9);
+    color: #495057;
+    border: 1px solid var(--vz-border-color, #e9ebec);
+    border-radius: 0.25rem;
+}
+
+/* Visible only to screen readers, but focusable (skip-to-cart link). */
+.sale-skip:not(:focus):not(:active) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.sale-busy {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (min-width: 992px) {
+    .sale-page {
+        --sale-sticky-offset: 5rem;
+    }
+}
+
+/* Tablet and below: the totals panel stops floating and the action bar pins to
+   the viewport so Complete Sale is always one tap away. */
+@media (max-width: 991.98px) {
+    .sale-summary {
+        position: static;
+    }
+
+    .sale-actions {
+        position: sticky;
+        bottom: 0;
+        z-index: 5;
+        padding: 0.75rem;
+        margin: 0 -0.75rem -1rem;
+        background: var(--vz-secondary-bg, #fff);
+        border-top: 1px solid var(--vz-border-color, #e9ebec);
+    }
+}
+
+@media (max-width: 575.98px) {
+    .sale-search__input {
+        font-size: 1rem;
+    }
+
+    .sale-result__side {
+        font-size: 0.8125rem;
+    }
+}
+

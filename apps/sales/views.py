@@ -2,23 +2,34 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db.models import Q, Sum
+from django.db.models import Case, IntegerField, Q, Sum, Value, When
+from django.db.models.functions import Coalesce
 from django.db import transaction
 from django.http import JsonResponse
 from django.utils import timezone
-from decimal import Decimal
 import json
-import html
 import logging
 
-from .models import Sale, SaleItem
-from .forms import SaleForm, SaleItemForm, PaymentForm
+from .models import Sale
+from .forms import SaleForm, PaymentForm
 from apps.inventory.models import Product, ProductStock
 from apps.warehouse.models import Warehouse
 from apps.customers.models import Customer, Payment
 from apps.core.utils import create_audit_log
 
 logger = logging.getLogger(__name__)
+
+# How many products the sale-screen search returns when the caller doesn't say.
+PRODUCT_SEARCH_LIMIT = 25
+
+
+def _to_int_or(value, fallback):
+    """Parse a query-string integer, falling back on anything unusable."""
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return fallback
+    return parsed if parsed > 0 else fallback
 
 
 @login_required
@@ -105,153 +116,27 @@ def sale_detail(request, pk):
 
 @login_required
 def sale_create(request):
-    """Create a new sale with manual batch selection."""
-    products = Product.objects.filter(is_active=True, total_stock__gt=0)
-    customers = Customer.objects.filter(is_active=True)
+    """Render the sale screen.
+
+    GET only. The page never submits this form -- its script posts JSON to
+    ``sales:pos_checkout``, which is the single sale-creation path. A POST branch
+    used to live here as a second, divergent implementation that nothing could
+    reach; it was deleted rather than kept in sync.
+    """
     shop = Warehouse.objects.filter(is_shop=True).first()
-    
+
     if not shop:
         messages.error(request, 'No shop warehouse configured. Please configure a shop warehouse first.')
         return redirect('core:dashboard')
-    
-    
-    if request.method == 'POST':
-        form = SaleForm(request.POST)
-        items_data = request.POST.getlist('items')
-        
-        if form.is_valid() and items_data:
-            from apps.sales.services import _to_decimal, _to_int
 
-            # Coerce and validate the whole payload before any write. Previously
-            # this happened after sale.save(), so a bad value raised KeyError /
-            # InvalidOperation mid-transaction and escaped as an HTTP 500.
-            parsed_items = []
-            try:
-                for index, item_json in enumerate(items_data, start=1):
-                    try:
-                        item = json.loads(html.unescape(item_json))
-                    except ValueError:
-                        raise ValueError('Invalid items data format.')
-                    if not isinstance(item, dict):
-                        raise ValueError(f'Invalid cart item #{index}.')
+    form = SaleForm(initial={'sale_date': timezone.localdate()})
 
-                    quantity = _to_int(item.get('quantity'), f'quantity for item #{index}')
-                    if quantity <= 0:
-                        raise ValueError(f'Quantity for item #{index} must be greater than zero.')
-
-                    unit_price = _to_decimal(item.get('unit_price'), f'unit price for item #{index}')
-                    if unit_price < 0:
-                        raise ValueError(f'Unit price for item #{index} cannot be negative.')
-
-                    discount = _to_decimal(item.get('discount'), f'discount for item #{index}')
-                    if discount < 0:
-                        raise ValueError(f'Discount for item #{index} cannot be negative.')
-
-                    parsed_items.append({
-                        'product_id': _to_int(item.get('product_id'), f'product for item #{index}'),
-                        'quantity': quantity,
-                        'unit_price': unit_price,
-                        'discount': discount,
-                    })
-            except ValueError as exc:
-                messages.error(request, str(exc))
-                return redirect('sales:sale_create')
-
-            sale_items_to_create = []
-            try:
-                # The ValueErrors below are raised inside the block and caught
-                # outside it, so every write -- the Sale row included -- rolls
-                # back. The old code deleted the Sale by hand, which could not
-                # undo the stock decrements that had already been written.
-                with transaction.atomic():
-                    sale = form.save(commit=False)
-                    sale.created_by = request.user
-                    sale.save()
-
-                    total_cost = Decimal('0')
-                    subtotal = Decimal('0')
-
-                    # Lock the stock rows in a stable order so two concurrent
-                    # sales cannot deadlock against each other.
-                    product_ids = sorted({item['product_id'] for item in parsed_items})
-                    products_map = {p.id: p for p in Product.objects.filter(id__in=product_ids)}
-                    stocks_map = {
-                        s.product_id: s
-                        for s in ProductStock.objects.select_for_update().filter(
-                            product_id__in=product_ids, warehouse=shop
-                        ).order_by('product_id')
-                    }
-
-                    stocks_to_update = []
-
-                    for item in parsed_items:
-                        product = products_map.get(item['product_id'])
-                        if not product:
-                            raise ValueError(f"Product with ID {item['product_id']} not found.")
-
-                        quantity = item['quantity']
-                        stock = stocks_map.get(product.id)
-
-                        # Validate stock
-                        if not stock or quantity > stock.quantity:
-                            raise ValueError(
-                                f'Insufficient stock for {product.display_name} in {shop.name}'
-                            )
-
-                        # Create sale item
-                        sale_items_to_create.append(SaleItem(
-                            sale=sale,
-                            product=product,
-                            warehouse=shop,
-                            quantity=quantity,
-                            unit_price=item['unit_price'],
-                            cost_price=product.average_cost,
-                            discount=item['discount'],
-                        ))
-
-                        # Update stock
-                        stock.quantity -= quantity
-                        stocks_to_update.append(stock)
-
-                    SaleItem.objects.bulk_create(sale_items_to_create)
-                    ProductStock.objects.bulk_update(stocks_to_update, ['quantity'])
-
-                    for stock in stocks_to_update:
-                        stock.product.update_total_stock()
-
-                    for sale_item in sale_items_to_create:
-                        subtotal += sale_item.total_price
-                        total_cost += sale_item.total_cost
-
-                    # Update sale totals (mirrors Sale.calculate_totals(): tax is added
-                    # after the discount, otherwise the invoice under-charges).
-                    sale.subtotal = subtotal
-                    sale.total_cost = total_cost
-                    sale.total_amount = subtotal - sale.discount_amount + sale.tax_amount
-                    sale.save()
-                    # Sale post_save signal recalculates the customer balance.
-            except ValueError as exc:
-                messages.error(request, str(exc))
-                return redirect('sales:sale_create')
-
-            create_audit_log(request, 'SALE', sale, {
-                'total': str(sale.total_amount),
-                'items': len(sale_items_to_create),
-                'customer': sale.customer.name if sale.customer else 'Walk-in'
-            })
-
-            messages.success(request, f'Sale "{sale.invoice_number}" created successfully.')
-            return redirect('sales:sale_detail', pk=sale.pk)
-        else:
-            if not items_data:
-                messages.error(request, 'Please add at least one item to the sale.')
-    else:
-        form = SaleForm(initial={'sale_date': timezone.localdate()})
-    
     context = {
         'form': form,
-        'products': products,
-        'customers': customers,
+        # Rendered as the payment-method buttons. Taken from the model rather than
+        # hardcoded in the template, which is how an invalid 'mobile_money' option
+        # sat in the markup and silently persisted against the reports.
+        'payment_methods': Payment.PaymentMethod.choices,
     }
     return render(request, 'sales/sale_form.html', context)
 
@@ -410,6 +295,66 @@ def api_product_info(request, product_id):
 
 
 @login_required
+def api_product_search(request):
+    """Search sellable products for the sale screen.
+
+    Replaces embedding every product in the page as <option> tags, which did not
+    scale and could only be searched by SKU. Matches SKU, brand and category, and
+    returns shop stock in the same response so adding a line needs no second call.
+    """
+    query = (request.GET.get('q') or '').strip()
+
+    shop = Warehouse.objects.filter(is_shop=True).first()
+    if not shop:
+        return JsonResponse({'results': [], 'error': 'No shop warehouse configured.'}, status=409)
+
+    products = Product.objects.filter(is_active=True).select_related('brand', 'category')
+
+    if query:
+        products = products.filter(
+            Q(sku__icontains=query)
+            | Q(brand__name__icontains=query)
+            | Q(category__name__icontains=query)
+        )
+
+    # Shop stock is what a cashier can actually sell; total_stock includes warehouses.
+    products = products.annotate(
+        shop_stock=Coalesce(
+            Sum('stocks__quantity', filter=Q(stocks__warehouse=shop)),
+            Value(0),
+        )
+    )
+
+    # An exact SKU hit is a barcode scan: surface it first so Enter adds the right line.
+    exact_first = Case(
+        When(sku__iexact=query, then=Value(0)),
+        default=Value(1),
+        output_field=IntegerField(),
+    ) if query else Value(1, output_field=IntegerField())
+
+    products = products.order_by(exact_first, '-shop_stock', 'sku')
+
+    # Bounded so a blank query cannot serialise the whole catalogue.
+    limit = min(_to_int_or(request.GET.get('limit'), PRODUCT_SEARCH_LIMIT), 100)
+    rows = list(products[:limit])
+
+    return JsonResponse({
+        'results': [{
+            'id': p.id,
+            'sku': p.sku,
+            'brand': p.brand.name if p.brand else '',
+            'category': p.category.name if p.category else '',
+            'display_name': p.display_name,
+            'price': str(p.default_selling_price),
+            'shop_stock': p.shop_stock,
+            'total_stock': p.total_stock,
+        } for p in rows],
+        'query': query,
+        'truncated': len(rows) == limit,
+    })
+
+
+@login_required
 @transaction.atomic
 def pos_checkout(request):
     """API endpoint to process a POS checkout."""
@@ -434,6 +379,9 @@ def pos_checkout(request):
         return JsonResponse({
             'status': 'success',
             'sale_id': sale.id,
+            # The sale screen shows this on the success modal; without it the
+            # cashier only ever saw the primary key.
+            'invoice_number': sale.invoice_number,
             'message': 'Sale completed successfully.'
         })
         

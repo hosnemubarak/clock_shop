@@ -12,41 +12,43 @@
     </div>
 
     <div class="main-content">
-        <div class="header">
-            <h1>{{ SHOP_NAME }}</h1>
-            {% if SHOP_ADDRESS %}
-            <p>{{ SHOP_ADDRESS|linebreaksbr }}</p>
-            {% else %}
-            <p>Retail Clock Shop</p>
-            {% endif %}
-        </div>
-
-        <div class="invoice-info">
-            <div class="bill-to-box">
-                {% if sale.customer %}
-                <strong>Name:</strong> <span class="table-header-dark-sm">{{ sale.customer.name }}</span><br>
-                {% if sale.customer.address %}<strong>Address:</strong> <span class="text-slate">{{ sale.customer.address }}</span><br>{% endif %}
-                {% if sale.customer.phone %}<strong>Phone:</strong> <span class="text-slate">{{ sale.customer.phone }}</span><br>{% endif %}
-                {% else %}
-                <strong>Name:</strong> <span class="table-header-dark-sm">Walk-in Customer</span>
-                {% endif %}
-            </div>
-            <div class="meta-box">
-                <strong>Invoice #:</strong> <span class="table-header-dark">{{ sale.invoice_number }}</span><br>
-                <strong>Date:</strong> {{ sale.sale_date|date:"F d, Y" }}<br>
-                <strong>Status:</strong> 
-                {% if sale.payment_status == 'paid' %}<span class="status-paid">Paid</span>
-                {% elif sale.payment_status == 'partial' %}<span class="status-partial">Partially Paid</span>
-                {% else %}<span class="status-unpaid">Unpaid</span>{% endif %}
-            </div>
-        </div>
-
         <table>
             <thead>
                 <tr>
+                    <th colspan="5" style="background: white; border: none; padding: 0;">
+                        <div class="header">
+                            <h1>{{ SHOP_NAME }}</h1>
+                            {% if SHOP_ADDRESS %}
+                            <p>{{ SHOP_ADDRESS|linebreaksbr }}</p>
+                            {% else %}
+                            <p>Retail Clock Shop</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="invoice-info">
+                            <div class="bill-to-box">
+                                {% if sale.customer %}
+                                <strong>Name:</strong> <span class="table-header-dark-sm">{{ sale.customer.name }}</span><br>
+                                {% if sale.customer.address %}<strong>Address:</strong> <span class="text-slate">{{ sale.customer.address }}</span><br>{% endif %}
+                                {% if sale.customer.phone %}<strong>Phone:</strong> <span class="text-slate">{{ sale.customer.phone }}</span><br>{% endif %}
+                                {% else %}
+                                <strong>Name:</strong> <span class="table-header-dark-sm">Walk-in Customer</span>
+                                {% endif %}
+                            </div>
+                            <div class="meta-box">
+                                <strong>Invoice #:</strong> <span class="table-header-dark">{{ sale.invoice_number }}</span><br>
+                                <strong>Date:</strong> {{ sale.sale_date|date:"F d, Y" }}<br>
+                                <strong>Status:</strong> 
+                                {% if sale.payment_status == 'paid' %}<span class="status-paid">Paid</span>
+                                {% elif sale.payment_status == 'partial' %}<span class="status-partial">Partially Paid</span>
+                                {% else %}<span class="status-unpaid">Unpaid</span>{% endif %}
+                            </div>
+                        </div>
+                    </th>
+                </tr>
+                <tr>
                     <th class="w-5">SL.</th>
                     <th>Product</th>
-                    <th>SKU</th>
                     <th class="text-right">Qty</th>
                     <th class="text-right">Price</th>
                     <th class="text-right">Total</th>
@@ -57,20 +59,11 @@
                 <tr>
                     <td>{{ forloop.counter|stringformat:"02d" }}</td>
                     <td>{% if item.is_custom %}{{ item.custom_description }} <em>(Custom)</em>{% else %}<span class="table-header-dark">{{ item.product.display_name }}</span>{% endif %}</td>
-                    <td>{% if item.is_custom %}-{% else %}{{ item.product.sku }}{% endif %}</td>
                     <td class="text-right">{{ item.quantity|stringformat:"02d" }}</td>
                     <td class="text-right">{{ item.unit_price|floatformat:2 }}</td>
                     <td class="text-right table-header-dark" >{{ item.total_price|floatformat:2 }}</td>
                 </tr>
                 {% endfor %}
-                <tr class="h-100">
-                    <td class="border-bottom-none"></td>
-                    <td class="border-bottom-none"></td>
-                    <td class="border-bottom-none"></td>
-                    <td class="border-bottom-none"></td>
-                    <td class="border-bottom-none"></td>
-                    <td class="border-bottom-none"></td>
-                </tr>
             </tbody>
         </table>
 
@@ -86,12 +79,7 @@
                     <td class="text-right totals-val">-{{ sale.discount_amount|floatformat:2|intcomma }}</td>
                 </tr>
                 {% endif %}
-                {% if sale.tax_amount > 0 %}
-                <tr>
-                    <td class="totals-label">Tax:</td>
-                    <td class="text-right totals-val">{{ sale.tax_amount|floatformat:2|intcomma }}</td>
-                </tr>
-                {% endif %}
+
                 <tr class="grand-total">
                     <td class="totals-label text-slate-dark">Total:</td>
                     <td class="text-right totals-val">{{ sale.total_amount|floatformat:2|intcomma }}</td>
@@ -115,6 +103,13 @@
             <strong class="text-slate">IN WORDS:</strong> 
             {{ sale.total_amount|amount_in_words }}
         </div>
+
+        {% if sale.customer %}
+        <div class="mt-15px fw-semibold text-danger fs-13px">
+            <strong>Outstanding Amount (Including This Invoice):</strong> 
+            Tk. {{ sale.customer.total_due|floatformat:2|intcomma }}/= ({{ sale.customer.total_due|amount_in_words }})
+        </div>
+        {% endif %}
         
         {% if sale.notes %}
         <div class="notes-section">

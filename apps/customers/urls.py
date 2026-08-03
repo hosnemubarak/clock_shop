@@ -18,6 +18,7 @@ urlpatterns = [
     
     # API
     path('api/create/', views.api_customer_create, name='api_customer_create'),
+    path('api/search/', views.api_customer_search, name='api_customer_search'),
     path('api/<int:customer_id>/', views.api_customer_info, name='api_customer_info'),
     path('api/<int:customer_id>/sales/', views.api_customer_sales, name='api_customer_sales'),
 ]

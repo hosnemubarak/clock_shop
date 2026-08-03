@@ -43,28 +43,18 @@
 
                 <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-pages">Management</span></li>
 
-                <!-- Inventory -->
+                <!-- Products -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="#sidebarInventory" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarInventory">
-                        <i class="las la-boxes"></i> <span data-key="t-inventory">Inventory</span>
+                    <a class="nav-link menu-link" href="{% url 'inventory:product_list' %}">
+                        <i class="las la-boxes"></i> <span data-key="t-products">Products</span>
                     </a>
-                    <div class="collapse menu-dropdown" id="sidebarInventory">
-                        <ul class="nav nav-sm flex-column">
-                            <li class="nav-item">
-                                <a href="{% url 'inventory:product_list' %}" class="nav-link" data-key="t-products">Products</a>
-                            </li>
+                </li>
 
-                            <li class="nav-item">
-                                <a href="{% url 'inventory:category_list' %}" class="nav-link" data-key="t-categories">Categories</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{% url 'inventory:brand_list' %}" class="nav-link" data-key="t-brands">Brands</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{% url 'inventory:purchase_list' %}" class="nav-link" data-key="t-purchases">Stock In</a>
-                            </li>
-                        </ul>
-                    </div>
+                <!-- Stock In -->
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="{% url 'inventory:purchase_list' %}">
+                        <i class="las la-truck"></i> <span data-key="t-purchases">Stock In</span>
+                    </a>
                 </li>
 
                 <!-- Sales -->

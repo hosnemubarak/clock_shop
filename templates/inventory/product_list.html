@@ -26,9 +26,17 @@
             <div class="card-header border-0 pb-0">
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                     <h5 class="card-title mb-0"><i class="las la-filter me-1"></i> Filters</h5>
-                    <a href="{% url 'inventory:product_create' %}" class="btn btn-success">
-                        <i class="las la-plus me-1"></i> Add Product
-                    </a>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'inventory:category_list' %}" class="btn btn-soft-primary">
+                            <i class="las la-tags me-1"></i> Categories
+                        </a>
+                        <a href="{% url 'inventory:brand_list' %}" class="btn btn-soft-info">
+                            <i class="las la-copyright me-1"></i> Brands
+                        </a>
+                        <a href="{% url 'inventory:product_create' %}" class="btn btn-success">
+                            <i class="las la-plus me-1"></i> Add Product
+                        </a>
+                    </div>
                 </div>
             </div>
             <div class="card-body">

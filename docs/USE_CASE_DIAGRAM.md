@@ -1,256 +1,100 @@
 # Clock Shop - Use Case Diagram
 
-## System Overview
+This document outlines the core use cases and functionality of the Clock Shop Management System.
 
-This document describes the use cases for the Clock Shop Inventory & Sales Management System.
+```mermaid
+flowchart LR
+    %% Actors
+    Admin(["Admin / Manager"])
+    Cashier(["Cashier / Staff"])
 
-## Actors
+    %% Authentication
+    subgraph Auth [Authentication]
+        UC_Auth("Login / Logout")
+    end
 
-| Actor | Description |
-|-------|-------------|
-| **Admin** | System administrator with full access to all features |
-| **Staff** | Shop employee who handles daily operations |
-| **Customer** | End customer who purchases products (indirect actor) |
+    %% Point of Sale & Sales
+    subgraph Sales [Point of Sale & Sales]
+        UC_POS("Process Sale (POS)")
+        UC_ViewSales("View Sales History")
+        UC_PrintReceipt("Print Receipt / Invoice")
+        UC_CancelSale("Cancel / Void Sale")
+        UC_SalePayment("Accept Sale Payments")
+    end
 
-## Use Case Diagram (Text Representation)
+    %% Customer Management
+    subgraph Customers [Customer Management]
+        UC_ManageCustomers("Manage Customers")
+        UC_ViewStatements("View Customer Statements")
+        UC_CustomerPayment("Record Customer Payments")
+    end
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         CLOCK SHOP SYSTEM                                    │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                    AUTHENTICATION                                    │    │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                  │    │
-│  │  │   Login     │  │  Register   │  │   Logout    │                  │    │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘                  │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                    INVENTORY MANAGEMENT                              │    │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                  │    │
-│  │  │  Manage     │  │  Manage     │  │  Manage     │                  │    │
-│  │  │  Products   │  │  Categories │  │  Brands     │                  │    │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘                  │    │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                  │    │
-│  │  │  Stock In   │  │  Stock Out  │  │   View      │                  │    │
-│  │  │  (Batches)  │  │  (Damage)   │  │   Batches   │                  │    │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘                  │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                    SALES MANAGEMENT                                  │    │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                  │    │
-│  │  │  Create     │  │   View      │  │   Cancel    │                  │    │
-│  │  │   Sale      │  │   Sales     │  │   Sale      │                  │    │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘                  │    │
-│  │  ┌─────────────┐  ┌─────────────┐                                   │    │
-│  │  │   Print     │  │  Add Custom │                                   │    │
-│  │  │  Invoice    │  │    Items    │                                   │    │
-│  │  └─────────────┘  └─────────────┘                                   │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                    CUSTOMER MANAGEMENT                               │    │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                  │    │
-│  │  │  Manage     │  │  Receive    │  │   View      │                  │    │
-│  │  │  Customers  │  │  Payments   │  │   History   │                  │    │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘                  │    │
-│  │  ┌─────────────┐  ┌─────────────┐                                   │    │
-│  │  │   Add       │  │   Track     │                                   │    │
-│  │  │   Notes     │  │    Dues     │                                   │    │
-│  │  └─────────────┘  └─────────────┘                                   │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                    WAREHOUSE MANAGEMENT                              │    │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                  │    │
-│  │  │  Manage     │  │  Transfer   │  │   View      │                  │    │
-│  │  │ Warehouses  │  │   Stock     │  │  Transfers  │                  │    │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘                  │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                    REPORTING & ANALYTICS                             │    │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                  │    │
-│  │  │   Sales     │  │   Profit    │  │   Stock     │                  │    │
-│  │  │   Report    │  │   Report    │  │   Report    │                  │    │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘                  │    │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                  │    │
-│  │  │  Customer   │  │ Dead Stock  │  │   Batch     │                  │    │
-│  │  │   Report    │  │   Report    │  │  Analysis   │                  │    │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘                  │    │
-│  │  ┌─────────────┐  ┌─────────────┐                                   │    │
-│  │  │  Transfer   │  │    View     │                                   │    │
-│  │  │   Report    │  │  Dashboard  │                                   │    │
-│  │  └─────────────┘  └─────────────┘                                   │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐    │
-│  │                    ADMINISTRATION (Admin Only)                       │    │
-│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                  │    │
-│  │  │   Manage    │  │    View     │  │   Approve   │                  │    │
-│  │  │   Users     │  │ Audit Logs  │  │   Users     │                  │    │
-│  │  └─────────────┘  └─────────────┘  └─────────────┘                  │    │
-│  └─────────────────────────────────────────────────────────────────────┘    │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+    %% Inventory Management
+    subgraph Inventory [Inventory Management]
+        UC_ManageProducts("Manage Products")
+        UC_ManageCat("Manage Categories & Brands")
+        UC_Purchases("Record Purchases (Restock)")
+        UC_Stockout("Record Stockouts (Damage/Loss)")
+    end
 
-        ┌───────┐                                          ┌───────┐
-        │ Admin │ ─────────── All Use Cases ──────────────│ Staff │
-        └───────┘                                          └───────┘
-            │                                                  │
-            │                                                  │
-            ▼                                                  ▼
-    [Full System Access]                            [Operational Access]
-    - User Management                               - Inventory Operations
-    - System Configuration                          - Sales Operations
-    - All Reports                                   - Customer Management
-    - Audit Logs                                    - Basic Reports
+    %% Warehouse Management
+    subgraph Warehouse [Warehouse Management]
+        UC_ManageWarehouses("Manage Warehouses")
+        UC_TransferStock("Transfer Stock")
+    end
+
+    %% Reports & Analytics
+    subgraph Reports [Reports & Analytics]
+        UC_Dashboard("View Dashboard")
+        UC_ProfitReport("View Sales & Profit Reports")
+        UC_StockReport("View Stock & Dead Stock Reports")
+        UC_ExportPDF("Export Reports to PDF")
+    end
+
+    %% System Administration
+    subgraph System [System Administration]
+        UC_Settings("Manage System Settings")
+        UC_AuditLogs("View Audit Logs")
+    end
+
+    %% Cashier Relationships
+    Cashier --- UC_Auth
+    Cashier --- UC_POS
+    Cashier --- UC_ViewSales
+    Cashier --- UC_PrintReceipt
+    Cashier --- UC_SalePayment
+    Cashier --- UC_ManageCustomers
+    Cashier --- UC_CustomerPayment
+    Cashier --- UC_Dashboard
+
+    %% Admin Relationships
+    Admin --- UC_Auth
+    Admin --- UC_POS
+    Admin --- UC_ViewSales
+    Admin --- UC_CancelSale
+    Admin --- UC_PrintReceipt
+    Admin --- UC_SalePayment
+    Admin --- UC_ManageCustomers
+    Admin --- UC_ViewStatements
+    Admin --- UC_CustomerPayment
+    Admin --- UC_ManageProducts
+    Admin --- UC_ManageCat
+    Admin --- UC_Purchases
+    Admin --- UC_Stockout
+    Admin --- UC_ManageWarehouses
+    Admin --- UC_TransferStock
+    Admin --- UC_Dashboard
+    Admin --- UC_ProfitReport
+    Admin --- UC_StockReport
+    Admin --- UC_ExportPDF
+    Admin --- UC_Settings
+    Admin --- UC_AuditLogs
 ```
 
-## Detailed Use Cases
-
-### UC-01: Manage Products
-| Field | Description |
-|-------|-------------|
-| **Actor** | Admin, Staff |
-| **Description** | Create, view, edit, and deactivate products |
-| **Preconditions** | User is logged in |
-| **Main Flow** | 1. Navigate to Products<br>2. Select action (Add/Edit/View)<br>3. Fill in product details<br>4. Save changes |
-| **Postconditions** | Product is created/updated in the system |
-
-### UC-02: Stock In (Create Batch)
-| Field | Description |
-|-------|-------------|
-| **Actor** | Admin, Staff |
-| **Description** | Add new stock by creating a batch |
-| **Preconditions** | Product exists, Warehouse exists |
-| **Main Flow** | 1. Navigate to Stock In<br>2. Select product and warehouse<br>3. Enter quantity, buy price, supplier<br>4. Save batch |
-| **Postconditions** | New batch created, product stock updated |
-
-### UC-03: Stock Out
-| Field | Description |
-|-------|-------------|
-| **Actor** | Admin, Staff |
-| **Description** | Remove stock for non-sale reasons (damage, loss, etc.) |
-| **Preconditions** | Batch exists with available stock |
-| **Main Flow** | 1. Navigate to Stock Out<br>2. Select warehouse<br>3. Add items to remove<br>4. Select reason<br>5. Complete stock out |
-| **Postconditions** | Stock reduced, audit trail created |
-
-### UC-04: Create Sale
-| Field | Description |
-|-------|-------------|
-| **Actor** | Admin, Staff |
-| **Description** | Create a new sale/invoice |
-| **Preconditions** | Products with stock exist |
-| **Main Flow** | 1. Navigate to New Sale<br>2. Select customer (optional)<br>3. Add items with batch selection<br>4. Apply discounts (optional)<br>5. Complete sale |
-| **Postconditions** | Sale created, stock deducted, invoice generated |
-
-### UC-05: Receive Payment
-| Field | Description |
-|-------|-------------|
-| **Actor** | Admin, Staff |
-| **Description** | Record payment from customer |
-| **Preconditions** | Customer has outstanding balance or sale exists |
-| **Main Flow** | 1. Navigate to Receive Payment<br>2. Select customer<br>3. Enter amount and method<br>4. Link to invoice (optional)<br>5. Save payment |
-| **Postconditions** | Payment recorded, customer balance updated |
-
-### UC-06: Transfer Stock
-| Field | Description |
-|-------|-------------|
-| **Actor** | Admin, Staff |
-| **Description** | Transfer stock between warehouses |
-| **Preconditions** | Source warehouse has stock, destination warehouse exists |
-| **Main Flow** | 1. Navigate to New Transfer<br>2. Select source and destination<br>3. Add items to transfer<br>4. Complete transfer |
-| **Postconditions** | Stock moved, transfer record created |
-
-### UC-07: View Reports
-| Field | Description |
-|-------|-------------|
-| **Actor** | Admin, Staff |
-| **Description** | Generate and view various reports |
-| **Preconditions** | User is logged in |
-| **Main Flow** | 1. Navigate to Reports<br>2. Select report type<br>3. Set date range/filters<br>4. View results with charts |
-| **Postconditions** | Report displayed |
-
-### UC-08: View Dashboard
-| Field | Description |
-|-------|-------------|
-| **Actor** | Admin, Staff |
-| **Description** | View real-time business metrics |
-| **Preconditions** | User is logged in |
-| **Main Flow** | 1. Login to system<br>2. View dashboard with KPIs, charts, alerts |
-| **Postconditions** | Dashboard displayed with current data |
-
-## System Workflows
-
-### Sales Workflow
-```
-[Create Sale] → [Select Batch] → [Deduct Stock] → [Generate Invoice] → [Receive Payment]
-```
-
-### Stock In Workflow
-```
-[Receive Goods] → [Create Batch] → [Update Product Stock] → [Create Audit Log]
-```
-
-### Stock Out Workflow
-```
-[Identify Issue] → [Create Stock Out] → [Select Items] → [Deduct Stock] → [Create Audit Log]
-```
-
-### Transfer Workflow
-```
-[Create Transfer] → [Add Items] → [Complete Transfer] → [Update Both Warehouses]
-```
-
-## Data Flow Diagram
-
-```
-                    ┌─────────────┐
-                    │    User     │
-                    └──────┬──────┘
-                           │
-                           ▼
-                    ┌─────────────┐
-                    │  Django     │
-                    │  Views      │
-                    └──────┬──────┘
-                           │
-            ┌──────────────┼──────────────┐
-            │              │              │
-            ▼              ▼              ▼
-     ┌──────────┐   ┌──────────┐   ┌──────────┐
-     │ Inventory│   │  Sales   │   │ Customers│
-     │  Models  │   │  Models  │   │  Models  │
-     └────┬─────┘   └────┬─────┘   └────┬─────┘
-          │              │              │
-          └──────────────┼──────────────┘
-                         │
-                         ▼
-                  ┌─────────────┐
-                  │   SQLite    │
-                  │  Database   │
-                  └─────────────┘
-```
-
-## Entity Relationship Summary
-
-```
-Warehouse ──┬── Batch ──── Product ──── Category
-            │      │              │
-            │      │              └── Brand
-            │      │
-            │      └── SaleItem ── Sale ── Customer
-            │              │
-            │              └── Payment
-            │
-            └── StockTransfer ── StockTransferItem
-            │
-            └── StockOut ── StockOutItem
-```
-
----
-
-*Last Updated: January 2026*
+### Feature Breakdown
+1. **Sales & POS**: The core cash register system (`sale-create.js`), capable of searching products, selecting customers via TomSelect, adding discounts, calculating totals, and printing invoices without VAT/Tax logic.
+2. **Customers**: Tracking walk-in and registered customers, their credit balances, and generating comprehensive statements.
+3. **Inventory**: Full CRUD for products, tracking stock levels globally, and managing inward (purchases) and outward (stockouts) stock movements.
+4. **Warehouses**: Managing multiple physical or logical storage locations and moving stock safely between them.
+5. **Reports**: Data visualization for daily/monthly performance, dead stock identification, and printable batch reports.
+6. **System**: Global settings management and action auditing for security.

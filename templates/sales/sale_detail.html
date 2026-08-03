@@ -73,12 +73,7 @@
                                 <td class="text-end text-danger">-{{ CURRENCY_SYMBOL }}{{ sale.discount_amount|floatformat:2 }}</td>
                             </tr>
                             {% endif %}
-                            {% if sale.tax_amount > 0 %}
-                            <tr>
-                                <td colspan="4" class="text-end">Tax:</td>
-                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.tax_amount|floatformat:2 }}</td>
-                            </tr>
-                            {% endif %}
+
                             <tr class="fw-bold">
                                 <td colspan="4" class="text-end">Total:</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
