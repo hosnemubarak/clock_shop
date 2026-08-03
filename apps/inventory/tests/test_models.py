@@ -135,3 +135,64 @@ class InventoryTestCase(TestCase):
         # Should raise ValueError when trying to complete
         with self.assertRaises(ValueError):
             stockout.complete_stockout()
+
+
+class StockOutCreateViewTests(TestCase):
+    """Guard-rail tests for the stockout_create POST contract.
+
+    stockout_create reads a single `items_data` hidden field holding a JSON
+    array. These lock that contract before any item-builder JS refactor.
+    """
+
+    def setUp(self):
+        from django.urls import reverse
+        self.reverse = reverse
+        self.user = User.objects.create_user(username='souser', password='password')
+        self.warehouse = Warehouse.objects.create(name='Shop', code='SHOP', is_shop=True)
+        self.category = Category.objects.create(name='Cat')
+        self.brand = Brand.objects.create(name='Br')
+        self.product = Product.objects.create(
+            sku='SO-1', category=self.category, brand=self.brand,
+            default_selling_price=Decimal('100.00'), average_cost=Decimal('40.00'),
+        )
+        ProductStock.objects.create(product=self.product, warehouse=self.warehouse, quantity=20)
+        self.product.update_total_stock()
+        self.client.force_login(self.user)
+
+    def _post(self, items):
+        import json
+        return self.client.post(self.reverse('inventory:stockout_create'), {
+            'warehouse': self.warehouse.id,
+            'reason': 'damage',
+            'stockout_date': timezone.now().strftime('%Y-%m-%dT%H:%M'),
+            'notes': 'test',
+            'items_data': json.dumps(items),
+        })
+
+    def test_stockout_create_reduces_stock(self):
+        resp = self._post([{'product_id': self.product.id, 'quantity': '5'}])
+        self.assertEqual(resp.status_code, 302)
+        stock = ProductStock.objects.get(product=self.product, warehouse=self.warehouse)
+        self.assertEqual(stock.quantity, 15)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.total_stock, 15)
+        self.assertEqual(StockOut.objects.count(), 1)
+        self.assertEqual(StockOut.objects.first().status, 'completed')
+
+    def test_stockout_create_rejects_malformed_items(self):
+        resp = self.client.post(self.reverse('inventory:stockout_create'), {
+            'warehouse': self.warehouse.id,
+            'reason': 'damage',
+            'stockout_date': timezone.now().strftime('%Y-%m-%dT%H:%M'),
+            'items_data': '{not json',
+        })
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(StockOut.objects.count(), 0)
+        stock = ProductStock.objects.get(product=self.product, warehouse=self.warehouse)
+        self.assertEqual(stock.quantity, 20)
+
+    def test_stockout_create_requires_items(self):
+        resp = self._post([])
+        self.assertEqual(StockOut.objects.count(), 0)
+        stock = ProductStock.objects.get(product=self.product, warehouse=self.warehouse)
+        self.assertEqual(stock.quantity, 20)

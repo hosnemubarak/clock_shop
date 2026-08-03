@@ -1,7 +1,19 @@
 from typing import Optional, Dict, Any
+from django.core.paginator import Page, Paginator
 from django.db import models, transaction, IntegrityError
 from django.utils import timezone
 from .models import AuditLog
+
+
+def paginate(request: Any, queryset: Any, per_page: int = 10, page_param: str = 'page') -> Page:
+    """Paginate a queryset using the request's page query param.
+
+    Centralizes the repeated ``Paginator(qs, n)`` + ``get_page`` scaffolding in
+    the function-based list views. ``get_page`` is used (not ``page``) so an
+    invalid or out-of-range page falls back to a valid page instead of raising.
+    """
+    paginator = Paginator(queryset, per_page)
+    return paginator.get_page(request.GET.get(page_param))
 
 
 def get_client_ip(request: Any) -> str:

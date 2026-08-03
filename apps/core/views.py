@@ -9,6 +9,7 @@ from decimal import Decimal
 
 from .models import AuditLog, SystemSettings
 from .forms import SystemSettingsForm
+from .utils import paginate
 from apps.inventory.models import Product, ProductStock
 from apps.sales.models import Sale, SaleItem
 from apps.customers.models import Customer, Payment
@@ -123,9 +124,8 @@ def dashboard(request):
 @login_required
 def audit_logs(request):
     """View audit logs."""
-    from django.core.paginator import Paginator
     from django.db.models import Q
-    
+
     logs = AuditLog.objects.select_related('user').all()
     
     # Search
@@ -150,10 +150,8 @@ def audit_logs(request):
     # Get all users for filter dropdown
     users = User.objects.filter(auditlog__isnull=False).distinct().order_by('username')
     
-    paginator = Paginator(logs, 20)
-    page = request.GET.get('page')
-    logs = paginator.get_page(page)
-    
+    logs = paginate(request, logs, 20)
+
     context = {
         'logs': logs,
         'search': search,

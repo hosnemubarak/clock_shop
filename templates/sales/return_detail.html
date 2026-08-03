@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}{{ sale_return.return_number }} | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+{% url 'sales:return_list' as list_url %}
+{% include 'includes/page_header.html' with title='Return: '|add:sale_return.return_number active_label=sale_return.return_number breadcrumb=True parent_label='Returns' parent_url=list_url %}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Returned Items</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th class="text-center">Qty Returned</th>
+                                <th class="text-end">Unit Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in sale_return.items.all %}
+                            <tr>
+                                <td>
+                                    {% if item.sale_item.is_custom %}{{ item.sale_item.custom_description }}
+                                    {% else %}{{ item.sale_item.product.display_name }}{% endif %}
+                                </td>
+                                <td class="text-center">{{ item.quantity }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.sale_item.unit_price|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            {% include 'includes/empty_state.html' with colspan=3 message='No items on this return' icon='las la-undo' %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% include 'includes/notes_block.html' with notes=sale_return.reason %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Details</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr><td class="text-muted">Return #</td><td class="text-end fw-medium">{{ sale_return.return_number }}</td></tr>
+                    <tr><td class="text-muted">Invoice</td><td class="text-end"><a href="{% url 'sales:sale_detail' sale_return.sale.pk %}">{{ sale_return.sale.invoice_number }}</a></td></tr>
+                    <tr><td class="text-muted">Date</td><td class="text-end">{{ sale_return.return_date|date:"M d, Y H:i" }}</td></tr>
+                    <tr><td class="text-muted">Refund</td><td class="text-end fw-medium">{{ CURRENCY_SYMBOL }}{{ sale_return.refund_amount|floatformat:2|intcomma }}</td></tr>
+                    <tr><td class="text-muted">By</td><td class="text-end">{{ sale_return.created_by.username|default:"-" }}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

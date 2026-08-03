@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load core_tags %}
+
+{% block title %}Sale Returns | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+{% url 'sales:sale_list' as sales_url %}
+{% include 'includes/page_header.html' with title='Sale Returns' breadcrumb=True parent_label='Sales' parent_url=sales_url %}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            {% capture as filter_fields %}
+                <div class="col-xl-4 col-lg-6 col-md-6">
+                    <input type="text" name="search" class="form-control" placeholder="Search return or invoice #..." value="{{ search }}">
+                </div>
+            {% endcapture %}
+            {% include 'includes/filter_bar.html' with fields=filter_fields %}
+            <div class="card-body">
+                <div class="table-responsive min-h-300">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Return #</th>
+                                <th>Invoice #</th>
+                                <th>Date</th>
+                                <th>Refund</th>
+                                <th>By</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale_return in returns %}
+                            <tr>
+                                <td>{{ sale_return.return_number }}</td>
+                                <td><a href="{% url 'sales:sale_detail' sale_return.sale.pk %}">{{ sale_return.sale.invoice_number }}</a></td>
+                                <td>{{ sale_return.return_date|date:"M d, Y" }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ sale_return.refund_amount|floatformat:2|intcomma }}</td>
+                                <td>{{ sale_return.created_by.username|default:"-" }}</td>
+                                <td>
+                                    {% capture as row_menu %}
+                                        <li><a class="dropdown-item" href="{% url 'sales:return_detail' sale_return.pk %}"><i class="las la-eye me-2"></i>View</a></li>
+                                    {% endcapture %}
+                                    {% include 'includes/row_actions.html' with menu=row_menu %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            {% include 'includes/empty_state.html' with colspan=6 message='No returns found' icon='las la-undo' %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% with page_obj=returns %}
+                {% include 'includes/pagination.html' %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -4,16 +4,7 @@
 {% block title %}Statement - {{ customer.name }} | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Customer Statement</h4>
-            <div class="page-title-right">
-                <button onclick="window.print()" class="btn btn-primary"><i class="las la-print"></i> Print</button>
-            </div>
-        </div>
-    </div>
-</div>
+{% include 'includes/page_header.html' with title='Customer Statement' action_onclick='window.print()' action_label='Print' action_icon='las la-print' action_class='btn-primary' %}
 
 <div class="row">
     <div class="col-12">

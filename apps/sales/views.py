@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.core.paginator import Paginator
 from django.db.models import Case, IntegerField, Q, Sum, Value, When
 from django.db.models.functions import Coalesce
 from django.db import transaction
@@ -10,12 +9,12 @@ from django.utils import timezone
 import json
 import logging
 
-from .models import Sale
+from .models import Sale, SaleReturn, SaleReturnItem
 from .forms import SaleForm, PaymentForm
 from apps.inventory.models import Product, ProductStock
 from apps.warehouse.models import Warehouse
 from apps.customers.models import Customer, Payment
-from apps.core.utils import create_audit_log
+from apps.core.utils import create_audit_log, paginate
 
 logger = logging.getLogger(__name__)
 
@@ -77,10 +76,8 @@ def sale_list(request):
         date_from = start_of_month.strftime('%Y-%m-%d')
         date_to = today.strftime('%Y-%m-%d')
     
-    paginator = Paginator(sales, 10)
-    page = request.GET.get('page')
-    sales = paginator.get_page(page)
-    
+    sales = paginate(request, sales, 10)
+
     context = {
         'sales': sales,
         'search': search,
@@ -151,6 +148,11 @@ def sale_cancel(request, pk):
             messages.error(request, 'Sale is already cancelled.')
         elif sale.paid_amount > 0:
             messages.error(request, 'Cannot cancel a sale with payments. Process refund first.')
+        elif sale.returns.exists():
+            # Returns already restocked some units and adjusted the ledger.
+            # Cancelling would restock the full original quantity again, so the
+            # returned units would be double-counted. Block it outright.
+            messages.error(request, 'Cannot cancel a sale that has returns. Reverse the returns first.')
         else:
             with transaction.atomic():
                 # Restore stock
@@ -222,76 +224,6 @@ def sale_print(request, pk):
         pk=pk
     )
     return render(request, 'sales/sale_print.html', {'sale': sale})
-
-
-@login_required
-def pos_view(request):
-    """Point of Sale interface."""
-    products = Product.objects.filter(is_active=True, total_stock__gt=0).select_related('category')
-    customers = Customer.objects.filter(is_active=True)
-    
-    context = {
-        'products': products,
-        'customers': customers,
-    }
-    return render(request, 'sales/pos.html', context)
-
-
-@login_required
-def api_product_info(request, product_id):
-    """API endpoint to get product info with available stock from SHOP warehouses only."""
-    product = get_object_or_404(Product, pk=product_id)
-    
-    # Only get stocks from shop warehouses (is_shop=True)
-    stocks = ProductStock.objects.filter(
-        product=product,
-        quantity__gt=0,
-        warehouse__is_shop=True  # Only shop warehouses
-    ).select_related('warehouse').order_by('warehouse__name')
-    
-    # Get stock breakdown by warehouse (all warehouses for display)
-    all_stocks = ProductStock.objects.filter(
-        product=product,
-        quantity__gt=0
-    ).select_related('warehouse').values(
-        'warehouse__id', 'warehouse__name', 'warehouse__is_shop'
-    ).annotate(
-        total_qty=Sum('quantity')
-    ).order_by('-warehouse__is_shop', 'warehouse__name')
-    
-    warehouse_availability = [{
-        'warehouse_id': w['warehouse__id'],
-        'warehouse_name': w['warehouse__name'],
-        'is_shop': w['warehouse__is_shop'],
-        'quantity': w['total_qty']
-    } for w in all_stocks]
-    
-    # Check if product has stock in non-shop warehouses (for guidance message)
-    warehouse_stock = sum(w['quantity'] for w in warehouse_availability if not w['is_shop'])
-    
-    # Get shop stock total
-    shop_stock = sum(w['quantity'] for w in warehouse_availability if w['is_shop'])
-    
-    data = {
-        'id': product.id,
-        'name': product.display_name,
-        'sku': product.sku,
-        'default_price': str(product.default_selling_price),
-        'total_stock': product.total_stock,
-        'shop_stock': shop_stock,  # Stock available in shops
-        'warehouse_stock': warehouse_stock,  # Stock in non-shop warehouses
-        'warehouse_availability': warehouse_availability,  # Detailed breakdown
-        'stocks': [{
-            'id': s.id,
-            'quantity': s.quantity,
-            'average_cost': str(product.average_cost),
-            'warehouse': s.warehouse.name,
-            'warehouse_id': s.warehouse.id,
-            'is_shop': s.warehouse.is_shop,
-        } for s in stocks]
-    }
-    
-    return JsonResponse(data)
 
 
 @login_required
@@ -390,3 +322,157 @@ def pos_checkout(request):
     except Exception:
         logger.exception('POS checkout failed')
         return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred.'}, status=500)
+
+
+# ---------------------------------------------------------------------------
+# Sale Returns
+# ---------------------------------------------------------------------------
+
+def _returned_quantities(sale):
+    """Map of sale_item_id -> total quantity already returned across all returns."""
+    rows = SaleReturnItem.objects.filter(
+        sale_return__sale=sale
+    ).values('sale_item_id').annotate(total=Sum('quantity'))
+    return {row['sale_item_id']: row['total'] for row in rows}
+
+
+@login_required
+def return_list(request):
+    """List sale returns."""
+    returns = SaleReturn.objects.select_related('sale', 'created_by').all()
+
+    search = request.GET.get('search', '').strip()
+    if search:
+        returns = returns.filter(
+            Q(return_number__icontains=search) |
+            Q(sale__invoice_number__icontains=search)
+        )
+
+    returns = paginate(request, returns, 10)
+    return render(request, 'sales/return_list.html', {
+        'returns': returns,
+        'search': search,
+    })
+
+
+@login_required
+def return_detail(request, pk):
+    """View a sale return."""
+    sale_return = get_object_or_404(
+        SaleReturn.objects.select_related('sale', 'created_by').prefetch_related(
+            'items__sale_item__product'
+        ),
+        pk=pk
+    )
+    return render(request, 'sales/return_detail.html', {'sale_return': sale_return})
+
+
+@login_required
+def return_create(request):
+    """Create a sale return against a completed sale and restock the items.
+
+    Requires ``?sale=<id>`` (linked from the sale detail page). Each line's
+    returnable quantity is the sold quantity minus what has already been
+    returned. Restock and record creation happen in one atomic block.
+    """
+    sale_id = request.GET.get('sale') or request.POST.get('sale')
+    sale = get_object_or_404(
+        Sale.objects.prefetch_related('items__product'),
+        pk=sale_id
+    ) if sale_id else None
+
+    if sale is None:
+        messages.error(request, 'Select a sale to return items from.')
+        return redirect('sales:sale_list')
+
+    already_returned = _returned_quantities(sale)
+    # Annotate each item with its remaining returnable quantity for the template.
+    returnable_items = []
+    for item in sale.items.all():
+        remaining = item.quantity - already_returned.get(item.id, 0)
+        if remaining > 0:
+            item.returnable = remaining
+            returnable_items.append(item)
+
+    if sale.status != Sale.Status.COMPLETED:
+        messages.error(request, 'Only completed sales can be returned.')
+        return redirect('sales:sale_detail', pk=sale.pk)
+
+    if request.method == 'POST':
+        reason = request.POST.get('reason', '').strip()
+        return_date = request.POST.get('return_date') or timezone.now()
+        refund_raw = request.POST.get('refund_amount', '0') or '0'
+
+        # Collect requested quantities keyed by sale_item id.
+        remaining_map = {item.id: item.returnable for item in returnable_items}
+        requested = {}
+        for item in returnable_items:
+            raw = request.POST.get(f'qty_{item.id}', '').strip()
+            if not raw:
+                continue
+            try:
+                qty = int(raw)
+            except ValueError:
+                messages.error(request, 'Invalid quantity entered.')
+                return redirect(f"{request.path}?sale={sale.pk}")
+            if qty <= 0:
+                continue
+            if qty > remaining_map[item.id]:
+                messages.error(
+                    request,
+                    f'Cannot return {qty} of "{item}" (only {remaining_map[item.id]} returnable).'
+                )
+                return redirect(f"{request.path}?sale={sale.pk}")
+            requested[item.id] = qty
+
+        if not reason:
+            messages.error(request, 'Please provide a reason for the return.')
+            return redirect(f"{request.path}?sale={sale.pk}")
+
+        if not requested:
+            messages.error(request, 'Enter a quantity for at least one item to return.')
+            return redirect(f"{request.path}?sale={sale.pk}")
+
+        from decimal import Decimal, InvalidOperation
+        try:
+            refund_amount = Decimal(str(refund_raw))
+            if refund_amount < 0:
+                raise InvalidOperation
+        except (InvalidOperation, ValueError):
+            messages.error(request, 'Invalid refund amount.')
+            return redirect(f"{request.path}?sale={sale.pk}")
+
+        with transaction.atomic():
+            sale_return = SaleReturn.objects.create(
+                sale=sale,
+                return_date=return_date,
+                reason=reason,
+                refund_amount=refund_amount,
+                created_by=request.user,
+            )
+            for sale_item_id, qty in requested.items():
+                SaleReturnItem.objects.create(
+                    sale_return=sale_return,
+                    sale_item_id=sale_item_id,
+                    quantity=qty,
+                )
+            # Restock the returned units (locks stock rows).
+            sale_return.restock_items()
+            # Move the money: reduce the sale total by returned goods value and
+            # the paid amount by the refund, then recompute the customer balance.
+            sale_return.reconcile_sale_ledger()
+
+            create_audit_log(request, 'SALE', sale_return, {
+                'action': 'return',
+                'sale': sale.invoice_number,
+                'refund': str(refund_amount),
+                'items': len(requested),
+            })
+
+        messages.success(request, f'Return "{sale_return.return_number}" recorded and stock restored.')
+        return redirect('sales:return_detail', pk=sale_return.pk)
+
+    return render(request, 'sales/return_form.html', {
+        'sale': sale,
+        'returnable_items': returnable_items,
+    })

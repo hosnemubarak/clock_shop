@@ -9,31 +9,13 @@
  * error across a long cart -- 0.1 + 0.2 !== 0.3 -- and this arithmetic ends up
  * in an invoice, so it never touches a fractional Number.
  */
-console.log('[SaleCreate] Script loaded, attaching listeners...');
-
-window.addEventListener('error', function(e) {
-    console.error('[SaleCreate] JS Error: ', e.message, 'at', e.filename, ':', e.lineno);
-    alert('JS Error: ' + e.message + ' at ' + e.filename + ':' + e.lineno);
-});
-
 function initSaleCreate() {
     'use strict';
-    console.log('[SaleCreate] initSaleCreate() executing...');
-
-    // Force reload if page is restored from BFCache (e.g. user clicked browser Back button).
-    // This ensures TomSelect and the cart state do not break or become stale.
-    window.addEventListener('pageshow', function (event) {
-        if (event.persisted) {
-            window.location.reload();
-        }
-    });
 
     var page = document.getElementById('salePage');
     if (!page) {
-        console.warn('[SaleCreate] #salePage not found, aborting initialization.');
         return;
     }
-    console.log('[SaleCreate] #salePage found, loading CFG...');
 
     var CFG = {
         searchUrl: page.dataset.searchUrl,
@@ -54,19 +36,20 @@ function initSaleCreate() {
     /** Cached element lookups: the old page re-queried the same ids on every keystroke. */
     var el = {};
     ['productSearch', 'searchResults', 'searchSpinner', 'searchStatus',
+     'customerSearch', 'customerResults', 'customerSpinner', 'customerStatus',
+     'customerChip', 'customerChipLabel', 'customerChipClear', 'customerWalkin',
      'cartBody', 'cartEmpty', 'cartCount', 'sumSubtotal', 'sumGrand', 'sumDue',
      'dueLabel', 'orderDiscount', 'amountPaid', 'paymentMethod',
-     'saleAlert', 'saleAlertText', 'btnComplete', 'btnReset', 'customerMetaBox',
-     'customerMetaName', 'customerMetaExtra', 'customerLoyaltyBox', 'customerLoyalty',
+     'btnComplete', 'btnReset', 'customerMetaBox',
+     'customerMetaName', 'customerMetaPhone', 'customerMetaDue', 'customerMetaDueRow',
+     'customerLoyaltyBox', 'customerLoyalty',
      'saleSuccessModal', 'successInvoice', 'btnPrintReceipt', 'btnNextSale',
      'linkViewSale', 'newCustomerModal', 'newCustomerForm', 'newCustomerName',
      'newCustomerPhone', 'newCustomerEmail', 'newCustomerAddress',
      'newCustomerSaveBtn'
     ].forEach(function (id) {
         el[id] = document.getElementById(id);
-        if (!el[id]) console.warn('[SaleCreate] Warning: Missing DOM element: ' + id);
     });
-    console.log('[SaleCreate] Finished gathering DOM elements.');
 
     var customerField = document.querySelector('[name="customer"]');
     var saleDateField = document.querySelector('[name="sale_date"]');
@@ -115,15 +98,26 @@ function initSaleCreate() {
         return safe.replace(new RegExp('(' + needle + ')', 'ig'), '<mark>$1</mark>');
     }
 
-    function showAlert(message) {
-        el.saleAlertText.textContent = message;
-        el.saleAlert.hidden = false;
-        el.saleAlert.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    /**
+     * Every error/warning on this page is surfaced through the shared modal
+     * (showValidationModal from modals.js, loaded globally in base.html) so the
+     * cashier gets one consistent, unmissable message instead of an inline banner.
+     * The inline #saleAlert region was removed; showAlert/clearAlert are kept so
+     * the many existing call sites keep working, now backed by the modal.
+     */
+    function showAlert(message, title) {
+        var text = message || 'Something went wrong.';
+        if (typeof showValidationModal === 'function') {
+            showValidationModal(text, title || 'Notice');
+            return;
+        }
+        // Fallback if the shared modal helper somehow failed to load.
+        window.alert(text);
     }
 
     function clearAlert() {
-        el.saleAlert.hidden = true;
-        el.saleAlertText.textContent = '';
+        // Modal-based messaging is dismissed by the user; nothing to clear here.
+        // Kept as a no-op so existing call sites need no change.
     }
 
     // ------------------------------------------------------------------ state
@@ -137,6 +131,13 @@ function initSaleCreate() {
     var successModal = null;
     var customerModal = null;
     var lastSaleId = null;
+
+    // Customer search mirrors the product search: its own last-payload list,
+    // active row, debounce timer and in-flight abort controller.
+    var customerResults = [];
+    var customerActiveIndex = -1;
+    var customerSearchTimer = null;
+    var customerAbort = null;
 
     // ----------------------------------------------------------------- search
 
@@ -512,7 +513,7 @@ function initSaleCreate() {
         el.orderDiscount.value = '0.00';
         el.amountPaid.value = '0.00';
         if (customerField) {
-            setCustomer('');
+            clearCustomer();
         }
         if (notesField) {
             notesField.value = '';
@@ -522,13 +523,154 @@ function initSaleCreate() {
         resetSearch();
     }
 
-    function setCustomer(value) {
-        if (customerField.tomselect) {
-            customerField.tomselect.setValue(value, true);
-        } else {
-            customerField.value = value;
+    /**
+     * Single writer for the customer selection. `value` is the customer id (or
+     * empty for walk-in); `label` is the chip text for a real customer. The
+     * hidden field is what `pos_checkout` reads, so it is set first, then the
+     * chip and meta card follow from it.
+     */
+    function setCustomer(value, label) {
+        if (!customerField) {
+            return;
         }
-        loadCustomerMeta(value);
+        customerField.value = value || '';
+        renderCustomerChip(label);
+        loadCustomerMeta(customerField.value);
+    }
+
+    function renderCustomerChip(label) {
+        if (!el.customerChip) {
+            return;
+        }
+        var hasCustomer = !!(customerField && customerField.value);
+        // One selection surface: show the compact chip for a real customer,
+        // otherwise fall back to the slim walk-in note. Never both at once.
+        el.customerChipLabel.textContent = label || 'Customer selected';
+        el.customerChip.hidden = !hasCustomer;
+        if (el.customerWalkin) {
+            el.customerWalkin.hidden = hasCustomer;
+        }
+    }
+
+    // ------------------------------------------------------- customer search
+
+    /** Chip label for a customer row: "Name - phone" when a phone is present. */
+    function customerLabel(row) {
+        return row.name + (row.phone ? ' - ' + row.phone : '');
+    }
+
+    function closeCustomerResults() {
+        el.customerResults.hidden = true;
+        el.customerResults.innerHTML = '';
+        el.customerSearch.setAttribute('aria-expanded', 'false');
+        el.customerSearch.removeAttribute('aria-activedescendant');
+        customerResults = [];
+        customerActiveIndex = -1;
+    }
+
+    function renderCustomerResults(query) {
+        if (!customerResults.length) {
+            el.customerResults.innerHTML =
+                '<li class="sale-search__message">No customers match &ldquo;' +
+                escapeHtml(query) + '&rdquo;.</li>';
+            el.customerResults.hidden = false;
+            el.customerSearch.setAttribute('aria-expanded', 'true');
+            el.customerStatus.textContent = 'No customers found.';
+            return;
+        }
+
+        el.customerResults.innerHTML = customerResults.map(function (row, i) {
+            return '' +
+                '<li class="sale-result' + (i === customerActiveIndex ? ' is-active' : '') + '"' +
+                ' id="customerResult' + i + '" role="option" data-index="' + i + '"' +
+                ' aria-selected="' + (i === customerActiveIndex ? 'true' : 'false') + '">' +
+                    '<div class="sale-result__body">' +
+                        '<div class="sale-result__title">' + highlight(row.name, query) + '</div>' +
+                        (row.phone
+                            ? '<div class="sale-result__meta">' + highlight(row.phone, query) + '</div>'
+                            : '') +
+                    '</div>' +
+                '</li>';
+        }).join('');
+
+        el.customerResults.hidden = false;
+        el.customerSearch.setAttribute('aria-expanded', 'true');
+        el.customerStatus.textContent = customerResults.length + ' customer' +
+            (customerResults.length === 1 ? '' : 's') + ' found.';
+    }
+
+    function setCustomerActive(index) {
+        if (!customerResults.length) {
+            return;
+        }
+        customerActiveIndex = (index + customerResults.length) % customerResults.length;
+
+        Array.prototype.forEach.call(
+            el.customerResults.querySelectorAll('.sale-result'),
+            function (node, i) {
+                var on = i === customerActiveIndex;
+                node.classList.toggle('is-active', on);
+                node.setAttribute('aria-selected', on ? 'true' : 'false');
+                if (on) {
+                    node.scrollIntoView({ block: 'nearest' });
+                }
+            }
+        );
+        el.customerSearch.setAttribute('aria-activedescendant', 'customerResult' + customerActiveIndex);
+    }
+
+    function runCustomerSearch(query) {
+        // Abort the in-flight request so a slow early response cannot repaint
+        // the list after a fast later one (same reason as the product search).
+        if (customerAbort) {
+            customerAbort.abort();
+        }
+        customerAbort = new AbortController();
+        el.customerSpinner.hidden = false;
+
+        fetch(CFG.customerSearchUrl + '?q=' + encodeURIComponent(query), {
+            signal: customerAbort.signal,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('Search failed (' + response.status + ')');
+                }
+                return response.json();
+            })
+            .then(function (data) {
+                customerResults = data.results || [];
+                customerActiveIndex = customerResults.length ? 0 : -1;
+                renderCustomerResults(query);
+            })
+            .catch(function (error) {
+                if (error.name === 'AbortError') {
+                    return;
+                }
+                el.customerResults.innerHTML =
+                    '<li class="sale-search__message text-danger">' +
+                    'Could not reach the customer search. Check your connection and try again.</li>';
+                el.customerResults.hidden = false;
+            })
+            .finally(function () {
+                el.customerSpinner.hidden = true;
+            });
+    }
+
+    /** Pick a customer row: set the hidden field, chip and meta, then close. */
+    function selectCustomer(row) {
+        setCustomer(String(row.id), customerLabel(row));
+        el.customerSearch.value = '';
+        closeCustomerResults();
+        el.customerStatus.textContent = row.name + ' selected.';
+        el.productSearch.focus();
+    }
+
+    /** Back to walk-in: empty the hidden field, reset the chip, hide meta. */
+    function clearCustomer() {
+        setCustomer('');
+        el.customerSearch.value = '';
+        closeCustomerResults();
     }
 
     // -------------------------------------------------------------- customer
@@ -552,23 +694,22 @@ function initSaleCreate() {
             .then(function (data) {
                 var due = toMinor(data.total_due);
                 el.customerMetaName.textContent = data.name;
-                
-                var parts = [];
-                if (data.phone) {
-                    parts.push(escapeHtml(data.phone));
-                }
-                parts.push(due > 0
-                    ? '<span class="text-danger fw-medium">Outstanding due ' + fmt(due) + '</span>'
-                    : '<span class="text-success">No outstanding due</span>');
-                
-                el.customerMetaExtra.innerHTML = parts.join(' &middot; ');
+                el.customerMetaPhone.textContent = data.phone || 'No phone on file';
+
+                // Stacked hierarchy: label subtle, amount bold. Zero due reads
+                // as a positive "Settled" state (green) rather than a red alarm.
+                var settled = due <= 0;
+                el.customerMetaDue.textContent = settled ? 'Settled' : fmt(due);
+                el.customerMetaBox.classList.toggle('is-settled', settled);
                 el.customerMetaBox.hidden = false;
-                
+
                 renderLoyalty(data.loyalty);
             })
             .catch(function () {
                 el.customerMetaName.textContent = 'Unknown';
-                el.customerMetaExtra.textContent = 'Customer details unavailable.';
+                el.customerMetaPhone.textContent = 'Customer details unavailable.';
+                el.customerMetaDue.textContent = '\u2014';
+                el.customerMetaBox.classList.remove('is-settled');
                 el.customerMetaBox.hidden = false;
                 renderLoyalty(null);
             });
@@ -607,12 +748,21 @@ function initSaleCreate() {
 
     function saveNewCustomer() {
         var name = el.newCustomerName.value.trim();
-        if (!name) {
-            el.newCustomerName.classList.add('is-invalid');
-            el.newCustomerName.focus();
+        var phone = el.newCustomerPhone.value.trim();
+
+        // Name and phone are both mandatory. Flag the offending field(s) and
+        // surface the reason through the shared modal.
+        el.newCustomerName.classList.toggle('is-invalid', !name);
+        el.newCustomerPhone.classList.toggle('is-invalid', !phone);
+
+        if (!name || !phone) {
+            var missing = !name
+                ? 'Customer name is required.'
+                : 'Customer phone number is required.';
+            showAlert(missing, 'Missing customer details');
+            (!name ? el.newCustomerName : el.newCustomerPhone).focus();
             return;
         }
-        el.newCustomerName.classList.remove('is-invalid');
 
         var btn = el.newCustomerSaveBtn;
         btn.disabled = true;
@@ -625,7 +775,7 @@ function initSaleCreate() {
             },
             body: JSON.stringify({
                 name: name,
-                phone: el.newCustomerPhone.value.trim(),
+                phone: phone,
                 email: el.newCustomerEmail.value.trim(),
                 address: el.newCustomerAddress.value.trim()
             })
@@ -638,16 +788,9 @@ function initSaleCreate() {
                     showAlert(result.message || 'The customer could not be created.');
                     return;
                 }
-                var label = result.customer.name +
-                    (result.customer.phone ? ' - ' + result.customer.phone : '');
-
-                if (customerField.tomselect) {
-                    customerField.tomselect.addOption({ id: result.customer.id, name: result.customer.name, phone: result.customer.phone });
-                    customerField.tomselect.refreshOptions(false);
-                } else {
-                    customerField.add(new Option(label, result.customer.id));
-                }
-                setCustomer(String(result.customer.id));
+                setCustomer(String(result.customer.id), customerLabel(result.customer));
+                el.customerSearch.value = '';
+                closeCustomerResults();
                 customerModal.hide();
             })
             .catch(function () {
@@ -663,7 +806,6 @@ function initSaleCreate() {
     // Search input
     el.productSearch.addEventListener('input', function () {
         var query = el.productSearch.value.trim();
-        console.log('[SaleCreate] Product search triggered with query:', query);
         clearTimeout(searchTimer);
 
         if (!query) {
@@ -725,6 +867,64 @@ function initSaleCreate() {
     document.addEventListener('click', function (event) {
         if (!event.target.closest('.sale-search')) {
             closeResults();
+        }
+    });
+
+    // Customer search: mirrors the product-search listeners above, but selecting
+    // a row sets the hidden customer field instead of adding to the cart.
+    el.customerSearch.addEventListener('input', function () {
+        var query = el.customerSearch.value.trim();
+        clearTimeout(customerSearchTimer);
+
+        if (!query) {
+            if (customerAbort) {
+                customerAbort.abort();
+            }
+            closeCustomerResults();
+            return;
+        }
+
+        customerSearchTimer = setTimeout(function () {
+            runCustomerSearch(query);
+        }, SEARCH_DEBOUNCE_MS);
+    });
+
+    el.customerSearch.addEventListener('keydown', function (event) {
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            setCustomerActive(customerActiveIndex + 1);
+        } else if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            setCustomerActive(customerActiveIndex - 1);
+        } else if (event.key === 'Enter') {
+            event.preventDefault();
+            if (customerActiveIndex >= 0 && customerResults[customerActiveIndex]) {
+                selectCustomer(customerResults[customerActiveIndex]);
+            }
+        } else if (event.key === 'Escape') {
+            closeCustomerResults();
+        }
+    });
+
+    el.customerResults.addEventListener('mousedown', function (event) {
+        var row = event.target.closest('.sale-result');
+        if (!row) {
+            return;
+        }
+        event.preventDefault();   // keep focus in the search box
+        selectCustomer(customerResults[Number(row.dataset.index)]);
+    });
+
+    el.customerResults.addEventListener('mousemove', function (event) {
+        var row = event.target.closest('.sale-result');
+        if (row) {
+            setCustomerActive(Number(row.dataset.index));
+        }
+    });
+
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest('.sale-customer')) {
+            closeCustomerResults();
         }
     });
 
@@ -838,13 +1038,23 @@ function initSaleCreate() {
         } else if (action.saleAction === 'new-customer') {
             el.newCustomerForm.reset();
             el.newCustomerName.classList.remove('is-invalid');
+            el.newCustomerPhone.classList.remove('is-invalid');
             customerModal.show();
+        } else if (action.saleAction === 'clear-customer') {
+            clearCustomer();
+            el.productSearch.focus();
         }
     });
 
-    el.saleAlert.querySelector('[data-sale-dismiss-alert]').addEventListener('click', clearAlert);
     el.btnComplete.addEventListener('click', completeSale);
     el.newCustomerSaveBtn.addEventListener('click', saveNewCustomer);
+
+    // Drop the invalid highlight as soon as the cashier starts fixing the field.
+    [el.newCustomerName, el.newCustomerPhone].forEach(function (input) {
+        input.addEventListener('input', function () {
+            input.classList.remove('is-invalid');
+        });
+    });
 
     el.btnReset.addEventListener('click', function () {
         if (!cart.length) {
@@ -906,56 +1116,7 @@ function initSaleCreate() {
     successModal = new bootstrap.Modal(el.saleSuccessModal);
     customerModal = new bootstrap.Modal(el.newCustomerModal);
 
-    if (customerField && customerField.tagName === 'SELECT') {
-        console.log('[SaleCreate] Initializing TomSelect on customerField...');
-        try {
-            new TomSelect(customerField, {
-                valueField: 'id',
-                labelField: 'name',
-                searchField: ['name', 'phone'],
-                maxItems: 1,
-                closeAfterSelect: true,
-                placeholder: 'Search for a customer...',
-                allowEmptyOption: true,
-                preload: 'focus',
-                shouldLoad: function(query) {
-                    return true;
-                },
-                load: function(query, callback) {
-                    var url = CFG.customerSearchUrl + '?q=' + encodeURIComponent(query);
-                    console.log('[SaleCreate] TomSelect fetching:', url);
-                    fetch(url)
-                        .then(function(response) {
-                            return response.json();
-                        })
-                        .then(function(json) {
-                            console.log('[SaleCreate] TomSelect got results:', json.results);
-                            callback(json.results || []);
-                        })
-                        .catch(function(err) {
-                            console.error('[SaleCreate] TomSelect fetch error:', err);
-                            callback();
-                        });
-                },
-                render: {
-                    option: function(item, escape) {
-                        var phone = item.phone ? '<br><small class="text-muted">' + escape(item.phone) + '</small>' : '';
-                        return '<div><span class="fw-medium">' + escape(item.name) + '</span>' + phone + '</div>';
-                    },
-                    item: function(item, escape) {
-                        return '<div>' + escape(item.name) + '</div>';
-                    }
-                },
-                onChange: loadCustomerMeta
-            });
-            console.log('[SaleCreate] TomSelect initialized successfully.');
-        } catch (e) {
-            console.error('[SaleCreate] TomSelect initialization failed!', e);
-        }
-    } else {
-        console.warn('[SaleCreate] No <select name="customer"> found! TomSelect NOT initialized.');
-    }
-
+    renderCustomerChip();
     render();
     el.productSearch.focus();
 }

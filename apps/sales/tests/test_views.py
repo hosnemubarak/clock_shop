@@ -442,6 +442,19 @@ class SaleCreatePageTests(SaleScreenTestMixin, TestCase):
         self.assertNotIn('products', response.context)
         self.assertNotIn('customers', response.context)
 
+    def test_customer_field_is_a_plain_hidden_input(self):
+        """The customer selector no longer uses TomSelect: it is a hidden
+        `customer` field driven by the page's own search dropdown, so the
+        checkout POST still carries `customer_id` from an id the JS controls."""
+        response = self.client.get(reverse('sales:sale_create'))
+        html = response.content.decode()
+        self.assertIn('id="customerId"', html)
+        self.assertIn('name="customer"', html)
+        self.assertIn('id="customerSearch"', html)
+        # The TomSelect init keyed off a <select name="customer">; it must be gone.
+        self.assertNotIn('<select name="customer"', html)
+        self.assertNotIn('TomSelect', html)
+
     def test_page_never_writes_on_post(self):
         """The removed POST branch was a second, unreachable sale-creation path.
         Posting the form must not create anything now."""

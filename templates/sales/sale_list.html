@@ -1,50 +1,36 @@
 {% extends 'base.html' %}
 {% load humanize %}
+{% load core_tags %}
 
 {% block title %}Sales | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Sales</h4>
-            <div class="page-title-right">
-                <a href="{% url 'sales:sale_create' %}" class="btn btn-success"><i class="las la-plus"></i> New Sale</a>
-            </div>
-        </div>
-    </div>
-</div>
+{% url 'sales:sale_create' as create_url %}
+{% include 'includes/page_header.html' with title='Sales' action_url=create_url action_label='New Sale' action_icon='las la-plus' %}
 
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
-                <form method="get" class="row g-3">
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ search }}">
-                    </div>
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <select name="payment_status" class="form-select">
-                            <option value="">All Payment Status</option>
-                            <option value="paid" {% if payment_status == 'paid' %}selected{% endif %}>Paid</option>
-                            <option value="partial" {% if payment_status == 'partial' %}selected{% endif %}>Partial</option>
-                            <option value="unpaid" {% if payment_status == 'unpaid' %}selected{% endif %}>Unpaid</option>
-                        </select>
-                    </div>
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <input type="date" name="date_from" class="form-control" placeholder="From" value="{{ date_from|default_if_none:'' }}">
-                    </div>
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <input type="date" name="date_to" class="form-control" placeholder="To" value="{{ date_to|default_if_none:'' }}">
-                    </div>
-                    <div class="col-md-auto ms-auto d-flex gap-2">
-                        <button type="submit" class="btn btn-primary"><i class="las la-filter me-1"></i> Filter</button>
-                        {% if search or payment_status or date_from or date_to %}
-                        <a href="{{ request.path }}" class="btn btn-soft-danger"><i class="las la-times me-1"></i> Clear</a>
-                        {% endif %}
-                    </div>
-                </form>
-            </div>
+            {% capture as filter_fields %}
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ search }}">
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <select name="payment_status" class="form-select">
+                        <option value="">All Payment Status</option>
+                        <option value="paid" {% if payment_status == 'paid' %}selected{% endif %}>Paid</option>
+                        <option value="partial" {% if payment_status == 'partial' %}selected{% endif %}>Partial</option>
+                        <option value="unpaid" {% if payment_status == 'unpaid' %}selected{% endif %}>Unpaid</option>
+                    </select>
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <input type="date" name="date_from" class="form-control" placeholder="From" value="{{ date_from|default_if_none:'' }}">
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <input type="date" name="date_to" class="form-control" placeholder="To" value="{{ date_to|default_if_none:'' }}">
+                </div>
+            {% endcapture %}
+            {% include 'includes/filter_bar.html' with fields=filter_fields %}
             <div class="card-body">
                 <div class="table-responsive min-h-300" >
                     <table class="table table-striped align-middle mb-0">
@@ -79,24 +65,18 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <div class="dropdown">
-                                        <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                            <i class="las la-ellipsis-h"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
+                                    {% capture as row_menu %}
                                             <li><a class="dropdown-item" href="{% url 'sales:sale_detail' sale.pk %}"><i class="las la-eye me-2"></i>View</a></li>
                                             <li><a class="dropdown-item" href="{% url 'sales:sale_print' sale.pk %}" target="_blank"><i class="las la-print me-2"></i>Print</a></li>
                                             {% if sale.due_amount > 0 %}
                                             <li><a class="dropdown-item" href="{% url 'sales:sale_detail' sale.pk %}#payment"><i class="las la-money-bill me-2"></i>Receive Payment</a></li>
                                             {% endif %}
-                                        </ul>
-                                    </div>
+                                    {% endcapture %}
+                                    {% include 'includes/row_actions.html' with menu=row_menu %}
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr>
-                                <td colspan="8" class="text-center text-muted py-4">No sales found</td>
-                            </tr>
+                            {% include 'includes/empty_state.html' with colspan=8 message='No sales found' %}
                             {% endfor %}
                         </tbody>
                     </table>

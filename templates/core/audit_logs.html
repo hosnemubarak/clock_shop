@@ -1,61 +1,41 @@
 {% extends 'base.html' %}
+{% load core_tags %}
 
 {% block title %}Audit Logs | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Audit Logs</h4>
-            <div class="page-title-right">
-                <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Audit Logs</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div>
+{% include 'includes/page_header.html' with title='Audit Logs' breadcrumb=True %}
 
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
-                <form method="get" class="row g-3">
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <input type="text" name="search" class="form-control" placeholder="Search logs..." value="{{ search }}">
-                    </div>
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <select name="action" class="form-select">
-                            <option value="">All Actions</option>
-                            <option value="CREATE" {% if selected_action == 'CREATE' %}selected{% endif %}>Create</option>
-                            <option value="UPDATE" {% if selected_action == 'UPDATE' %}selected{% endif %}>Update</option>
-                            <option value="DELETE" {% if selected_action == 'DELETE' %}selected{% endif %}>Delete</option>
-                            <option value="SALE" {% if selected_action == 'SALE' %}selected{% endif %}>Sale</option>
-                            <option value="PAYMENT" {% if selected_action == 'PAYMENT' %}selected{% endif %}>Payment</option>
-                            <option value="STOCK_IN" {% if selected_action == 'STOCK_IN' %}selected{% endif %}>Stock In</option>
-                            <option value="STOCK_OUT" {% if selected_action == 'STOCK_OUT' %}selected{% endif %}>Stock Out</option>
-                            <option value="TRANSFER" {% if selected_action == 'TRANSFER' %}selected{% endif %}>Transfer</option>
-                        </select>
-                    </div>
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <select name="user" class="form-select">
-                            <option value="">All Users</option>
-                            {% for user in users %}
-                            <option value="{{ user.id }}" {% if selected_user == user.id|stringformat:"s" %}selected{% endif %}>{{ user.username }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <button type="submit" class="btn btn-primary w-100">Filter</button>
-                    </div>
-                    {% if selected_action or selected_user %}
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <a href="{% url 'core:audit_logs' %}" class="btn btn-outline-secondary w-100">Clear</a>
-                    </div>
-                    {% endif %}
-                </form>
-            </div>
+            {% capture as filter_fields %}
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <input type="text" name="search" class="form-control" placeholder="Search logs..." value="{{ search }}">
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <select name="action" class="form-select">
+                        <option value="">All Actions</option>
+                        <option value="CREATE" {% if selected_action == 'CREATE' %}selected{% endif %}>Create</option>
+                        <option value="UPDATE" {% if selected_action == 'UPDATE' %}selected{% endif %}>Update</option>
+                        <option value="DELETE" {% if selected_action == 'DELETE' %}selected{% endif %}>Delete</option>
+                        <option value="SALE" {% if selected_action == 'SALE' %}selected{% endif %}>Sale</option>
+                        <option value="PAYMENT" {% if selected_action == 'PAYMENT' %}selected{% endif %}>Payment</option>
+                        <option value="STOCK_IN" {% if selected_action == 'STOCK_IN' %}selected{% endif %}>Stock In</option>
+                        <option value="STOCK_OUT" {% if selected_action == 'STOCK_OUT' %}selected{% endif %}>Stock Out</option>
+                        <option value="TRANSFER" {% if selected_action == 'TRANSFER' %}selected{% endif %}>Transfer</option>
+                    </select>
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <select name="user" class="form-select">
+                        <option value="">All Users</option>
+                        {% for user in users %}
+                        <option value="{{ user.id }}" {% if selected_user == user.id|stringformat:"s" %}selected{% endif %}>{{ user.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% endcapture %}
+            {% include 'includes/filter_bar.html' with fields=filter_fields %}
             <div class="card-body">
                 <div class="table-responsive min-h-300" >
                     <table class="table table-striped table-nowrap align-middle mb-0">

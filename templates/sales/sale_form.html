@@ -3,10 +3,8 @@
 
 {% block title %}New Sale | {{ SHOP_NAME }}{% endblock %}
 
-{% block sidebar_size %}sm{% endblock %}
-
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/sale-create.css' %}">
+<link rel="stylesheet" href="{% static 'css/sale-create.css' %}?v=2">
 {% endblock %}
 
 {% block content %}
@@ -31,68 +29,108 @@
      data-sale-list-url="{% url 'sales:sale_list' %}"
      data-currency="{{ CURRENCY_SYMBOL }}">
 
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 class="mb-sm-0">New Sale</h4>
-
-            </div>
-        </div>
-    </div>
+    {% include 'includes/page_header.html' with title='New Sale' %}
 
     <form id="saleForm" novalidate>
         {% csrf_token %}
 
         <a href="#cartCard" class="sale-skip btn btn-sm btn-primary">Skip to sale items</a>
 
-        {# Non-blocking error region: checkout failures land here, not in a modal. #}
-        <div id="saleAlert" class="alert alert-danger d-flex align-items-start gap-2" role="alert" hidden>
-            <i class="las la-exclamation-circle fs-4 lh-1"></i>
-            <div class="flex-grow-1">
-                <span id="saleAlertText"></span>
-            </div>
-            <button type="button" class="btn-close" data-sale-dismiss-alert aria-label="Dismiss"></button>
-        </div>
-
         <!-- 1. Customer ------------------------------------------------------->
-        <div class="card mb-3">
-            <div class="card-body py-3">
-                <div class="row g-3 align-items-end">
-                    <div class="col-lg-4 col-md-6">
-                        <label for="{{ form.customer.id_for_label }}" class="form-label fw-medium mb-1">
+        <!-- {#
+          Redesigned on an 8px grid. Three top-aligned columns share one label
+          row so the inputs sit on a single baseline (no more "floating" date).
+          Controls are a consistent 40px tall. One selection surface: a compact
+          chip inside the field, plus a stacked summary card that only appears
+          for a real customer -- walk-in shows a slim inline note, not a slab.
+        #} -->
+        <div class="card mb-3 sale-customer-card">
+            <div class="card-body">
+                <div class="row g-4 align-items-start">
+                    <!-- Customer search + New + selection chip -->
+                    <div class="col-12 col-lg-5">
+                        <label for="customerSearch" class="form-label sale-field__label">
                             Customer
                         </label>
-                        <div class="d-flex gap-2">
-                            {{ form.customer }}
+                        {# Carries customer_id in the checkout POST. Empty = walk-in. #}
+                        <input type="hidden" name="customer" id="customerId">
+                        <div class="sale-customer__controls">
+                            <div class="sale-customer flex-grow-1">
+                                <div class="sale-search__control">
+                                    <i class="las la-search sale-search__icon" aria-hidden="true"></i>
+                                    <input type="search"
+                                           class="form-control sale-search__input"
+                                           id="customerSearch"
+                                           placeholder="Search by name or phone&hellip;"
+                                           autocomplete="off"
+                                           role="combobox"
+                                           aria-expanded="false"
+                                           aria-autocomplete="list"
+                                           aria-controls="customerResults">
+                                    <div class="spinner-border spinner-border-sm text-primary sale-search__spinner"
+                                         id="customerSpinner" role="status" hidden>
+                                        <span class="visually-hidden">Searching&hellip;</span>
+                                    </div>
+                                </div>
+                                <ul class="sale-search__results list-unstyled"
+                                    id="customerResults"
+                                    role="listbox"
+                                    aria-label="Customer search results"
+                                    hidden></ul>
+                            </div>
                             <button type="button"
-                                    class="btn btn-outline-primary flex-shrink-0"
+                                    class="btn btn-outline-primary sale-customer__new"
                                     data-sale-action="new-customer"
                                     title="Add a new customer">
                                 <i class="las la-user-plus"></i>
-                                <span class="d-none d-xl-inline ms-1">New</span>
+                                <span class="d-none d-sm-inline ms-1">New</span>
                             </button>
                         </div>
+                        {# Compact selected-customer chip. Hidden entirely for walk-in. #}
+                        <div class="sale-customer__chip" id="customerChip" hidden>
+                            <i class="las la-user-check" aria-hidden="true"></i>
+                            <span id="customerChipLabel">Customer selected</span>
+                            <button type="button"
+                                    class="sale-customer__clear"
+                                    id="customerChipClear"
+                                    data-sale-action="clear-customer"
+                                    aria-label="Clear customer and return to walk-in">
+                                <i class="las la-times" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        {# Slim inline note shown only while no customer is selected. #}
+                        <p class="sale-customer__walkin" id="customerWalkin">
+                            <i class="las la-walking" aria-hidden="true"></i>
+                            Walk-in customer &mdash; no account, no credit.
+                        </p>
+                        {# Screen-reader running commentary for a list that changes silently. #}
+                        <div id="customerStatus" class="visually-hidden" aria-live="polite"></div>
                     </div>
-                    <div class="col-lg-5 col-md-12">
-                        <div id="customerMetaBox" class="card border border-primary-subtle bg-primary-subtle bg-opacity-10 shadow-none mb-0 h-100" hidden>
-                            <div class="card-body p-2 d-flex align-items-center">
-                                <div class="avatar-sm flex-shrink-0 me-3">
-                                    <div class="avatar-title bg-primary text-white rounded fs-3">
-                                        <i class="las la-user"></i>
-                                    </div>
-                                </div>
-                                <div class="flex-grow-1" id="customerMetaDetails" aria-live="polite">
-                                    <h6 class="mb-0 fs-14 text-primary" id="customerMetaName">Walk-in Customer</h6>
-                                    <p class="mb-0 text-muted small" id="customerMetaExtra">No account, no credit.</p>
-                                </div>
-                                <div class="flex-shrink-0 text-end ms-3" id="customerLoyaltyBox" hidden>
-                                    <div id="customerLoyalty" aria-live="polite"></div>
-                                </div>
+
+                    <!-- Customer summary card (real customers only) -->
+                    <div class="col-12 col-lg-4">
+                        <span class="form-label sale-field__label d-none d-lg-block" aria-hidden="true">&nbsp;</span>
+                        <div id="customerMetaBox" class="sale-summary-card" aria-live="polite" hidden>
+                            <div class="sale-summary-card__avatar" aria-hidden="true">
+                                <i class="las la-user"></i>
+                            </div>
+                            <div class="sale-summary-card__body">
+                                <p class="sale-summary-card__name" id="customerMetaName">Customer</p>
+                                <p class="sale-summary-card__phone" id="customerMetaPhone">&mdash;</p>
+                                <p class="sale-summary-card__due" id="customerMetaDueRow">
+                                    <span class="sale-summary-card__due-label">Outstanding Due:</span>
+                                    <span class="sale-summary-card__due-value" id="customerMetaDue">{{ CURRENCY_SYMBOL }}0.00</span>
+                                </p>
+                            </div>
+                            <div class="sale-summary-card__loyalty" id="customerLoyaltyBox" hidden>
+                                <div id="customerLoyalty"></div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3 col-md-6">
-                        <label for="{{ form.sale_date.id_for_label }}" class="form-label fw-medium mb-1">
+
+                    <!-- Sale date -->
+                    <div class="col-12 col-lg-3">
+                        <label for="{{ form.sale_date.id_for_label }}" class="form-label sale-field__label">
                             Sale Date
                         </label>
                         {{ form.sale_date }}
@@ -304,19 +342,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<style>
-    /* Force TomSelect to always be on top and clickable, overriding any theme z-index issues */
-    .ts-wrapper {
-        position: relative !important;
-        z-index: 9999 !important;
-        pointer-events: auto !important;
-    }
-    .ts-control {
-        pointer-events: auto !important;
-    }
-    .ts-dropdown {
-        z-index: 10000 !important;
-    }
-</style>
-<script src="{% static 'js/sale-create.js' %}?v=7"></script>
+<script src="{% static 'js/sale-create.js' %}?v=10"></script>
 {% endblock %}

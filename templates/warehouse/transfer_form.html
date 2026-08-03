@@ -3,20 +3,8 @@
 {% block title %}New Transfer | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">New Stock Transfer</h4>
-            <div class="page-title-right">
-                <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'warehouse:transfer_list' %}">Transfers</a></li>
-                    <li class="breadcrumb-item active">New Transfer</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div>
+{% url 'warehouse:transfer_list' as list_url %}
+{% include 'includes/page_header.html' with title='New Stock Transfer' active_label='New Transfer' breadcrumb=True parent_label='Transfers' parent_url=list_url %}
 
 <form method="post" id="transferForm">
     {% csrf_token %}
@@ -89,7 +77,7 @@
                         {{ form.notes }}
                     </div>
                     
-                    <button type="submit" class="btn btn-primary w-100">
+                    <button type="submit" id="submitBtn" class="btn btn-primary w-100">
                         <i class="las la-exchange-alt"></i> Create Transfer
                     </button>
                 </div>
@@ -161,20 +149,18 @@ function loadWarehouseStocks(warehouseId) {
 }
 
 function addItem() {
-    try {
-        console.log('addItem function called');
-        const stockSelect = document.getElementById('newStock');
-        const qtyInput = document.getElementById('newQty');
-        const qty = parseInt(qtyInput.value);
-        
-        // Get stock value from Tom Select instance if it exists, otherwise from select element
-        const productId = window.stockTomSelect ? window.stockTomSelect.getValue() : stockSelect.value;
-        
-        if (!productId) {
-            showValidationModal('Please select a product before adding.', 'Product Required');
-            return;
-        }
-    
+    const stockSelect = document.getElementById('newStock');
+    const qtyInput = document.getElementById('newQty');
+    const qty = parseInt(qtyInput.value);
+
+    // Get stock value from Tom Select instance if it exists, otherwise from select element
+    const productId = window.stockTomSelect ? window.stockTomSelect.getValue() : stockSelect.value;
+
+    if (!productId) {
+        showValidationModal('Please select a product before adding.', 'Product Required');
+        return;
+    }
+
     if (!qty || qty < 1) {
         showValidationModal('Please enter a valid quantity greater than zero.', 'Invalid Quantity');
         return;
@@ -224,13 +210,8 @@ function addItem() {
         window.stockTomSelect.refreshOptions(false);
     }
     
-    console.log('Item added successfully');
-    } catch (error) {
-        console.error('Error in addItem:', error);
-        showValidationModal('Error adding item: ' + error.message, 'Error');
-    }
     renderItems();
-    
+
     // Reset inputs
     if (window.stockTomSelect) {
         window.stockTomSelect.clear();
@@ -320,6 +301,11 @@ document.getElementById('transferForm').addEventListener('submit', function(e) {
         showValidationModal('Source and destination warehouses must be different. Please select a different destination.', 'Invalid Selection');
         return false;
     }
+
+    // Validation passed — show a loading state and block double-submit.
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="las la-spinner la-spin"></i> Creating...';
 });
 
 // Initial render

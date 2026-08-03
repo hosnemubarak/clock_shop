@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load humanize %}
+{% load static %}
 
 {% block title %}Dashboard | {{ SHOP_NAME }}{% endblock %}
 
@@ -22,19 +23,7 @@
 </div>
 {% endif %}
 
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Dashboard</h4>
-            <div class="page-title-right">
-                <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Home</a></li>
-                    <li class="breadcrumb-item active">Dashboard</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div>
+{% include 'includes/page_header.html' with title='Dashboard' breadcrumb=True home_label='Home' %}
 
 <!-- Quick Actions -->
 <div class="row mb-3">
@@ -321,26 +310,8 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="{% static 'js/charts.js' %}?v=1"></script>
 <script>
-// Chart color helper
-function getChartColorsArray(id) {
-    if (document.getElementById(id)) {
-        var colors = document.getElementById(id).getAttribute("data-colors");
-        if (colors) {
-            colors = JSON.parse(colors);
-            return colors.map(function(color) {
-                var c = color.replace(" ", "");
-                if (c.indexOf(",") === -1) {
-                    var style = getComputedStyle(document.documentElement);
-                    return style.getPropertyValue(c) || c;
-                }
-                return c;
-            });
-        }
-    }
-    return ["#405189", "#0ab39c", "#f7b84b"];
-}
-
 // Payment Status Data
 var paidCount = {{ paid_count|default:0 }};
 var partialCount = {{ partial_count|default:0 }};

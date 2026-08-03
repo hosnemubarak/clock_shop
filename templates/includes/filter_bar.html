@@ -1,0 +1,31 @@
+{% comment %}
+Standard list filter bar: a GET form in a card-header with a Filter + Clear
+button pair. Standardizes the wrapper and buttons so they never drift.
+
+Pass the field columns via the {% capture %} tag (from core_tags):
+
+    {% load core_tags %}
+    {% capture as filter_fields %}
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ search }}">
+        </div>
+        ...
+    {% endcapture %}
+    {% include 'includes/filter_bar.html' with fields=filter_fields %}
+
+The Clear button shows whenever any GET param other than `page` is set
+(via the has_active_filters filter). Override the grid class with `form_class`.
+{% endcomment %}
+{% load core_tags %}
+<div class="card-header">
+    <form method="get" class="{{ form_class|default:'row g-3' }}">
+        {{ fields }}
+        <div class="col-md-auto ms-auto d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="las la-filter me-1"></i> Filter</button>
+            {% if request|has_active_filters %}
+            <a href="{{ request.path }}" class="btn btn-soft-danger"><i class="las la-times me-1"></i> Clear</a>
+            {% endif %}
+        </div>
+        {% if trailing %}{{ trailing }}{% endif %}
+    </form>
+</div>

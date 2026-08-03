@@ -1,0 +1,51 @@
+{% comment %}
+Shared page header. Standardizes the Velzon page-title-box across all pages and
+collapses the two former breadcrumb styles into one.
+
+Params (all optional except title):
+  title         page heading (required)
+  active_label  active breadcrumb text (defaults to title)
+  breadcrumb    truthy to render the breadcrumb region
+  home_label    label for the dashboard crumb (default "Dashboard")
+  parent_label  one intermediate crumb label
+  parent_url    intermediate crumb href (required if parent_label given)
+
+  Primary action button:
+    action_url, action_label, action_icon, action_class (default btn-success),
+    action_target, action_onclick
+  Secondary action button:
+    action2_url, action2_label, action2_icon, action2_class (default btn-info),
+    action2_target, action2_onclick
+
+Resolve URLs before including, e.g.:
+  {% url 'sales:sale_create' as create_url %}
+  {% include 'includes/page_header.html' with title='Sales' action_url=create_url action_label='New Sale' action_icon='las la-plus' %}
+{% endcomment %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">{{ title }}</h4>
+            {% if breadcrumb or action_url or action_onclick or action2_url or action2_onclick %}
+            <div class="page-title-right d-flex align-items-center gap-2">
+                {% if breadcrumb %}
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">{{ home_label|default:'Dashboard' }}</a></li>
+                    {% if parent_label %}<li class="breadcrumb-item"><a href="{{ parent_url }}">{{ parent_label }}</a></li>{% endif %}
+                    <li class="breadcrumb-item active">{{ active_label|default:title }}</li>
+                </ol>
+                {% endif %}
+                {% if action_onclick and not action_url %}
+                <button type="button" onclick="{{ action_onclick }}" class="btn {{ action_class|default:'btn-success' }}">{% if action_icon %}<i class="{{ action_icon }}"></i> {% endif %}{{ action_label }}</button>
+                {% elif action_url %}
+                <a href="{{ action_url }}" class="btn {{ action_class|default:'btn-success' }}"{% if action_target %} target="{{ action_target }}"{% endif %}>{% if action_icon %}<i class="{{ action_icon }}"></i> {% endif %}{{ action_label }}</a>
+                {% endif %}
+                {% if action2_onclick and not action2_url %}
+                <button type="button" onclick="{{ action2_onclick }}" class="btn {{ action2_class|default:'btn-info' }}">{% if action2_icon %}<i class="{{ action2_icon }}"></i> {% endif %}{{ action2_label }}</button>
+                {% elif action2_url %}
+                <a href="{{ action2_url }}" class="btn {{ action2_class|default:'btn-info' }}"{% if action2_target %} target="{{ action2_target }}"{% endif %}>{% if action2_icon %}<i class="{{ action2_icon }}"></i> {% endif %}{{ action2_label }}</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>

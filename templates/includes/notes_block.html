@@ -1,0 +1,10 @@
+{% comment %}
+Notes block for detail pages. Renders an <hr> + Notes paragraph only when a
+note is present. Pass the note text as `notes`:
+
+    {% include 'includes/notes_block.html' with notes=sale.notes %}
+{% endcomment %}
+{% if notes %}
+<hr>
+<p class="text-muted mb-0"><strong>Notes:</strong> {{ notes }}</p>
+{% endif %}

@@ -1,0 +1,68 @@
+{% comment %}
+Shared create/edit form for simple single-name entities (Category, Brand, ...).
+
+Include it from a thin wrapper that supplies the entity-specific bits, e.g.:
+
+    {% include 'includes/simple_crud_form.html' with
+        icon='las la-tag'
+        entity='Category'
+        list_url=... list_label='Categories'
+        name_hint='Enter a unique category name'
+        tip1='...' tip2='...' tip3='...' %}
+
+Expected context (from the view): `title`, `form`.
+Expected include args: `icon`, `entity`, `list_url`, `list_label`,
+`name_hint` (optional), and `tip1`/`tip2`/`tip3` (optional).
+{% endcomment %}
+{% include 'includes/page_header.html' with title=title breadcrumb=True parent_label=list_label parent_url=list_url %}
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="{{ icon }} me-2"></i>{{ entity }} Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ entity }} Name <span class="text-danger">*</span></label>
+                        {{ form.name }}
+                        {% if name_hint %}<small class="text-muted">{{ name_hint }}</small>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        {{ form.description }}
+                        <small class="text-muted">Optional description for this {{ entity|lower }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.is_active }}
+                            <label class="form-check-label"><strong>Active {{ entity }}</strong></label>
+                        </div>
+                        <small class="text-muted">Inactive {{ plural|default:entity|lower }} won't appear in product forms</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success"><i class="las la-save me-1"></i> Save {{ entity }}</button>
+                        <a href="{{ list_url }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-soft-info">
+                <h6 class="card-title mb-0"><i class="las la-info-circle me-1"></i> Tips</h6>
+            </div>
+            <div class="card-body">
+                <ul class="text-muted small mb-0">
+                    {% if tip1 %}<li class="mb-2">{{ tip1 }}</li>{% endif %}
+                    {% if tip2 %}<li class="mb-2">{{ tip2 }}</li>{% endif %}
+                    {% if tip3 %}<li>{{ tip3 }}</li>{% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q, Sum, F
 from django.http import JsonResponse
@@ -11,7 +10,7 @@ import json
 from .models import Warehouse, StockTransfer, StockTransferItem
 from .forms import WarehouseForm, StockTransferForm
 from apps.inventory.models import ProductStock, Product
-from apps.core.utils import create_audit_log
+from apps.core.utils import create_audit_log, paginate
 
 
 @login_required
@@ -33,11 +32,8 @@ def warehouse_list(request):
     total_warehouses = warehouses.count()
     active_shops = warehouses.filter(is_shop=True, is_active=True).count()
 
-    paginator = Paginator(warehouses.order_by('name'), 10)
-    page = request.GET.get('page')
-    warehouses = paginator.get_page(page)
+    warehouses = paginate(request, warehouses.order_by('name'), 10)
 
-    
     return render(request, 'warehouse/warehouse_list.html', {
         'warehouses': warehouses,
         'search': search,
@@ -64,9 +60,7 @@ def warehouse_detail(request, pk):
             Q(product__brand__name__icontains=product_search)
         )
     
-    stock_paginator = Paginator(stocks, 10)
-    stock_page = request.GET.get('page')
-    stocks = stock_paginator.get_page(stock_page)
+    stocks = paginate(request, stocks, 10)
 
     context = {
         'warehouse': warehouse,
@@ -146,13 +140,11 @@ def transfer_list(request):
     if destination:
         transfers = transfers.filter(destination_warehouse_id=destination)
     
-    paginator = Paginator(transfers, 10)
-    page = request.GET.get('page')
-    transfers = paginator.get_page(page)
-    
+    transfers = paginate(request, transfers, 10)
+
     # Get warehouses for filter dropdowns
     warehouses = Warehouse.objects.filter(is_active=True)
-    
+
     return render(request, 'warehouse/transfer_list.html', {
         'transfers': transfers,
         'warehouses': warehouses,

@@ -1,42 +1,28 @@
 {% extends 'base.html' %}
 {% load humanize %}
+{% load core_tags %}
 
 {% block title %}Payments | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Payments</h4>
-            <div class="page-title-right">
-                <a href="{% url 'customers:payment_create' %}" class="btn btn-success"><i class="las la-plus"></i> Receive Payment</a>
-            </div>
-        </div>
-    </div>
-</div>
+{% url 'customers:payment_create' as create_url %}
+{% include 'includes/page_header.html' with title='Payments' action_url=create_url action_label='Receive Payment' action_icon='las la-plus' %}
 
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
-                <form method="get" class="row g-3">
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ search }}">
-                    </div>
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <input type="date" name="date_from" class="form-control" value="{{ date_from|default:'' }}">
-                    </div>
-                    <div class="col-xl-3 col-lg-4 col-md-6">
-                        <input type="date" name="date_to" class="form-control" value="{{ date_to|default:'' }}">
-                    </div>
-                    <div class="col-md-auto ms-auto d-flex gap-2">
-                        <button type="submit" class="btn btn-primary"><i class="las la-filter me-1"></i> Filter</button>
-                        {% if search or date_from or date_to %}
-                        <a href="{{ request.path }}" class="btn btn-soft-danger"><i class="las la-times me-1"></i> Clear</a>
-                        {% endif %}
-                    </div>
-                </form>
-            </div>
+            {% capture as filter_fields %}
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ search }}">
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from|default:'' }}">
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to|default:'' }}">
+                </div>
+            {% endcapture %}
+            {% include 'includes/filter_bar.html' with fields=filter_fields %}
             <div class="card-body">
                 <div class="table-responsive min-h-300" >
                     <table class="table table-striped align-middle mb-0">
@@ -73,9 +59,7 @@
                                 <td>{{ payment.received_by.username|default:"-" }}</td>
                             </tr>
                             {% empty %}
-                            <tr>
-                                <td colspan="7" class="text-center text-muted py-4">No payments found</td>
-                            </tr>
+                            {% include 'includes/empty_state.html' with colspan=7 message='No payments found' %}
                             {% endfor %}
                         </tbody>
                     </table>

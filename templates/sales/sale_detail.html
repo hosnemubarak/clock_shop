@@ -4,18 +4,17 @@
 {% block title %}{{ sale.invoice_number }} | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Invoice: {{ sale.invoice_number }}</h4>
-            <div class="page-title-right">
-                <a href="{% url 'sales:sale_print' sale.pk %}" class="btn btn-primary" target="_blank">
-                    <i class="las la-print"></i> Print
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
+{% url 'sales:sale_print' sale.pk as print_url %}
+{% if sale.status == 'completed' %}
+    {% url 'sales:return_create' as return_base %}
+    {% with pk_str=sale.pk|stringformat:'s' %}
+    {% with return_url=return_base|add:'?sale='|add:pk_str %}
+    {% include 'includes/page_header.html' with title='Invoice: '|add:sale.invoice_number action_url=print_url action_label='Print' action_icon='las la-print' action_class='btn-primary' action_target='_blank' action2_url=return_url action2_label='Return Items' action2_icon='las la-undo' action2_class='btn-soft-warning' %}
+    {% endwith %}
+    {% endwith %}
+{% else %}
+    {% include 'includes/page_header.html' with title='Invoice: '|add:sale.invoice_number action_url=print_url action_label='Print' action_icon='las la-print' action_class='btn-primary' action_target='_blank' %}
+{% endif %}
 
 <div class="row">
     <div class="col-lg-8">
@@ -170,10 +169,7 @@
                     </tr>
                 </table>
                 
-                {% if sale.notes %}
-                <hr>
-                <p class="text-muted mb-0"><strong>Notes:</strong> {{ sale.notes }}</p>
-                {% endif %}
+                {% include 'includes/notes_block.html' with notes=sale.notes %}
             </div>
         </div>
 

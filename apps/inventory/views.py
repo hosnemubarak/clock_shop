@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q, Sum, ProtectedError
 from django.http import JsonResponse
@@ -14,7 +13,7 @@ from .models import Product, Category, Brand, ProductStock, Purchase, PurchaseIt
 from .forms import (ProductForm, CategoryForm, BrandForm, 
                     PurchaseForm, PurchaseItemForm, StockOutForm)
 from apps.warehouse.models import Warehouse
-from apps.core.utils import create_audit_log
+from apps.core.utils import create_audit_log, paginate
 
 logger = logging.getLogger(__name__)
 
@@ -58,10 +57,8 @@ def product_list(request):
     elif status_filter == 'inactive':
         products = products.filter(is_active=False)
     
-    paginator = Paginator(products, 10)
-    page = request.GET.get('page')
-    products = paginator.get_page(page)
-    
+    products = paginate(request, products, 10)
+
     categories = Category.objects.filter(is_active=True)
     brands = Brand.objects.filter(is_active=True)
     
@@ -225,10 +222,8 @@ def category_list(request):
     if search:
         categories = categories.filter(Q(name__icontains=search) | Q(description__icontains=search))
     
-    paginator = Paginator(categories, 10)
-    page = request.GET.get('page')
-    categories = paginator.get_page(page)
-    
+    categories = paginate(request, categories, 10)
+
     return render(request, 'inventory/category_list.html', {'categories': categories, 'search': search})
 
 
@@ -280,10 +275,8 @@ def brand_list(request):
     if search:
         brands = brands.filter(Q(name__icontains=search) | Q(description__icontains=search))
     
-    paginator = Paginator(brands, 10)
-    page = request.GET.get('page')
-    brands = paginator.get_page(page)
-    
+    brands = paginate(request, brands, 10)
+
     return render(request, 'inventory/brand_list.html', {'brands': brands, 'search': search})
 
 
@@ -333,10 +326,8 @@ def purchase_list(request):
     """List all purchases."""
     purchases = Purchase.objects.select_related('created_by').prefetch_related('items')
     
-    paginator = Paginator(purchases, 10)
-    page = request.GET.get('page')
-    purchases = paginator.get_page(page)
-    
+    purchases = paginate(request, purchases, 10)
+
     return render(request, 'inventory/purchase_list.html', {'purchases': purchases})
 
 
@@ -606,10 +597,8 @@ def stockout_list(request):
     if status:
         stockouts = stockouts.filter(status=status)
     
-    paginator = Paginator(stockouts, 10)
-    page = request.GET.get('page')
-    stockouts = paginator.get_page(page)
-    
+    stockouts = paginate(request, stockouts, 10)
+
     warehouses = Warehouse.objects.filter(is_active=True)
     
     context = {

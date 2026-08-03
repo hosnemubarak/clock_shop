@@ -1,23 +1,12 @@
 {% extends 'base.html' %}
 {% load humanize %}
+{% load core_tags %}
 
 {% block title %}Stock Transfers | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Stock Transfers</h4>
-            <div class="page-title-right">
-                <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'warehouse:warehouse_list' %}">Warehouses</a></li>
-                    <li class="breadcrumb-item active">Transfers</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div>
+{% url 'warehouse:warehouse_list' as wh_url %}
+{% include 'includes/page_header.html' with title='Stock Transfers' active_label='Transfers' breadcrumb=True parent_label='Warehouses' parent_url=wh_url %}
 
 <div class="row">
     <div class="col-12">
@@ -108,40 +97,30 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <div class="dropdown">
-                                        <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                            <i class="las la-ellipsis-h"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><a class="dropdown-item" href="{% url 'warehouse:transfer_detail' transfer.pk %}"><i class="las la-eye me-2"></i>View Details</a></li>
-                                            {% if transfer.status == 'pending' %}
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li>
-                                                <form method="post" action="{% url 'warehouse:transfer_complete' transfer.pk %}" class="d-inline">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="dropdown-item text-success"><i class="las la-check me-2"></i>Complete</button>
-                                                </form>
-                                            </li>
-                                            <li>
-                                                <form method="post" action="{% url 'warehouse:transfer_cancel' transfer.pk %}" class="d-inline">
-                                                    {% csrf_token %}
-                                                    <button type="submit" class="dropdown-item text-danger"><i class="las la-times me-2"></i>Cancel</button>
-                                                </form>
-                                            </li>
-                                            {% endif %}
-                                        </ul>
-                                    </div>
+                                    {% capture as row_menu %}
+                                        <li><a class="dropdown-item" href="{% url 'warehouse:transfer_detail' transfer.pk %}"><i class="las la-eye me-2"></i>View Details</a></li>
+                                        {% if transfer.status == 'pending' %}
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form method="post" action="{% url 'warehouse:transfer_complete' transfer.pk %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="dropdown-item text-success"><i class="las la-check me-2"></i>Complete</button>
+                                            </form>
+                                        </li>
+                                        <li>
+                                            <form method="post" action="{% url 'warehouse:transfer_cancel' transfer.pk %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="dropdown-item text-danger"><i class="las la-times me-2"></i>Cancel</button>
+                                            </form>
+                                        </li>
+                                        {% endif %}
+                                    {% endcapture %}
+                                    {% include 'includes/row_actions.html' with menu=row_menu %}
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr>
-                                <td colspan="7" class="text-center text-muted py-4">
-                                    <i class="las la-exchange-alt fs-1 d-block mb-2"></i>
-                                    No transfers found
-                                    <br>
-                                    <a href="{% url 'warehouse:transfer_create' %}" class="btn btn-primary btn-sm mt-2">Create First Transfer</a>
-                                </td>
-                            </tr>
+                            {% url 'warehouse:transfer_create' as create_url %}
+                            {% include 'includes/empty_state.html' with colspan=7 message='No transfers found' icon='las la-exchange-alt' cta_url=create_url cta_label='Create First Transfer' %}
                             {% endfor %}
                         </tbody>
                     </table>

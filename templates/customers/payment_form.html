@@ -3,20 +3,8 @@
 {% block title %}Receive Payment | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Receive Payment</h4>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'customers:payment_list' %}">Payments</a></li>
-                    <li class="breadcrumb-item active">New Payment</li>
-                </ol>
-            </nav>
-        </div>
-    </div>
-</div>
+{% url 'customers:payment_list' as list_url %}
+{% include 'includes/page_header.html' with title='Receive Payment' active_label='New Payment' breadcrumb=True parent_label='Payments' parent_url=list_url %}
 
 <div class="row">
     <div class="col-lg-8">

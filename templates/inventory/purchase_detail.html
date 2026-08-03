@@ -4,13 +4,7 @@
 {% block title %}{{ purchase.purchase_number }} | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Stock In Record: {{ purchase.purchase_number }}</h4>
-        </div>
-    </div>
-</div>
+{% include 'includes/page_header.html' with title='Stock In Record: '|add:purchase.purchase_number %}
 
 <div class="row">
     <div class="col-lg-8">
@@ -77,10 +71,7 @@
                         <td>{{ purchase.created_by.username|default:"-" }}</td>
                     </tr>
                 </table>
-                {% if purchase.notes %}
-                <hr>
-                <p class="text-muted mb-0"><strong>Notes:</strong> {{ purchase.notes }}</p>
-                {% endif %}
+                {% include 'includes/notes_block.html' with notes=purchase.notes %}
             </div>
         </div>
     </div>

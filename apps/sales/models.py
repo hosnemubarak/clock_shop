@@ -105,12 +105,22 @@ class Sale(TimeStampedModel):
         self.save(update_fields=['subtotal', 'total_cost', 'total_amount'])
     
     def recalculate_paid_amount(self):
-        """Recalculate paid_amount from all linked payments."""
+        """Recalculate paid_amount from linked payments, net of refunds.
+
+        Refunds are not Payment rows (they live on SaleReturn.refund_amount), so
+        this nets them out here. Without it, any later payment event on a
+        returned sale would fire this recompute and reset paid_amount to the
+        gross payments total, resurrecting the refunded cash and driving
+        due_amount negative. Floored at zero.
+        """
         from apps.customers.models import Payment
         total_paid = Payment.objects.filter(sale=self).aggregate(
             total=models.Sum('amount')
         )['total'] or Decimal('0.00')
-        self.paid_amount = total_paid
+        refunds = self.returns.aggregate(
+            total=models.Sum('refund_amount')
+        )['total'] or Decimal('0.00')
+        self.paid_amount = max(Decimal('0.00'), total_paid - refunds)
         self.update_payment_status()
 
 
@@ -208,6 +218,85 @@ class SaleReturn(TimeStampedModel):
     
     def save(self, *args, **kwargs):
         save_with_sequential_number(self, 'return_number', 'RET', *args, **kwargs)
+
+    def restock_items(self):
+        """Return each item's quantity to the warehouse it was sold from.
+
+        Mirrors the stock-restore path in sale_cancel: locks the stock row,
+        increments it, and refreshes the product's denormalized total. Custom
+        line items (no product/warehouse) are skipped. Call inside an atomic
+        block alongside creating the return and its items.
+        """
+        from apps.inventory.models import ProductStock
+
+        for return_item in self.items.select_related('sale_item__product', 'sale_item__warehouse'):
+            sale_item = return_item.sale_item
+            if not sale_item.product or not sale_item.warehouse:
+                continue
+            stock, _ = ProductStock.objects.select_for_update().get_or_create(
+                product=sale_item.product,
+                warehouse=sale_item.warehouse,
+                defaults={'quantity': 0},
+            )
+            stock.quantity += return_item.quantity
+            stock.save(update_fields=['quantity'])
+            sale_item.product.update_total_stock()
+
+    def returned_goods_value(self):
+        """Value of the goods on this return, at their effective per-unit price.
+
+        Each sale line's discount is spread evenly across its units, so a
+        partial return only credits back its proportional share. This is the
+        goods value to subtract from the sale total, independent of how much
+        cash was actually refunded.
+        """
+        total = Decimal('0.00')
+        for return_item in self.items.select_related('sale_item'):
+            sale_item = return_item.sale_item
+            if not sale_item.quantity:
+                continue
+            per_unit = sale_item.total_price / sale_item.quantity
+            total += (per_unit * return_item.quantity).quantize(Decimal('0.01'))
+        return total
+
+    def returned_cost_value(self):
+        """COGS of the returned units, so cost tracks the restocked inventory.
+
+        The returned units go back into stock, so their cost must come off the
+        sale's ``total_cost`` too; otherwise ``Sale.profit`` (total_amount -
+        total_cost) and the sales-report margin understate profit by the
+        returned units' cost.
+        """
+        total = Decimal('0.00')
+        for return_item in self.items.select_related('sale_item'):
+            sale_item = return_item.sale_item
+            total += (sale_item.cost_price * return_item.quantity).quantize(Decimal('0.01'))
+        return total
+
+    def reconcile_sale_ledger(self):
+        """Move the sale's money to reflect this return.
+
+        A return does these things to the ledger:
+          * the customer no longer owes for goods they gave back -> reduce
+            ``total_amount`` by the returned goods value;
+          * the returned units are restocked, so their cost leaves the sale ->
+            reduce ``total_cost`` by the returned units' COGS, keeping profit
+            and the margin reports honest;
+          * cash handed back leaves the drawer -> reduce ``paid_amount`` by the
+            actual ``refund_amount``.
+        All are floored at zero so a return can never push the sale negative.
+        Saving the sale fires the post_save signal that recomputes the
+        customer's outstanding balance, so the refund finally moves the ledger.
+        Call inside the same atomic block as the return creation and restock.
+        """
+        sale = self.sale
+        goods_value = self.returned_goods_value()
+        cost_value = self.returned_cost_value()
+        sale.total_amount = max(Decimal('0.00'), sale.total_amount - goods_value)
+        sale.total_cost = max(Decimal('0.00'), sale.total_cost - cost_value)
+        sale.paid_amount = max(Decimal('0.00'), sale.paid_amount - self.refund_amount)
+        sale.update_payment_status()  # saves paid_amount + payment_status
+        sale.save(update_fields=['total_amount', 'total_cost'])
 
 
 class SaleReturnItem(TimeStampedModel):

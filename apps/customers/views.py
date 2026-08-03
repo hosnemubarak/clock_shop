@@ -4,7 +4,6 @@ import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.core.paginator import Paginator
 from django.db.models import Q, Sum, F
 from django.db import transaction, IntegrityError
 from django.http import JsonResponse
@@ -14,7 +13,7 @@ from decimal import Decimal
 from .models import Customer, Payment, CustomerNote
 from .forms import CustomerForm, PaymentForm, CustomerNoteForm
 from apps.sales.models import Sale
-from apps.core.utils import create_audit_log
+from apps.core.utils import create_audit_log, paginate
 
 logger = logging.getLogger(__name__)
 
@@ -47,10 +46,8 @@ def customer_list(request):
     elif status == 'inactive':
         customers = customers.filter(is_active=False)
     
-    paginator = Paginator(customers, 10)
-    page = request.GET.get('page')
-    customers = paginator.get_page(page)
-    
+    customers = paginate(request, customers, 10)
+
     # Summary stats
     summary = Customer.objects.aggregate(
         total_due=Sum('total_due'),
@@ -256,10 +253,8 @@ def payment_list(request):
     if date_to:
         payments = payments.filter(payment_date__date__lte=date_to)
     
-    paginator = Paginator(payments, 10)
-    page = request.GET.get('page')
-    payments = paginator.get_page(page)
-    
+    payments = paginate(request, payments, 10)
+
     context = {
         'payments': payments,
         'search': search,
@@ -422,13 +417,17 @@ def api_customer_create(request):
         try:
             data = json.loads(request.body)
             name = data.get('name', '').strip()
+            phone = data.get('phone', '').strip()
             
             if not name:
                 return JsonResponse({'status': 'error', 'message': 'Customer name is required.'}, status=400)
+
+            if not phone:
+                return JsonResponse({'status': 'error', 'message': 'Customer phone number is required.'}, status=400)
                 
             customer = Customer.objects.create(
                 name=name,
-                phone=data.get('phone', '').strip(),
+                phone=phone,
                 email=data.get('email', '').strip(),
                 address=data.get('address', '').strip()
             )

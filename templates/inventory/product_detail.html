@@ -1,23 +1,12 @@
 {% extends 'base.html' %}
 {% load humanize %}
+{% load static %}
 
 {% block title %}{{ product.display_name }} | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Product Details</h4>
-            <div class="page-title-right">
-                <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'inventory:product_list' %}">Products</a></li>
-                    <li class="breadcrumb-item active">{{ product.sku }}</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div>
+{% url 'inventory:product_list' as list_url %}
+{% include 'includes/page_header.html' with title='Product Details' active_label=product.sku breadcrumb=True parent_label='Products' parent_url=list_url %}
 
 <div class="row">
     <div class="col-12 mb-4">
@@ -217,72 +206,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-function openQuickAddStockModal(productId, productName, averageCost) {
-    document.getElementById('qasProductId').value = productId;
-    document.getElementById('qasProductName').textContent = productName;
-    document.getElementById('qasUnitPrice').value = averageCost;
-    document.getElementById('qasQuantity').value = '';
-    document.getElementById('qasWarehouse').value = '';
-    document.getElementById('qasSupplier').value = '';
-    
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('qasPurchaseDate').value = today;
-    document.getElementById('qasNotes').value = '';
-    
-    new bootstrap.Modal(document.getElementById('quickAddStockModal')).show();
-}
-
-function submitQuickAddStock() {
-    const productId = document.getElementById('qasProductId').value;
-    const warehouseId = document.getElementById('qasWarehouse').value;
-    const quantity = document.getElementById('qasQuantity').value;
-    const unitPrice = document.getElementById('qasUnitPrice').value;
-    const supplier = document.getElementById('qasSupplier').value;
-    const purchaseDate = document.getElementById('qasPurchaseDate').value;
-    const notes = document.getElementById('qasNotes').value;
-    
-    if (!warehouseId || !quantity || !unitPrice || !supplier || !purchaseDate) {
-        showValidationModal('Please fill out all required fields.');
-        return;
-    }
-    
-    const btn = document.getElementById('btnQuickAddStock');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="las la-spinner la-spin"></i> Adding...';
-    btn.disabled = true;
-    
-    fetch(`/inventory/api/products/${productId}/quick-add-stock/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        },
-        body: JSON.stringify({
-            warehouse_id: warehouseId,
-            quantity: quantity,
-            unit_price: unitPrice,
-            supplier: supplier,
-            purchase_date: purchaseDate,
-            notes: notes
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.reload();
-        } else {
-            showValidationModal(data.error, 'Error');
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showValidationModal('An error occurred.', 'Error');
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    });
-}
-</script>
+<script src="{% static 'js/stock-actions.js' %}?v=1"></script>
 {% endblock %}

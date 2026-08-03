@@ -4,17 +4,9 @@
 {% block title %}Purchases | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Stock In Records</h4>
-            <div class="page-title-right d-flex gap-2">
-                <a href="{% url 'inventory:stockout_list' %}" class="btn btn-outline-danger"><i class="las la-minus-circle"></i> Stock Out</a>
-                <a href="{% url 'inventory:purchase_create' %}" class="btn btn-success"><i class="las la-plus"></i> Add Stock</a>
-            </div>
-        </div>
-    </div>
-</div>
+{% url 'inventory:stockout_list' as stockout_url %}
+{% url 'inventory:purchase_create' as create_url %}
+{% include 'includes/page_header.html' with title='Stock In Records' action_url=stockout_url action_label='Stock Out' action_icon='las la-minus-circle' action_class='btn-outline-danger' action2_url=create_url action2_label='Add Stock' action2_icon='las la-plus' action2_class='btn-success' %}
 
 <div class="row">
     <div class="col-12">
@@ -49,9 +41,7 @@
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr>
-                                <td colspan="7" class="text-center text-muted py-4">No records found</td>
-                            </tr>
+                            {% include 'includes/empty_state.html' with colspan=7 message='No records found' %}
                             {% endfor %}
                         </tbody>
                     </table>

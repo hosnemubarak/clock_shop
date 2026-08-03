@@ -4,20 +4,8 @@
 {% block title %}Stock Out | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Stock Out Records</h4>
-            <div class="page-title-right">
-                <ol class="breadcrumb m-0">
-                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Home</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'inventory:product_list' %}">Inventory</a></li>
-                    <li class="breadcrumb-item active">Stock Out</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-</div>
+{% url 'inventory:product_list' as inv_url %}
+{% include 'includes/page_header.html' with title='Stock Out Records' active_label='Stock Out' breadcrumb=True home_label='Home' parent_label='Inventory' parent_url=inv_url %}
 
 <div class="row">
     <div class="col-lg-12">
@@ -114,12 +102,8 @@
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr>
-                                <td colspan="9" class="text-center text-muted py-4">
-                                    <i class="las la-inbox fs-1 d-block mb-2"></i>
-                                    No stock out records found
-                                </td>
-                            </tr>
+                            {% url 'inventory:stockout_create' as create_url %}
+                            {% include 'includes/empty_state.html' with colspan=9 message='No stock out records found' icon='las la-inbox' cta_url=create_url cta_label='New Stock Out' %}
                             {% endfor %}
                         </tbody>
                     </table>

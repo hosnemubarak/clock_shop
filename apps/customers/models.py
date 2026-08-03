@@ -81,25 +81,41 @@ class Customer(TimeStampedModel):
                 raise ValidationError({'email': 'A customer with this email already exists.'})
     
     def recalculate_balance(self):
-        """Recalculate customer balance from sales and payments."""
-        from apps.sales.models import Sale
-        
-        # Total from completed sales
+        """Recalculate customer balance from sales, payments and refunds.
+
+        Balance is ``purchases - net cash``. A sale return reduces the sale's
+        ``total_amount`` (fewer goods owed for) and refunds cash, so a refund is
+        netted out of payments here: net cash = payments - refunds. Without the
+        refund term a refunded customer would look overpaid, because the cash
+        that left the drawer is not represented in the Payment rows.
+        """
+        from apps.sales.models import Sale, SaleReturn
+
+        # Total from completed sales (already net of returned goods value).
         sales_total = Sale.objects.filter(
             customer=self,
             status='completed'
         ).aggregate(
             total=models.Sum('total_amount')
         )['total'] or Decimal('0.00')
-        
-        # Total payments
+
+        # Total payments received.
         payments_total = self.payments.aggregate(
             total=models.Sum('amount')
         )['total'] or Decimal('0.00')
-        
+
+        # Cash refunded on returns against this customer's completed sales.
+        refunds_total = SaleReturn.objects.filter(
+            sale__customer=self,
+            sale__status='completed'
+        ).aggregate(
+            total=models.Sum('refund_amount')
+        )['total'] or Decimal('0.00')
+
+        net_paid = payments_total - refunds_total
         self.total_purchases = sales_total
-        self.total_paid = payments_total
-        self.total_due = sales_total - payments_total
+        self.total_paid = net_paid
+        self.total_due = sales_total - net_paid
         self.save(update_fields=['total_purchases', 'total_paid', 'total_due'])
     
     def get_purchase_history(self):

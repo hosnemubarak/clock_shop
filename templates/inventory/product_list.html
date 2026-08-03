@@ -1,23 +1,13 @@
 {% extends 'base.html' %}
 {% load humanize %}
+{% load core_tags %}
+{% load static %}
 
 {% block title %}Products | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Products</h4>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'inventory:category_list' %}">Inventory</a></li>
-                    <li class="breadcrumb-item active">Products</li>
-                </ol>
-            </nav>
-        </div>
-    </div>
-</div>
+{% url 'inventory:category_list' as inv_url %}
+{% include 'includes/page_header.html' with title='Products' breadcrumb=True parent_label='Inventory' parent_url=inv_url %}
 
 <!-- Filter Card -->
 <div class="row">
@@ -151,24 +141,18 @@
                                                 onclick="openQuickAddStockModal({{ product.pk }}, '{{ product.display_name|escapejs }}', '{{ product.average_cost|default_if_none:'0.00' }}')">
                                             <i class="las la-plus"></i> Add Stock
                                         </button>
-                                        <div class="dropdown">
-                                            <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                                <i class="las la-ellipsis-h"></i>
-                                            </button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
+                                        {% capture as row_menu %}
                                             <li><a class="dropdown-item" href="{% url 'inventory:product_detail' product.pk %}"><i class="las la-eye me-2"></i>View</a></li>
                                             <li><a class="dropdown-item" href="{% url 'inventory:product_edit' product.pk %}"><i class="las la-pen me-2"></i>Edit</a></li>
                                             <li><hr class="dropdown-divider"></li>
                                             <li><a class="dropdown-item text-danger" href="{% url 'inventory:product_delete' product.pk %}"><i class="las la-trash me-2"></i>Delete</a></li>
-                                        </ul>
-                                        </div>
+                                        {% endcapture %}
+                                        {% include 'includes/row_actions.html' with menu=row_menu %}
                                     </div>
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr>
-                                <td colspan="8" class="text-center text-muted py-4">No products found</td>
-                            </tr>
+                            {% include 'includes/empty_state.html' with colspan=8 message='No products found' %}
                             {% endfor %}
                         </tbody>
                     </table>
@@ -244,76 +228,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-function openQuickAddStockModal(productId, productName, averageCost) {
-    document.getElementById('qasProductId').value = productId;
-    document.getElementById('qasProductName').textContent = productName;
-    document.getElementById('qasUnitPrice').value = averageCost;
-    document.getElementById('qasQuantity').value = '';
-    document.getElementById('qasWarehouse').value = '';
-    document.getElementById('qasSupplier').value = '';
-    
-    // Set default Stock Date to today
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('qasPurchaseDate').value = today;
-    
-    document.getElementById('qasNotes').value = '';
-    
-    // Convert comma decimal to point if necessary, though averageCost is usually standard string
-    
-    new bootstrap.Modal(document.getElementById('quickAddStockModal')).show();
-}
-
-function submitQuickAddStock() {
-    const productId = document.getElementById('qasProductId').value;
-    const warehouseId = document.getElementById('qasWarehouse').value;
-    const quantity = document.getElementById('qasQuantity').value;
-    const unitPrice = document.getElementById('qasUnitPrice').value;
-    const supplier = document.getElementById('qasSupplier').value;
-    const purchaseDate = document.getElementById('qasPurchaseDate').value;
-    const notes = document.getElementById('qasNotes').value;
-    
-    if (!warehouseId || !quantity || !unitPrice || !supplier || !purchaseDate) {
-        showValidationModal('Please fill out all required fields.');
-        return;
-    }
-    
-    const btn = document.getElementById('btnQuickAddStock');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="las la-spinner la-spin"></i> Adding...';
-    btn.disabled = true;
-    
-    fetch(`/inventory/api/products/${productId}/quick-add-stock/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        },
-        body: JSON.stringify({
-            warehouse_id: warehouseId,
-            quantity: quantity,
-            unit_price: unitPrice,
-            supplier: supplier,
-            purchase_date: purchaseDate,
-            notes: notes
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.reload();
-        } else {
-            showValidationModal(data.error, 'Error');
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showValidationModal('An error occurred.', 'Error');
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    });
-}
-</script>
+<script src="{% static 'js/stock-actions.js' %}?v=1"></script>
 {% endblock %}

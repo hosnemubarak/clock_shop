@@ -3,13 +3,7 @@
 {% block title %}Add Stock | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Add Stock</h4>
-        </div>
-    </div>
-</div>
+{% include 'includes/page_header.html' with title='Add Stock' %}
 
 <form method="post" id="purchaseForm">
     {% csrf_token %}
@@ -104,7 +98,7 @@
                         {{ form.notes }}
                     </div>
                     
-                    <button type="submit" class="btn btn-success w-100">
+                    <button type="submit" id="submitBtn" class="btn btn-success w-100">
                         <i class="las la-save"></i> Save Stock In
                     </button>
                 </div>
@@ -217,6 +211,11 @@ document.getElementById('purchaseForm').addEventListener('submit', function(e) {
         showValidationModal('Please enter a supplier name.', 'Supplier Required');
         return false;
     }
+
+    // Validation passed — show a loading state and block double-submit.
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="las la-spinner la-spin"></i> Saving...';
 });
 </script>
 {% endblock %}

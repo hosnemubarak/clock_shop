@@ -1,16 +1,11 @@
 {% extends 'base.html' %}
 {% load humanize %}
+{% load static %}
 
 {% block title %}Sales Report | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Sales Report</h4>
-        </div>
-    </div>
-</div>
+{% include 'includes/page_header.html' with title='Sales Report' %}
 
 <div class="row">
     <div class="col-12">
@@ -254,32 +249,15 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="{% static 'js/charts.js' %}?v=1"></script>
 <script>
-function getChartColorsArray(id) {
-    if (document.getElementById(id)) {
-        var colors = document.getElementById(id).getAttribute("data-colors");
-        if (colors) {
-            colors = JSON.parse(colors);
-            return colors.map(function(color) {
-                var c = color.replace(" ", "");
-                if (c.indexOf(",") === -1) {
-                    var style = getComputedStyle(document.documentElement);
-                    return style.getPropertyValue(c) || c;
-                }
-                return c;
-            });
-        }
-    }
-    return ["#405189", "#0ab39c"];
-}
-
 // Sales Period Data
 var salesPeriodLabels = [{% for row in sales_by_period %}"{{ row.period|date:'M d' }}"{% if not forloop.last %},{% endif %}{% endfor %}];
 var salesPeriodValues = [{% for row in sales_by_period %}{{ row.total|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}];
 var profitPeriodValues = [{% for row in sales_by_period %}{{ row.profit|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}];
 
 // Sales Period Bar Chart
-var salesChartColors = getChartColorsArray("sales-period-chart");
+var salesChartColors = getChartColorsArray("sales-period-chart", ["#405189", "#0ab39c"]);
 if (document.getElementById("sales-period-chart") && salesPeriodLabels.length > 0) {
     var options = {
         chart: {
@@ -323,7 +301,7 @@ var topProductLabels = [{% for p in top_products %}"{{ p.product__sku }}{% if p.
 var topProductValues = [{% for p in top_products %}{{ p.total_revenue|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}];
 
 // Top Products Horizontal Bar Chart
-var topProductsColors = getChartColorsArray("top-products-chart");
+var topProductsColors = getChartColorsArray("top-products-chart", ["#405189", "#0ab39c"]);
 if (document.getElementById("top-products-chart") && topProductLabels.length > 0) {
     var options2 = {
         chart: {

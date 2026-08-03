@@ -11,7 +11,7 @@ from apps.inventory.models import Product, ProductStock, Category
 from apps.sales.models import Sale, SaleItem
 from apps.customers.models import Customer, Payment
 from apps.warehouse.models import Warehouse, StockTransfer
-from .exports import generate_pdf, generate_excel
+from .exports import handle_export
 
 
 @login_required
@@ -145,8 +145,8 @@ def sales_report(request):
         'shop_sales': shop_sales,
     }
     
-    from .exports import handle_export
-    
+    context['sales_by_period_export'] = sales_data[:10000]  # Used by PDF template
+
     def get_excel_data():
         return [
             [
@@ -157,7 +157,7 @@ def sales_report(request):
                 row['count']
             ] for row in sales_data[:10000]
         ]
-        
+
     filters_dict = {
         'Date From': date_from,
         'Date To': date_to,
@@ -168,7 +168,7 @@ def sales_report(request):
             filters_dict['Shop'] = shops.get(id=shop_id).name
         except Exception:
             pass
-            
+
     totals = [
         'Total',
         summary['total_sales'],
@@ -176,9 +176,7 @@ def sales_report(request):
         summary['total_profit'],
         summary['count']
     ]
-    
-    context['sales_by_period_export'] = sales_data[:10000]  # Used by PDF template
-    
+
     export_response = handle_export(
         request=request,
         context=context,
@@ -318,25 +316,24 @@ def profit_report(request):
     }
     
     export = request.GET.get('export')
-    if export == 'pdf':
-        # Pass the full queryset instead of paginated for export
-        context['profit_by_product'] = profit_data
-        return generate_pdf('reports/pdf/profit_report.html', context, 'Profit_Report')
-    elif export == 'excel':
-        headers = ['SKU', 'Brand', 'Category', 'Quantity Sold', 'Revenue', 'Cost', 'Profit', 'Margin %']
-        data = []
-        for row in profit_data:
-            data.append([
-                row['product__sku'],
-                row['product__brand__name'] if row['product__brand__name'] else '-',
-                row['product__category__name'] if row['product__category__name'] else '-',
-                row['quantity_sold'],
-                row['revenue'],
-                row['cost'],
-                row['profit'],
-                row['margin']
-            ])
-            
+    if export:
+        pdf_context = {**context, 'profit_by_product': profit_data}
+
+        def get_excel_data():
+            data = []
+            for row in profit_data:
+                data.append([
+                    row['product__sku'],
+                    row['product__brand__name'] if row['product__brand__name'] else '-',
+                    row['product__category__name'] if row['product__category__name'] else '-',
+                    row['quantity_sold'],
+                    row['revenue'],
+                    row['cost'],
+                    row['profit'],
+                    row['margin']
+                ])
+            return data
+
         filters_dict = {
             'Date From': date_from,
             'Date To': date_to,
@@ -344,16 +341,19 @@ def profit_report(request):
         if product_id:
             try:
                 filters_dict['Product'] = products.get(id=product_id).name
-            except: pass
+            except Exception:
+                pass
         if category_id:
             try:
                 filters_dict['Category'] = categories.get(id=category_id).name
-            except: pass
+            except Exception:
+                pass
         if shop_id:
             try:
                 filters_dict['Shop'] = shops.get(id=shop_id).name
-            except: pass
-                
+            except Exception:
+                pass
+
         totals_row = [
             'Total', '', '', '',
             totals['total_revenue'],
@@ -361,7 +361,19 @@ def profit_report(request):
             totals['total_profit'],
             totals['margin']
         ]
-        return generate_excel('Profit_Report', 'Profit Report', filters_dict, headers, data, totals_row)
+        export_response = handle_export(
+            request=request,
+            context=pdf_context,
+            filename='Profit_Report',
+            pdf_template='reports/pdf/profit_report.html',
+            excel_title='Profit Report',
+            filters_dict=filters_dict,
+            headers=['SKU', 'Brand', 'Category', 'Quantity Sold', 'Revenue', 'Cost', 'Profit', 'Margin %'],
+            data_func=get_excel_data,
+            totals=totals_row
+        )
+        if export_response:
+            return export_response
 
     return render(request, 'reports/profit_report.html', context)
 
@@ -477,39 +489,55 @@ def stock_report(request):
     }
     
     export = request.GET.get('export')
-    if export == 'pdf':
-        context['stock_summary'] = stock_summary
-        return generate_pdf('reports/pdf/stock_report.html', context, 'Stock_Report')
-    elif export == 'excel':
-        headers = ['SKU', 'Brand', 'Category', 'Default Price', 'Total Quantity', 'Avg Cost', 'Total Value']
-        data = []
-        for row in stock_summary:
-            data.append([
-                row['product__sku'],
-                row['product__brand__name'] if row['product__brand__name'] else '-',
-                row['product__category__name'] if row['product__category__name'] else '-',
-                row['product__default_selling_price'],
-                row['total_quantity'],
-                row['avg_cost'],
-                row['total_value']
-            ])
-            
+    if export:
+        pdf_context = {**context, 'stock_summary': stock_summary}
+
+        def get_excel_data():
+            data = []
+            for row in stock_summary:
+                data.append([
+                    row['product__sku'],
+                    row['product__brand__name'] if row['product__brand__name'] else '-',
+                    row['product__category__name'] if row['product__category__name'] else '-',
+                    row['product__default_selling_price'],
+                    row['total_quantity'],
+                    row['avg_cost'],
+                    row['total_value']
+                ])
+            return data
+
         filters_dict = {}
         if warehouse_id:
-            try: filters_dict['Warehouse'] = warehouses.get(id=warehouse_id).name
-            except: pass
+            try:
+                filters_dict['Warehouse'] = warehouses.get(id=warehouse_id).name
+            except Exception:
+                pass
         if category_id:
-            try: filters_dict['Category'] = categories.get(id=category_id).name
-            except: pass
+            try:
+                filters_dict['Category'] = categories.get(id=category_id).name
+            except Exception:
+                pass
         filters_dict['Stock Filter'] = stock_filter.title()
-                
+
         totals_row = [
             'Total', '', '', '',
             totals['total_items'],
             '',
             totals['total_value']
         ]
-        return generate_excel('Stock_Report', 'Stock Report', filters_dict, headers, data, totals_row)
+        export_response = handle_export(
+            request=request,
+            context=pdf_context,
+            filename='Stock_Report',
+            pdf_template='reports/pdf/stock_report.html',
+            excel_title='Stock Report',
+            filters_dict=filters_dict,
+            headers=['SKU', 'Brand', 'Category', 'Default Price', 'Total Quantity', 'Avg Cost', 'Total Value'],
+            data_func=get_excel_data,
+            totals=totals_row
+        )
+        if export_response:
+            return export_response
 
     return render(request, 'reports/stock_report.html', context)
 
@@ -557,35 +585,47 @@ def transfer_report(request):
     }
     
     export = request.GET.get('export')
-    if export == 'pdf':
-        context['transfers'] = transfers
-        return generate_pdf('reports/pdf/transfer_report.html', context, 'Transfer_Report')
-    elif export == 'excel':
-        headers = ['ID', 'Date', 'Source', 'Destination', 'Status', 'Items']
-        data = []
-        for t in transfers:
-            items_str = ", ".join([f"{item.product.display_name} (x{item.quantity})" for item in t.items.all()])
-            data.append([
-                t.id,
-                t.transfer_date.strftime('%Y-%m-%d'),
-                t.source_warehouse.name,
-                t.destination_warehouse.name,
-                t.get_status_display(),
-                items_str
-            ])
-            
+    if export:
+        pdf_context = {**context, 'transfers': transfers}
+
+        def get_excel_data():
+            data = []
+            for t in transfers:
+                items_str = ", ".join([f"{item.product.display_name} (x{item.quantity})" for item in t.items.all()])
+                data.append([
+                    t.id,
+                    t.transfer_date.strftime('%Y-%m-%d'),
+                    t.source_warehouse.name,
+                    t.destination_warehouse.name,
+                    t.get_status_display(),
+                    items_str
+                ])
+            return data
+
         filters_dict = {
             'Date From': date_from,
             'Date To': date_to,
             'Status': status.title() if status else 'All'
         }
-        
+
         totals_row = [
             'Total Transfers:', transfer_summary['total_transfers'],
             'Completed:', transfer_summary['completed'],
             'Pending:', transfer_summary['pending'],
         ]
-        return generate_excel('Transfer_Report', 'Transfer Report', filters_dict, headers, data, totals_row)
+        export_response = handle_export(
+            request=request,
+            context=pdf_context,
+            filename='Transfer_Report',
+            pdf_template='reports/pdf/transfer_report.html',
+            excel_title='Transfer Report',
+            filters_dict=filters_dict,
+            headers=['ID', 'Date', 'Source', 'Destination', 'Status', 'Items'],
+            data_func=get_excel_data,
+            totals=totals_row
+        )
+        if export_response:
+            return export_response
 
     return render(request, 'reports/transfer_report.html', context)
 
@@ -645,35 +685,47 @@ def dead_stock_report(request):
     }
     
     export = request.GET.get('export')
-    if export == 'pdf':
-        context['dead_stock'] = dead_stock
-        return generate_pdf('reports/pdf/dead_stock_report.html', context, 'Dead_Stock_Report')
-    elif export == 'excel':
-        headers = ['SKU', 'Brand', 'Category', 'Warehouse', 'Quantity', 'Buy Price', 'Total Value']
-        data = []
-        for stock in dead_stock:
-            data.append([
-                stock.product.sku,
-                stock.product.brand.name if stock.product.brand else '-',
-                stock.product.category.name if stock.product.category else '-',
-                stock.warehouse.name,
-                stock.quantity,
-                stock.product.average_cost,
-                stock.quantity * stock.product.average_cost
-            ])
-            
+    if export:
+        pdf_context = {**context, 'dead_stock': dead_stock}
+
+        def get_excel_data():
+            data = []
+            for stock in dead_stock:
+                data.append([
+                    stock.product.sku,
+                    stock.product.brand.name if stock.product.brand else '-',
+                    stock.product.category.name if stock.product.category else '-',
+                    stock.warehouse.name,
+                    stock.quantity,
+                    stock.product.average_cost,
+                    stock.quantity * stock.product.average_cost
+                ])
+            return data
+
         filters_dict = {
             'Inactivity Days': days_threshold,
             'Threshold Date': threshold_date.strftime('%Y-%m-%d')
         }
-        
+
         totals_row = [
             'Total Dead Stock', '', '', '',
             dead_stock_summary['total_items'],
             '',
             dead_stock_summary['total_value']
         ]
-        return generate_excel('Dead_Stock_Report', 'Dead Stock Report', filters_dict, headers, data, totals_row)
+        export_response = handle_export(
+            request=request,
+            context=pdf_context,
+            filename='Dead_Stock_Report',
+            pdf_template='reports/pdf/dead_stock_report.html',
+            excel_title='Dead Stock Report',
+            filters_dict=filters_dict,
+            headers=['SKU', 'Brand', 'Category', 'Warehouse', 'Quantity', 'Buy Price', 'Total Value'],
+            data_func=get_excel_data,
+            totals=totals_row
+        )
+        if export_response:
+            return export_response
 
     return render(request, 'reports/dead_stock_report.html', context)
 
@@ -716,30 +768,45 @@ def batch_report(request):
     }
     
     export = request.GET.get('export')
-    if export == 'pdf':
-        context['stock_data'] = stock_data_list
-        return generate_pdf('reports/pdf/batch_report.html', context, 'Stock_Detail_Report')
-    elif export == 'excel':
-        headers = ['Product', 'Warehouse', 'Quantity', 'WAC', 'Value']
-        data = []
-        for item in stock_data_list:
-            b = item['stock']
-            data.append([
-                b.product.display_name,
-                b.warehouse.name,
-                b.quantity,
-                b.product.average_cost,
-                item['value']
-            ])
-            
+    if export:
+        pdf_context = {**context, 'stock_data': stock_data_list}
+
+        def get_excel_data():
+            data = []
+            for item in stock_data_list:
+                b = item['stock']
+                data.append([
+                    b.product.display_name,
+                    b.warehouse.name,
+                    b.quantity,
+                    b.product.average_cost,
+                    item['value']
+                ])
+            return data
+
         filters_dict = {}
         if warehouse_id:
-            try: filters_dict['Warehouse'] = warehouses.get(id=warehouse_id).name
-            except: pass
+            try:
+                filters_dict['Warehouse'] = warehouses.get(id=warehouse_id).name
+            except Exception:
+                pass
         if product_id:
-            try: filters_dict['Product'] = products.get(id=product_id).name
-            except: pass
-        
-        return generate_excel('Stock_Detail_Report', 'Stock Detail Report', filters_dict, headers, data)
+            try:
+                filters_dict['Product'] = products.get(id=product_id).name
+            except Exception:
+                pass
+
+        export_response = handle_export(
+            request=request,
+            context=pdf_context,
+            filename='Stock_Detail_Report',
+            pdf_template='reports/pdf/batch_report.html',
+            excel_title='Stock Detail Report',
+            filters_dict=filters_dict,
+            headers=['Product', 'Warehouse', 'Quantity', 'WAC', 'Value'],
+            data_func=get_excel_data
+        )
+        if export_response:
+            return export_response
 
     return render(request, 'reports/batch_report.html', context)

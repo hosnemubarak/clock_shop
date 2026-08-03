@@ -4,17 +4,9 @@
 {% block title %}{{ warehouse.name }} | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">{{ warehouse.name }}</h4>
-            <div class="page-title-right">
-                <a href="{% url 'warehouse:warehouse_edit' warehouse.pk %}" class="btn btn-primary"><i class="las la-pen"></i> Edit</a>
-                <a href="{% url 'warehouse:transfer_create' %}" class="btn btn-info"><i class="las la-exchange-alt"></i> Transfer Stock</a>
-            </div>
-        </div>
-    </div>
-</div>
+{% url 'warehouse:warehouse_edit' warehouse.pk as edit_url %}
+{% url 'warehouse:transfer_create' as transfer_url %}
+{% include 'includes/page_header.html' with title=warehouse.name action_url=edit_url action_label='Edit' action_icon='las la-pen' action_class='btn-primary' action2_url=transfer_url action2_label='Transfer Stock' action2_icon='las la-exchange-alt' action2_class='btn-info' %}
 
 <div class="row">
     <div class="col-xl-3 col-md-6">

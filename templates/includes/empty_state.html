@@ -1,0 +1,25 @@
+{% comment %}
+Empty-state row for list tables. Renders a full-width <tr><td colspan=...>.
+Use inside {% empty %} of a table-body {% for %} loop.
+
+Params:
+  colspan     number of columns to span (required)
+  message     text to show (default "No records found")
+  icon        icon class (default "las la-inbox")
+  cta_url     optional call-to-action button href
+  cta_label   optional call-to-action button label
+  cta_icon    optional call-to-action button icon (default "las la-plus")
+{% endcomment %}
+<tr>
+    <td colspan="{{ colspan }}" class="text-center py-5">
+        <div class="text-muted">
+            <i class="{{ icon|default:'las la-inbox' }} fs-1 d-block mb-2"></i>
+            <p class="mb-2">{{ message|default:'No records found' }}</p>
+            {% if cta_url and cta_label %}
+            <a href="{{ cta_url }}" class="btn btn-sm btn-primary">
+                <i class="{{ cta_icon|default:'las la-plus' }} me-1"></i> {{ cta_label }}
+            </a>
+            {% endif %}
+        </div>
+    </td>
+</tr>

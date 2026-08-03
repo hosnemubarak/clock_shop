@@ -3,20 +3,8 @@
 {% block title %}{{ title }} | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">{{ title }}</h4>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{% url 'inventory:product_list' %}">Products</a></li>
-                    <li class="breadcrumb-item active">{{ title }}</li>
-                </ol>
-            </nav>
-        </div>
-    </div>
-</div>
+{% url 'inventory:product_list' as list_url %}
+{% include 'includes/page_header.html' with title=title breadcrumb=True parent_label='Products' parent_url=list_url %}
 
 <form method="post" enctype="multipart/form-data" id="productForm">
     {% csrf_token %}
