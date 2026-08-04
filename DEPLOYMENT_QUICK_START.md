@@ -44,6 +44,8 @@ docker-compose up -d --build
 docker-compose exec web python manage.py migrate
 docker-compose exec web python manage.py createcachetable
 docker-compose exec web python manage.py createsuperuser
+docker-compose exec web python manage.py setup_groups
+docker-compose exec web python manage.py setup_walkin_customer
 ```
 
 ### 5. Troubleshooting (Docker)
@@ -155,6 +157,12 @@ python manage.py createcachetable
 
 # Create admin user
 python manage.py createsuperuser
+
+# Setup default groups and permissions
+python manage.py setup_groups
+
+# Setup default walk-in customer
+python manage.py setup_walkin_customer
 ```
 
 ---

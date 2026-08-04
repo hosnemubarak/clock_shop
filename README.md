@@ -200,7 +200,10 @@ docker-compose exec web python manage.py createsuperuser
 # 6. Setup default groups and permissions
 docker-compose exec web python manage.py setup_groups
 
-# 7. (Optional) Load demo data
+# 7. Setup default walk-in customer
+docker-compose exec web python manage.py setup_walkin_customer
+
+# 8. (Optional) Load demo data
 docker-compose exec web python manage.py loaddata fixtures/demo_data.json
 ```
 
