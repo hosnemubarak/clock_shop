@@ -13,6 +13,7 @@
 
 <form method="post" id="stockoutForm">
     {% csrf_token %}
+    {% include 'includes/form_errors.html' %}
     <input type="hidden" name="items_data" id="items_data" value="[]">
     
     <div class="row">
@@ -27,18 +28,22 @@
                         <div class="col-md-6">
                             <label class="form-label">Warehouse <span class="text-danger">*</span></label>
                             {{ form.warehouse }}
+                            {% if form.warehouse.errors %}<div class="text-danger small mt-1">{{ form.warehouse.errors.0 }}</div>{% endif %}
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Reason <span class="text-danger">*</span></label>
                             {{ form.reason }}
+                            {% if form.reason.errors %}<div class="text-danger small mt-1">{{ form.reason.errors.0 }}</div>{% endif %}
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Date & Time <span class="text-danger">*</span></label>
                             {{ form.stockout_date }}
+                            {% if form.stockout_date.errors %}<div class="text-danger small mt-1">{{ form.stockout_date.errors.0 }}</div>{% endif %}
                         </div>
                         <div class="col-12">
                             <label class="form-label">Notes</label>
                             {{ form.notes }}
+                            {% if form.notes.errors %}<div class="text-danger small mt-1">{{ form.notes.errors.0 }}</div>{% endif %}
                         </div>
                     </div>
                 </div>

@@ -8,6 +8,7 @@
 
 <form method="post" id="transferForm">
     {% csrf_token %}
+    {% include 'includes/form_errors.html' %}
     
     <div class="card mb-4">
         <div class="card-header">
@@ -78,18 +79,22 @@
                     <div class="mb-3">
                         <label class="form-label">Source Warehouse <span class="text-danger">*</span></label>
                         {{ form.source_warehouse }}
+                        {% if form.source_warehouse.errors %}<div class="text-danger small mt-1">{{ form.source_warehouse.errors.0 }}</div>{% endif %}
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Destination Warehouse <span class="text-danger">*</span></label>
                         {{ form.destination_warehouse }}
+                        {% if form.destination_warehouse.errors %}<div class="text-danger small mt-1">{{ form.destination_warehouse.errors.0 }}</div>{% endif %}
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Transfer Date</label>
                         {{ form.transfer_date }}
+                        {% if form.transfer_date.errors %}<div class="text-danger small mt-1">{{ form.transfer_date.errors.0 }}</div>{% endif %}
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Notes</label>
                         {{ form.notes }}
+                        {% if form.notes.errors %}<div class="text-danger small mt-1">{{ form.notes.errors.0 }}</div>{% endif %}
                     </div>
                     
                     <button type="submit" id="submitBtn" class="btn btn-primary w-100">

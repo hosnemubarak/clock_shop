@@ -15,16 +15,19 @@
             <div class="card-body">
                 <form method="post">
                     {% csrf_token %}
+                    {% include 'includes/form_errors.html' %}
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Warehouse Name <span class="text-danger">*</span></label>
                             {{ form.name }}
                             <small class="text-muted">e.g. Main Store, Downtown Branch</small>
+                            {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Code <span class="text-danger">*</span></label>
                             {{ form.code }}
                             <small class="text-muted">Unique identifier (e.g. WH001, MAIN)</small>
+                            {% if form.code.errors %}<div class="text-danger small mt-1">{{ form.code.errors.0 }}</div>{% endif %}
                         </div>
                     </div>
                     <div class="row">
@@ -32,11 +35,13 @@
                             <label class="form-label">Phone Number</label>
                             {{ form.phone }}
                             <small class="text-muted">Optional contact number</small>
+                            {% if form.phone.errors %}<div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>{% endif %}
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Address</label>
                             {{ form.address }}
                             <small class="text-muted">Optional location address</small>
+                            {% if form.address.errors %}<div class="text-danger small mt-1">{{ form.address.errors.0 }}</div>{% endif %}
                         </div>
                     </div>
                     
@@ -49,6 +54,7 @@
                                 <label class="form-check-label"><strong>Active Warehouse</strong></label>
                             </div>
                             <small class="text-muted">Inactive warehouses won't appear in transfers</small>
+                            {% if form.is_active.errors %}<div class="text-danger small mt-1">{{ form.is_active.errors.0 }}</div>{% endif %}
                         </div>
                         <div class="col-md-6 mb-3">
                             <div class="form-check form-switch">
@@ -56,6 +62,7 @@
                                 <label class="form-check-label"><strong>Retail Shop</strong></label>
                             </div>
                             <small class="text-muted">Mark if this is a customer-facing retail location</small>
+                            {% if form.is_shop.errors %}<div class="text-danger small mt-1">{{ form.is_shop.errors.0 }}</div>{% endif %}
                         </div>
                     </div>
                     

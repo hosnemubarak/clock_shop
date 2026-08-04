@@ -6,6 +6,7 @@ from django.utils import timezone
 from decimal import Decimal
 from apps.core.models import TimeStampedModel
 from apps.core.utils import save_with_sequential_number
+from apps.core.validators import bd_phone_validator
 
 
 class Warehouse(TimeStampedModel):
@@ -13,7 +14,7 @@ class Warehouse(TimeStampedModel):
     name = models.CharField(max_length=100, unique=True)
     code = models.CharField(max_length=20, unique=True)
     address = models.TextField(blank=True)
-    phone = models.CharField(max_length=20, blank=True)
+    phone = models.CharField(validators=[bd_phone_validator], max_length=20, blank=True)
     is_active = models.BooleanField(default=True)
     is_shop = models.BooleanField(default=False, help_text='Is this a retail shop location?')
     

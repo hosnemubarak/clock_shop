@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 
 body { 
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
     margin: 0 auto; 
     padding: 20px; 
     font-size: 13px; 
@@ -27,17 +27,17 @@ h1, h2, h3, h4, strong, th { color: #0f172a; }
 .main-content > table { margin-bottom: 0; }
 .bottom-content { margin-top: 0; }
 
-.header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0; }
+.header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; }
 .header h1 { margin: 0 0 5px 0; font-size: 24px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-.header p { margin: 0; color: #64748b; font-size: 13px; }
+.header p { margin: 0; color: #64748b; font-size: 11px; }
 
-.invoice-info { display: flex; justify-content: space-between; margin-bottom: 25px; align-items: flex-start; }
+.invoice-info { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: flex-start; }
 .bill-to-box { width: 55%; }
 .invoice-info strong { font-weight: 600; color: #475569; display: inline-block; margin-bottom: 5px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
 .meta-box { width: 40%; text-align: right; }
 
-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-th, td { border-bottom: 1px solid #e2e8f0; padding: 12px 14px; text-align: left; }
+table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+th, td { border-bottom: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; }
 th { 
     background: #f8fafc; 
     font-weight: 600; 
@@ -67,7 +67,7 @@ td { font-size: 13px; }
 
 .notes-section { margin-top: 25px; padding: 15px; background: #f8fafc; border-radius: 6px; border: 1px solid #f1f5f9; }
 
-.signatures { display: flex; justify-content: space-between; margin-top: 60px; margin-bottom: 30px; }
+.signatures { display: flex; justify-content: space-between; margin-top: 40px; margin-bottom: 20px; }
 .signature-box { text-align: center; width: 28%; }
 .signature-line { border-top: 1px solid #cbd5e1; padding-top: 8px; font-weight: 600; font-size: 12px; color: #475569; }
 
@@ -96,16 +96,21 @@ td { font-size: 13px; }
 
 /* Hide browser headers/footers and adjust physical margins */
 @page { 
-    margin: 0; 
+    margin: 10mm; 
+    @bottom-right {
+        content: "Page " counter(page) " of " counter(pages);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 10px;
+        color: #64748b;
+    }
 }
 @media print { 
     body { 
-        padding: 10mm; 
+        padding: 0; 
         max-width: none; 
         background: white; 
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
+        display: block;
+        min-height: auto;
     }
     .no-print { display: none !important; } 
     thead { display: table-header-group; }

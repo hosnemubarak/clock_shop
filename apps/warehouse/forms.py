@@ -7,10 +7,15 @@ class WarehouseForm(forms.ModelForm):
         model = Warehouse
         fields = ['name', 'code', 'address', 'phone', 'is_active', 'is_shop']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Main Store'}),
-            'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. WH001'}),
-            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'e.g. 123 Main Street, City'}),
-            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. +1 555-123-4567'}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Main Warehouse'}),
+            'code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. WH-MAIN'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'e.g. 123 Main Street'}),
+            'phone': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'e.g. 01712345678',
+                'pattern': r'^(?:\+?88)?01[3-9]\d{8}$',
+                'title': 'Enter a valid Bangladeshi mobile number (e.g. 01712345678)'
+            }),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_shop': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }

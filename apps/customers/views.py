@@ -425,6 +425,10 @@ def api_customer_create(request):
             if not phone:
                 return JsonResponse({'status': 'error', 'message': 'Customer phone number is required.'}, status=400)
                 
+            import re
+            if not re.match(r'^(?:\+?88)?01[3-9]\d{8}$', phone):
+                return JsonResponse({'status': 'error', 'message': 'Enter a valid Bangladeshi mobile number (e.g. 01712345678).'}, status=400)
+                
             customer = Customer.objects.create(
                 name=name,
                 phone=phone,

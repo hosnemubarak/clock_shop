@@ -14,6 +14,7 @@ class SystemSettingsForm(forms.ModelForm):
             'license_expiry_date',
             'low_stock_threshold',
             'alert_days_before_expiry',
+            'allow_walkin_customers',
         ]
         widgets = {
             'shop_name': forms.TextInput(attrs={
@@ -43,6 +44,9 @@ class SystemSettingsForm(forms.ModelForm):
                 'min': '1',
                 'placeholder': '30'
             }),
+            'allow_walkin_customers': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
         }
         labels = {
             'shop_name': 'Shop Name',
@@ -51,6 +55,7 @@ class SystemSettingsForm(forms.ModelForm):
             'license_expiry_date': 'License/Server Expiry Date',
             'low_stock_threshold': 'Low Stock Threshold',
             'alert_days_before_expiry': 'Alert Days Before Expiry',
+            'allow_walkin_customers': 'Allow Walk-in Customers',
         }
         help_texts = {
             'shop_name': 'Leave blank to use environment variable (SHOP_NAME)',
@@ -59,6 +64,7 @@ class SystemSettingsForm(forms.ModelForm):
             'license_expiry_date': 'Date when server/license expires',
             'low_stock_threshold': 'Products at or below this stock level are flagged as low stock',
             'alert_days_before_expiry': 'Show dashboard alert this many days before expiry',
+            'allow_walkin_customers': 'Allow sales without requiring a registered customer profile',
         }
     
     def clean_low_stock_threshold(self):

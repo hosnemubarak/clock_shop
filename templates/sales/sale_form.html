@@ -27,7 +27,8 @@
      data-customer-info-url="{% url 'customers:api_customer_info' 0 %}"
      data-receipt-url="{% url 'sales:sale_print' 0 %}"
      data-sale-list-url="{% url 'sales:sale_list' %}"
-     data-currency="{{ CURRENCY_SYMBOL }}">
+     data-currency="{{ CURRENCY_SYMBOL }}"
+     data-allow-walkin="{{ ALLOW_WALKIN_CUSTOMERS|yesno:'true,false' }}">
 
     {% include 'includes/page_header.html' with title='New Sale' %}
 
@@ -99,10 +100,15 @@
                             </button>
                         </div>
                         {# Slim inline note shown only while no customer is selected. #}
-                        <p class="sale-customer__walkin" id="customerWalkin">
+                        <div class="sale-customer__walkin {% if not ALLOW_WALKIN_CUSTOMERS %}text-danger{% endif %}" id="customerWalkin">
+                            {% if ALLOW_WALKIN_CUSTOMERS %}
                             <i class="las la-walking" aria-hidden="true"></i>
                             Walk-in customer &mdash; no account, no credit.
-                        </p>
+                            {% else %}
+                            <i class="las la-exclamation-circle" aria-hidden="true"></i>
+                            A registered customer must be selected for this sale.
+                            {% endif %}
+                        </div>
                         {# Screen-reader running commentary for a list that changes silently. #}
                         <div id="customerStatus" class="visually-hidden" aria-live="polite"></div>
                     </div>
@@ -134,6 +140,7 @@
                             Sale Date
                         </label>
                         {{ form.sale_date }}
+                        {% if form.sale_date.errors %}<div class="text-danger small mt-1">{{ form.sale_date.errors.0 }}</div>{% endif %}
                     </div>
                 </div>
             </div>
@@ -294,6 +301,7 @@
                                     Notes <span class="text-muted fw-normal">(optional)</span>
                                 </label>
                                 {{ form.notes }}
+                                {% if form.notes.errors %}<div class="text-danger small mt-1">{{ form.notes.errors.0 }}</div>{% endif %}
                             </div>
                         </div>
                     </div>

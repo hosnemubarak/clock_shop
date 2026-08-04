@@ -25,7 +25,8 @@ function initSaleCreate() {
         customerInfoUrl: page.dataset.customerInfoUrl,
         receiptUrl: page.dataset.receiptUrl,
         saleListUrl: page.dataset.saleListUrl,
-        currency: page.dataset.currency || ''
+        currency: page.dataset.currency || '',
+        allowWalkin: page.dataset.allowWalkin === 'true'
     };
 
     var SEARCH_DEBOUNCE_MS = 180;
@@ -417,6 +418,10 @@ function initSaleCreate() {
         if (!cart.length) {
             return 'Add at least one product before completing the sale.';
         }
+        
+        if (!CFG.allowWalkin && (!customerField || !customerField.value)) {
+            return 'Walk-in customers are not allowed. Please select or create a registered customer.';
+        }
 
         for (var i = 0; i < cart.length; i++) {
             var line = cart[i];
@@ -791,6 +796,15 @@ function initSaleCreate() {
                 : 'Customer phone number is required.';
             showAlert(missing, 'Missing customer details');
             (!name ? el.newCustomerName : el.newCustomerPhone).focus();
+            return;
+        }
+
+        // Validate Bangladeshi phone number format
+        var bdPhoneRegex = /^(?:\+?88)?01[3-9]\d{8}$/;
+        if (!bdPhoneRegex.test(phone)) {
+            el.newCustomerPhone.classList.add('is-invalid');
+            showAlert('Enter a valid Bangladeshi mobile number (e.g. 01712345678).', 'Invalid Phone Number');
+            el.newCustomerPhone.focus();
             return;
         }
 

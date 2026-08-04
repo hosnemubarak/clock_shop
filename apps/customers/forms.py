@@ -9,7 +9,12 @@ class CustomerForm(forms.ModelForm):
         fields = ['name', 'phone', 'email', 'address', 'credit_limit', 'notes', 'is_active']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. John Smith'}),
-            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. +1 555-123-4567'}),
+            'phone': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'e.g. 01712345678',
+                'pattern': r'^(?:\+?88)?01[3-9]\d{8}$',
+                'title': 'Enter a valid Bangladeshi mobile number (e.g. 01712345678)'
+            }),
             'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'e.g. customer@example.com'}),
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'e.g. 123 Main Street, City, State 12345'}),
             'credit_limit': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'e.g. 5000.00'}),

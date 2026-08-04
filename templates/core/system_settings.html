@@ -62,6 +62,24 @@
                     </div>
                     
                     <hr class="my-4">
+                    <h6 class="text-success mb-3"><i class="las la-shopping-cart me-1"></i> Sales Settings</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <div class="form-check form-switch mt-2">
+                                {{ form.allow_walkin_customers }}
+                                <label class="form-check-label fw-medium ms-1" for="{{ form.allow_walkin_customers.id_for_label }}">
+                                    {{ form.allow_walkin_customers.label }}
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-1">{{ form.allow_walkin_customers.help_text }}</small>
+                            {% if form.allow_walkin_customers.errors %}
+                            <div class="text-danger small">{{ form.allow_walkin_customers.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
                     <h6 class="text-danger mb-3"><i class="las la-calendar-times me-1"></i> License / Server Expiry</h6>
                     
                     <div class="row">

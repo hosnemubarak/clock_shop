@@ -4,16 +4,18 @@ from django.core.validators import MinValueValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from decimal import Decimal
 from apps.core.models import TimeStampedModel
+from apps.core.validators import bd_phone_validator
 
 
 class Customer(TimeStampedModel):
     """Customer model for retail clock shop."""
     name = models.CharField(max_length=200, db_index=True)
-    phone_regex = RegexValidator(
-        regex=r'^\+?1?\d{9,15}$',
-        message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed."
+    phone = models.CharField(
+        validators=[bd_phone_validator], 
+        max_length=20, 
+        unique=True,
+        error_messages={'unique': 'A customer with this phone number already exists.'}
     )
-    phone = models.CharField(validators=[phone_regex], max_length=20, blank=True)
     email = models.EmailField(blank=True)
     address = models.TextField(blank=True)
     
@@ -50,12 +52,6 @@ class Customer(TimeStampedModel):
         ordering = ['name']
         constraints = [
             models.UniqueConstraint(
-                fields=['phone'],
-                name='unique_customer_phone',
-                condition=~Q(phone=''),
-                violation_error_message='A customer with this phone number already exists.'
-            ),
-            models.UniqueConstraint(
                 fields=['email'],
                 name='unique_customer_email',
                 condition=~Q(email=''),
@@ -69,12 +65,8 @@ class Customer(TimeStampedModel):
         return self.name
     
     def clean(self):
-        """Validate uniqueness of phone and email."""
+        """Validate uniqueness of email."""
         super().clean()
-        if self.phone:
-            existing = Customer.objects.filter(phone=self.phone).exclude(pk=self.pk)
-            if existing.exists():
-                raise ValidationError({'phone': 'A customer with this phone number already exists.'})
         if self.email:
             existing = Customer.objects.filter(email=self.email).exclude(pk=self.pk)
             if existing.exists():

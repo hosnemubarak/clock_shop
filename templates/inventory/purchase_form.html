@@ -7,6 +7,7 @@
 
 <form method="post" id="purchaseForm">
     {% csrf_token %}
+    {% include 'includes/form_errors.html' %}
     
     <div class="card mb-4">
         <div class="card-header">
@@ -100,14 +101,17 @@
                     <div class="mb-3">
                         <label class="form-label">Supplier <span class="text-danger">*</span></label>
                         {{ form.supplier }}
+                        {% if form.supplier.errors %}<div class="text-danger small mt-1">{{ form.supplier.errors.0 }}</div>{% endif %}
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Stock Date <span class="text-danger">*</span></label>
                         {{ form.purchase_date }}
+                        {% if form.purchase_date.errors %}<div class="text-danger small mt-1">{{ form.purchase_date.errors.0 }}</div>{% endif %}
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Notes</label>
                         {{ form.notes }}
+                        {% if form.notes.errors %}<div class="text-danger small mt-1">{{ form.notes.errors.0 }}</div>{% endif %}
                     </div>
                     
                     <button type="submit" id="submitBtn" class="btn btn-success w-100">

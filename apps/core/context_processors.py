@@ -68,6 +68,11 @@ def global_context(request):
                 'critical': days_until_expiry <= 7
             }
     
+    if db_settings:
+        allow_walkin = db_settings.allow_walkin_customers
+    else:
+        allow_walkin = True
+        
     return {
         'SHOP_NAME': shop_name,
         'SHOP_ADDRESS': shop_address,
@@ -75,4 +80,5 @@ def global_context(request):
         'LOW_STOCK_THRESHOLD': low_stock_threshold,
         'EXPIRY_ALERT': expiry_alert,
         'DAYS_UNTIL_EXPIRY': days_until_expiry,
+        'ALLOW_WALKIN_CUSTOMERS': allow_walkin,
     }

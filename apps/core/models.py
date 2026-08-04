@@ -74,6 +74,10 @@ class SystemSettings(models.Model):
         default='৳',
         help_text='Currency symbol for prices'
     )
+    allow_walkin_customers = models.BooleanField(
+        default=True,
+        help_text='Allow sales to walk-in customers without an account'
+    )
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(
         User,
