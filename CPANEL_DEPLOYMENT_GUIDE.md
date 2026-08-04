@@ -201,12 +201,17 @@ This guide will help you deploy the Clock Shop Django application on cPanel with
    ```
    Follow the prompts to create your admin account.
 
-3. **Run DatabaseCache setup:**
+3. **Setup default groups and permissions:**
+   ```bash
+   python manage.py setup_groups
+   ```
+
+4. **Run DatabaseCache setup:**
    ```bash
    python manage.py createcachetable
    ```
 
-4. **Load initial data (optional):**
+5. **Load initial data (optional):**
    ```bash
    # If you have fixtures
    python manage.py loaddata fixtures/initial_data.json

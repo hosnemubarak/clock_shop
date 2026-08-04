@@ -143,10 +143,13 @@ python manage.py migrate
 # 7. Create admin user
 python manage.py createsuperuser
 
-# 8. Setup default walk-in customer
+# 8. Setup default groups and permissions
+python manage.py setup_groups
+
+# 9. Setup default walk-in customer
 python manage.py setup_walkin_customer
 
-# 9. (Optional) Load demo data
+# 10. (Optional) Load demo data
 python manage.py loaddata fixtures/demo_data.json
 
 # 10. Start development server
@@ -194,7 +197,10 @@ docker-compose up -d --build
 # 5. Create admin user
 docker-compose exec web python manage.py createsuperuser
 
-# 6. (Optional) Load demo data
+# 6. Setup default groups and permissions
+docker-compose exec web python manage.py setup_groups
+
+# 7. (Optional) Load demo data
 docker-compose exec web python manage.py loaddata fixtures/demo_data.json
 ```
 
@@ -312,6 +318,9 @@ python manage.py collectstatic --noinput
 
 # Create admin user
 python manage.py createsuperuser
+
+# Setup default groups and permissions
+python manage.py setup_groups
 ```
 
 #### Step 4: Systemd Service
