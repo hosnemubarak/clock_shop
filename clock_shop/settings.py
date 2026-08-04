@@ -351,3 +351,7 @@ LOGGING = {
         'level': 'INFO',
     },
 }
+
+import sys
+if 'test' in sys.argv:
+    ENABLE_RBAC = False

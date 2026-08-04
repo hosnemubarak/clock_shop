@@ -17,14 +17,24 @@ def is_cashier(user):
     return user.is_active and (is_manager(user) or user.groups.filter(name='Cashier').exists())
 
 from django.shortcuts import redirect
+from functools import wraps
 
 def custom_user_passes_test(test_func):
+    """
+    Custom decorator that redirects unauthorized authenticated users to an
+    'unauthorized' page instead of throwing a 403 or redirecting to login.
+    """
     def decorator(view_func):
+        @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
             if not request.user.is_authenticated:
-                return redirect(f"{settings.LOGIN_URL}?next={request.path}")
+                from django.contrib.auth.views import redirect_to_login
+                return redirect_to_login(request.get_full_path())
+            
             if test_func(request.user):
                 return view_func(request, *args, **kwargs)
+                
+            # Authenticated but unauthorized -> Show access denied page
             return redirect('core:unauthorized')
         return _wrapped_view
     return decorator

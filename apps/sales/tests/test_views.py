@@ -59,7 +59,11 @@ class SaleScreenTestMixin:
         )
         ProductStock.objects.create(product=self.depot_only, warehouse=self.depot, quantity=7)
 
-        self.customer = Customer.objects.create(name='Rahim Uddin', phone='01700000000')
+        self.customer = Customer.objects.create(
+            name='Rahim Uddin', 
+            phone='01700000000',
+            credit_limit=Decimal('5000.00')
+        )
 
         self.client.force_login(self.user)
 
