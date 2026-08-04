@@ -16,13 +16,13 @@ class PaymentStatusTests(TestCase):
         # Create a sale
         self.sale = Sale.objects.create(
             customer=self.customer,
-            sale_date=timezone.now(),
-            total_amount=Decimal('100.00'),
+            sale_date=timezone.localdate(),
             subtotal=Decimal('100.00'),
             discount_amount=Decimal('0.00'),
-            tax_amount=Decimal('0.00'),
+            total_amount=Decimal('100.00'),
             paid_amount=Decimal('0.00'),
-            payment_status='unpaid',
+            total_cost=Decimal('50.00'),
+            status='completed',
             created_by=self.user
         )
 

@@ -105,9 +105,9 @@ def sales_report(request):
     ).values(
         'product__sku', 'product__brand__name'
     ).annotate(
-        total_quantity=Sum('quantity'),
-        total_revenue=Sum(F('quantity') * F('unit_price')),
-        total_profit=Sum(F('quantity') * (F('unit_price') - F('cost_price')))
+        quantity_sold=Sum(F('quantity') - F('returned_quantity')),
+        total_revenue=Sum((F('quantity') - F('returned_quantity')) * F('unit_price')),
+        total_profit=Sum((F('quantity') - F('returned_quantity')) * (F('unit_price') - F('cost_price')))
     ).order_by('-total_revenue')[:10]
     
     # Shop-wise sales breakdown (for comparison)
@@ -238,9 +238,9 @@ def profit_report(request):
     ).values(
         'product__sku', 'product__brand__name', 'product__category__name'
     ).annotate(
-        quantity_sold=Sum('quantity'),
-        revenue=Sum(F('quantity') * F('unit_price')),
-        cost=Sum(F('quantity') * F('cost_price')),
+        quantity_sold=Sum(F('quantity') - F('returned_quantity')),
+        revenue=Sum((F('quantity') - F('returned_quantity')) * F('unit_price')),
+        cost=Sum((F('quantity') - F('returned_quantity')) * F('cost_price')),
     ).annotate(
         profit=F('revenue') - F('cost'),
     ).order_by('-profit')
@@ -265,8 +265,8 @@ def profit_report(request):
     ).values(
         'product__category__name'
     ).annotate(
-        revenue=Sum(F('quantity') * F('unit_price')),
-        cost=Sum(F('quantity') * F('cost_price')),
+        revenue=Sum((F('quantity') - F('returned_quantity')) * F('unit_price')),
+        cost=Sum((F('quantity') - F('returned_quantity')) * F('cost_price')),
     ).annotate(
         profit=F('revenue') - F('cost'),
     ).order_by('-profit')
@@ -282,8 +282,8 @@ def profit_report(request):
     ).values(
         'warehouse__name', 'warehouse__is_shop'
     ).annotate(
-        revenue=Sum(F('quantity') * F('unit_price')),
-        cost=Sum(F('quantity') * F('cost_price')),
+        revenue=Sum((F('quantity') - F('returned_quantity')) * F('unit_price')),
+        cost=Sum((F('quantity') - F('returned_quantity')) * F('cost_price')),
     ).annotate(
         profit=F('revenue') - F('cost'),
     ).order_by('-profit')
@@ -292,8 +292,8 @@ def profit_report(request):
     totals = SaleItem.objects.filter(
         **base_filter
     ).aggregate(
-        total_revenue=Sum(F('quantity') * F('unit_price')),
-        total_cost=Sum(F('quantity') * F('cost_price')),
+        total_revenue=Sum((F('quantity') - F('returned_quantity')) * F('unit_price')),
+        total_cost=Sum((F('quantity') - F('returned_quantity')) * F('cost_price')),
     )
     totals['total_profit'] = (totals['total_revenue'] or Decimal('0')) - (totals['total_cost'] or Decimal('0'))
     if totals['total_revenue'] and totals['total_revenue'] > 0:

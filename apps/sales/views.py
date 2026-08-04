@@ -178,17 +178,27 @@ def sale_cancel(request, pk):
 @cashier_required
 def sale_payment(request, pk):
     """Record payment for a sale."""
-    sale = get_object_or_404(Sale, pk=pk)
+    sale_base = get_object_or_404(Sale, pk=pk)
     
     if request.method == 'POST':
+        if sale_base.status == Sale.Status.CANCELLED:
+            messages.error(request, 'Cannot record payment for a cancelled sale.')
+            return redirect('sales:sale_detail', pk=sale_base.pk)
+            
         form = PaymentForm(request.POST)
         if form.is_valid():
             amount = form.cleaned_data['amount']
             
-            if amount > sale.due_amount:
-                messages.error(request, f'Payment amount exceeds due amount ({sale.due_amount}).')
+            if amount > sale_base.due_amount:
+                messages.error(request, f'Payment amount exceeds due amount ({sale_base.due_amount}).')
             else:
                 with transaction.atomic():
+                    # Lock the sale to prevent concurrent payments from overpaying
+                    sale = Sale.objects.select_for_update().get(pk=sale_base.pk)
+                    if amount > sale.due_amount:
+                        messages.error(request, f'Payment amount exceeds due amount ({sale.due_amount}).')
+                        return redirect('sales:sale_detail', pk=sale.pk)
+                        
                     # Create payment record. The Payment post_save signal
                     # recalculates sale.paid_amount, sale.payment_status and the
                     # customer balance from the persisted payment rows.
@@ -212,7 +222,7 @@ def sale_payment(request, pk):
         else:
             messages.error(request, 'Invalid payment data.')
     
-    return redirect('sales:sale_detail', pk=sale.pk)
+    return redirect('sales:sale_detail', pk=sale_base.pk)
 
 
 @cashier_required
@@ -441,6 +451,25 @@ def return_create(request):
                 raise InvalidOperation
         except (InvalidOperation, ValueError):
             messages.error(request, 'Invalid refund amount.')
+            return redirect(f"{request.path}?sale={sale.pk}")
+
+        # Calculate value of returned goods to cap the refund
+        returned_goods_value = Decimal('0.00')
+        for item in returnable_items:
+            qty = requested.get(item.id)
+            if qty:
+                # Apportion the line discount proportionally
+                if item.quantity > 0:
+                    gross = (item.quantity * item.unit_price) - item.discount
+                    per_unit_net = (gross / item.quantity)
+                    returned_goods_value += (per_unit_net * qty).quantize(Decimal('0.01'))
+                    
+        if refund_amount > sale.paid_amount:
+            messages.error(request, f'Refund amount cannot exceed the paid amount ({sale.paid_amount}).')
+            return redirect(f"{request.path}?sale={sale.pk}")
+            
+        if refund_amount > returned_goods_value:
+            messages.error(request, f'Refund amount cannot exceed the value of the returned goods ({returned_goods_value}).')
             return redirect(f"{request.path}?sale={sale.pk}")
 
         with transaction.atomic():

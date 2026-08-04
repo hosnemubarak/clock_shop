@@ -344,7 +344,7 @@ function initSaleCreate() {
                     '<td class="text-end">' +
                         '<input type="number" class="form-control form-control-sm text-end sale-num"' +
                         ' data-field="price" value="' + toMajor(line.unitPrice) + '"' +
-                        ' step="0.01" min="0" inputmode="decimal"' +
+                        ' step="1" min="0" inputmode="numeric"' +
                         ' aria-label="Unit price for ' + escapeHtml(line.sku) + '">' +
                     '</td>' +
                     '<td>' +
@@ -361,7 +361,7 @@ function initSaleCreate() {
                     '<td class="text-end d-none">' +
                         '<input type="number" class="form-control form-control-sm sale-line-discount sale-num"' +
                         ' data-field="discount" value="' + toMajor(line.discount) + '"' +
-                        ' step="0.01" min="0" inputmode="decimal"' +
+                        ' step="1" min="0" inputmode="numeric"' +
                         ' aria-label="Discount for ' + escapeHtml(line.sku) + '">' +
                     '</td>' +
                     '<td class="text-end fw-medium sale-num">' + fmt(lineTotal(line)) + '</td>' +

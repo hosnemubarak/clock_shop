@@ -1,10 +1,59 @@
-# cPanel Quick Start Guide
+# Deployment Quick Start Guide
 
-**Quick reference for deploying Clock Shop on cPanel with PostgreSQL**
+This guide covers deployment for both **cPanel** (Shared Hosting) and **VPS** (Docker).
 
 ---
 
-## 🚀 Quick Steps
+## 🐳 Docker Deployment (VPS)
+
+**Docker is highly recommended for VPS deployments.** It handles all dependencies, database setup, and environment isolation automatically.
+
+### 1. Initial Setup
+SSH into your VPS and run:
+```bash
+# Clone or copy your project files
+git clone <your-repo-url> clock_shop
+cd clock_shop
+
+# Copy the environment file
+cp .env.example .env
+nano .env
+```
+
+### 2. Configure Environment
+Update `.env` with your secure settings:
+```env
+SECRET_KEY=<generate-new-key>
+DEBUG=False
+ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
+CSRF_TRUSTED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+POSTGRES_DB=clock_shop
+POSTGRES_USER=clock_shop_user
+POSTGRES_PASSWORD=<strong-password>
+APP_PORT=80
+```
+
+### 3. Deploy
+Start the containers in the background:
+```bash
+docker-compose up -d --build
+```
+
+### 4. Create Admin Account
+```bash
+docker-compose exec web python manage.py createsuperuser
+```
+
+### 5. Troubleshooting (Docker)
+- **View Logs:** `docker-compose logs -f web`
+- **Restart App:** `docker-compose restart web`
+- **Rebuild Image:** `docker-compose up -d --build web`
+
+---
+
+## 🌐 cPanel Deployment (PostgreSQL)
+
+**Quick reference for deploying Clock Shop on cPanel.**
 
 ### 1. Create PostgreSQL Database (cPanel)
 ```

@@ -98,7 +98,8 @@ class Sale(TimeStampedModel):
     
     def calculate_totals(self):
         """Recalculate totals from items."""
-        items = self.items.all()
+        # Query DB directly to bypass any stale prefetch cache (e.g. after returns)
+        items = SaleItem.objects.filter(sale=self)
         self.subtotal = sum(item.total_price for item in items)
         self.total_cost = sum(item.total_cost for item in items)
         self.total_amount = self.subtotal - self.discount_amount
@@ -143,6 +144,10 @@ class SaleItem(TimeStampedModel):
         null=True, blank=True
     )
     quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    returned_quantity = models.PositiveIntegerField(
+        default=0,
+        help_text='Quantity returned so far'
+    )
     unit_price = models.DecimalField(
         max_digits=12, decimal_places=2,
         validators=[MinValueValidator(Decimal('0.00'))],
@@ -174,14 +179,22 @@ class SaleItem(TimeStampedModel):
         return f"{self.product.display_name} x {self.quantity}" if self.product else f"Item x {self.quantity}"
     
     @property
+    def net_quantity(self):
+        """Quantity net of returns."""
+        return max(0, self.quantity - self.returned_quantity)
+
+    @property
     def total_price(self):
-        """Total selling price."""
-        return (self.quantity * self.unit_price) - self.discount
+        """Total selling price net of returns."""
+        if self.quantity == 0:
+            return Decimal('0.00')
+        gross = (self.quantity * self.unit_price) - self.discount
+        return (gross * Decimal(self.net_quantity) / Decimal(self.quantity)).quantize(Decimal('0.01'))
     
     @property
     def total_cost(self):
-        """Total cost (COGS)."""
-        return self.quantity * self.cost_price
+        """Total cost (COGS) net of returns."""
+        return self.net_quantity * self.cost_price
     
     @property
     def profit(self):
@@ -241,6 +254,10 @@ class SaleReturn(TimeStampedModel):
             stock.quantity += return_item.quantity
             stock.save(update_fields=['quantity'])
             sale_item.product.update_total_stock()
+            
+            # Update returned_quantity on the sale item for net calculations
+            sale_item.returned_quantity += return_item.quantity
+            sale_item.save(update_fields=['returned_quantity'])
 
     def returned_goods_value(self):
         """Value of the goods on this return, at their effective per-unit price.
@@ -276,27 +293,16 @@ class SaleReturn(TimeStampedModel):
     def reconcile_sale_ledger(self):
         """Move the sale's money to reflect this return.
 
-        A return does these things to the ledger:
-          * the customer no longer owes for goods they gave back -> reduce
-            ``total_amount`` by the returned goods value;
-          * the returned units are restocked, so their cost leaves the sale ->
-            reduce ``total_cost`` by the returned units' COGS, keeping profit
-            and the margin reports honest;
-          * cash handed back leaves the drawer -> reduce ``paid_amount`` by the
-            actual ``refund_amount``.
+        A return reduces the sale's net items, so we just recalculate the sale totals.
+        Cash handed back leaves the drawer -> reduce ``paid_amount`` by the actual ``refund_amount``.
         All are floored at zero so a return can never push the sale negative.
-        Saving the sale fires the post_save signal that recomputes the
-        customer's outstanding balance, so the refund finally moves the ledger.
+        Saving the sale fires the post_save signal that recomputes the customer balance.
         Call inside the same atomic block as the return creation and restock.
         """
         sale = self.sale
-        goods_value = self.returned_goods_value()
-        cost_value = self.returned_cost_value()
-        sale.total_amount = max(Decimal('0.00'), sale.total_amount - goods_value)
-        sale.total_cost = max(Decimal('0.00'), sale.total_cost - cost_value)
         sale.paid_amount = max(Decimal('0.00'), sale.paid_amount - self.refund_amount)
+        sale.calculate_totals()  # Automatically computes based on net_quantity
         sale.update_payment_status()  # saves paid_amount + payment_status
-        sale.save(update_fields=['total_amount', 'total_cost'])
 
 
 class SaleReturnItem(TimeStampedModel):

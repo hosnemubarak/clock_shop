@@ -106,6 +106,18 @@
 
     <!-- App js -->
     <script src="{% static 'js/app.js' %}"></script>
+    
+    <!-- Auto-select zero values in number inputs for easier editing -->
+    <script>
+        document.addEventListener('focusin', function(e) {
+            if (e.target.tagName === 'INPUT' && (e.target.type === 'number' || e.target.type === 'text')) {
+                var val = e.target.value.trim();
+                if (val === '0.00' || val === '0' || val === '0.0') {
+                    e.target.select();
+                }
+            }
+        });
+    </script>
 </body>
 
 </html>

@@ -51,6 +51,19 @@ class PaymentForm(forms.ModelForm):
         else:
             self.fields['sale'].queryset = Sale.objects.none()
 
+    def clean(self):
+        cleaned_data = super().clean()
+        amount = cleaned_data.get('amount')
+        sale = cleaned_data.get('sale')
+        
+        if sale:
+            if sale.status == 'cancelled':
+                self.add_error('sale', 'Cannot record payment for a cancelled sale.')
+            elif amount and amount > sale.due_amount:
+                self.add_error('amount', f'Payment amount cannot exceed the due amount ({sale.due_amount}).')
+                
+        return cleaned_data
+
 
 class CustomerNoteForm(forms.ModelForm):
     class Meta:
@@ -81,3 +94,13 @@ class QuickPaymentForm(forms.Form):
         required=False,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. TXN-12345'})
     )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        amount = cleaned_data.get('amount')
+        customer = cleaned_data.get('customer')
+        
+        if amount and customer and amount > customer.total_due:
+            self.add_error('amount', f'Payment amount cannot exceed the total due ({customer.total_due}).')
+            
+        return cleaned_data

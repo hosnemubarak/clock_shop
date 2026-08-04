@@ -35,6 +35,9 @@ class SaleReturnTests(TestCase):
             quantity=2, unit_price=Decimal('100.00'), cost_price=Decimal('40.00'),
         )
         self.client.force_login(self.user)
+        # Fully pay the sale so we can refund up to 200
+        self.sale.paid_amount = Decimal('200.00')
+        self.sale.save(update_fields=['paid_amount'])
 
     def _post(self, qty, refund='100.00', reason='defective'):
         return self.client.post(

@@ -183,6 +183,10 @@ class SaleService:
         if discount_amount > subtotal:
             raise ValueError('Order discount cannot exceed the sale subtotal.')
 
+        total_amount = subtotal - discount_amount
+        if payment_amount > total_amount:
+            payment_amount = total_amount
+
         sale.subtotal = subtotal
         sale.total_cost = total_cost
         sale.total_amount = subtotal - discount_amount
