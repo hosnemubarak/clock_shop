@@ -1,7 +1,7 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from apps.core.decorators import cashier_required, admin_required
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib.auth import login
 from django.contrib import messages
 from django.db.models import Sum, Count, F
@@ -404,7 +404,8 @@ def register(request):
             from django.contrib.auth.password_validation import validate_password
             from django.core.exceptions import ValidationError
             try:
-                validate_password(password1)
+                temp_user = User(username=username, email=email, first_name=first_name, last_name=last_name)
+                validate_password(password1, user=temp_user)
             except ValidationError as e:
                 errors.extend(e.messages)
         
@@ -469,3 +470,46 @@ def system_settings(request):
 def unauthorized(request):
     """View shown to logged-in users who lack the required role to view a page."""
     return render(request, 'core/unauthorized.html')
+
+@login_required
+@user_passes_test(is_superuser)
+def staff_list(request):
+    """List all staff members and their roles."""
+    staff_members = User.objects.all().prefetch_related('groups').order_by('-is_superuser', 'username')
+    roles = Group.objects.all()
+    return render(request, 'core/staff_list.html', {
+        'staff_members': staff_members,
+        'roles': roles
+    })
+
+@login_required
+@user_passes_test(is_superuser)
+def update_staff_role(request, pk):
+    """Update a staff member's role and status."""
+    if request.method == 'POST':
+        staff = get_object_or_404(User, pk=pk)
+        
+        # Don't allow modifying superusers through this interface
+        if staff.is_superuser:
+            messages.error(request, 'Cannot modify superuser roles through this interface.')
+            return redirect('core:staff_list')
+            
+        # Update active status
+        is_active = request.POST.get('is_active') == 'true'
+        staff.is_active = is_active
+        
+        # Update role
+        role_name = request.POST.get('role')
+        staff.groups.clear()
+        
+        if role_name:
+            try:
+                group = Group.objects.get(name=role_name)
+                staff.groups.add(group)
+            except Group.DoesNotExist:
+                pass
+                
+        staff.save()
+        messages.success(request, f'Successfully updated settings for {staff.username}.')
+        
+    return redirect('core:staff_list')

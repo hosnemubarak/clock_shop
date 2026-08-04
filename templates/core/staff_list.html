@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Staff Directory | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+{% include 'includes/page_header.html' with title='Staff Directory' breadcrumb=True %}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Role</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for staff in staff_members %}
+                            <tr>
+                                <td>
+                                    <strong>{{ staff.get_full_name|default:staff.username }}</strong>
+                                </td>
+                                <td>{{ staff.username }}</td>
+                                <td>{{ staff.email|default:"-" }}</td>
+                                <td>
+                                    {% if staff.is_active %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending Approval</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if staff.is_superuser %}
+                                        <span class="badge bg-danger">Superuser / Admin</span>
+                                    {% else %}
+                                        {% for group in staff.groups.all %}
+                                            <span class="badge bg-info">{{ group.name }}</span>
+                                        {% empty %}
+                                            <span class="badge bg-secondary">No Role</span>
+                                        {% endfor %}
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if not staff.is_superuser %}
+                                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#roleModal{{ staff.id }}">
+                                        <i class="las la-user-edit"></i> Edit Role
+                                    </button>
+                                    
+                                    <!-- Role Edit Modal -->
+                                    <div class="modal fade" id="roleModal{{ staff.id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content text-start">
+                                                <form action="{% url 'core:update_staff_role' staff.id %}" method="post">
+                                                    {% csrf_token %}
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">Edit Role: {{ staff.username }}</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Account Status</label>
+                                                            <select name="is_active" class="form-select">
+                                                                <option value="true" {% if staff.is_active %}selected{% endif %}>Approved (Active)</option>
+                                                                <option value="false" {% if not staff.is_active %}selected{% endif %}>Pending / Disabled</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label">System Role</label>
+                                                            <select name="role" class="form-select">
+                                                                <option value="">-- No Role (Locked Out) --</option>
+                                                                {% for role in roles %}
+                                                                    <option value="{{ role.name }}" 
+                                                                        {% for g in staff.groups.all %}{% if g.name == role.name %}selected{% endif %}{% endfor %}>
+                                                                        {{ role.name }}
+                                                                    </option>
+                                                                {% endfor %}
+                                                            </select>
+                                                            <div class="form-text mt-2">
+                                                                <strong>Cashier:</strong> Can create sales and register customers.<br>
+                                                                <strong>Manager:</strong> Can manage inventory, process returns, and view reports.<br>
+                                                                <strong>Admin:</strong> View audit logs and manage staff (must be superuser).
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">No staff members found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

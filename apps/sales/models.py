@@ -315,4 +315,6 @@ class SaleReturnItem(TimeStampedModel):
         ordering = ['id']
     
     def __str__(self):
+        if self.sale_item.is_custom:
+            return f"{self.sale_item.custom_description} x {self.quantity}"
         return f"{self.sale_item.product.display_name} x {self.quantity}"

@@ -90,8 +90,8 @@ def customer_detail(request, pk):
     ).values(
         'product__sku', 'product__brand__name'
     ).annotate(
-        total_quantity=Sum('quantity'),
-        total_amount=Sum(F('quantity') * F('unit_price'))
+        total_quantity=Sum(F('quantity') - F('returned_quantity')),
+        total_amount=Sum((F('quantity') - F('returned_quantity')) * F('unit_price'))
     ).order_by('-total_quantity')[:10]
     
     context = {
