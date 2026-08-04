@@ -406,7 +406,9 @@ def stock_report(request):
     
     # Apply stock filter
     if stock_filter == 'low':
-        stock_summary = stock_summary.filter(total_quantity__lte=10)
+        from apps.core.models import SystemSettings
+        threshold = SystemSettings.get_settings().low_stock_threshold or 5
+        stock_summary = stock_summary.filter(total_quantity__lte=threshold)
     elif stock_filter == 'out':
         # The ProductStock base above excludes every zero row, so a
         # total_quantity=0 predicate on it can never match. Out-of-stock has to
@@ -457,9 +459,11 @@ def stock_report(request):
     ).order_by('-total_value')
     
     # Low stock alerts
+    from apps.core.models import SystemSettings
+    threshold = SystemSettings.get_settings().low_stock_threshold or 5
     low_stock = ProductStock.objects.filter(
         quantity__gt=0,
-        quantity__lte=10
+        quantity__lte=threshold
     ).select_related('product', 'warehouse').order_by('quantity')[:20]
     
     # Totals

@@ -16,6 +16,19 @@ def is_cashier(user):
         return user.is_authenticated and user.is_active
     return user.is_active and (is_manager(user) or user.groups.filter(name='Cashier').exists())
 
-admin_required = user_passes_test(is_admin)
-manager_required = user_passes_test(is_manager)
-cashier_required = user_passes_test(is_cashier)
+from django.shortcuts import redirect
+
+def custom_user_passes_test(test_func):
+    def decorator(view_func):
+        def _wrapped_view(request, *args, **kwargs):
+            if not request.user.is_authenticated:
+                return redirect(f"{settings.LOGIN_URL}?next={request.path}")
+            if test_func(request.user):
+                return view_func(request, *args, **kwargs)
+            return redirect('core:unauthorized')
+        return _wrapped_view
+    return decorator
+
+admin_required = custom_user_passes_test(is_admin)
+manager_required = custom_user_passes_test(is_manager)
+cashier_required = custom_user_passes_test(is_cashier)

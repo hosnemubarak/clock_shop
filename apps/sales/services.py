@@ -187,6 +187,13 @@ class SaleService:
         if payment_amount > total_amount:
             payment_amount = total_amount
 
+        due_amount = total_amount - payment_amount
+        if due_amount > 0:
+            if not customer:
+                raise ValueError('Walk-in customers cannot have unpaid balances. Full payment required.')
+            if customer.total_due + due_amount > customer.credit_limit:
+                raise ValueError(f"Credit limit exceeded. Customer owes {customer.total_due} and limit is {customer.credit_limit}.")
+
         sale.subtotal = subtotal
         sale.total_cost = total_cost
         sale.total_amount = subtotal - discount_amount

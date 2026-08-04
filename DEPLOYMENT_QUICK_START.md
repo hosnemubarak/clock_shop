@@ -39,8 +39,10 @@ Start the containers in the background:
 docker-compose up -d --build
 ```
 
-### 4. Create Admin Account
+### 4. Setup Database & Admin
 ```bash
+docker-compose exec web python manage.py migrate
+docker-compose exec web python manage.py createcachetable
 docker-compose exec web python manage.py createsuperuser
 ```
 
@@ -147,6 +149,9 @@ python manage.py collectstatic --noinput
 
 # Run migrations
 python manage.py migrate
+
+# Create cache table
+python manage.py createcachetable
 
 # Create admin user
 python manage.py createsuperuser

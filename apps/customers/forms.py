@@ -61,6 +61,10 @@ class PaymentForm(forms.ModelForm):
                 self.add_error('sale', 'Cannot record payment for a cancelled sale.')
             elif amount and amount > sale.due_amount:
                 self.add_error('amount', f'Payment amount cannot exceed the due amount ({sale.due_amount}).')
+        else:
+            customer = cleaned_data.get('customer')
+            if customer and amount and amount > customer.total_due:
+                self.add_error('amount', f'Payment amount cannot exceed the total amount due ({customer.total_due}).')
                 
         return cleaned_data
 

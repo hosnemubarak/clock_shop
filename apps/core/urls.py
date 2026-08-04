@@ -11,4 +11,5 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('audit-logs/', views.audit_logs, name='audit_logs'),
     path('settings/', views.system_settings, name='system_settings'),
+    path('unauthorized/', views.unauthorized, name='unauthorized'),
 ]

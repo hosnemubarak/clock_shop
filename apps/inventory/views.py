@@ -45,7 +45,9 @@ def product_list(request):
     # Stock filter
     stock_filter = request.GET.get('stock')
     if stock_filter == 'low':
-        products = products.filter(total_stock__gt=0, total_stock__lte=10)
+        from apps.core.models import SystemSettings
+        threshold = SystemSettings.get_settings().low_stock_threshold or 5
+        products = products.filter(total_stock__gt=0, total_stock__lte=threshold)
     elif stock_filter == 'out':
         products = products.filter(total_stock=0)
     elif stock_filter == 'in':
