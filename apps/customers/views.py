@@ -430,12 +430,23 @@ def api_customer_create(request):
             if not re.match(r'^(?:\+?88)?01[3-9]\d{8}$', phone):
                 return JsonResponse({'status': 'error', 'message': 'Enter a valid Bangladeshi mobile number (e.g. 01712345678).'}, status=400)
                 
-            customer = Customer.objects.create(
-                name=name,
-                phone=phone,
-                email=data.get('email', '').strip(),
-                address=data.get('address', '').strip()
-            )
+            credit_limit = data.get('credit_limit', '').strip()
+            
+            customer_data = {
+                'name': name,
+                'phone': phone,
+                'email': data.get('email', '').strip(),
+                'address': data.get('address', '').strip(),
+                'notes': data.get('notes', '').strip()
+            }
+            
+            if credit_limit:
+                try:
+                    customer_data['credit_limit'] = Decimal(credit_limit)
+                except:
+                    return JsonResponse({'status': 'error', 'message': 'Invalid credit limit format.'}, status=400)
+            
+            customer = Customer.objects.create(**customer_data)
             
             create_audit_log(request, 'CUSTOMER', customer, {
                 'action': 'inline_create',

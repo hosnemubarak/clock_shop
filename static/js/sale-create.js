@@ -49,7 +49,7 @@ function initSaleCreate() {
      'confirmDueLabel', 'confirmDueAmount', 'btnConfirmSaleSubmit',
      'linkViewSale', 'newCustomerModal', 'newCustomerForm', 'newCustomerName',
      'newCustomerPhone', 'newCustomerEmail', 'newCustomerAddress',
-     'newCustomerSaveBtn'
+     'newCustomerCreditLimit', 'newCustomerNotes', 'newCustomerSaveBtn'
     ].forEach(function (id) {
         el[id] = document.getElementById(id);
     });
@@ -821,7 +821,9 @@ function initSaleCreate() {
                 name: name,
                 phone: phone,
                 email: el.newCustomerEmail.value.trim(),
-                address: el.newCustomerAddress.value.trim()
+                address: el.newCustomerAddress.value.trim(),
+                credit_limit: el.newCustomerCreditLimit.value.trim(),
+                notes: el.newCustomerNotes.value.trim()
             })
         })
             .then(function (response) {
