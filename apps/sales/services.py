@@ -193,7 +193,7 @@ class SaleService:
                 raise ValueError('Walk-in customers cannot have unpaid balances. Full payment required.')
             if customer.total_due + due_amount > customer.credit_limit:
                 if customer.credit_limit == 0:
-                    raise ValueError("This customer is not allowed to buy on credit. Please collect full payment.")
+                    raise ValueError("Credit limit is 0 Tk. Full payment required.")
                 else:
                     raise ValueError(f"Credit limit exceeded! Customer's limit is {customer.credit_limit} Tk (currently owes {customer.total_due} Tk).")
 
