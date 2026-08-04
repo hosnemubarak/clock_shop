@@ -104,9 +104,13 @@
             {{ sale.total_amount|amount_in_words }}
         </div>
 
-        {% if sale.customer %}
+        {% if sale.customer and sale.customer.total_due > 0 %}
         <div class="mt-15px fw-semibold text-danger fs-13px">
+            {% if sale.due_amount > 0 %}
             <strong>Outstanding Amount (Including This Invoice):</strong> 
+            {% else %}
+            <strong>Total Outstanding Amount:</strong> 
+            {% endif %}
             Tk. {{ sale.customer.total_due|floatformat:2|intcomma }}/= ({{ sale.customer.total_due|amount_in_words }})
         </div>
         {% endif %}
