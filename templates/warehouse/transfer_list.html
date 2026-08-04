@@ -15,7 +15,7 @@
                 <div class="row align-items-center g-3">
                     <div class="col-md-8">
                         <form method="get" class="row g-2" id="filterForm">
-                            <div class="col-xl-3 col-lg-4 col-md-6">
+                            <div class="col-md-4">
                                 <select name="status" class="form-select" onchange="document.getElementById('filterForm').submit()">
                                     <option value="">All Status</option>
                                     <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
@@ -23,7 +23,7 @@
                                     <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
                                 </select>
                             </div>
-                            <div class="col-xl-3 col-lg-4 col-md-6">
+                            <div class="col-md-4">
                                 <select name="source" class="form-select" onchange="document.getElementById('filterForm').submit()">
                                     <option value="">All Sources</option>
                                     {% for wh in warehouses %}
@@ -31,7 +31,7 @@
                                     {% endfor %}
                                 </select>
                             </div>
-                            <div class="col-xl-3 col-lg-4 col-md-6">
+                            <div class="col-md-4">
                                 <select name="destination" class="form-select" onchange="document.getElementById('filterForm').submit()">
                                     <option value="">All Destinations</option>
                                     {% for wh in warehouses %}
@@ -39,9 +39,9 @@
                                     {% endfor %}
                                 </select>
                             </div>
-                            <div class="col-xl-3 col-lg-4 col-md-6">
+                            <div class="col-12 text-end">
                                 {% if request.GET.status or request.GET.source or request.GET.destination %}
-                                <a href="{% url 'warehouse:transfer_list' %}" class="btn btn-soft-secondary w-100">
+                                <a href="{% url 'warehouse:transfer_list' %}" class="btn btn-soft-secondary">
                                     <i class="las la-times"></i> Clear
                                 </a>
                                 {% endif %}

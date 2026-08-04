@@ -8,6 +8,39 @@
 
 <form method="post" id="transferForm">
     {% csrf_token %}
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Add Item</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info py-2 small border-0 bg-info-subtle text-info">
+                <i class="las la-info-circle me-1 fs-16 align-middle"></i> 
+                Please select the <strong>Source Warehouse</strong> first, then select a product to transfer.
+            </div>
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <select class="form-select" id="newStock">
+                        <option value="">Select Product Stock</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <button class="btn btn-outline-secondary" type="button" onclick="const q=document.getElementById('newQty'); q.value=Math.max(1, parseInt(q.value||0)-1);"><i class="las la-minus"></i></button>
+                        <input type="number" class="form-control text-center px-0" id="newQty" placeholder="Qty" min="1" value="1">
+                        <button class="btn btn-outline-secondary" type="button" onclick="const q=document.getElementById('newQty'); q.value=parseInt(q.value||0)+1;"><i class="las la-plus"></i></button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-primary w-100" onclick="addItem()">
+                        <i class="las la-plus"></i> Add
+                    </button>
+                </div>
+            </div>
+            <div id="stockInfo" class="mt-2 text-muted small"></div>
+        </div>
+    </div>
+    
     <div class="row">
         <div class="col-lg-8">
             <div class="card">
@@ -31,25 +64,7 @@
                         </table>
                     </div>
                     
-                    <hr>
-                    <h6>Add Item</h6>
-                    <p class="text-muted small">First select source warehouse to see available stock</p>
-                    <div class="row g-3">
-                        <div class="col-md-5">
-                            <select class="form-select" id="newStock">
-                                <option value="">Select Product Stock</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <input type="number" class="form-control" id="newQty" placeholder="Qty" min="1" value="1">
-                        </div>
-                        <div class="col-md-4">
-                            <button type="button" class="btn btn-primary w-100" onclick="addItem()">
-                                <i class="las la-plus"></i> Add
-                            </button>
-                        </div>
-                    </div>
-                    <div id="stockInfo" class="mt-2 text-muted small"></div>
+
                 </div>
             </div>
         </div>
@@ -96,17 +111,37 @@ let stockData = {};
 
 // Initialize source warehouse change listener
 const sourceWarehouseSelect = document.querySelector('[name="source_warehouse"]');
+const destWarehouseSelect = document.querySelector('[name="destination_warehouse"]');
+
+function updateDestinationOptions() {
+    if (!destWarehouseSelect || !sourceWarehouseSelect) return;
+    const sourceId = sourceWarehouseSelect.value;
+    
+    Array.from(destWarehouseSelect.options).forEach(option => {
+        if (option.value && option.value === sourceId) {
+            option.disabled = true;
+            if (destWarehouseSelect.value === sourceId) {
+                destWarehouseSelect.value = '';
+            }
+        } else {
+            option.disabled = false;
+        }
+    });
+}
+
 if (sourceWarehouseSelect) {
     sourceWarehouseSelect.addEventListener('change', function() {
         loadWarehouseStocks(this.value);
         // Clear items when source warehouse changes
         items = [];
         renderItems();
+        updateDestinationOptions();
     });
     
     // Load stocks if a source warehouse is already selected
     if (sourceWarehouseSelect.value) {
         loadWarehouseStocks(sourceWarehouseSelect.value);
+        updateDestinationOptions();
     }
 }
 

@@ -7,6 +7,54 @@
 
 <form method="post" id="purchaseForm">
     {% csrf_token %}
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Add Item</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Product</label>
+                    <select class="form-select" id="newProduct">
+                        <option value="">Select Product</option>
+                        {% for p in products %}
+                        <option value="{{ p.id }}" data-sku="{{ p.sku }}">{{ p.sku }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Warehouse</label>
+                    <select class="form-select" id="newWarehouse">
+                        {% for w in warehouses %}
+                        <option value="{{ w.id }}" data-name="{{ w.name }}">{{ w.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Quantity</label>
+                    <div class="input-group">
+                        <button class="btn btn-outline-secondary" type="button" onclick="const q=document.getElementById('newQty'); q.value=Math.max(1, parseInt(q.value||0)-1); updateLinePreview();"><i class="las la-minus"></i></button>
+                        <input type="number" class="form-control text-center px-0" id="newQty" placeholder="1" min="1" value="1" oninput="updateLinePreview()">
+                        <button class="btn btn-outline-secondary" type="button" onclick="const q=document.getElementById('newQty'); q.value=parseInt(q.value||0)+1; updateLinePreview();"><i class="las la-plus"></i></button>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Unit Price</label>
+                    <input type="number" class="form-control" id="newPrice" placeholder="e.g. 150.00" step="0.01" min="0" oninput="updateLinePreview()">
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-primary w-100" onclick="addItem()">
+                        <i class="las la-plus"></i> Add Item
+                    </button>
+                </div>
+            </div>
+            <div class="mt-2 text-end">
+                <small class="text-muted">Line Total: <strong id="linePreview">{{ CURRENCY_SYMBOL }}0.00</strong></small>
+            </div>
+        </div>
+    </div>
+    
     <div class="row">
         <div class="col-lg-8">
             <div class="card">
@@ -38,43 +86,7 @@
                         </table>
                     </div>
                     
-                    <hr>
-                    <h6>Add Item</h6>
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-3">
-                            <label class="form-label small text-muted">Product</label>
-                            <select class="form-select" id="newProduct">
-                                <option value="">Select Product</option>
-                                {% for p in products %}
-                                <option value="{{ p.id }}" data-sku="{{ p.sku }}">{{ p.sku }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small text-muted">Warehouse</label>
-                            <select class="form-select" id="newWarehouse">
-                                {% for w in warehouses %}
-                                <option value="{{ w.id }}" data-name="{{ w.name }}">{{ w.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small text-muted">Quantity</label>
-                            <input type="number" class="form-control" id="newQty" placeholder="e.g. 10" min="1" value="1" oninput="updateLinePreview()">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small text-muted">Unit Price</label>
-                            <input type="number" class="form-control" id="newPrice" placeholder="e.g. 150.00" step="0.01" min="0" oninput="updateLinePreview()">
-                        </div>
-                        <div class="col-md-3">
-                            <button type="button" class="btn btn-primary w-100" onclick="addItem()">
-                                <i class="las la-plus"></i> Add Item
-                            </button>
-                        </div>
-                    </div>
-                    <div class="mt-2 text-end">
-                        <small class="text-muted">Line Total: <strong id="linePreview">{{ CURRENCY_SYMBOL }}0.00</strong></small>
-                    </div>
+
                 </div>
             </div>
         </div>

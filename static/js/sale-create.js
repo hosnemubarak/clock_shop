@@ -44,6 +44,8 @@ function initSaleCreate() {
      'customerMetaName', 'customerMetaPhone', 'customerMetaDue', 'customerMetaDueRow',
      'customerLoyaltyBox', 'customerLoyalty',
      'saleSuccessModal', 'successInvoice', 'btnPrintReceipt', 'btnNextSale',
+     'saleConfirmModal', 'confirmGrandTotal', 'confirmItemsCount', 'confirmAmountPaid',
+     'confirmDueLabel', 'confirmDueAmount', 'btnConfirmSaleSubmit',
      'linkViewSale', 'newCustomerModal', 'newCustomerForm', 'newCustomerName',
      'newCustomerPhone', 'newCustomerEmail', 'newCustomerAddress',
      'newCustomerSaveBtn'
@@ -128,6 +130,7 @@ function initSaleCreate() {
     var submitting = false;
     var searchTimer = null;
     var searchAbort = null;
+    var confirmModal = null;
     var successModal = null;
     var customerModal = null;
     var lastSaleId = null;
@@ -296,6 +299,7 @@ function initSaleCreate() {
                 sku: row.sku,
                 label: row.display_name,
                 meta: [row.brand, row.category].filter(Boolean).join(' · '),
+                brand: row.brand,
                 unitPrice: toMinor(row.price),
                 qty: 1,
                 discount: 0,
@@ -330,9 +334,8 @@ function initSaleCreate() {
             return '' +
                 '<tr class="sale-cart__row' + (over ? ' is-over-stock' : '') + '" data-id="' + line.productId + '">' +
                     '<td class="ps-3">' +
-                        '<div class="fw-medium">' + escapeHtml(line.label) + '</div>' +
-                        '<div class="text-muted small">' + escapeHtml(line.sku) +
-                            (line.meta ? ' &middot; ' + escapeHtml(line.meta) : '') + '</div>' +
+                        '<div class="fw-medium">' + escapeHtml(line.sku) + '</div>' +
+                        (line.brand ? '<div class="text-muted small">' + escapeHtml(line.brand) + '</div>' : '') +
                         (over
                             ? '<div class="text-danger small">Only ' + line.stock + ' in shop</div>'
                             : '') +
@@ -354,7 +357,7 @@ function initSaleCreate() {
                             ' aria-label="Increase quantity for ' + escapeHtml(line.sku) + '">+</button>' +
                         '</div>' +
                     '</td>' +
-                    '<td class="text-end">' +
+                    '<td class="text-end d-none">' +
                         '<input type="number" class="form-control form-control-sm sale-line-discount sale-num"' +
                         ' data-field="discount" value="' + toMajor(line.discount) + '"' +
                         ' step="0.01" min="0" inputmode="decimal"' +
@@ -432,8 +435,6 @@ function initSaleCreate() {
     }
 
     function completeSale() {
-        // Guarded rather than only disabled: a double Ctrl+Enter can fire twice
-        // before the button's disabled state has painted.
         if (submitting) {
             return;
         }
@@ -444,6 +445,35 @@ function initSaleCreate() {
             return;
         }
 
+        var subtotal = cartSubtotal();
+        var discount = toMinor(el.orderDiscount.value);
+        var grand = Math.max(0, subtotal - Math.min(discount, subtotal));
+        var paid = toMinor(el.amountPaid.value);
+        var diff = paid - grand;
+
+        el.confirmGrandTotal.textContent = fmt(grand);
+        el.confirmItemsCount.textContent = cart.length;
+        el.confirmAmountPaid.textContent = fmt(paid);
+        
+        if (diff >= 0) {
+            el.confirmDueLabel.textContent = 'Change:';
+            el.confirmDueAmount.textContent = fmt(diff);
+            el.confirmDueAmount.className = 'text-success';
+        } else {
+            el.confirmDueLabel.textContent = 'Amount Due:';
+            el.confirmDueAmount.textContent = fmt(-diff);
+            el.confirmDueAmount.className = 'text-danger';
+        }
+
+        confirmModal.show();
+    }
+
+    function submitSale() {
+        if (submitting) {
+            return;
+        }
+
+        confirmModal.hide();
         submitting = true;
         clearAlert();
         el.btnComplete.disabled = true;
@@ -1047,6 +1077,7 @@ function initSaleCreate() {
     });
 
     el.btnComplete.addEventListener('click', completeSale);
+    el.btnConfirmSaleSubmit.addEventListener('click', submitSale);
     el.newCustomerSaveBtn.addEventListener('click', saveNewCustomer);
 
     // Drop the invalid highlight as soon as the cashier starts fixing the field.
@@ -1113,6 +1144,7 @@ function initSaleCreate() {
 
     // ------------------------------------------------------------------ init
 
+    confirmModal = new bootstrap.Modal(el.saleConfirmModal);
     successModal = new bootstrap.Modal(el.saleSuccessModal);
     customerModal = new bootstrap.Modal(el.newCustomerModal);
 

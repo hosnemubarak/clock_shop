@@ -196,7 +196,7 @@
                                         <th scope="col" class="ps-3">Product</th>
                                         <th scope="col" class="text-end" style="width: 8rem;">Unit Price</th>
                                         <th scope="col" class="text-center" style="width: 9rem;">Qty</th>
-                                        <th scope="col" class="text-end" style="width: 8rem;">Discount</th>
+                                        <th scope="col" class="text-end d-none" style="width: 8rem;">Discount</th>
                                         <th scope="col" class="text-end" style="width: 8rem;">Total</th>
                                         <th scope="col" style="width: 3rem;">
                                             <span class="visually-hidden">Remove</span>
@@ -313,8 +313,59 @@
         </div>
     </form>
 
+    <!-- Confirmation --------------------------------------------------------->
+    <div class="modal fade" id="saleConfirmModal" tabindex="-1" aria-labelledby="saleConfirmTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-semibold" id="saleConfirmTitle">Confirm Checkout</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <div class="avatar-md mx-auto mb-3">
+                            <span class="avatar-title rounded-circle bg-success-subtle text-success fs-1">
+                                <i class="las la-shopping-bag"></i>
+                            </span>
+                        </div>
+                        <h3 class="text-primary mb-1 fw-bold" id="confirmGrandTotal">{{ CURRENCY_SYMBOL }}0.00</h3>
+                        <p class="text-muted small">Total amount to be paid</p>
+                    </div>
+                    
+                    <div class="card bg-light border-0 shadow-none mb-4">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Total Items</span>
+                                <strong class="fs-6" id="confirmItemsCount">0</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Amount Paid</span>
+                                <strong class="fs-6" id="confirmAmountPaid">{{ CURRENCY_SYMBOL }}0.00</strong>
+                            </div>
+                            <div class="d-flex justify-content-between border-top pt-2 mt-2">
+                                <span class="text-muted fw-medium" id="confirmDueLabel">Change</span>
+                                <strong id="confirmDueAmount" class="text-success fs-5">{{ CURRENCY_SYMBOL }}0.00</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <button type="button" class="btn btn-light w-100 btn-lg" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                        <div class="col-6">
+                            <button type="button" class="btn btn-success w-100 btn-lg" id="btnConfirmSaleSubmit">
+                                <i class="las la-check-circle me-1"></i> Confirm Sale
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Success -------------------------------------------------------------->
-    <div class="modal fade" id="saleSuccessModal" tabindex="-1" aria-labelledby="saleSuccessTitle" aria-hidden="true">
+    <div class="modal fade" id="saleSuccessModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="saleSuccessTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body text-center p-4">

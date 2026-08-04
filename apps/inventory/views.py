@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 @login_required
 def product_list(request):
     """List all products with filtering."""
-    products = Product.objects.select_related('category', 'brand').all()
+    products = Product.objects.select_related('category', 'brand').order_by('-updated_at')
     
     # Search
     search = request.GET.get('search', '')
