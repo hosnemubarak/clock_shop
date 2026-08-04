@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from apps.core.decorators import cashier_required, manager_required
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q, Sum, ProtectedError
@@ -18,7 +19,7 @@ from apps.core.utils import create_audit_log, paginate
 logger = logging.getLogger(__name__)
 
 
-@login_required
+@cashier_required
 def product_list(request):
     """List all products with filtering."""
     products = Product.objects.select_related('category', 'brand').order_by('-updated_at')
@@ -76,7 +77,7 @@ def product_list(request):
     return render(request, 'inventory/product_list.html', context)
 
 
-@login_required
+@cashier_required
 def product_detail(request, pk):
     """View product details with stock information."""
     product = get_object_or_404(Product, pk=pk)
@@ -90,7 +91,7 @@ def product_detail(request, pk):
     return render(request, 'inventory/product_detail.html', context)
 
 
-@login_required
+@manager_required
 def product_create(request):
     """Create a new product."""
     if request.method == 'POST':
@@ -161,7 +162,7 @@ def product_create(request):
     return render(request, 'inventory/product_form.html', {'form': form, 'title': 'Add Product'})
 
 
-@login_required
+@manager_required
 def product_edit(request, pk):
     """Edit a product."""
     product = get_object_or_404(Product, pk=pk)
@@ -183,7 +184,7 @@ def product_edit(request, pk):
     })
 
 
-@login_required
+@manager_required
 def product_delete(request, pk):
     """Delete a product."""
     product = get_object_or_404(Product, pk=pk)
@@ -212,7 +213,7 @@ def product_delete(request, pk):
     return render(request, 'inventory/product_confirm_delete.html', {'product': product})
 
 
-@login_required
+@manager_required
 def category_list(request):
     """List all categories."""
     categories = Category.objects.annotate(product_count=Sum('products__total_stock'))
@@ -227,7 +228,7 @@ def category_list(request):
     return render(request, 'inventory/category_list.html', {'categories': categories, 'search': search})
 
 
-@login_required
+@manager_required
 def category_create(request):
     """Create a new category."""
     if request.method == 'POST':
@@ -243,7 +244,7 @@ def category_create(request):
     return render(request, 'inventory/category_form.html', {'form': form, 'title': 'Add Category'})
 
 
-@login_required
+@manager_required
 def category_edit(request, pk):
     """Edit a category."""
     category = get_object_or_404(Category, pk=pk)
@@ -265,7 +266,7 @@ def category_edit(request, pk):
     })
 
 
-@login_required
+@manager_required
 def brand_list(request):
     """List all brands."""
     brands = Brand.objects.all()
@@ -280,7 +281,7 @@ def brand_list(request):
     return render(request, 'inventory/brand_list.html', {'brands': brands, 'search': search})
 
 
-@login_required
+@manager_required
 def brand_create(request):
     """Create a new brand."""
     if request.method == 'POST':
@@ -296,7 +297,7 @@ def brand_create(request):
     return render(request, 'inventory/brand_form.html', {'form': form, 'title': 'Add Brand'})
 
 
-@login_required
+@manager_required
 def brand_edit(request, pk):
     """Edit a brand."""
     brand = get_object_or_404(Brand, pk=pk)
@@ -321,7 +322,7 @@ def brand_edit(request, pk):
 
 
 
-@login_required
+@manager_required
 def purchase_list(request):
     """List all purchases."""
     purchases = Purchase.objects.select_related('created_by').prefetch_related('items')
@@ -331,7 +332,7 @@ def purchase_list(request):
     return render(request, 'inventory/purchase_list.html', {'purchases': purchases})
 
 
-@login_required
+@manager_required
 def purchase_create(request):
     """Create a new purchase order with items."""
     warehouses = Warehouse.objects.filter(is_active=True)
@@ -455,7 +456,7 @@ def purchase_create(request):
     return render(request, 'inventory/purchase_form.html', context)
 
 
-@login_required
+@manager_required
 def purchase_detail(request, pk):
     """View purchase details."""
     purchase = get_object_or_404(
@@ -465,7 +466,7 @@ def purchase_detail(request, pk):
     return render(request, 'inventory/purchase_detail.html', {'purchase': purchase})
 
 
-@login_required
+@cashier_required
 def api_product_stocks(request, product_id):
     """API endpoint to get available stocks for a product."""
     warehouse_id = request.GET.get('warehouse')
@@ -484,7 +485,7 @@ def api_product_stocks(request, product_id):
     return JsonResponse(data, safe=False)
 
 
-@login_required
+@manager_required
 def api_quick_add_stock(request, product_id):
     """API endpoint to quickly add stock to a product."""
     if request.method != 'POST':
@@ -569,7 +570,7 @@ def api_quick_add_stock(request, product_id):
 
 
 # Stock Out Views
-@login_required
+@manager_required
 def stockout_list(request):
     """List all stock out records."""
     stockouts = StockOut.objects.select_related('warehouse', 'created_by').all()
@@ -614,7 +615,7 @@ def stockout_list(request):
     return render(request, 'inventory/stockout_list.html', context)
 
 
-@login_required
+@manager_required
 def stockout_create(request):
     """Create a new stock out record."""
     warehouses = Warehouse.objects.filter(is_active=True)
@@ -691,7 +692,7 @@ def stockout_create(request):
     return render(request, 'inventory/stockout_form.html', context)
 
 
-@login_required
+@manager_required
 def stockout_detail(request, pk):
     """View stock out details."""
     stockout = get_object_or_404(
@@ -703,7 +704,7 @@ def stockout_detail(request, pk):
     return render(request, 'inventory/stockout_detail.html', {'stockout': stockout})
 
 
-@login_required
+@manager_required
 def stockout_cancel(request, pk):
     """Cancel a stock out record."""
     stockout = get_object_or_404(StockOut, pk=pk)
@@ -721,7 +722,7 @@ def stockout_cancel(request, pk):
     return redirect('inventory:stockout_detail', pk=pk)
 
 
-@login_required
+@cashier_required
 def api_warehouse_stocks(request, warehouse_id):
     """API endpoint to get available stocks for a warehouse."""
     product_id = request.GET.get('product')

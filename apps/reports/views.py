@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from apps.core.decorators import manager_required, admin_required
 from django.core.paginator import Paginator
 from django.db.models import Sum, Count, F, Q, Avg
 from django.db.models.functions import Coalesce, TruncMonth, TruncWeek
@@ -14,7 +15,7 @@ from apps.warehouse.models import Warehouse, StockTransfer
 from .exports import handle_export
 
 
-@login_required
+@admin_required
 def report_dashboard(request):
     """Main reports dashboard with overview."""
     today = timezone.localdate()
@@ -29,7 +30,7 @@ def report_dashboard(request):
     return render(request, 'reports/dashboard.html', context)
 
 
-@login_required
+@manager_required
 def sales_report(request):
     """Sales report with date and shop filtering."""
     today = timezone.localdate()
@@ -194,7 +195,7 @@ def sales_report(request):
     return render(request, 'reports/sales_report.html', context)
 
 
-@login_required
+@admin_required
 def profit_report(request):
     """Profit analysis report with product and shop filters."""
     today = timezone.localdate()
@@ -378,7 +379,7 @@ def profit_report(request):
     return render(request, 'reports/profit_report.html', context)
 
 
-@login_required
+@manager_required
 def stock_report(request):
     """Stock/inventory report."""
     warehouse_id = request.GET.get('warehouse')
@@ -545,7 +546,7 @@ def stock_report(request):
 
 
 
-@login_required
+@manager_required
 def transfer_report(request):
     """Stock transfer history report."""
     date_from = request.GET.get('date_from')
@@ -630,7 +631,7 @@ def transfer_report(request):
     return render(request, 'reports/transfer_report.html', context)
 
 
-@login_required
+@manager_required
 def dead_stock_report(request):
     """Report on slow-moving/dead stock."""
     days_threshold = int(request.GET.get('days', 90))
@@ -730,7 +731,7 @@ def dead_stock_report(request):
     return render(request, 'reports/dead_stock_report.html', context)
 
 
-@login_required
+@manager_required
 def batch_report(request):
     """Detailed stock report."""
     warehouse_id = request.GET.get('warehouse')

@@ -168,7 +168,7 @@ else:
 # Reuse database connections across requests instead of opening a fresh one every
 # time. Applied after the branch above so all four configurations get it. Keep this
 # below the gunicorn/DB idle timeout; 0 restores the old connect-per-request behaviour.
-DATABASES['default'].setdefault('CONN_MAX_AGE', int(os.environ.get('CONN_MAX_AGE', '60')))
+DATABASES['default'].setdefault('CONN_MAX_AGE', int(os.environ.get('CONN_MAX_AGE', '0')))
 DATABASES['default'].setdefault('CONN_HEALTH_CHECKS', True)
 
 # =============================================================================
@@ -176,8 +176,8 @@ DATABASES['default'].setdefault('CONN_HEALTH_CHECKS', True)
 # =============================================================================
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'clock-shop-cache',
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'clock_shop_cache',
     }
 }
 
@@ -230,6 +230,7 @@ LOGOUT_REDIRECT_URL = 'core:login'
 SHOP_NAME = os.environ.get('SHOP_NAME', "Clock Shop")
 CURRENCY_SYMBOL = os.environ.get('CURRENCY_SYMBOL', "৳")
 LOW_STOCK_THRESHOLD = int(os.environ.get('LOW_STOCK_THRESHOLD', 5))
+ENABLE_RBAC = os.environ.get('ENABLE_RBAC', 'True').lower() in ('true', '1', 'yes')
 
 # =============================================================================
 # LOGGING CONFIGURATION

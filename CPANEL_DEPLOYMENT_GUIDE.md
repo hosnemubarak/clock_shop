@@ -1,6 +1,6 @@
 # cPanel Deployment Guide for Clock Shop
 
-This guide will help you deploy the Clock Shop Django application on cPanel with PostgreSQL database.
+This guide will help you deploy the Clock Shop Django application on cPanel with a MySQL database.
 
 ---
 
@@ -13,10 +13,10 @@ This guide will help you deploy the Clock Shop Django application on cPanel with
 
 ---
 
-## Step 1: Create PostgreSQL Database
+## Step 1: Create MySQL Database
 
 1. **Login to cPanel**
-2. **Go to PostgreSQL® Databases**
+2. **Go to MySQL® Databases**
 3. **Create a new database:**
    - Database name: `clock_shop_db` (cPanel will prefix it with your username)
    - Note the full database name (e.g., `rumaelec_clock_shop_db`)
@@ -104,7 +104,10 @@ This guide will help you deploy the Clock Shop Django application on cPanel with
 
 4. **Click "Create"**
 
-5. **Note the virtual environment path:**
+5. **Ensure passenger_wsgi.py is present:**
+   - The codebase includes a `passenger_wsgi.py` file which Phusion Passenger requires. cPanel should automatically use this.
+
+6. **Note the virtual environment path:**
    ```
    /home/username/virtualenv/clock_shop/3.11
    ```
@@ -130,12 +133,7 @@ This guide will help you deploy the Clock Shop Django application on cPanel with
    pip install --upgrade pip
    pip install -r requirements.txt
    ```
-
-   **Note:** If `mysqlclient` installation fails, you may need to install system dependencies:
-   ```bash
-   # Contact your hosting provider if this doesn't work
-   pip install mysqlclient
-   ```
+   *Note: This will install `mysqlclient`. Your cPanel environment must have MySQL development headers.*
 
 ---
 
@@ -203,7 +201,12 @@ This guide will help you deploy the Clock Shop Django application on cPanel with
    ```
    Follow the prompts to create your admin account.
 
-3. **Load initial data (optional):**
+3. **Run DatabaseCache setup:**
+   ```bash
+   python manage.py createcachetable
+   ```
+
+4. **Load initial data (optional):**
    ```bash
    # If you have fixtures
    python manage.py loaddata fixtures/initial_data.json
@@ -291,14 +294,9 @@ Django will serve static files using WhiteNoise. No additional configuration nee
    cat ~/clock_shop/.env | grep DB_
    ```
 
-2. **Test PostgreSQL connection:**
+2. **Test MySQL connection:**
    ```bash
-   psql -U rumaelec_clock_shop_user -d rumaelec_clock_shop_db -h localhost
-   ```
-
-3. **Check PostgreSQL is running:**
-   ```bash
-   pg_isready -h localhost
+   mysql -u rumaelec_clock_shop_user -p rumaelec_clock_shop_db -h localhost
    ```
 
 ### Static files not loading
@@ -337,19 +335,10 @@ Django will serve static files using WhiteNoise. No additional configuration nee
    python manage.py check --deploy
    ```
 
-### psycopg2 installation fails
+### Database Connection Limits
 
-1. **Try installing with pip:**
-   ```bash
-   pip install psycopg2-binary
-   ```
-
-2. **If that fails, contact your hosting provider** - they may need to install PostgreSQL development headers
-
-3. **Check PostgreSQL client libraries:**
-   ```bash
-   which pg_config
-   ```
+1. **Too Many Connections error:**
+   If you receive "Too Many Connections" errors, ensure `CONN_MAX_AGE=0` is set in your `clock_shop/settings.py` (which is the new default). Passenger spawns multiple processes and will hold connections open otherwise.
 
 ---
 
@@ -408,11 +397,11 @@ Django will serve static files using WhiteNoise. No additional configuration nee
 ### Database Backup
 
 1. **Via cPanel:**
-   - Go to **Backup** → **Download a PostgreSQL Database Backup**
+   - Go to **Backup** → **Download a MySQL Database Backup**
 
 2. **Via SSH:**
    ```bash
-   pg_dump -U rumaelec_clock_shop_user -h localhost rumaelec_clock_shop_db > backup_$(date +%Y%m%d).sql
+   mysqldump -u rumaelec_clock_shop_user -p rumaelec_clock_shop_db > backup_$(date +%Y%m%d).sql
    ```
 
 ### Files Backup
@@ -429,16 +418,17 @@ Django will serve static files using WhiteNoise. No additional configuration nee
 
 ## Performance Optimization
 
-1. **Enable caching in settings.py:**
+1. **Database Caching is Enabled:**
+   The `settings.py` is configured to use `DatabaseCache` to solve Passenger's cross-process memory isolation issues.
    ```python
    CACHES = {
        'default': {
            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-           'LOCATION': 'cache_table',
+           'LOCATION': 'clock_shop_cache',
        }
    }
    ```
-   Then run: `python manage.py createcachetable`
+   Ensure you run: `python manage.py createcachetable`
 
 2. **Use CDN for static files** (optional)
 

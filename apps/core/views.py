@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
+from apps.core.decorators import cashier_required, admin_required
 from django.contrib.auth.models import User
 from django.contrib.auth import login
 from django.contrib import messages
@@ -16,7 +17,7 @@ from apps.customers.models import Customer, Payment
 from apps.warehouse.models import Warehouse
 
 
-@login_required
+@cashier_required
 def dashboard(request):
     """Main dashboard view with key metrics."""
     today = timezone.localtime().date()
@@ -121,7 +122,7 @@ def dashboard(request):
     return render(request, 'core/dashboard.html', context)
 
 
-@login_required
+@admin_required
 def audit_logs(request):
     """View audit logs."""
     from django.db.models import Q

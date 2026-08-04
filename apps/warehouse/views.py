@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from apps.core.decorators import cashier_required, manager_required, admin_required
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q, Sum, F
@@ -13,7 +14,7 @@ from apps.inventory.models import ProductStock, Product
 from apps.core.utils import create_audit_log, paginate
 
 
-@login_required
+@admin_required
 def warehouse_list(request):
     """List all warehouses."""
     # Base queryset with annotations for stock value and items
@@ -42,7 +43,7 @@ def warehouse_list(request):
     })
 
 
-@login_required
+@admin_required
 def warehouse_detail(request, pk):
     """View warehouse details with stock information."""
     warehouse = get_object_or_404(Warehouse, pk=pk)
@@ -72,7 +73,7 @@ def warehouse_detail(request, pk):
     return render(request, 'warehouse/warehouse_detail.html', context)
 
 
-@login_required
+@admin_required
 def warehouse_create(request):
     """Create a new warehouse."""
     if request.method == 'POST':
@@ -93,7 +94,7 @@ def warehouse_create(request):
     return render(request, 'warehouse/warehouse_form.html', {'form': form, 'title': 'Add Warehouse'})
 
 
-@login_required
+@admin_required
 def warehouse_edit(request, pk):
     """Edit a warehouse."""
     warehouse = get_object_or_404(Warehouse, pk=pk)
@@ -118,7 +119,7 @@ def warehouse_edit(request, pk):
     })
 
 
-@login_required
+@manager_required
 def transfer_list(request):
     """List all stock transfers."""
     transfers = StockTransfer.objects.select_related(
@@ -151,7 +152,7 @@ def transfer_list(request):
     })
 
 
-@login_required
+@manager_required
 def transfer_create(request):
     """Create a new stock transfer."""
     warehouses = Warehouse.objects.filter(is_active=True)
@@ -241,7 +242,7 @@ def transfer_create(request):
     return render(request, 'warehouse/transfer_form.html', context)
 
 
-@login_required
+@manager_required
 def transfer_detail(request, pk):
     """View transfer details."""
     transfer = get_object_or_404(
@@ -253,7 +254,7 @@ def transfer_detail(request, pk):
     return render(request, 'warehouse/transfer_detail.html', {'transfer': transfer})
 
 
-@login_required
+@manager_required
 def transfer_complete(request, pk):
     """Complete a pending transfer."""
     transfer = get_object_or_404(StockTransfer, pk=pk)
@@ -276,7 +277,7 @@ def transfer_complete(request, pk):
     return redirect('warehouse:transfer_detail', pk=transfer.pk)
 
 
-@login_required
+@manager_required
 def transfer_cancel(request, pk):
     """Cancel a pending transfer."""
     transfer = get_object_or_404(StockTransfer, pk=pk)
@@ -293,7 +294,7 @@ def transfer_cancel(request, pk):
     return redirect('warehouse:transfer_detail', pk=transfer.pk)
 
 
-@login_required
+@cashier_required
 def api_warehouse_stocks(request, warehouse_id):
     """API endpoint to get stocks in a warehouse. Delegates to the inventory
     app's superset implementation, which supports ?product= filtering."""

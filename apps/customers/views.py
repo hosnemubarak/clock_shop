@@ -3,6 +3,7 @@ import logging
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from apps.core.decorators import cashier_required, manager_required
 from django.contrib import messages
 from django.db.models import Q, Sum, F
 from django.db import transaction, IntegrityError
@@ -18,7 +19,7 @@ from apps.core.utils import create_audit_log, paginate
 logger = logging.getLogger(__name__)
 
 
-@login_required
+@cashier_required
 def customer_list(request):
     """List all customers with filtering."""
     customers = Customer.objects.all()
@@ -67,7 +68,7 @@ def customer_list(request):
     return render(request, 'customers/customer_list.html', context)
 
 
-@login_required
+@cashier_required
 def customer_detail(request, pk):
     """View customer details with purchase and payment history."""
     customer = get_object_or_404(Customer, pk=pk)
@@ -103,7 +104,7 @@ def customer_detail(request, pk):
     return render(request, 'customers/customer_detail.html', context)
 
 
-@login_required
+@cashier_required
 def customer_create(request):
     """Create a new customer."""
     if request.method == 'POST':
@@ -119,7 +120,7 @@ def customer_create(request):
     return render(request, 'customers/customer_form.html', {'form': form, 'title': 'Add Customer'})
 
 
-@login_required
+@cashier_required
 def customer_edit(request, pk):
     """Edit a customer."""
     customer = get_object_or_404(Customer, pk=pk)
@@ -141,7 +142,7 @@ def customer_edit(request, pk):
     })
 
 
-@login_required
+@manager_required
 def customer_add_note(request, pk):
     """Add a note to a customer."""
     customer = get_object_or_404(Customer, pk=pk)
@@ -158,7 +159,7 @@ def customer_add_note(request, pk):
     return redirect('customers:customer_detail', pk=pk)
 
 
-@login_required
+@cashier_required
 def customer_statement(request, pk):
     """Generate customer statement."""
     customer = get_object_or_404(Customer, pk=pk)
@@ -231,7 +232,7 @@ def customer_statement(request, pk):
     return render(request, 'customers/customer_statement.html', context)
 
 
-@login_required
+@manager_required
 def payment_list(request):
     """List all payments."""
     payments = Payment.objects.select_related('customer', 'sale', 'received_by').all()
@@ -264,7 +265,7 @@ def payment_list(request):
     return render(request, 'customers/payment_list.html', context)
 
 
-@login_required
+@manager_required
 @transaction.atomic
 def payment_create(request):
     """Record a new payment."""
@@ -311,7 +312,7 @@ def payment_create(request):
     return render(request, 'customers/payment_form.html', context)
 
 
-@login_required
+@cashier_required
 def api_customer_info(request, customer_id):
     """API endpoint to get customer info."""
     customer = get_object_or_404(Customer, pk=customer_id)
@@ -342,7 +343,7 @@ def api_customer_info(request, customer_id):
     return JsonResponse(data)
 
 
-@login_required
+@cashier_required
 def api_customer_search(request):
     """API endpoint to search customers dynamically."""
     query = request.GET.get('q', '').strip()
@@ -388,7 +389,7 @@ def _customer_loyalty(customer):
     return payload or None
 
 
-@login_required
+@cashier_required
 def api_customer_sales(request, customer_id):
     """API endpoint to get customer's unpaid sales."""
     customer = get_object_or_404(Customer, pk=customer_id)
@@ -410,7 +411,7 @@ def api_customer_sales(request, customer_id):
     return JsonResponse(data, safe=False)
 
 
-@login_required
+@cashier_required
 def api_customer_create(request):
     """API endpoint to create a customer inline."""
     if request.method == 'POST':

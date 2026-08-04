@@ -16,9 +16,10 @@ A comprehensive, production-ready Inventory and Sales Management System for reta
 - [Tech Stack](#tech-stack)
 - [Quick Start](#quick-start)
 - [Deployment Options](#deployment-options)
-  - [Option 1: Local Development (SQLite)](#option-1-local-development-sqlite)
-  - [Option 2: Docker Deployment (PostgreSQL)](#option-2-docker-deployment-postgresql)
-  - [Option 3: Linux Server (Production)](#option-3-linux-server-production)
+- [Option 1: Local Development (SQLite)](#option-1-local-development-sqlite)
+  - [Option 2: Docker Deployment (PostgreSQL/MySQL)](#option-2-docker-deployment-postgresqlmysql)
+  - [Option 3: Shared cPanel Hosting (MySQL)](#option-3-shared-cpanel-hosting-mysql)
+  - [Option 4: Linux Server (Production)](#option-4-linux-server-production)
 - [Environment Variables](#environment-variables)
 - [Project Structure](#project-structure)
 - [Key Workflows](#key-workflows)
@@ -80,6 +81,7 @@ Clock Shop is a full-featured business management solution that handles:
 
 ### Security & Audit
 - **Login required** - All views protected by authentication
+- **Role-Based Access Control (RBAC)** - Enforces permissions for Cashiers, Managers, and Admins across all operations.
 - **User registration** - With admin approval workflow
 - **Audit logging** - Track all create, update, delete operations
 - **CSRF protection** - Django's built-in CSRF with configurable trusted origins
@@ -104,7 +106,8 @@ Choose your deployment method:
 | Method | Database | Best For |
 |--------|----------|----------|
 | **Local Development** | SQLite | Development, testing |
-| **Docker** | PostgreSQL | Production, easy deployment |
+| **Docker** | PostgreSQL/MySQL | Production, easy deployment |
+| **Shared cPanel** | MySQL | Budget-friendly standard hosting |
 | **Linux Server** | PostgreSQL/SQLite | Custom production setup |
 
 ---
@@ -221,7 +224,15 @@ docker-compose exec db pg_dump -U clock_shop clock_shop > backup.sql
 
 ---
 
-### Option 3: Linux Server (Production)
+### Option 3: Shared cPanel Hosting (MySQL)
+
+This is the standard approach for budget-friendly deployment. We have prepared this repository with `passenger_wsgi.py`, `mysqlclient`, and `DatabaseCache` specifically for cPanel's Passenger environment.
+
+**Please see the detailed [cPanel Deployment Guide](CPANEL_DEPLOYMENT_GUIDE.md) for full step-by-step instructions.**
+
+---
+
+### Option 4: Linux Server (Production)
 
 Manual deployment on a Linux server with Gunicorn. Suitable for VPS/Cloud deployment.
 
@@ -425,9 +436,10 @@ clock_shop/
 ## Security Features
 
 - Django's built-in CSRF protection
+- Role-Based Access Control (Cashier, Manager, Admin)
 - Login required for all views
 - Audit logging for all major actions
-- Permission-based access (extensible)
+- Secure Passenger memory isolation using DatabaseCache
 
 ## Environment Variables
 
@@ -455,6 +467,7 @@ cp .env.example .env
 | `SHOP_NAME` | `Clock Shop` | Business name |
 | `CURRENCY_SYMBOL` | `৳` | Currency symbol |
 | `LOW_STOCK_THRESHOLD` | `5` | Low stock alert threshold |
+| `ENABLE_RBAC` | `True` | Set to `False` to disable strict Role-Based Access Control |
 | `POSTGRES_DB` | `clock_shop` | Docker PostgreSQL database |
 | `POSTGRES_USER` | `clock_shop` | Docker PostgreSQL user |
 | `POSTGRES_PASSWORD` | (required) | Docker PostgreSQL password |
@@ -489,6 +502,7 @@ Configure via `.env` file:
 SHOP_NAME=Your Clock Shop Name
 CURRENCY_SYMBOL=৳
 LOW_STOCK_THRESHOLD=10
+ENABLE_RBAC=True
 ```
 
 ### Backup & Restore
