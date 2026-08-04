@@ -53,15 +53,15 @@ docker-compose exec web python manage.py createsuperuser
 
 ---
 
-## 🌐 cPanel Deployment (PostgreSQL)
+## 🌐 cPanel Deployment (MySQL)
 
 **Quick reference for deploying Clock Shop on cPanel.**
 
-### 1. Create PostgreSQL Database (cPanel)
+### 1. Create MySQL Database (cPanel)
 ```
-PostgreSQL Databases → Create Database: clock_shop_db
-PostgreSQL Databases → Create User: clock_shop_user (strong password)
-PostgreSQL Databases → Add User to Database (ALL PRIVILEGES)
+MySQL Databases → Create Database: clock_shop_db
+MySQL Databases → Create User: clock_shop_user (strong password)
+MySQL Databases → Add User to Database (ALL PRIVILEGES)
 ```
 **Note:** cPanel will prefix with your username (e.g., `rumaelec_clock_shop_db`)
 
@@ -112,12 +112,12 @@ DEBUG=False
 ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
 CSRF_TRUSTED_ORIGINS=https://yourdomain.com
 
-DB_ENGINE=postgresql
+DB_ENGINE=mysql
 DB_NAME=rumaelec_clock_shop_db
 DB_USER=rumaelec_clock_shop_user
 DB_PASSWORD=<your-db-password>
 DB_HOST=localhost
-DB_PORT=5432
+DB_PORT=3306
 ```
 
 **Generate SECRET_KEY:**
@@ -186,7 +186,7 @@ touch ~/clock_shop/tmp/restart.txt
 
 ### Backup Database
 ```bash
-pg_dump -U rumaelec_clock_shop_user -h localhost rumaelec_clock_shop_db > backup.sql
+mysqldump -u rumaelec_clock_shop_user -p rumaelec_clock_shop_db > backup.sql
 ```
 
 ### View Logs
@@ -204,9 +204,9 @@ tail -f ~/logs/error_log
 - Verify .env file exists and is correct
 
 **Database errors?**
-- Test connection: `psql -U rumaelec_clock_shop_user -d rumaelec_clock_shop_db -h localhost`
+- Test connection: `mysql -u rumaelec_clock_shop_user -p rumaelec_clock_shop_db`
 - Verify credentials in .env
-- Check PostgreSQL is running: `pg_isready -h localhost`
+- Check MySQL is running: `mysqladmin -u rumaelec_clock_shop_user -p ping`
 
 **Static files missing?**
 - Re-run: `python manage.py collectstatic --clear --noinput`
@@ -220,7 +220,7 @@ tail -f ~/logs/error_log
 
 ## 📋 Checklist
 
-- [ ] PostgreSQL database created
+- [ ] MySQL database created
 - [ ] Database user created with ALL PRIVILEGES
 - [ ] Files uploaded to ~/clock_shop
 - [ ] Python app configured in cPanel
