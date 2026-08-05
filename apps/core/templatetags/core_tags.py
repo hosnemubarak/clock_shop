@@ -49,7 +49,7 @@ class CaptureNode(template.Node):
         context[self.varname] = mark_safe(self.nodelist.render(context).strip())
         return ''
 
-from apps.core.decorators import is_manager, is_admin
+from apps.core.decorators import is_manager, is_admin, is_cashier
 
 @register.filter(name='is_manager')
 def is_manager_filter(user):
@@ -58,3 +58,7 @@ def is_manager_filter(user):
 @register.filter(name='is_admin')
 def is_admin_filter(user):
     return is_admin(user)
+
+@register.filter(name='is_cashier')
+def is_cashier_filter(user):
+    return is_cashier(user)
