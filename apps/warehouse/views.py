@@ -14,7 +14,7 @@ from apps.inventory.models import ProductStock, Product
 from apps.core.utils import create_audit_log, paginate
 
 
-@admin_required
+@cashier_required
 def warehouse_list(request):
     """List all warehouses."""
     # Base queryset with annotations for stock value and items
@@ -43,7 +43,7 @@ def warehouse_list(request):
     })
 
 
-@admin_required
+@cashier_required
 def warehouse_detail(request, pk):
     """View warehouse details with stock information."""
     warehouse = get_object_or_404(Warehouse, pk=pk)

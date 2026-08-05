@@ -47,9 +47,11 @@
         <div class="card">
             <div class="card-body">
                 <div class="d-flex gap-2">
+                    {% if request.user|is_admin %}
                     <a href="{% url 'warehouse:warehouse_create' %}" class="btn btn-success flex-grow-1">
                         <i class="las la-plus"></i> Add Warehouse
                     </a>
+                    {% endif %}
                     <a href="{% url 'warehouse:transfer_list' %}" class="btn btn-primary flex-grow-1">
                         <i class="las la-exchange-alt"></i> View Transfers
                     </a>
@@ -123,7 +125,9 @@
                                 <td>
                                     {% capture as row_menu %}
                                         <li><a class="dropdown-item" href="{% url 'warehouse:warehouse_detail' warehouse.pk %}"><i class="las la-eye me-2"></i>View Stock</a></li>
+                                        {% if request.user|is_admin %}
                                         <li><a class="dropdown-item" href="{% url 'warehouse:warehouse_edit' warehouse.pk %}"><i class="las la-pen me-2"></i>Edit</a></li>
+                                        {% endif %}
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a class="dropdown-item" href="{% url 'warehouse:transfer_create' %}"><i class="las la-truck me-2"></i>New Transfer</a></li>
                                     {% endcapture %}
