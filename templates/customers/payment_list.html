@@ -75,7 +75,7 @@
                                     Walk-in Customer
                                     {% endif %}
                                 </td>
-                                <td class="text-success fw-medium">{{ CURRENCY_SYMBOL }}{{ payment.amount|floatformat:2 }}</td>
+                                <td class="text-success fw-medium">{{ CURRENCY_SYMBOL }}{{ payment.amount|floatformat:0 }}</td>
                                 <td>{{ payment.get_payment_method_display }}</td>
                                 <td>{{ payment.reference|default:"-" }}</td>
                                 <td>{{ payment.received_by.username|default:"-" }}</td>

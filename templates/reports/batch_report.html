@@ -61,8 +61,8 @@
                                 <td>{{ item.stock.product.sku }}</td>
                                 <td>{{ item.stock.warehouse.code }}</td>
                                 <td class="text-center">{{ item.stock.quantity }}</td>
-                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.stock.product.average_cost|floatformat:2 }}</td>
-                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.value|floatformat:2 }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.stock.product.average_cost|floatformat:0 }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.value|floatformat:0 }}</td>
                             </tr>
                             {% empty %}
                             <tr><td colspan="6" class="text-center text-muted">No stock found</td></tr>

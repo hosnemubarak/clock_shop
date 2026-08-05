@@ -19,7 +19,7 @@
         <div class="card card-animate">
             <div class="card-body">
                 <p class="text-uppercase fw-medium text-muted mb-0">Stock Value</p>
-                <h4 class="fs-22 fw-semibold mt-4">{{ CURRENCY_SYMBOL }}{{ totals.total_value|floatformat:2|intcomma|default:"0.00" }}</h4>
+                <h4 class="fs-22 fw-semibold mt-4">{{ CURRENCY_SYMBOL }}{{ totals.total_value|floatformat:0|intcomma|default:"0.00" }}</h4>
             </div>
         </div>
     </div>
@@ -96,8 +96,8 @@
                                     <span class="badge bg-success">{{ item.total_quantity }}</span>
                                     {% endif %}
                                 </td>
-                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.avg_cost|floatformat:2 }}</td>
-                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.total_value|floatformat:2 }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.avg_cost|floatformat:0 }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.total_value|floatformat:0 }}</td>
                             </tr>
                             {% empty %}
                             <tr><td colspan="6" class="text-center text-muted">No stock data</td></tr>
@@ -135,7 +135,7 @@
                             <tr>
                                 <td>{{ w.warehouse__name }}</td>
                                 <td class="text-center">{{ w.total_items|intcomma }}</td>
-                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ w.total_value|floatformat:2|intcomma }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ w.total_value|floatformat:0|intcomma }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

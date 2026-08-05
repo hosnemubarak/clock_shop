@@ -104,7 +104,7 @@
                                 <th>Category</th>
                                 <th>Stock</th>
                                 <th>Avg. Cost</th>
-                                <th>Price</th>
+                                <th>Sell Price</th>
                                 <th>Status</th>
                                 <th class="text-center">Actions</th>
                             </tr>
@@ -127,8 +127,8 @@
                                     <span class="badge bg-success">{{ product.total_stock }}</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ CURRENCY_SYMBOL }}{{ product.average_cost|floatformat:2 }}</td>
-                                <td>{{ CURRENCY_SYMBOL }}{{ product.default_selling_price|floatformat:2 }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ product.average_cost|floatformat:0 }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ product.default_selling_price|floatformat:0 }}</td>
                                 <td>
                                     {% if product.is_active %}
                                     <span class="badge bg-success-subtle text-success">Active</span>

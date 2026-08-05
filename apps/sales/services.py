@@ -191,11 +191,8 @@ class SaleService:
         if due_amount > 0:
             if not customer:
                 raise ValueError('Walk-in customers cannot have unpaid balances. Full payment required.')
-            if customer.total_due + due_amount > customer.credit_limit:
-                if customer.credit_limit == 0:
-                    raise ValueError("Credit limit is 0 Tk. Full payment required.")
-                else:
-                    raise ValueError(f"Credit limit exceeded! Customer's limit is {customer.credit_limit} Tk (currently owes {customer.total_due} Tk).")
+            if customer.credit_limit > 0 and (customer.total_due + due_amount > customer.credit_limit):
+                raise ValueError(f"Credit limit exceeded! Customer's limit is {customer.credit_limit} Tk (currently owes {customer.total_due} Tk).")
 
         sale.subtotal = subtotal
         sale.total_cost = total_cost

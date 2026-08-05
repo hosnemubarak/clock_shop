@@ -93,9 +93,9 @@
                                         </td>
                                         <td><a href="{% url 'sales:sale_detail' sale.pk %}" target="_blank">{{ sale.invoice_number }}</a></td>
                                         <td>{{ sale.sale_date|date:"M d, Y" }}</td>
-                                        <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
-                                        <td class="text-end text-success">{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2 }}</td>
-                                        <td class="text-end text-danger fw-bold">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2 }}</td>
+                                        <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:0 }}</td>
+                                        <td class="text-end text-success">{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:0 }}</td>
+                                        <td class="text-end text-danger fw-bold">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:0 }}</td>
                                     </tr>
                                     {% empty %}
                                     <tr>

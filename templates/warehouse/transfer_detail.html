@@ -37,8 +37,8 @@
                                 <td>{{ item.product.sku }}</td>
                                 <!-- No Batch cell -->
                                 <td class="text-center">{{ item.quantity }}</td>
-                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.unit_cost|floatformat:2 }}</td>
-                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.total_cost|floatformat:2 }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.unit_cost|floatformat:0 }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.total_cost|floatformat:0 }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

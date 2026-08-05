@@ -84,7 +84,7 @@
                                     </span>
                                 </td>
                                 <td class="text-center">{{ stockout.total_quantity }}</td>
-                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ stockout.total_value|floatformat:2|intcomma }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ stockout.total_value|floatformat:0|intcomma }}</td>
                                 <td>
                                     {% if stockout.status == 'completed' %}
                                     <span class="badge bg-success-subtle text-success">Completed</span>

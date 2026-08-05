@@ -72,7 +72,7 @@
                     </div>
                     <div class="d-flex align-items-end justify-content-between mt-4">
                         <div>
-                            <h4 class="fs-22 fw-semibold mb-4"><span class="counter-value" data-target="{{ total_sales_today }}">{{ CURRENCY_SYMBOL }}{{ total_sales_today|floatformat:2|intcomma }}</span></h4>
+                            <h4 class="fs-22 fw-semibold mb-4"><span class="counter-value" data-target="{{ total_sales_today }}">{{ CURRENCY_SYMBOL }}{{ total_sales_today|floatformat:0|intcomma }}</span></h4>
                             <span class="text-primary">View Sales <i class="las la-arrow-right"></i></span>
                         </div>
                         <div class="avatar-sm flex-shrink-0">
@@ -97,7 +97,7 @@
                     </div>
                     <div class="d-flex align-items-end justify-content-between mt-4">
                         <div>
-                            <h4 class="fs-22 fw-semibold mb-4 text-success"><span class="counter-value" data-target="{{ today_cash_collection }}">{{ CURRENCY_SYMBOL }}{{ today_cash_collection|floatformat:2|intcomma }}</span></h4>
+                            <h4 class="fs-22 fw-semibold mb-4 text-success"><span class="counter-value" data-target="{{ today_cash_collection }}">{{ CURRENCY_SYMBOL }}{{ today_cash_collection|floatformat:0|intcomma }}</span></h4>
                             <span class="text-success">View Payments <i class="las la-arrow-right"></i></span>
                         </div>
                         <div class="avatar-sm flex-shrink-0">
@@ -122,7 +122,7 @@
                     </div>
                     <div class="d-flex align-items-end justify-content-between mt-4">
                         <div>
-                            <h4 class="fs-22 fw-semibold mb-4"><span class="counter-value" data-target="{{ total_sales_month }}">{{ CURRENCY_SYMBOL }}{{ total_sales_month|floatformat:2|intcomma }}</span></h4>
+                            <h4 class="fs-22 fw-semibold mb-4"><span class="counter-value" data-target="{{ total_sales_month }}">{{ CURRENCY_SYMBOL }}{{ total_sales_month|floatformat:0|intcomma }}</span></h4>
                             <span class="text-success">View Report <i class="las la-arrow-right"></i></span>
                         </div>
                         <div class="avatar-sm flex-shrink-0">
@@ -147,7 +147,7 @@
                     </div>
                     <div class="d-flex align-items-end justify-content-between mt-4">
                         <div>
-                            <h4 class="fs-22 fw-semibold mb-4 text-danger">{{ CURRENCY_SYMBOL }}{{ total_dues|floatformat:2|intcomma }}</h4>
+                            <h4 class="fs-22 fw-semibold mb-4 text-danger">{{ CURRENCY_SYMBOL }}{{ total_dues|floatformat:0|intcomma }}</h4>
                             <span class="text-danger">View Dues <i class="las la-arrow-right"></i></span>
                         </div>
                         <div class="avatar-sm flex-shrink-0">
@@ -235,7 +235,7 @@
                                 <td><a href="{% url 'sales:sale_detail' sale.pk %}" class="fw-medium">{{ sale.invoice_number }}</a></td>
                                 <td>{{ sale.customer.name|default:"Walk-in" }}</td>
                                 <td>{{ sale.sale_date|date:"M d, Y" }}</td>
-                                <td>{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:0 }}</td>
                                 <td>
                                     {% if sale.payment_status == 'paid' %}
                                     <span class="badge bg-success-subtle text-success">Paid</span>

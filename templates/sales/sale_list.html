@@ -72,9 +72,9 @@
                                     {% endif %}
                                 </td>
                                 <td>{{ sale.sale_date|date:"M d, Y" }}</td>
-                                <td>{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
-                                <td class="text-success">{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2 }}</td>
-                                <td class="{% if sale.due_amount > 0 %}text-danger{% endif %}">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2 }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:0 }}</td>
+                                <td class="text-success">{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:0 }}</td>
+                                <td class="{% if sale.due_amount > 0 %}text-danger{% endif %}">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:0 }}</td>
                                 <td>
                                     {% if sale.payment_status == 'paid' %}
                                     <span class="badge bg-success">Paid</span>

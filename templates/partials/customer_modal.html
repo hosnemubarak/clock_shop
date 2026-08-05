@@ -1,6 +1,6 @@
 <!-- New Customer Modal -->
 <div class="modal fade z-1060" id="newCustomerModal" tabindex="-1" aria-hidden="true" >
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title text-white">
@@ -10,29 +10,31 @@
             </div>
             <div class="modal-body">
                 <form id="newCustomerForm">
-                    <div class="mb-3">
-                        <label class="form-label">Name <span class="text-danger">*</span></label>
-                        <input type="text" id="newCustomerName" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Phone <span class="text-danger">*</span></label>
-                        <input type="text" id="newCustomerPhone" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" id="newCustomerEmail" class="form-control">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Address</label>
-                        <textarea id="newCustomerAddress" class="form-control" rows="2"></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Credit Limit</label>
-                        <input type="number" step="0.01" id="newCustomerCreditLimit" class="form-control" placeholder="e.g. 5000.00">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Notes</label>
-                        <textarea id="newCustomerNotes" class="form-control" rows="2" placeholder="Internal notes..."></textarea>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Name <span class="text-danger">*</span></label>
+                            <input type="text" id="newCustomerName" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone <span class="text-danger">*</span></label>
+                            <input type="text" id="newCustomerPhone" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" id="newCustomerEmail" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Credit Limit</label>
+                            <input type="number" step="0.01" id="newCustomerCreditLimit" class="form-control" placeholder="e.g. 5000">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Address</label>
+                            <textarea id="newCustomerAddress" class="form-control" rows="1"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Notes</label>
+                            <textarea id="newCustomerNotes" class="form-control" rows="1" placeholder="Internal notes..."></textarea>
+                        </div>
                     </div>
                 </form>
             </div>

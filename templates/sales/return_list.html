@@ -36,7 +36,7 @@
                                 <td>{{ sale_return.return_number }}</td>
                                 <td><a href="{% url 'sales:sale_detail' sale_return.sale.pk %}">{{ sale_return.sale.invoice_number }}</a></td>
                                 <td>{{ sale_return.return_date|date:"M d, Y" }}</td>
-                                <td>{{ CURRENCY_SYMBOL }}{{ sale_return.refund_amount|floatformat:2|intcomma }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ sale_return.refund_amount|floatformat:0|intcomma }}</td>
                                 <td>{{ sale_return.created_by.username|default:"-" }}</td>
                                 <td>
                                     {% capture as row_menu %}

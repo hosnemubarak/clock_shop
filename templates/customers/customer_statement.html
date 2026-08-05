@@ -52,9 +52,9 @@
                                 <td>{{ t.date|date:"M d, Y" }}</td>
                                 <td>{{ t.type }}</td>
                                 <td>{{ t.reference }}</td>
-                                <td class="text-end">{% if t.debit > 0 %}{{ CURRENCY_SYMBOL }}{{ t.debit|floatformat:2 }}{% endif %}</td>
-                                <td class="text-end text-success">{% if t.credit > 0 %}{{ CURRENCY_SYMBOL }}{{ t.credit|floatformat:2 }}{% endif %}</td>
-                                <td class="text-end {% if t.balance > 0 %}text-danger{% endif %}">{{ CURRENCY_SYMBOL }}{{ t.balance|floatformat:2 }}</td>
+                                <td class="text-end">{% if t.debit > 0 %}{{ CURRENCY_SYMBOL }}{{ t.debit|floatformat:0 }}{% endif %}</td>
+                                <td class="text-end text-success">{% if t.credit > 0 %}{{ CURRENCY_SYMBOL }}{{ t.credit|floatformat:0 }}{% endif %}</td>
+                                <td class="text-end {% if t.balance > 0 %}text-danger{% endif %}">{{ CURRENCY_SYMBOL }}{{ t.balance|floatformat:0 }}</td>
                             </tr>
                             {% empty %}
                             <tr>
@@ -67,7 +67,7 @@
                             <tr class="fw-bold">
                                 <td colspan="5" class="text-end">Current Balance:</td>
                                 <td class="text-end {% if customer.total_due > 0 %}text-danger{% endif %}">
-                                    {{ CURRENCY_SYMBOL }}{{ customer.total_due|floatformat:2 }}
+                                    {{ CURRENCY_SYMBOL }}{{ customer.total_due|floatformat:0 }}
                                 </td>
                             </tr>
                         </tfoot>

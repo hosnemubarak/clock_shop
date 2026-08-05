@@ -35,7 +35,7 @@
                                     <td>
                                         {% if item.is_custom %}{{ item.custom_description }}
                                         {% else %}{{ item.product.display_name }}{% endif %}
-                                        <div class="text-muted small">{{ CURRENCY_SYMBOL }}{{ item.unit_price|floatformat:2 }} each</div>
+                                        <div class="text-muted small">{{ CURRENCY_SYMBOL }}{{ item.unit_price|floatformat:0 }} each</div>
                                     </td>
                                     <td class="text-center">{{ item.quantity }}</td>
                                     <td class="text-center">{{ item.returnable }}</td>

@@ -60,8 +60,8 @@
                     <td>{{ forloop.counter|stringformat:"02d" }}</td>
                     <td>{% if item.is_custom %}{{ item.custom_description }} <em>(Custom)</em>{% else %}<span class="table-header-dark">{{ item.product.display_name }}</span>{% endif %}</td>
                     <td class="text-right">{{ item.quantity|stringformat:"02d" }}</td>
-                    <td class="text-right">{{ item.unit_price|floatformat:2 }}</td>
-                    <td class="text-right table-header-dark" >{{ item.total_price|floatformat:2 }}</td>
+                    <td class="text-right">{{ item.unit_price|floatformat:0 }}</td>
+                    <td class="text-right table-header-dark" >{{ item.total_price|floatformat:0 }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -71,27 +71,27 @@
             <table>
                 <tr>
                     <td class="totals-label">Subtotal:</td>
-                    <td class="text-right totals-val">{{ sale.subtotal|floatformat:2|intcomma }}</td>
+                    <td class="text-right totals-val">{{ sale.subtotal|floatformat:0|intcomma }}</td>
                 </tr>
                 {% if sale.discount_amount > 0 %}
                 <tr>
                     <td class="totals-label">Discount:</td>
-                    <td class="text-right totals-val">-{{ sale.discount_amount|floatformat:2|intcomma }}</td>
+                    <td class="text-right totals-val">-{{ sale.discount_amount|floatformat:0|intcomma }}</td>
                 </tr>
                 {% endif %}
 
                 <tr class="grand-total">
                     <td class="totals-label text-slate-dark">Total:</td>
-                    <td class="text-right totals-val">{{ sale.total_amount|floatformat:2|intcomma }}</td>
+                    <td class="text-right totals-val">{{ sale.total_amount|floatformat:0|intcomma }}</td>
                 </tr>
                 <tr>
                     <td class="totals-label">Paid:</td>
-                    <td class="text-right totals-val">{{ sale.paid_amount|floatformat:2|intcomma }}</td>
+                    <td class="text-right totals-val">{{ sale.paid_amount|floatformat:0|intcomma }}</td>
                 </tr>
                 {% if sale.due_amount > 0 %}
                 <tr class="balance-due">
                     <td class="totals-label text-danger">Balance Due:</td>
-                    <td class="text-right">{{ sale.due_amount|floatformat:2|intcomma }}</td>
+                    <td class="text-right">{{ sale.due_amount|floatformat:0|intcomma }}</td>
                 </tr>
                 {% endif %}
             </table>
@@ -111,7 +111,7 @@
             {% else %}
             <strong>Total Outstanding Amount:</strong> 
             {% endif %}
-            <strong>৳</strong> {{ sale.customer.total_due|floatformat:2|intcomma }}/= ({{ sale.customer.total_due|amount_in_words }})
+            <strong>৳</strong> {{ sale.customer.total_due|floatformat:0|intcomma }}/= ({{ sale.customer.total_due|amount_in_words }})
         </div>
         {% endif %}
         

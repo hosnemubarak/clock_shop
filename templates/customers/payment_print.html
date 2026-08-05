@@ -57,7 +57,7 @@
                         {% if payment.notes %} <br><span class="text-muted">{{ payment.notes }}</span>{% endif %}
                     </td>
                     <td class="text-right table-header-dark" style="padding: 15px; font-size:18px; vertical-align: top; border:1px solid #e2e8f0; border-top:2px solid #0f172a; width:150px;">
-                        <strong>৳</strong> {{ payment.amount|floatformat:2|intcomma }}
+                        <strong>৳</strong> {{ payment.amount|floatformat:0|intcomma }}
                     </td>
                 </tr>
             </tbody>
@@ -67,7 +67,7 @@
             <table>
                 <tr class="grand-total">
                     <td class="totals-label text-slate-dark">Amount Received:</td>
-                    <td class="text-right totals-val"><strong>৳</strong> {{ payment.amount|floatformat:2|intcomma }}</td>
+                    <td class="text-right totals-val"><strong>৳</strong> {{ payment.amount|floatformat:0|intcomma }}</td>
                 </tr>
             </table>
         </div>
@@ -82,7 +82,7 @@
         {% if payment.customer and payment.customer.total_due > 0 %}
         <div class="mt-15px fw-semibold text-danger fs-13px">
             <strong>Total Outstanding Amount:</strong> 
-            <strong>৳</strong> {{ payment.customer.total_due|floatformat:2|intcomma }}/= ({{ payment.customer.total_due|amount_in_words }})
+            <strong>৳</strong> {{ payment.customer.total_due|floatformat:0|intcomma }}/= ({{ payment.customer.total_due|amount_in_words }})
         </div>
         {% endif %}
 

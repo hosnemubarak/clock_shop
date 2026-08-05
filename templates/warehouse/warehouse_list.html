@@ -112,7 +112,7 @@
                                 <td>
                                     <span class="badge bg-primary">{{ warehouse.total_items|intcomma }}</span>
                                 </td>
-                                <td>{{ CURRENCY_SYMBOL }}{{ warehouse.stock_value|floatformat:2|intcomma }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ warehouse.stock_value|floatformat:0|intcomma }}</td>
                                 <td>
                                     {% if warehouse.is_active %}
                                     <span class="badge bg-success-subtle text-success">Active</span>

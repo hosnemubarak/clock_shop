@@ -48,7 +48,7 @@
                                 </tr>
                                 <tr>
                                     <td class="text-muted">Selling Price</td>
-                                    <td class="fw-medium">{{ CURRENCY_SYMBOL }}{{ product.default_selling_price|floatformat:2 }}</td>
+                                    <td class="fw-medium">{{ CURRENCY_SYMBOL }}{{ product.default_selling_price|floatformat:0 }}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-muted">Total Stock</td>
@@ -64,7 +64,7 @@
                                 </tr>
                                 <tr>
                                     <td class="text-muted">Avg. Cost</td>
-                                    <td class="fw-medium">{{ CURRENCY_SYMBOL }}{{ product.average_cost|floatformat:2 }}</td>
+                                    <td class="fw-medium">{{ CURRENCY_SYMBOL }}{{ product.average_cost|floatformat:0 }}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-muted">Status</td>
@@ -127,7 +127,7 @@
                                     </a>
                                 </td>
                                 <td><span class="badge bg-primary">{{ stock.quantity }}</span></td>
-                                <td>{{ CURRENCY_SYMBOL }}{{ stock.total_value|floatformat:2|intcomma }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ stock.total_value|floatformat:0|intcomma }}</td>
                             </tr>
                             {% empty %}
                             <tr>

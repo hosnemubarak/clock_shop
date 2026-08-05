@@ -32,7 +32,7 @@
                                 <td>{{ purchase.supplier }}</td>
                                 <td>{{ purchase.purchase_date|date:"M d, Y" }}</td>
                                 <td>{{ purchase.items.count }}</td>
-                                <td>{{ CURRENCY_SYMBOL }}{{ purchase.total_amount|floatformat:2|intcomma }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ purchase.total_amount|floatformat:0|intcomma }}</td>
                                 <td>{{ purchase.created_by.username|default:"-" }}</td>
                                 <td>
                                     <a href="{% url 'inventory:purchase_detail' purchase.pk %}" class="btn btn-soft-info btn-sm">

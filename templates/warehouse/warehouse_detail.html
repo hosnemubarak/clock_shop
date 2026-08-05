@@ -21,7 +21,7 @@
         <div class="card card-animate">
             <div class="card-body">
                 <p class="text-uppercase fw-medium text-muted mb-0">Stock Value</p>
-                <h4 class="fs-22 fw-semibold mt-4">{{ CURRENCY_SYMBOL }}{{ total_value|floatformat:2|intcomma }}</h4>
+                <h4 class="fs-22 fw-semibold mt-4">{{ CURRENCY_SYMBOL }}{{ total_value|floatformat:0|intcomma }}</h4>
             </div>
         </div>
     </div>
@@ -66,7 +66,7 @@
                                     </a>
                                 </td>
                                 <td class="text-center">{{ stock.quantity }}</td>
-                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ stock.total_value|floatformat:2 }}</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ stock.total_value|floatformat:0 }}</td>
                             </tr>
                             {% empty %}
                             <tr>

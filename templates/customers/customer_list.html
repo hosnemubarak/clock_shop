@@ -32,7 +32,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <p class="fw-medium text-muted mb-0">Total Spend</p>
-                        <h4 class="fs-22 fw-semibold mt-3 mb-0 text-success">{{ CURRENCY_SYMBOL }}{{ total_purchases|floatformat:2|intcomma }}</h4>
+                        <h4 class="fs-22 fw-semibold mt-3 mb-0 text-success">{{ CURRENCY_SYMBOL }}{{ total_purchases|floatformat:0|intcomma }}</h4>
                     </div>
                     <div class="avatar-sm flex-shrink-0">
                         <span class="avatar-title bg-success-subtle text-success rounded fs-3">
@@ -49,7 +49,7 @@
                 <div class="d-flex justify-content-between">
                     <div>
                         <p class="fw-medium text-muted mb-0">Total Outstanding</p>
-                        <h4 class="fs-22 fw-semibold mt-3 mb-0 text-danger">{{ CURRENCY_SYMBOL }}{{ total_due|floatformat:2|intcomma }}</h4>
+                        <h4 class="fs-22 fw-semibold mt-3 mb-0 text-danger">{{ CURRENCY_SYMBOL }}{{ total_due|floatformat:0|intcomma }}</h4>
                     </div>
                     <div class="avatar-sm flex-shrink-0">
                         <span class="avatar-title bg-danger-subtle text-danger rounded fs-3">
@@ -99,10 +99,10 @@
                                     <a href="{% url 'customers:customer_detail' customer.pk %}" class="fw-medium">{{ customer.name }}</a>
                                 </td>
                                 <td>{{ customer.phone|default:"-" }}</td>
-                                <td>{{ CURRENCY_SYMBOL }}{{ customer.total_purchases|floatformat:2 }}</td>
-                                <td class="text-success">{{ CURRENCY_SYMBOL }}{{ customer.total_paid|floatformat:2 }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ customer.total_purchases|floatformat:0 }}</td>
+                                <td class="text-success">{{ CURRENCY_SYMBOL }}{{ customer.total_paid|floatformat:0 }}</td>
                                 <td class="{% if customer.total_due > 0 %}text-danger fw-bold{% endif %}">
-                                    {{ CURRENCY_SYMBOL }}{{ customer.total_due|floatformat:2 }}
+                                    {{ CURRENCY_SYMBOL }}{{ customer.total_due|floatformat:0 }}
                                 </td>
                                 <td>
                                     {% if customer.is_active %}
