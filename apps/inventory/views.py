@@ -476,6 +476,8 @@ def purchase_create(request):
         'form': form,
         'warehouses': warehouses,
         'products': products,
+        'has_products': products.exists(),
+        'has_warehouses': warehouses.exists()
     }
     return render(request, 'inventory/purchase_form.html', context)
 

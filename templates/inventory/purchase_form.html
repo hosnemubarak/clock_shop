@@ -5,6 +5,23 @@
 {% block content %}
 {% include 'includes/page_header.html' with title='Add Stock' %}
 
+{% if not has_products or not has_warehouses %}
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <strong><i class="las la-exclamation-triangle"></i> Action Required!</strong>
+    You need to add at least one {% if not has_products and not has_warehouses %}Product and Warehouse{% elif not has_products %}Product{% else %}Warehouse{% endif %} to the system before you can add stock.
+    
+    <div class="mt-2">
+        {% if not has_products %}
+        <a href="{% url 'inventory:product_create' %}" class="btn btn-sm btn-warning"><i class="las la-plus"></i> Add Product</a>
+        {% endif %}
+        {% if not has_warehouses %}
+        <a href="{% url 'warehouse:warehouse_create' %}" class="btn btn-sm btn-warning"><i class="las la-plus"></i> Add Warehouse</a>
+        {% endif %}
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
 <form method="post" id="purchaseForm">
     {% csrf_token %}
     {% include 'includes/form_errors.html' %}
