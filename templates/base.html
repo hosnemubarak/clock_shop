@@ -117,6 +117,29 @@
                 }
             }
         });
+
+        // Helper for quantity +/- buttons
+        function changeQty(btn, delta) {
+            const container = btn.closest('.input-group') || btn.parentElement;
+            const input = container.querySelector('input[type=number]');
+            if (!input) return;
+            
+            try {
+                if (delta > 0) input.stepUp(); 
+                else input.stepDown();
+            } catch(e) {
+                // Fallback for browsers with issues
+                let val = parseFloat(input.value) || 0;
+                let step = parseFloat(input.getAttribute('step')) || 1;
+                let min = parseFloat(input.getAttribute('min'));
+                let max = parseFloat(input.getAttribute('max'));
+                if (delta > 0 && (isNaN(max) || val + step <= max)) input.value = val + step;
+                else if (delta < 0 && (isNaN(min) || val - step >= min)) input.value = val - step;
+            }
+            
+            input.dispatchEvent(new Event('input', {bubbles:true}));
+            input.dispatchEvent(new Event('change', {bubbles:true}));
+        }
     </script>
 </body>
 

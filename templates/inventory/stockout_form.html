@@ -77,7 +77,11 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Quantity <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="quantityInput" min="1" value="1">
+                            <div class="input-group">
+                                <button class="btn btn-outline-secondary px-2" type="button" onclick="changeQty(this, -1)"><i class="las la-minus"></i></button>
+                                <input type="number" class="form-control text-center px-0" id="quantityInput" min="1" value="1">
+                                <button class="btn btn-outline-secondary px-2" type="button" onclick="changeQty(this, 1)"><i class="las la-plus"></i></button>
+                            </div>
                         </div>
                         <div class="col-md-1">
                             <button type="button" class="btn btn-danger w-100" onclick="addItem()">

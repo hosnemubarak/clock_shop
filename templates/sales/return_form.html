@@ -40,9 +40,13 @@
                                     <td class="text-center">{{ item.quantity }}</td>
                                     <td class="text-center">{{ item.returnable }}</td>
                                     <td>
-                                        <input type="number" name="qty_{{ item.id }}" class="form-control"
-                                               min="0" max="{{ item.returnable }}" value="0"
-                                               data-unit-price="{{ item.unit_price }}">
+                                        <div class="input-group input-group-sm">
+                                            <button class="btn btn-outline-secondary px-2" type="button" onclick="changeQty(this, -1)"><i class="las la-minus"></i></button>
+                                            <input type="number" name="qty_{{ item.id }}" class="form-control text-center px-0"
+                                                   min="0" max="{{ item.returnable }}" value="0"
+                                                   data-unit-price="{{ item.unit_price }}">
+                                            <button class="btn btn-outline-secondary px-2" type="button" onclick="changeQty(this, 1)"><i class="las la-plus"></i></button>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% empty %}
