@@ -11,6 +11,7 @@ import json
 import logging
 
 from .models import Product, Category, Brand, ProductStock, Purchase, PurchaseItem, StockOut, StockOutItem
+from .services import get_product_stock_history
 from .forms import (ProductForm, CategoryForm, BrandForm, 
                     PurchaseForm, PurchaseItemForm, StockOutForm)
 from apps.warehouse.models import Warehouse
@@ -84,13 +85,27 @@ def product_detail(request, pk):
     """View product details with stock information."""
     product = get_object_or_404(Product, pk=pk)
     stocks = product.stocks.select_related('warehouse').all()
+    recent_history = get_product_stock_history(product, limit=5)
     
     context = {
         'product': product,
         'stocks': stocks,
+        'recent_history': recent_history,
         'warehouses': Warehouse.objects.filter(is_active=True),
     }
     return render(request, 'inventory/product_detail.html', context)
+
+@cashier_required
+def product_stock_history(request, pk):
+    """View full chronological stock history for a product."""
+    product = get_object_or_404(Product, pk=pk)
+    full_history = get_product_stock_history(product)
+    
+    context = {
+        'product': product,
+        'full_history': full_history,
+    }
+    return render(request, 'inventory/product_history.html', context)
 
 
 @cashier_required

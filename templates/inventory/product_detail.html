@@ -142,6 +142,66 @@
     </div>
 </div>
 
+    <div class="col-12 mt-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Recent Stock Movements</h5>
+                <a href="{% url 'inventory:product_stock_history' product.pk %}" class="btn btn-sm btn-soft-primary">
+                    View Full History <i class="las la-arrow-right ms-1"></i>
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Reference</th>
+                                <th>Warehouse</th>
+                                <th>Quantity</th>
+                                <th>User</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in recent_history %}
+                            <tr>
+                                <td>{{ record.date|date:"M d, Y" }}</td>
+                                <td>
+                                    {% if record.type == 'STOCK_IN' or record.type == 'RETURN' %}
+                                    <span class="badge bg-soft-success text-success">{{ record.type_label }}</span>
+                                    {% elif record.type == 'SALE' or record.type == 'STOCK_OUT' %}
+                                    <span class="badge bg-soft-danger text-danger">{{ record.type_label }}</span>
+                                    {% else %}
+                                    <span class="badge bg-soft-primary text-primary">{{ record.type_label }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ record.reference }}</td>
+                                <td>{{ record.warehouse }}</td>
+                                <td>
+                                    {% if record.is_positive == True %}
+                                    <span class="text-success fw-bold">+{{ record.quantity }}</span>
+                                    {% elif record.is_positive == False %}
+                                    <span class="text-danger fw-bold">{{ record.quantity }}</span>
+                                    {% else %}
+                                    <span class="text-primary fw-bold">{{ record.quantity }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ record.user }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No stock movements found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Quick Add Stock Modal -->
 <div class="modal fade" id="quickAddStockModal" tabindex="-1">
     <div class="modal-dialog">
