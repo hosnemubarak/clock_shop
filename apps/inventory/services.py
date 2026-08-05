@@ -58,17 +58,17 @@ def get_product_stock_history(product, limit=None):
         })
         
     # 4. Stock Out (Damaged / Lost)
-    for so in product.stockout_items.select_related('stock_out', 'stock_out__created_by', 'stock_out__warehouse'):
+    for so in product.stockout_items.select_related('stockout', 'stockout__created_by', 'stockout__warehouse'):
         history.append({
             'timestamp': so.created_at,
-            'date': so.stock_out.date,
+            'date': so.stockout.date,
             'type': 'STOCK_OUT',
-            'type_label': f'Stock Out ({so.stock_out.get_reason_display()})',
-            'reference': so.stock_out.reference_number,
-            'warehouse': so.stock_out.warehouse.name if so.stock_out.warehouse else 'N/A',
+            'type_label': f'Stock Out ({so.stockout.get_reason_display()})',
+            'reference': so.stockout.reference_number,
+            'warehouse': so.stockout.warehouse.name if so.stockout.warehouse else 'N/A',
             'quantity': -so.quantity,
             'price': so.cost_price,
-            'user': so.stock_out.created_by.get_full_name() if so.stock_out.created_by else 'System',
+            'user': so.stockout.created_by.get_full_name() if so.stockout.created_by else 'System',
             'is_positive': False
         })
         
