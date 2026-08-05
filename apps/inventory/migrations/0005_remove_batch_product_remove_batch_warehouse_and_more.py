@@ -14,14 +14,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='batch',
-            name='product',
-        ),
-        migrations.RemoveField(
-            model_name='batch',
-            name='warehouse',
-        ),
+
         migrations.RemoveField(
             model_name='stockoutitem',
             name='batch',
