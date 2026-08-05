@@ -16,18 +16,11 @@ def amount_in_words(amount):
         return ""
         
     try:
-        amount = float(amount)
+        # We enforce no decimal points globally now, so we round to nearest integer
+        amount = round(float(amount))
         
-        integer_part = math.floor(amount)
-        fractional_part = int(round((amount - integer_part) * 100))
-        
-        main_words = num2words(integer_part)
-        
-        if fractional_part > 0:
-            fraction_words = num2words(fractional_part)
-            result = f"{main_words} Taka and {fraction_words} Poisha"
-        else:
-            result = f"{main_words} Taka"
+        main_words = num2words(amount)
+        result = f"{main_words} Taka"
             
         return result.replace("-", " ").title() + " Only"
     except (ValueError, TypeError):
