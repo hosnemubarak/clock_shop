@@ -73,7 +73,7 @@ def get_product_stock_history(product, limit=None):
         })
         
     # 5. Transfers
-    for ti in product.transfer_items.select_related('transfer', 'transfer__created_by', 'transfer__source', 'transfer__destination'):
+    for ti in product.transfer_items.select_related('transfer', 'transfer__created_by', 'transfer__source_warehouse', 'transfer__destination_warehouse'):
         # For a transfer, from the product's perspective, it left source and entered destination.
         # We'll represent it as a single line item.
         history.append({
@@ -82,7 +82,7 @@ def get_product_stock_history(product, limit=None):
             'type': 'TRANSFER',
             'type_label': 'Transfer',
             'reference': ti.transfer.reference_number,
-            'warehouse': f"{ti.transfer.source.name} ➔ {ti.transfer.destination.name}",
+            'warehouse': f"{ti.transfer.source_warehouse.name} ➔ {ti.transfer.destination_warehouse.name}",
             'quantity': ti.quantity,
             'price': 0,
             'user': ti.transfer.created_by.get_full_name() if ti.transfer.created_by else 'System',
