@@ -23,6 +23,22 @@
 </div>
 {% endif %}
 
+<!-- System Settings Warning -->
+{% if SETTINGS_WARNING and request.user.is_superuser %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-warning alert-dismissible alert-label-icon label-arrow fade show" role="alert">
+            <i class="las la-exclamation-triangle label-icon"></i>
+            <strong>System settings incomplete!</strong> Please configure the Shop Name and Address so that invoices display correctly.
+            <a href="{% url 'core:system_settings' %}" class="alert-link ms-2">
+                <i class="las la-cog"></i> Configure Settings
+            </a>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% include 'includes/page_header.html' with title='Dashboard' breadcrumb=True home_label='Home' %}
 
 <!-- Quick Actions -->

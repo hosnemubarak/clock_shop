@@ -73,6 +73,11 @@ def global_context(request):
     else:
         allow_walkin = True
         
+    # Check if system settings are configured
+    settings_warning = False
+    if not shop_name or shop_name == 'Clock Shop' or not shop_address:
+        settings_warning = True
+        
     return {
         'SHOP_NAME': shop_name,
         'SHOP_ADDRESS': shop_address,
@@ -81,4 +86,5 @@ def global_context(request):
         'EXPIRY_ALERT': expiry_alert,
         'DAYS_UNTIL_EXPIRY': days_until_expiry,
         'ALLOW_WALKIN_CUSTOMERS': allow_walkin,
+        'SETTINGS_WARNING': settings_warning,
     }
