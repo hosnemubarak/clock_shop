@@ -227,7 +227,7 @@ LOGIN_REDIRECT_URL = 'core:dashboard'
 LOGOUT_REDIRECT_URL = 'core:login'
 
 # Business Settings
-SHOP_NAME = os.environ.get('SHOP_NAME', "Clock Shop")
+SHOP_NAME = os.environ.get('SHOP_NAME', "Your Shop")
 CURRENCY_SYMBOL = os.environ.get('CURRENCY_SYMBOL', "৳")
 LOW_STOCK_THRESHOLD = int(os.environ.get('LOW_STOCK_THRESHOLD', 5))
 ENABLE_RBAC = os.environ.get('ENABLE_RBAC', 'True').lower() in ('true', '1', 'yes')
