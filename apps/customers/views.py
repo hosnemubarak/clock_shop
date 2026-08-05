@@ -331,6 +331,7 @@ def payment_create(request):
         'form': form,
         'customer': customer,
         'unpaid_invoices': unpaid_invoices,
+        'has_customers': Customer.objects.exists()
     }
     return render(request, 'customers/payment_form.html', context)
 

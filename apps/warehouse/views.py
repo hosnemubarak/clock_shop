@@ -238,6 +238,7 @@ def transfer_create(request):
     context = {
         'form': form,
         'warehouses': warehouses,
+        'has_multiple_warehouses': warehouses.count() >= 2,
     }
     return render(request, 'warehouse/transfer_form.html', context)
 

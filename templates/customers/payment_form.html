@@ -6,6 +6,18 @@
 {% url 'customers:payment_list' as list_url %}
 {% include 'includes/page_header.html' with title='Receive Payment' active_label='New Payment' breadcrumb=True parent_label='Payments' parent_url=list_url %}
 
+{% if not has_customers %}
+<div class="alert alert-warning alert-custom alert-indicator-top indicator-warning shadow-sm fade show" role="alert">
+    <div class="alert-body">
+        <strong><i class="las la-exclamation-triangle"></i> Setup Required!</strong><br>
+        To record a payment, you must first have at least one <a href="{% url 'customers:customer_create' %}" class="alert-link text-decoration-underline">Customer</a> registered in the system.
+    </div>
+    <div class="mt-3">
+        <a href="{% url 'customers:customer_create' %}" class="btn btn-sm btn-warning"><i class="las la-plus"></i> Add Customer Now</a>
+    </div>
+</div>
+{% endif %}
+
 <div class="row">
     <div class="col-lg-8">
         <div class="card">

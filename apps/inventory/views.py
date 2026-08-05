@@ -713,6 +713,8 @@ def stockout_create(request):
         'form': form,
         'warehouses': warehouses,
         'products': products,
+        'has_warehouses': warehouses.exists(),
+        'has_products': products.exists(),
         'reason_choices': StockOut.Reason.choices,
     }
     return render(request, 'inventory/stockout_form.html', context)

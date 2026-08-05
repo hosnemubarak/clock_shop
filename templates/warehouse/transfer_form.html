@@ -10,6 +10,18 @@
     {% csrf_token %}
     {% include 'includes/form_errors.html' %}
     
+    {% if not has_multiple_warehouses %}
+    <div class="alert alert-warning alert-custom alert-indicator-top indicator-warning shadow-sm fade show" role="alert">
+        <div class="alert-body">
+            <strong><i class="las la-exclamation-triangle"></i> Setup Required!</strong><br>
+            To transfer stock, you must have at least two <a href="{% url 'warehouse:warehouse_create' %}" class="alert-link text-decoration-underline">Warehouses</a> registered in the system.
+        </div>
+        <div class="mt-3">
+            <a href="{% url 'warehouse:warehouse_create' %}" class="btn btn-sm btn-warning"><i class="las la-plus"></i> Add Another Warehouse Now</a>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="card mb-4">
         <div class="card-header">
             <h5 class="card-title mb-0">Add Item</h5>

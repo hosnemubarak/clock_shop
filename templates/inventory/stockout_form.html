@@ -11,6 +11,31 @@
 {% url 'inventory:stockout_list' as list_url %}
 {% include 'includes/page_header.html' with title='New Stock Out' active_label='New' breadcrumb=True home_label='Home' parent_label='Stock Out' parent_url=list_url %}
 
+{% if not has_products or not has_warehouses %}
+<div class="alert alert-warning alert-custom alert-indicator-top indicator-warning shadow-sm fade show" role="alert">
+    <div class="alert-body">
+        <strong><i class="las la-exclamation-triangle"></i> Setup Required!</strong><br>
+        To create a stock out record, you must first have at least one 
+        {% if not has_products and not has_warehouses %}
+        <a href="{% url 'inventory:product_create' %}" class="alert-link text-decoration-underline">Product</a> (with available stock) and one 
+        <a href="{% url 'warehouse:warehouse_create' %}" class="alert-link text-decoration-underline">Warehouse</a> registered in the system.
+        {% elif not has_products %}
+        <a href="{% url 'inventory:product_create' %}" class="alert-link text-decoration-underline">Product</a> (with available stock) registered in the system.
+        {% else %}
+        <a href="{% url 'warehouse:warehouse_create' %}" class="alert-link text-decoration-underline">Warehouse</a> registered in the system.
+        {% endif %}
+    </div>
+    <div class="mt-3">
+        {% if not has_products %}
+        <a href="{% url 'inventory:product_create' %}" class="btn btn-sm btn-warning"><i class="las la-plus"></i> Add Product Now</a>
+        {% endif %}
+        {% if not has_warehouses %}
+        <a href="{% url 'warehouse:warehouse_create' %}" class="btn btn-sm btn-warning"><i class="las la-plus"></i> Add Warehouse Now</a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
 <form method="post" id="stockoutForm">
     {% csrf_token %}
     {% include 'includes/form_errors.html' %}
