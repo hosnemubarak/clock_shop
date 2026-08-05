@@ -15,7 +15,7 @@ from apps.warehouse.models import Warehouse, StockTransfer
 from .exports import handle_export
 
 
-@admin_required
+@manager_required
 def report_dashboard(request):
     """Main reports dashboard with overview."""
     today = timezone.localdate()
@@ -195,7 +195,7 @@ def sales_report(request):
     return render(request, 'reports/sales_report.html', context)
 
 
-@admin_required
+@manager_required
 def profit_report(request):
     """Profit analysis report with product and shop filters."""
     today = timezone.localdate()

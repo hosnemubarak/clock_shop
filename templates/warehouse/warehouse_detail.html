@@ -5,7 +5,7 @@
 
 {% block content %}
 {% url 'warehouse:transfer_create' as transfer_url %}
-{% if request.user|is_admin %}
+{% if request.user|is_manager %}
     {% url 'warehouse:warehouse_edit' warehouse.pk as edit_url %}
     {% include 'includes/page_header.html' with title=warehouse.name action_url=edit_url action_label='Edit' action_icon='las la-pen' action_class='btn-primary' action2_url=transfer_url action2_label='Transfer Stock' action2_icon='las la-exchange-alt' action2_class='btn-info' %}
 {% else %}

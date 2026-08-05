@@ -134,14 +134,17 @@
                 {% endif %}
 
                 <!-- Audit Logs -->
+                <!-- Audit Logs -->
+                {% if request.user|is_admin %}
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{% url 'core:audit_logs' %}">
                         <i class="las la-history"></i> <span data-key="t-audit-logs">Audit Logs</span>
                     </a>
                 </li>
+                {% endif %}
 
-                <!-- System Settings & Staff (Superuser only) -->
-                {% if request.user.is_superuser %}
+                <!-- System Settings & Staff (Manager and Admin) -->
+                {% if request.user|is_manager %}
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{% url 'core:staff_list' %}">
                         <i class="las la-users-cog"></i> <span data-key="t-staff">Staff Directory</span>

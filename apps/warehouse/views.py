@@ -73,7 +73,7 @@ def warehouse_detail(request, pk):
     return render(request, 'warehouse/warehouse_detail.html', context)
 
 
-@admin_required
+@manager_required
 def warehouse_create(request):
     """Create a new warehouse."""
     if request.method == 'POST':
@@ -94,7 +94,7 @@ def warehouse_create(request):
     return render(request, 'warehouse/warehouse_form.html', {'form': form, 'title': 'Add Warehouse'})
 
 
-@admin_required
+@manager_required
 def warehouse_edit(request, pk):
     """Edit a warehouse."""
     warehouse = get_object_or_404(Warehouse, pk=pk)

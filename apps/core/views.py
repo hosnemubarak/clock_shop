@@ -443,8 +443,10 @@ def is_superuser(user):
     return user.is_superuser
 
 
+from apps.core.decorators import manager_required
+
 @login_required
-@user_passes_test(is_superuser)
+@manager_required
 def system_settings(request):
     """View and update system settings."""
     settings = SystemSettings.get_settings()
@@ -472,7 +474,7 @@ def unauthorized(request):
     return render(request, 'core/unauthorized.html')
 
 @login_required
-@user_passes_test(is_superuser)
+@manager_required
 def staff_list(request):
     """List all staff members and their roles."""
     staff_members = User.objects.all().prefetch_related('groups').order_by('-is_superuser', 'username')
@@ -483,7 +485,7 @@ def staff_list(request):
     })
 
 @login_required
-@user_passes_test(is_superuser)
+@manager_required
 def update_staff_role(request, pk):
     """Update a staff member's role and status."""
     if request.method == 'POST':
