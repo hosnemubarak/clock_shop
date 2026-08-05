@@ -6,6 +6,25 @@
 {% url 'inventory:product_list' as list_url %}
 {% include 'includes/page_header.html' with title=title breadcrumb=True parent_label='Products' parent_url=list_url %}
 
+{% if title == 'Add Product' %}
+{% if not has_categories or not has_brands %}
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <strong><i class="las la-exclamation-triangle"></i> Action Required!</strong>
+    You need to add at least one {% if not has_categories and not has_brands %}Category and Brand{% elif not has_categories %}Category{% else %}Brand{% endif %} before creating a product.
+    
+    <div class="mt-2">
+        {% if not has_categories %}
+        <a href="{% url 'inventory:category_create' %}" class="btn btn-sm btn-warning"><i class="las la-plus"></i> Add Category</a>
+        {% endif %}
+        {% if not has_brands %}
+        <a href="{% url 'inventory:brand_create' %}" class="btn btn-sm btn-warning"><i class="las la-plus"></i> Add Brand</a>
+        {% endif %}
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+{% endif %}
+
 <form method="post" enctype="multipart/form-data" id="productForm">
     {% csrf_token %}
     <div class="row">

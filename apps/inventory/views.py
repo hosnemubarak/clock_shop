@@ -175,8 +175,15 @@ def product_create(request):
             return redirect('inventory:product_list')
     else:
         form = ProductForm()
+    has_categories = Category.objects.exists()
+    has_brands = Brand.objects.exists()
     
-    return render(request, 'inventory/product_form.html', {'form': form, 'title': 'Add Product'})
+    return render(request, 'inventory/product_form.html', {
+        'form': form, 
+        'title': 'Add Product',
+        'has_categories': has_categories,
+        'has_brands': has_brands
+    })
 
 
 @cashier_required
