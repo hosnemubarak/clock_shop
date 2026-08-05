@@ -26,7 +26,7 @@ def get_product_stock_history(product, limit=None):
     # We need to query SaleItem where product matches.
     from apps.sales.models import SaleItem, SaleReturnItem
     
-    sale_items = SaleItem.objects.filter(product=product).select_related('sale', 'sale__created_by', 'warehouse')
+    sale_items = SaleItem.objects.filter(product=product).exclude(sale__status='cancelled').select_related('sale', 'sale__created_by', 'warehouse')
     for si in sale_items:
         history.append({
             'timestamp': si.created_at,
@@ -58,7 +58,7 @@ def get_product_stock_history(product, limit=None):
         })
         
     # 4. Stock Out (Damaged / Lost)
-    for so in product.stockout_items.select_related('stockout', 'stockout__created_by', 'stockout__warehouse'):
+    for so in product.stockout_items.exclude(stockout__status='cancelled').select_related('stockout', 'stockout__created_by', 'stockout__warehouse'):
         history.append({
             'timestamp': so.created_at,
             'date': so.stockout.date,
@@ -73,7 +73,7 @@ def get_product_stock_history(product, limit=None):
         })
         
     # 5. Transfers
-    for ti in product.transfer_items.select_related('transfer', 'transfer__created_by', 'transfer__source_warehouse', 'transfer__destination_warehouse'):
+    for ti in product.transfer_items.exclude(transfer__status='cancelled').select_related('transfer', 'transfer__created_by', 'transfer__source_warehouse', 'transfer__destination_warehouse'):
         # For a transfer, from the product's perspective, it left source and entered destination.
         # We'll represent it as a single line item.
         history.append({
