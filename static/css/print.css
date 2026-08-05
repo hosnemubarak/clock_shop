@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700&display=swap');
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 
 body { 
-    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
     margin: 0 auto; 
     padding: 20px; 
     font-size: 13px; 
@@ -28,7 +28,7 @@ h1, h2, h3, h4, strong, th { color: #0f172a; }
 .bottom-content { margin-top: 0; }
 
 .header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; }
-.header h1 { margin: 0 0 5px 0; font-size: 24px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.header h1 { margin: 0 0 5px 0; font-family: 'Montserrat', sans-serif; font-size: 26px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #0f172a; }
 .header p { margin: 0; color: #64748b; font-size: 11px; }
 
 .invoice-info { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: flex-start; }
