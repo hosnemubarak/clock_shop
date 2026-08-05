@@ -82,9 +82,9 @@ Clock Shop is a full-featured business management solution that handles:
 ### Security & Audit
 - **Login required** - All views protected by authentication
 - **Role-Based Access Control (RBAC)** - Enforces permissions for three distinct roles:
-  - **Cashier**: Can manage Sales, Returns, Customers, Payments, Inventory, and Warehouse operations. Cannot delete records or view Reports/Analytics.
-  - **Manager**: Inherits all Cashier permissions, plus access to all Reports and Analytics, and ability to delete records.
-  - **Admin**: Inherits all Manager permissions, plus access to Audit Logs, Staff Directory, and System Settings.
+  - **Cashier**: Can manage Sales, Returns, Customers, Payments, Inventory, Warehouse operations, and System Settings. Cannot access Reports, Analytics, Audit Logs, or the Staff Directory.
+  - **Manager**: Inherits all Cashier permissions, plus access to all Reports and Analytics. Cannot access Audit Logs or the Staff Directory.
+  - **Admin**: Inherits all Manager permissions, plus exclusive access to Audit Logs and the Staff Directory.
 - **User registration** - With admin approval workflow
 - **Audit logging** - Track all create, update, delete operations
 - **CSRF protection** - Django's built-in CSRF with configurable trusted origins
