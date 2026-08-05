@@ -1,4 +1,4 @@
-{% load static i18n %}
+{% load static i18n core_tags %}
 <!-- ========== App Menu ========== -->
 <div class="app-menu navbar-menu">
     <!-- LOGO -->
@@ -99,6 +99,7 @@
                     </a>
                 </li>
 
+                {% if request.user|is_manager %}
                 <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-analytics">Analytics</span></li>
 
                 <!-- Reports -->
@@ -130,6 +131,7 @@
                         </ul>
                     </div>
                 </li>
+                {% endif %}
 
                 <!-- Audit Logs -->
                 <li class="nav-item">

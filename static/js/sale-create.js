@@ -426,6 +426,10 @@ function initSaleCreate() {
         if (!CFG.allowWalkin && (!customerField || !customerField.value)) {
             return 'Walk-in customers are not allowed. Please select or create a registered customer.';
         }
+        
+        if ((!customerField || !customerField.value) && toMinor(el.amountPaid.value) < grandTotal()) {
+            return 'Walk-in customers cannot have unpaid balances. Full payment required.';
+        }
 
         for (var i = 0; i < cart.length; i++) {
             var line = cart[i];

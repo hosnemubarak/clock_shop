@@ -10,9 +10,7 @@ class Command(BaseCommand):
         # Can create sales and register customers.
         cashier_group, _ = Group.objects.get_or_create(name='Cashier')
         cashier_permissions = Permission.objects.filter(
-            content_type__app_label__in=['sales', 'customers']
-        ).exclude(
-            content_type__model__in=['salereturn', 'salereturnitem']
+            content_type__app_label__in=['sales', 'customers', 'inventory', 'warehouse']
         ).exclude(
             codename__startswith='delete_'
         )

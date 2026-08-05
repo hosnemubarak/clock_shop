@@ -142,7 +142,7 @@ def customer_edit(request, pk):
     })
 
 
-@manager_required
+@cashier_required
 def customer_add_note(request, pk):
     """Add a note to a customer."""
     customer = get_object_or_404(Customer, pk=pk)
@@ -232,7 +232,7 @@ def customer_statement(request, pk):
     return render(request, 'customers/customer_statement.html', context)
 
 
-@manager_required
+@cashier_required
 def payment_list(request):
     """List all general payments (not linked to specific invoices)."""
     payments = Payment.objects.select_related('customer', 'sale', 'received_by').filter(sale__isnull=True)
@@ -287,7 +287,7 @@ def payment_list(request):
     return render(request, 'customers/payment_list.html', context)
 
 
-@manager_required
+@cashier_required
 @transaction.atomic
 def payment_create(request):
     """Record a new payment."""

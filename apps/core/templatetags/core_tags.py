@@ -48,3 +48,9 @@ class CaptureNode(template.Node):
     def render(self, context):
         context[self.varname] = mark_safe(self.nodelist.render(context).strip())
         return ''
+
+from apps.core.decorators import is_manager
+
+@register.filter(name='is_manager')
+def is_manager_filter(user):
+    return is_manager(user)

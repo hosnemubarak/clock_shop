@@ -148,7 +148,7 @@ def sale_create(request):
     return render(request, 'sales/sale_form.html', context)
 
 
-@manager_required
+@cashier_required
 def sale_cancel(request, pk):
     """Cancel a sale and restore stock."""
     sale = get_object_or_404(Sale, pk=pk)
@@ -359,7 +359,7 @@ def _returned_quantities(sale):
     return {row['sale_item_id']: row['total'] for row in rows}
 
 
-@manager_required
+@cashier_required
 def return_list(request):
     """List sale returns."""
     returns = SaleReturn.objects.select_related('sale', 'created_by').all()
@@ -378,7 +378,7 @@ def return_list(request):
     })
 
 
-@manager_required
+@cashier_required
 def return_detail(request, pk):
     """View a sale return."""
     sale_return = get_object_or_404(
@@ -390,7 +390,7 @@ def return_detail(request, pk):
     return render(request, 'sales/return_detail.html', {'sale_return': sale_return})
 
 
-@manager_required
+@cashier_required
 def return_create(request):
     """Create a sale return against a completed sale and restock the items.
 

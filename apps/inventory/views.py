@@ -93,7 +93,7 @@ def product_detail(request, pk):
     return render(request, 'inventory/product_detail.html', context)
 
 
-@manager_required
+@cashier_required
 def product_create(request):
     """Create a new product."""
     if request.method == 'POST':
@@ -164,7 +164,7 @@ def product_create(request):
     return render(request, 'inventory/product_form.html', {'form': form, 'title': 'Add Product'})
 
 
-@manager_required
+@cashier_required
 def product_edit(request, pk):
     """Edit a product."""
     product = get_object_or_404(Product, pk=pk)
@@ -186,7 +186,7 @@ def product_edit(request, pk):
     })
 
 
-@manager_required
+@cashier_required
 def product_delete(request, pk):
     """Delete a product."""
     product = get_object_or_404(Product, pk=pk)
@@ -215,7 +215,7 @@ def product_delete(request, pk):
     return render(request, 'inventory/product_confirm_delete.html', {'product': product})
 
 
-@manager_required
+@cashier_required
 def category_list(request):
     """List all categories."""
     categories = Category.objects.annotate(product_count=Sum('products__total_stock'))
@@ -230,7 +230,7 @@ def category_list(request):
     return render(request, 'inventory/category_list.html', {'categories': categories, 'search': search})
 
 
-@manager_required
+@cashier_required
 def category_create(request):
     """Create a new category."""
     if request.method == 'POST':
@@ -246,7 +246,7 @@ def category_create(request):
     return render(request, 'inventory/category_form.html', {'form': form, 'title': 'Add Category'})
 
 
-@manager_required
+@cashier_required
 def category_edit(request, pk):
     """Edit a category."""
     category = get_object_or_404(Category, pk=pk)
@@ -268,7 +268,7 @@ def category_edit(request, pk):
     })
 
 
-@manager_required
+@cashier_required
 def brand_list(request):
     """List all brands."""
     brands = Brand.objects.all()
@@ -283,7 +283,7 @@ def brand_list(request):
     return render(request, 'inventory/brand_list.html', {'brands': brands, 'search': search})
 
 
-@manager_required
+@cashier_required
 def brand_create(request):
     """Create a new brand."""
     if request.method == 'POST':
@@ -299,7 +299,7 @@ def brand_create(request):
     return render(request, 'inventory/brand_form.html', {'form': form, 'title': 'Add Brand'})
 
 
-@manager_required
+@cashier_required
 def brand_edit(request, pk):
     """Edit a brand."""
     brand = get_object_or_404(Brand, pk=pk)
@@ -324,7 +324,7 @@ def brand_edit(request, pk):
 
 
 
-@manager_required
+@cashier_required
 def purchase_list(request):
     """List all purchases."""
     purchases = Purchase.objects.select_related('created_by').prefetch_related('items')
@@ -334,7 +334,7 @@ def purchase_list(request):
     return render(request, 'inventory/purchase_list.html', {'purchases': purchases})
 
 
-@manager_required
+@cashier_required
 def purchase_create(request):
     """Create a new purchase order with items."""
     warehouses = Warehouse.objects.filter(is_active=True)
@@ -458,7 +458,7 @@ def purchase_create(request):
     return render(request, 'inventory/purchase_form.html', context)
 
 
-@manager_required
+@cashier_required
 def purchase_detail(request, pk):
     """View purchase details."""
     purchase = get_object_or_404(
@@ -487,7 +487,7 @@ def api_product_stocks(request, product_id):
     return JsonResponse(data, safe=False)
 
 
-@manager_required
+@cashier_required
 def api_quick_add_stock(request, product_id):
     """API endpoint to quickly add stock to a product."""
     if request.method != 'POST':
@@ -572,7 +572,7 @@ def api_quick_add_stock(request, product_id):
 
 
 # Stock Out Views
-@manager_required
+@cashier_required
 def stockout_list(request):
     """List all stock out records."""
     stockouts = StockOut.objects.select_related('warehouse', 'created_by').all()
@@ -617,7 +617,7 @@ def stockout_list(request):
     return render(request, 'inventory/stockout_list.html', context)
 
 
-@manager_required
+@cashier_required
 def stockout_create(request):
     """Create a new stock out record."""
     warehouses = Warehouse.objects.filter(is_active=True)
@@ -694,7 +694,7 @@ def stockout_create(request):
     return render(request, 'inventory/stockout_form.html', context)
 
 
-@manager_required
+@cashier_required
 def stockout_detail(request, pk):
     """View stock out details."""
     stockout = get_object_or_404(
@@ -706,7 +706,7 @@ def stockout_detail(request, pk):
     return render(request, 'inventory/stockout_detail.html', {'stockout': stockout})
 
 
-@manager_required
+@cashier_required
 def stockout_cancel(request, pk):
     """Cancel a stock out record."""
     stockout = get_object_or_404(StockOut, pk=pk)
