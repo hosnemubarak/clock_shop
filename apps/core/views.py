@@ -473,8 +473,10 @@ def unauthorized(request):
     """View shown to logged-in users who lack the required role to view a page."""
     return render(request, 'core/unauthorized.html')
 
+from apps.core.decorators import admin_required
+
 @login_required
-@cashier_required
+@admin_required
 def staff_list(request):
     """List all staff members and their roles."""
     staff_members = User.objects.all().prefetch_related('groups').order_by('-is_superuser', 'username')
@@ -485,7 +487,7 @@ def staff_list(request):
     })
 
 @login_required
-@cashier_required
+@admin_required
 def update_staff_role(request, pk):
     """Update a staff member's role and status."""
     if request.method == 'POST':

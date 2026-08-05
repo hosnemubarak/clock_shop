@@ -143,13 +143,17 @@
                 </li>
                 {% endif %}
 
-                <!-- System Settings & Staff (Cashier, Manager and Admin) -->
-                {% if request.user|is_cashier %}
+                <!-- Staff Directory (Admin only) -->
+                {% if request.user|is_admin %}
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{% url 'core:staff_list' %}">
                         <i class="las la-users-cog"></i> <span data-key="t-staff">Staff Directory</span>
                     </a>
                 </li>
+                {% endif %}
+
+                <!-- System Settings (Cashier, Manager and Admin) -->
+                {% if request.user|is_cashier %}
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="{% url 'core:system_settings' %}">
                         <i class="las la-cog"></i> <span data-key="t-settings">System Settings</span>
