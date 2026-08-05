@@ -8,18 +8,43 @@
 {% url 'customers:payment_create' as create_url %}
 {% include 'includes/page_header.html' with title='Payments' action_url=create_url action_label='Receive Payment' action_icon='las la-plus' %}
 
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="alert alert-info d-flex align-items-center mb-0" role="alert">
+            <i class="las la-info-circle fs-3 me-2"></i>
+            <div>
+                <strong>Note:</strong> This list only displays general payments (such as advance payments or balance payoffs). Payments that are linked to specific invoices can be found in the <a href="{% url 'sales:sale_list' %}" class="alert-link">Sales</a> section.
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-12">
         <div class="card">
             {% capture as filter_fields %}
-                <div class="col-md-6">
-                    <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ search }}">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" placeholder="Search by ID, Customer or Ref..." value="{{ search }}">
                 </div>
                 <div class="col-md-2">
-                    <input type="date" name="date_from" class="form-control" title="Date From" value="{{ date_from|default:'' }}">
+                    <select name="customer" class="form-select" id="customerFilter">
+                        <option value="">All Customers</option>
+                        {% for c in customers %}
+                        <option value="{{ c.id }}" {% if customer_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
-                <div class="col-md-2">
-                    <input type="date" name="date_to" class="form-control" title="Date To" value="{{ date_to|default:'' }}">
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text">From</span>
+                        <input type="date" name="date_from" class="form-control" title="Date From" value="{{ date_from|default:'' }}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text">To</span>
+                        <input type="date" name="date_to" class="form-control" title="Date To" value="{{ date_to|default:'' }}">
+                    </div>
                 </div>
             {% endcapture %}
             {% include 'includes/filter_bar.html' with fields=filter_fields %}
@@ -28,18 +53,20 @@
                     <table class="table table-striped align-middle mb-0">
                         <thead>
                             <tr>
+                                <th>Payment ID</th>
                                 <th>Date</th>
                                 <th>Customer</th>
                                 <th>Amount</th>
                                 <th>Method</th>
-                                <th>Invoice</th>
                                 <th>Reference</th>
                                 <th>Received By</th>
+                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for payment in payments %}
                             <tr>
+                                <td class="fw-medium text-primary">PMT-{{ payment.pk }}</td>
                                 <td>{{ payment.payment_date|date:"M d, Y H:i" }}</td>
                                 <td>
                                     {% if payment.customer %}
@@ -50,16 +77,16 @@
                                 </td>
                                 <td class="text-success fw-medium">{{ CURRENCY_SYMBOL }}{{ payment.amount|floatformat:2 }}</td>
                                 <td>{{ payment.get_payment_method_display }}</td>
-                                <td>
-                                    {% if payment.sale %}
-                                    <a href="{% url 'sales:sale_detail' payment.sale.pk %}">{{ payment.sale.invoice_number }}</a>
-                                    {% else %}-{% endif %}
-                                </td>
                                 <td>{{ payment.reference|default:"-" }}</td>
                                 <td>{{ payment.received_by.username|default:"-" }}</td>
+                                <td class="text-end">
+                                    <a href="{% url 'customers:payment_print' payment.pk %}" class="btn btn-sm btn-outline-secondary" target="_blank" title="Print Receipt">
+                                        <i class="las la-print"></i>
+                                    </a>
+                                </td>
                             </tr>
                             {% empty %}
-                            {% include 'includes/empty_state.html' with colspan=7 message='No payments found' %}
+                            {% include 'includes/empty_state.html' with colspan=8 message='No payments found' %}
                             {% endfor %}
                         </tbody>
                     </table>
@@ -72,4 +99,49 @@
         </div>
     </div>
 </div>
+
+{% if request.GET.print_payment %}
+<!-- Payment Success Modal -->
+<div class="modal fade" id="paymentSuccessModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-body text-center p-4">
+                <i class="las la-check-circle text-success" style="font-size: 4rem;"></i>
+                <h4 class="mt-3 mb-2">Payment Received</h4>
+                <p class="text-muted mb-4">The payment has been successfully recorded.</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'customers:payment_print' request.GET.print_payment %}" target="_blank" class="btn btn-primary btn-lg" onclick="bootstrap.Modal.getInstance(document.getElementById('paymentSuccessModal')).hide()">
+                        <i class="las la-print me-1"></i> Print Receipt
+                    </a>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    new TomSelect('#customerFilter', {
+        create: false,
+        sortField: {
+            field: 'text',
+            direction: 'asc'
+        }
+    });
+    
+    {% if request.GET.print_payment %}
+    var paymentModal = new bootstrap.Modal(document.getElementById('paymentSuccessModal'));
+    paymentModal.show();
+    
+    // Clean up URL
+    var url = new URL(window.location);
+    url.searchParams.delete('print_payment');
+    window.history.replaceState({}, document.title, url);
+    {% endif %}
+});
+</script>
 {% endblock %}

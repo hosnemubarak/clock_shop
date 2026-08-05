@@ -103,6 +103,7 @@
                                 <th>Product (SKU - Brand)</th>
                                 <th>Category</th>
                                 <th>Stock</th>
+                                <th>Avg. Cost</th>
                                 <th>Price</th>
                                 <th>Status</th>
                                 <th class="text-center">Actions</th>
@@ -126,6 +127,7 @@
                                     <span class="badge bg-success">{{ product.total_stock }}</span>
                                     {% endif %}
                                 </td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ product.average_cost|floatformat:2 }}</td>
                                 <td>{{ CURRENCY_SYMBOL }}{{ product.default_selling_price|floatformat:2 }}</td>
                                 <td>
                                     {% if product.is_active %}
@@ -204,8 +206,8 @@
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Supplier <span class="text-danger">*</span></label>
-                            <input type="text" id="qasSupplier" class="form-control" placeholder="e.g. ABC Distributors" required>
+                            <label class="form-label">Supplier</label>
+                            <input type="text" id="qasSupplier" class="form-control" placeholder="e.g. ABC Distributors">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Stock Date <span class="text-danger">*</span></label>

@@ -77,7 +77,14 @@ def sale_list(request):
         date_from = start_of_month.strftime('%Y-%m-%d')
         date_to = today.strftime('%Y-%m-%d')
     
+    # Customer filter
+    customer_id = request.GET.get('customer')
+    if customer_id:
+        sales = sales.filter(customer_id=customer_id)
+    
     sales = paginate(request, sales, 10)
+
+    customers = Customer.objects.filter(is_active=True).order_by('name')
 
     context = {
         'sales': sales,
@@ -87,6 +94,8 @@ def sale_list(request):
         'date_from': date_from,
         'date_to': date_to,
         'date_filter': date_filter,
+        'customer_id': customer_id,
+        'customers': customers,
     }
     return render(request, 'sales/sale_list.html', context)
 
@@ -202,7 +211,7 @@ def sale_payment(request, pk):
                     # Create payment record. The Payment post_save signal
                     # recalculates sale.paid_amount, sale.payment_status and the
                     # customer balance from the persisted payment rows.
-                    Payment.objects.create(
+                    payment = Payment.objects.create(
                         customer=sale.customer,
                         sale=sale,
                         amount=amount,
@@ -219,6 +228,8 @@ def sale_payment(request, pk):
                     })
                     
                     messages.success(request, f'Payment of {amount} recorded.')
+                    from django.urls import reverse
+                    return redirect(reverse('sales:sale_detail', args=[sale_base.pk]) + f'?print_payment={payment.pk}')
         else:
             messages.error(request, 'Invalid payment data.')
     
@@ -289,6 +300,7 @@ def api_product_search(request):
             'category': p.category.name if p.category else '',
             'display_name': p.display_name,
             'price': str(p.default_selling_price),
+            'average_cost': str(p.average_cost),
             'shop_stock': p.shop_stock,
             'total_stock': p.total_stock,
         } for p in rows],

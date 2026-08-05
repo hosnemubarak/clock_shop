@@ -13,7 +13,15 @@
         <div class="card">
             {% capture as filter_fields %}
                 <div class="col-xl-3 col-lg-4 col-md-6">
-                    <input type="text" name="search" class="form-control" placeholder="Search..." value="{{ search }}">
+                    <input type="text" name="search" class="form-control" placeholder="Search by Invoice..." value="{{ search }}">
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <select name="customer" class="form-select" id="customerFilter">
+                        <option value="">All Customers</option>
+                        {% for c in customers %}
+                        <option value="{{ c.id }}" {% if customer_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
                 <div class="col-xl-3 col-lg-4 col-md-6">
                     <select name="payment_status" class="form-select">
@@ -24,10 +32,16 @@
                     </select>
                 </div>
                 <div class="col-xl-3 col-lg-4 col-md-6">
-                    <input type="date" name="date_from" class="form-control" placeholder="From" value="{{ date_from|default_if_none:'' }}">
+                    <div class="input-group">
+                        <span class="input-group-text">From</span>
+                        <input type="date" name="date_from" class="form-control" title="Date From" value="{{ date_from|default_if_none:'' }}">
+                    </div>
                 </div>
                 <div class="col-xl-3 col-lg-4 col-md-6">
-                    <input type="date" name="date_to" class="form-control" placeholder="To" value="{{ date_to|default_if_none:'' }}">
+                    <div class="input-group">
+                        <span class="input-group-text">To</span>
+                        <input type="date" name="date_to" class="form-control" title="Date To" value="{{ date_to|default_if_none:'' }}">
+                    </div>
                 </div>
             {% endcapture %}
             {% include 'includes/filter_bar.html' with fields=filter_fields %}
@@ -50,7 +64,13 @@
                             {% for sale in sales %}
                             <tr>
                                 <td><a href="{% url 'sales:sale_detail' sale.pk %}" class="fw-medium">{{ sale.invoice_number }}</a></td>
-                                <td>{{ sale.customer.name|default:"Walk-in" }}</td>
+                                <td>
+                                    {% if sale.customer %}
+                                    <a href="{% url 'customers:customer_detail' sale.customer.pk %}">{{ sale.customer.name }}</a>
+                                    {% else %}
+                                    Walk-in
+                                    {% endif %}
+                                </td>
                                 <td>{{ sale.sale_date|date:"M d, Y" }}</td>
                                 <td>{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
                                 <td class="text-success">{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2 }}</td>
@@ -89,4 +109,18 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    new TomSelect('#customerFilter', {
+        create: false,
+        sortField: {
+            field: 'text',
+            direction: 'asc'
+        }
+    });
+});
+</script>
 {% endblock %}

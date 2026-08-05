@@ -102,7 +102,7 @@ class ProductStock(TimeStampedModel):
 class Purchase(TimeStampedModel):
     """Purchase order record."""
     purchase_number = models.CharField(max_length=50, unique=True)
-    supplier = models.CharField(max_length=200)
+    supplier = models.CharField(max_length=200, blank=True)
     purchase_date = models.DateField()
     total_amount = models.DecimalField(
         max_digits=12, decimal_places=2,

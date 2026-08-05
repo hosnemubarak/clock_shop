@@ -15,6 +15,7 @@ urlpatterns = [
     # Payments
     path('payments/', views.payment_list, name='payment_list'),
     path('payments/create/', views.payment_create, name='payment_create'),
+    path('payments/<int:pk>/print/', views.payment_print, name='payment_print'),
     
     # API
     path('api/create/', views.api_customer_create, name='api_customer_create'),

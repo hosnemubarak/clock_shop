@@ -111,7 +111,7 @@
             {% else %}
             <strong>Total Outstanding Amount:</strong> 
             {% endif %}
-            Tk. {{ sale.customer.total_due|floatformat:2|intcomma }}/= ({{ sale.customer.total_due|amount_in_words }})
+            <strong>৳</strong> {{ sale.customer.total_due|floatformat:2|intcomma }}/= ({{ sale.customer.total_due|amount_in_words }})
         </div>
         {% endif %}
         

@@ -167,7 +167,10 @@ function initSaleCreate() {
 
         el.searchResults.innerHTML = results.map(function (row, i) {
             var out = row.shop_stock <= 0;
-            var meta = [row.brand, row.category].filter(Boolean).join(' &middot; ');
+            var metaArr = [];
+            if (row.brand) metaArr.push('Brand: ' + highlight(row.brand, query));
+            if (row.category) metaArr.push('Category: ' + highlight(row.category, query));
+            var metaHtml = metaArr.join(' &middot; ');
             var stockBadge = out
                 ? '<span class="badge bg-danger-subtle text-danger">Out of stock</span>'
                 : '<span class="badge bg-success-subtle text-success">' + row.shop_stock + ' in shop</span>';
@@ -178,9 +181,10 @@ function initSaleCreate() {
                 ' aria-selected="' + (i === activeIndex ? 'true' : 'false') + '"' +
                 ' aria-disabled="' + (out ? 'true' : 'false') + '">' +
                     '<div class="sale-result__body">' +
-                        '<div class="sale-result__title">' + highlight(row.display_name, query) + '</div>' +
+                        '<div class="sale-result__title">' + highlight(row.display_name, query) + 
+                        ' <span class="badge bg-light text-secondary border ms-2">Avg Cost: ' + fmt(toMinor(row.average_cost)) + '</span></div>' +
                         '<div class="sale-result__meta">' +
-                            highlight(row.sku, query) + (meta ? ' &middot; ' + highlight(meta, query) : '') +
+                            metaHtml +
                         '</div>' +
                     '</div>' +
                     '<div class="sale-result__side">' +

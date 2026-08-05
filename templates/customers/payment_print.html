@@ -1,0 +1,112 @@
+{% load humanize invoice_tags static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Receipt #{{ payment.id }}</title>
+    <link href="{% static 'css/print.css' %}" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <div class="no-print mb-20px" >
+        <button onclick="window.print()" class="print-btn">Print Receipt</button>
+        <button onclick="window.close()" class="back-link" style="margin-left:10px; cursor:pointer;">Close</button>
+    </div>
+
+    <div class="main-content">
+        <table>
+            <thead>
+                <tr>
+                    <th colspan="2" style="background: white; border: none; padding: 0;">
+                        <div class="header">
+                            <h1>{{ SHOP_NAME }}</h1>
+                            {% if SHOP_ADDRESS %}
+                            <p>{{ SHOP_ADDRESS|linebreaksbr }}</p>
+                            {% else %}
+                            <p>Retail Clock Shop</p>
+                            {% endif %}
+                            <h2 style="margin-top:20px; font-size:18px; color:#0f172a;">PAYMENT RECEIPT</h2>
+                        </div>
+
+                        <div class="invoice-info">
+                            <div class="bill-to-box">
+                                {% if payment.customer %}
+                                <strong>Received From:</strong> <span class="table-header-dark-sm">{{ payment.customer.name }}</span><br>
+                                {% if payment.customer.address %}<strong>Address:</strong> <span class="text-slate">{{ payment.customer.address }}</span><br>{% endif %}
+                                {% if payment.customer.phone %}<strong>Phone:</strong> <span class="text-slate">{{ payment.customer.phone }}</span><br>{% endif %}
+                                {% else %}
+                                <strong>Received From:</strong> <span class="table-header-dark-sm">Walk-in Customer</span>
+                                {% endif %}
+                            </div>
+                            <div class="meta-box">
+                                <strong>Receipt #:</strong> <span class="table-header-dark">PR-{{ payment.id|stringformat:"06d" }}</span><br>
+                                <strong>Date:</strong> {{ payment.payment_date|date:"F d, Y h:i A" }}<br>
+                                <strong>Method:</strong> {{ payment.get_payment_method_display }}<br>
+                                {% if payment.sale %}
+                                <strong>For Invoice:</strong> {{ payment.sale.invoice_number }}<br>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="padding: 15px; font-size:14px; border:1px solid #e2e8f0; border-top:2px solid #0f172a;">
+                        <strong>Description:</strong> <br>
+                        Payment received {% if payment.sale %}for Invoice #{{ payment.sale.invoice_number }}{% endif %}
+                        {% if payment.reference %}<br><strong>Ref:</strong> {{ payment.reference }}{% endif %}
+                        {% if payment.notes %} <br><span class="text-muted">{{ payment.notes }}</span>{% endif %}
+                    </td>
+                    <td class="text-right table-header-dark" style="padding: 15px; font-size:18px; vertical-align: top; border:1px solid #e2e8f0; border-top:2px solid #0f172a; width:150px;">
+                        <strong>৳</strong> {{ payment.amount|floatformat:2|intcomma }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="totals">
+            <table>
+                <tr class="grand-total">
+                    <td class="totals-label text-slate-dark">Amount Received:</td>
+                    <td class="text-right totals-val"><strong>৳</strong> {{ payment.amount|floatformat:2|intcomma }}</td>
+                </tr>
+            </table>
+        </div>
+    </div> <!-- end main-content -->
+
+    <div class="bottom-content">
+        <div class="mt-15px fw-semibold text-slate-dark fs-13px">
+            <strong class="text-slate">IN WORDS:</strong> 
+            {{ payment.amount|amount_in_words }}
+        </div>
+
+        {% if payment.customer and payment.customer.total_due > 0 %}
+        <div class="mt-15px fw-semibold text-danger fs-13px">
+            <strong>Total Outstanding Amount:</strong> 
+            <strong>৳</strong> {{ payment.customer.total_due|floatformat:2|intcomma }}/= ({{ payment.customer.total_due|amount_in_words }})
+        </div>
+        {% endif %}
+
+        {% if payment.notes %}
+        <div class="notes-section">
+            <strong class="text-slate">Notes:</strong> {{ payment.notes }}
+        </div>
+        {% endif %}
+
+        <div class="signatures">
+            <div class="signature-box">
+                <div class="signature-line">Customer</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line">Prepared & Checked by</div>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line">Sales Authority</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p class="footer-text">★ Thank you for your business! ★</p>
+        </div>
+    </div> <!-- end bottom-content -->
+</body>
+</html>

@@ -510,8 +510,8 @@ def api_quick_add_stock(request, product_id):
 
     notes = data.get('notes') or f'Quick stock addition for {product.display_name}'
 
-    if not warehouse_id or quantity <= 0 or not supplier or not purchase_date_str:
-        return JsonResponse({'success': False, 'error': 'Warehouse, positive quantity, supplier, and purchase date are required.'}, status=400)
+    if not warehouse_id or quantity <= 0 or not purchase_date_str:
+        return JsonResponse({'success': False, 'error': 'Warehouse, positive quantity, and purchase date are required.'}, status=400)
 
     if unit_price < 0:
         return JsonResponse({'success': False, 'error': 'Unit price cannot be negative.'}, status=400)

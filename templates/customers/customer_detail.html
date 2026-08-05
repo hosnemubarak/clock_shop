@@ -8,93 +8,145 @@
 {% url 'customers:customer_statement' customer.pk as statement_url %}
 {% include 'includes/page_header.html' with title='Customer Details' action_url=edit_url action_label='Edit' action_icon='las la-pen' action_class='btn-primary' action2_url=statement_url action2_label='Statement' action2_icon='las la-file-alt' action2_class='btn-info' %}
 
-<div class="row">
-    <div class="col-lg-4">
-        <div class="card">
+<!-- Stat Cards Row -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
-                <div class="text-center mb-4">
-                    <div class="avatar-xl mx-auto">
-                        <div class="avatar-title bg-primary-subtle rounded-circle text-primary fs-1">
-                            {{ customer.name|slice:":1"|upper }}
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1 text-uppercase small fw-semibold">Total Spend</p>
+                        <h4 class="mb-0 fw-bold">{{ CURRENCY_SYMBOL }}{{ customer.total_purchases|floatformat:2|intcomma }}</h4>
+                    </div>
+                    <div class="avatar-sm">
+                        <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-3">
+                            <i class="las la-shopping-bag"></i>
                         </div>
                     </div>
                 </div>
-                <h5 class="text-center">{{ customer.name }}</h5>
-                
-                <table class="table table-borderless mt-4">
-                    <tr>
-                        <td class="text-muted"><i class="las la-phone me-2"></i>Phone</td>
-                        <td>{{ customer.phone|default:"-" }}</td>
-                    </tr>
-                    <tr>
-                        <td class="text-muted"><i class="las la-envelope me-2"></i>Email</td>
-                        <td>{{ customer.email|default:"-" }}</td>
-                    </tr>
-                    <tr>
-                        <td class="text-muted"><i class="las la-map-marker me-2"></i>Address</td>
-                        <td>{{ customer.address|default:"-" }}</td>
-                    </tr>
-                </table>
             </div>
         </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Financial Summary</h5>
-            </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
-                <div class="d-flex justify-content-between mb-3">
-                    <span class="text-muted">Total Spend</span>
-                    <span class="fw-medium">{{ CURRENCY_SYMBOL }}{{ customer.total_purchases|floatformat:2|intcomma }}</span>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1 text-uppercase small fw-semibold">Total Paid</p>
+                        <h4 class="mb-0 fw-bold text-success">{{ CURRENCY_SYMBOL }}{{ customer.total_paid|floatformat:2|intcomma }}</h4>
+                    </div>
+                    <div class="avatar-sm">
+                        <div class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
+                            <i class="las la-wallet"></i>
+                        </div>
+                    </div>
                 </div>
-                <div class="d-flex justify-content-between mb-3">
-                    <span class="text-muted">Total Paid</span>
-                    <span class="fw-medium text-success">{{ CURRENCY_SYMBOL }}{{ customer.total_paid|floatformat:2|intcomma }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm {% if customer.total_due > 0 %}border-bottom border-danger border-3{% endif %}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <p class="text-muted mb-1 text-uppercase small fw-semibold">Outstanding Due</p>
+                        <h4 class="mb-0 fw-bold {% if customer.total_due > 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ CURRENCY_SYMBOL }}{{ customer.total_due|floatformat:2|intcomma }}
+                        </h4>
+                    </div>
+                    <div class="avatar-sm">
+                        <div class="avatar-title {% if customer.total_due > 0 %}bg-danger-subtle text-danger{% else %}bg-success-subtle text-success{% endif %} rounded-circle fs-3">
+                            <i class="las la-hand-holding-usd"></i>
+                        </div>
+                    </div>
                 </div>
-                <hr>
-                <div class="d-flex justify-content-between">
-                    <span class="fw-bold">Outstanding Due</span>
-                    <span class="fw-bold {% if customer.total_due > 0 %}text-danger{% else %}text-success{% endif %}">
-                        {{ CURRENCY_SYMBOL }}{{ customer.total_due|floatformat:2|intcomma }}
-                    </span>
-                </div>
-                
                 {% if customer.total_due > 0 %}
-                <hr>
-                <a href="{% url 'customers:payment_create' %}?customer={{ customer.pk }}" class="btn btn-success w-100">
-                    <i class="las la-money-bill"></i> Receive Payment
+                <a href="{% url 'customers:payment_create' %}?customer={{ customer.pk }}" class="btn btn-sm btn-danger w-100">
+                    <i class="las la-money-bill me-1"></i> Receive Payment
                 </a>
                 {% endif %}
             </div>
         </div>
     </div>
+</div>
 
+<div class="row">
+    <!-- Left Column: Customer Profile -->
+    <div class="col-lg-4 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="avatar-xl mx-auto mb-3">
+                        <div class="avatar-title bg-primary-subtle rounded-circle text-primary fs-1">
+                            {{ customer.name|slice:":1"|upper }}
+                        </div>
+                    </div>
+                    <h4 class="mb-1 fw-bold">{{ customer.name }}</h4>
+                    <span class="badge bg-light text-dark border"><i class="las la-id-badge me-1"></i>Customer ID: {{ customer.pk }}</span>
+                </div>
+                
+                <hr class="border-light">
+                
+                <ul class="list-unstyled mb-0">
+                    <li class="d-flex mb-3">
+                        <div class="avatar-xs me-3 flex-shrink-0">
+                            <span class="avatar-title bg-light text-secondary rounded fs-5"><i class="las la-phone"></i></span>
+                        </div>
+                        <div>
+                            <p class="mb-0 text-muted small">Phone</p>
+                            <span class="fw-medium">{{ customer.phone|default:"Not Provided" }}</span>
+                        </div>
+                    </li>
+                    <li class="d-flex mb-3">
+                        <div class="avatar-xs me-3 flex-shrink-0">
+                            <span class="avatar-title bg-light text-secondary rounded fs-5"><i class="las la-envelope"></i></span>
+                        </div>
+                        <div>
+                            <p class="mb-0 text-muted small">Email</p>
+                            <span class="fw-medium">{{ customer.email|default:"Not Provided" }}</span>
+                        </div>
+                    </li>
+                    <li class="d-flex">
+                        <div class="avatar-xs me-3 flex-shrink-0">
+                            <span class="avatar-title bg-light text-secondary rounded fs-5"><i class="las la-map-marker"></i></span>
+                        </div>
+                        <div>
+                            <p class="mb-0 text-muted small">Address</p>
+                            <span class="fw-medium">{{ customer.address|default:"Not Provided" }}</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Transactions & Tabs -->
     <div class="col-lg-8">
         {% if unpaid_invoices %}
-        <div class="card border-warning">
-            <div class="card-header bg-warning-subtle">
-                <h5 class="card-title mb-0 text-warning">Unpaid Invoices</h5>
+        <div class="card border-warning border-0 shadow-sm mb-4">
+            <div class="card-header bg-warning-subtle border-0 py-3">
+                <h5 class="card-title mb-0 text-warning-emphasis"><i class="las la-exclamation-triangle me-2"></i>Unpaid Invoices</h5>
             </div>
-            <div class="card-body">
-                <div class="table-responsive min-h-300" >
-                    <table class="table table-sm mb-0">
-                        <thead>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light">
                             <tr>
-                                <th>Invoice</th>
+                                <th class="ps-3">Invoice</th>
                                 <th>Date</th>
                                 <th>Total</th>
                                 <th>Paid</th>
-                                <th>Due</th>
+                                <th class="text-end pe-3">Due</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for sale in unpaid_invoices %}
                             <tr>
-                                <td><a href="{% url 'sales:sale_detail' sale.pk %}">{{ sale.invoice_number }}</a></td>
+                                <td class="ps-3"><a href="{% url 'sales:sale_detail' sale.pk %}" class="fw-medium">{{ sale.invoice_number }}</a></td>
                                 <td>{{ sale.sale_date|date:"M d, Y" }}</td>
                                 <td>{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
-                                <td>{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2 }}</td>
-                                <td class="text-danger">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2 }}</td>
+                                <td class="text-success">{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2 }}</td>
+                                <td class="text-danger fw-bold text-end pe-3">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2 }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -104,77 +156,158 @@
         </div>
         {% endif %}
 
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Recent Orders</h5>
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-bottom-0 pt-4 pb-0">
+                <ul class="nav nav-tabs nav-tabs-custom" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active fw-medium" data-bs-toggle="tab" href="#sales" role="tab">
+                            <i class="las la-shopping-cart me-1"></i> Recent Sales
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-medium" data-bs-toggle="tab" href="#payments" role="tab">
+                            <i class="las la-receipt me-1"></i> Payment History
+                        </a>
+                    </li>
+                </ul>
             </div>
-            <div class="card-body">
-                <div class="table-responsive min-h-300" >
-                    <table class="table table-sm mb-0">
-                        <thead>
-                            <tr>
-                                <th>Invoice</th>
-                                <th>Date</th>
-                                <th>Amount</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for sale in purchases %}
-                            <tr>
-                                <td><a href="{% url 'sales:sale_detail' sale.pk %}">{{ sale.invoice_number }}</a></td>
-                                <td>{{ sale.sale_date|date:"M d, Y" }}</td>
-                                <td>{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
-                                <td>
-                                    {% if sale.payment_status == 'paid' %}
-                                    <span class="badge bg-success">Paid</span>
-                                    {% elif sale.payment_status == 'partial' %}
-                                    <span class="badge bg-warning">Partial</span>
-                                    {% else %}
-                                    <span class="badge bg-danger">Unpaid</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="4" class="text-center text-muted">No records</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Payment History</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive min-h-300" >
-                    <table class="table table-sm mb-0">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Amount</th>
-                                <th>Method</th>
-                                <th>Reference</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for payment in payments %}
-                            <tr>
-                                <td>{{ payment.payment_date|date:"M d, Y H:i" }}</td>
-                                <td class="text-success">{{ CURRENCY_SYMBOL }}{{ payment.amount|floatformat:2 }}</td>
-                                <td>{{ payment.get_payment_method_display }}</td>
-                                <td>{{ payment.reference|default:"-" }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr><td colspan="4" class="text-center text-muted">No payments</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+            <div class="card-body p-0">
+                <div class="tab-content">
+                    <!-- Sales Tab -->
+                    <div class="tab-pane active" id="sales" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Invoice</th>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sale in purchases %}
+                                    <tr>
+                                        <td class="ps-4"><a href="{% url 'sales:sale_detail' sale.pk %}" class="fw-medium">{{ sale.invoice_number }}</a></td>
+                                        <td>{{ sale.sale_date|date:"M d, Y" }}</td>
+                                        <td>{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
+                                        <td>
+                                            {% if sale.payment_status == 'paid' %}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">Paid</span>
+                                            {% elif sale.payment_status == 'partial' %}
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Partial</span>
+                                            {% else %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Unpaid</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="4" class="text-center text-muted py-4">No recent sales found</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                                {% if purchases %}
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="4" class="text-center bg-light p-3 border-0">
+                                            <a href="{% url 'sales:sale_list' %}?customer={{ customer.pk }}" class="text-decoration-none fw-medium text-primary">
+                                                View All Sales <i class="las la-arrow-right ms-1"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Payments Tab -->
+                    <div class="tab-pane" id="payments" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4">Date</th>
+                                        <th>Amount</th>
+                                        <th>Method</th>
+                                        <th>Reference</th>
+                                        <th class="text-end pe-4">Receipt</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in payments %}
+                                    <tr>
+                                        <td class="ps-4">{{ payment.payment_date|date:"M d, Y H:i" }}</td>
+                                        <td class="text-success fw-medium">{{ CURRENCY_SYMBOL }}{{ payment.amount|floatformat:2 }}</td>
+                                        <td>
+                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                                                {{ payment.get_payment_method_display }}
+                                            </span>
+                                        </td>
+                                        <td class="text-muted">{{ payment.reference|default:"-" }}</td>
+                                        <td class="text-end pe-4">
+                                            <a href="{% url 'customers:payment_print' payment.pk %}" class="btn btn-sm btn-light text-primary" target="_blank" title="Print Receipt">
+                                                <i class="las la-print"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr><td colspan="5" class="text-center text-muted py-4">No payments found</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                                {% if payments %}
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="5" class="text-center bg-light p-3 border-0">
+                                            <a href="{% url 'customers:payment_list' %}?customer={{ customer.pk }}" class="text-decoration-none fw-medium text-primary">
+                                                View All Payments <i class="las la-arrow-right ms-1"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+{% if request.GET.print_payment %}
+<!-- Payment Success Modal -->
+<div class="modal fade" id="paymentSuccessModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-body text-center p-4">
+                <i class="las la-check-circle text-success" style="font-size: 4rem;"></i>
+                <h4 class="mt-3 mb-2">Payment Received</h4>
+                <p class="text-muted mb-4">The payment has been successfully recorded.</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'customers:payment_print' request.GET.print_payment %}" target="_blank" class="btn btn-primary btn-lg" onclick="bootstrap.Modal.getInstance(document.getElementById('paymentSuccessModal')).hide()">
+                        <i class="las la-print me-1"></i> Print Receipt
+                    </a>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if request.GET.print_payment %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var paymentModal = new bootstrap.Modal(document.getElementById('paymentSuccessModal'));
+    paymentModal.show();
+    
+    // Clean up URL
+    var url = new URL(window.location);
+    url.searchParams.delete('print_payment');
+    window.history.replaceState({}, document.title, url);
+});
+</script>
+{% endif %}
 {% endblock %}

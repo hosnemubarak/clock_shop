@@ -234,17 +234,30 @@ def customer_statement(request, pk):
 
 @manager_required
 def payment_list(request):
-    """List all payments."""
-    payments = Payment.objects.select_related('customer', 'sale', 'received_by').all()
+    """List all general payments (not linked to specific invoices)."""
+    payments = Payment.objects.select_related('customer', 'sale', 'received_by').filter(sale__isnull=True)
     
     # Search
     search = request.GET.get('search', '')
     if search:
-        payments = payments.filter(
-            Q(customer__name__icontains=search) |
-            Q(reference__icontains=search) |
-            Q(sale__invoice_number__icontains=search)
-        )
+        search_query = search.strip()
+        payment_id_match = None
+        if search_query.upper().startswith('PMT-') and search_query[4:].isdigit():
+            payment_id_match = int(search_query[4:])
+        elif search_query.isdigit():
+            payment_id_match = int(search_query)
+
+        if payment_id_match:
+            payments = payments.filter(
+                Q(pk=payment_id_match) |
+                Q(customer__name__icontains=search_query) |
+                Q(reference__icontains=search_query)
+            )
+        else:
+            payments = payments.filter(
+                Q(customer__name__icontains=search_query) |
+                Q(reference__icontains=search_query)
+            )
     
     # Date filter
     date_from = request.GET.get('date_from')
@@ -253,14 +266,23 @@ def payment_list(request):
         payments = payments.filter(payment_date__date__gte=date_from)
     if date_to:
         payments = payments.filter(payment_date__date__lte=date_to)
-    
+
+    # Customer filter
+    customer_id = request.GET.get('customer')
+    if customer_id:
+        payments = payments.filter(customer_id=customer_id)
+        
     payments = paginate(request, payments, 10)
+
+    customers = Customer.objects.filter(is_active=True).order_by('name')
 
     context = {
         'payments': payments,
         'search': search,
         'date_from': date_from,
         'date_to': date_to,
+        'customer_id': customer_id,
+        'customers': customers,
     }
     return render(request, 'customers/payment_list.html', context)
 
@@ -297,10 +319,11 @@ def payment_create(request):
             })
             
             messages.success(request, f'Payment of {payment.amount} recorded.')
+            from django.urls import reverse
             if payment.customer:
-                return redirect('customers:customer_detail', pk=payment.customer.pk)
+                return redirect(reverse('customers:customer_detail', args=[payment.customer.pk]) + f'?print_payment={payment.pk}')
             else:
-                return redirect('customers:payment_list')
+                return redirect(reverse('customers:payment_list') + f'?print_payment={payment.pk}')
     else:
         form = PaymentForm(customer=customer)
     
@@ -387,6 +410,16 @@ def _customer_loyalty(customer):
         payload['points'] = str(points)
 
     return payload or None
+
+
+@cashier_required
+def payment_print(request, pk):
+    """Print-friendly payment receipt view."""
+    payment = get_object_or_404(
+        Payment.objects.select_related('customer', 'sale', 'received_by'),
+        pk=pk
+    )
+    return render(request, 'customers/payment_print.html', {'payment': payment})
 
 
 @cashier_required

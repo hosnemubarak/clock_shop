@@ -49,7 +49,7 @@
         var purchaseDate = byId('qasPurchaseDate').value;
         var notes = byId('qasNotes').value;
 
-        if (!warehouseId || !quantity || !unitPrice || !supplier || !purchaseDate) {
+        if (!warehouseId || !quantity || !unitPrice || !purchaseDate) {
             showValidationModal('Please fill out all required fields.');
             return;
         }

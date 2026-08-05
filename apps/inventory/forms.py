@@ -80,8 +80,6 @@ class ProductForm(forms.ModelForm):
         if initial_stock:
             if not initial_warehouse:
                 self.add_error('initial_warehouse', 'Warehouse is required when adding initial stock.')
-            if not initial_stock_supplier:
-                self.add_error('initial_stock_supplier', 'Supplier is required when adding initial stock.')
             if not initial_stock_date:
                 self.add_error('initial_stock_date', 'Stock Date is required when adding initial stock.')
             
