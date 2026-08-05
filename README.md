@@ -195,19 +195,19 @@ POSTGRES_PASSWORD=strong-database-password
 
 ```bash
 # 4. Build and start containers
-docker-compose up -d --build
+docker compose up -d --build
 
 # 5. Create admin user
-docker-compose exec web python manage.py createsuperuser
+docker compose exec web python manage.py createsuperuser
 
 # 6. Setup default groups and permissions
-docker-compose exec web python manage.py setup_groups
+docker compose exec web python manage.py setup_groups
 
 # 7. Setup default walk-in customer
-docker-compose exec web python manage.py setup_walkin_customer
+docker compose exec web python manage.py setup_walkin_customer
 
 # 8. (Optional) Load demo data
-docker-compose exec web python manage.py loaddata fixtures/demo_data.json
+docker compose exec web python manage.py loaddata fixtures/demo_data.json
 ```
 
 **Access:** http://localhost:8090
@@ -216,22 +216,22 @@ docker-compose exec web python manage.py loaddata fixtures/demo_data.json
 
 ```bash
 # View logs
-docker-compose logs -f web
+docker compose logs -f web
 
 # Stop services
-docker-compose down
+docker compose down
 
 # Stop and remove volumes (WARNING: deletes data)
-docker-compose down -v
+docker compose down -v
 
 # Restart services
-docker-compose restart
+docker compose restart
 
 # Enter container shell
-docker-compose exec web bash
+docker compose exec web bash
 
 # Database backup
-docker-compose exec db pg_dump -U clock_shop clock_shop > backup.sql
+docker compose exec db pg_dump -U clock_shop clock_shop > backup.sql
 ```
 
 ---
@@ -381,7 +381,7 @@ After deployment, you can:
 python manage.py loaddata fixtures/demo_data.json
 
 # Docker
-docker-compose exec web python manage.py loaddata fixtures/demo_data.json
+docker compose exec web python manage.py loaddata fixtures/demo_data.json
 ```
 
 Demo data includes:

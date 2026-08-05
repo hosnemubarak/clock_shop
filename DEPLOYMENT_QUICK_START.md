@@ -36,22 +36,22 @@ APP_PORT=80
 ### 3. Deploy
 Start the containers in the background:
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 ### 4. Setup Database & Admin
 ```bash
-docker-compose exec web python manage.py migrate
-docker-compose exec web python manage.py createcachetable
-docker-compose exec web python manage.py createsuperuser
-docker-compose exec web python manage.py setup_groups
-docker-compose exec web python manage.py setup_walkin_customer
+docker compose exec web python manage.py migrate
+docker compose exec web python manage.py createcachetable
+docker compose exec web python manage.py createsuperuser
+docker compose exec web python manage.py setup_groups
+docker compose exec web python manage.py setup_walkin_customer
 ```
 
 ### 5. Troubleshooting (Docker)
-- **View Logs:** `docker-compose logs -f web`
-- **Restart App:** `docker-compose restart web`
-- **Rebuild Image:** `docker-compose up -d --build web`
+- **View Logs:** `docker compose logs -f web`
+- **Restart App:** `docker compose restart web`
+- **Rebuild Image:** `docker compose up -d --build web`
 
 ---
 

@@ -3,8 +3,8 @@
 # =============================================================================
 # Usage:
 #   1. Copy .env.example to .env and configure
-#   2. Run: docker-compose up -d --build
-#   3. Create superuser: docker-compose exec web python manage.py createsuperuser
+#   2. Run: docker compose up -d --build
+#   3. Create superuser: docker compose exec web python manage.py createsuperuser
 #   4. Access: http://localhost:8090
 # =============================================================================
 
