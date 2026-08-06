@@ -37,10 +37,12 @@ class SaleItemForm(forms.Form):
     """Form for adding items to a sale with manual stock selection."""
     product = forms.ModelChoiceField(
         queryset=Product.objects.filter(is_active=True, total_stock__gt=0),
+        empty_label='Select Product',
         widget=forms.Select(attrs={'class': 'form-select product-select'})
     )
     warehouse = forms.ModelChoiceField(
         queryset=Warehouse.objects.filter(is_active=True),
+        empty_label='Select Warehouse',
         widget=forms.Select(attrs={'class': 'form-select warehouse-select'})
     )
     quantity = forms.IntegerField(

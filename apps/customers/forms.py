@@ -39,6 +39,8 @@ class PaymentForm(forms.ModelForm):
     def __init__(self, *args, customer=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['customer'].queryset = Customer.objects.filter(is_active=True)
+        self.fields['customer'].empty_label = 'Select Customer'
+        self.fields['sale'].empty_label = 'Select Invoice'
         
         if customer:
             self.fields['customer'].initial = customer
@@ -82,6 +84,7 @@ class QuickPaymentForm(forms.Form):
     """Quick payment form for receiving payments."""
     customer = forms.ModelChoiceField(
         queryset=Customer.objects.filter(is_active=True, total_due__gt=0),
+        empty_label='Select Customer',
         widget=forms.Select(attrs={'class': 'form-select'})
     )
     amount = forms.DecimalField(

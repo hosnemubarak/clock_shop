@@ -72,6 +72,11 @@ class ProductForm(forms.ModelForm):
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['brand'].empty_label = 'Select Brand'
+        self.fields['category'].empty_label = 'Select Category'
+
     def clean(self):
         cleaned_data = super().clean()
         initial_stock = cleaned_data.get('initial_stock')
@@ -106,10 +111,12 @@ class PurchaseItemForm(forms.Form):
     """Form for adding items to a purchase."""
     product = forms.ModelChoiceField(
         queryset=Product.objects.filter(is_active=True),
+        empty_label='Select Product',
         widget=forms.Select(attrs={'class': 'form-select product-select'})
     )
     warehouse = forms.ModelChoiceField(
         queryset=Warehouse.objects.filter(is_active=True),
+        empty_label='Select Warehouse',
         widget=forms.Select(attrs={'class': 'form-select'})
     )
     quantity = forms.IntegerField(
@@ -132,10 +139,12 @@ class StockAdjustmentForm(forms.Form):
     
     product = forms.ModelChoiceField(
         queryset=Product.objects.filter(is_active=True),
+        empty_label='Select Product',
         widget=forms.Select(attrs={'class': 'form-select'})
     )
     warehouse = forms.ModelChoiceField(
         queryset=Warehouse.objects.filter(is_active=True),
+        empty_label='Select Warehouse',
         widget=forms.Select(attrs={'class': 'form-select'})
     )
     adjustment_type = forms.ChoiceField(
@@ -169,3 +178,7 @@ class StockOutForm(forms.ModelForm):
                 'placeholder': 'Additional details about this stock out...'
             }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['warehouse'].empty_label = 'Select Warehouse'

@@ -38,7 +38,9 @@ class StockTransferForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['source_warehouse'].queryset = Warehouse.objects.filter(is_active=True)
+        self.fields['source_warehouse'].empty_label = 'Select Source Warehouse'
         self.fields['destination_warehouse'].queryset = Warehouse.objects.filter(is_active=True)
+        self.fields['destination_warehouse'].empty_label = 'Select Destination Warehouse'
     
     def clean(self):
         cleaned_data = super().clean()
