@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import timezone
 from .models import Product, Category, Brand, Purchase, PurchaseItem, StockOut
 from apps.warehouse.models import Warehouse
 
@@ -50,6 +51,7 @@ class ProductForm(forms.ModelForm):
     )
     initial_stock_date = forms.DateField(
         required=False,
+        initial=timezone.localdate,
         widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
     )
     initial_stock_notes = forms.CharField(

@@ -75,7 +75,8 @@
                     </button>
                 </div>
             </div>
-            <div class="mt-2 text-end">
+            <div class="mt-2 d-flex justify-content-between">
+                <small id="currentStockInfo" class="text-primary fw-medium"></small>
                 <small class="text-muted">Line Total: <strong id="linePreview">{{ CURRENCY_SYMBOL }}0.00</strong></small>
             </div>
         </div>
@@ -162,6 +163,43 @@ function updateLinePreview() {
     document.getElementById('linePreview').textContent = CURRENCY + lineTotal.toFixed(2);
 }
 
+function fetchCurrentStock() {
+    const productId = document.getElementById('newProduct').value;
+    const warehouseSelect = document.getElementById('newWarehouse');
+    const warehouseId = warehouseSelect.value;
+    const stockInfoEl = document.getElementById('currentStockInfo');
+    
+    if (!productId || !warehouseId) {
+        stockInfoEl.textContent = '';
+        return;
+    }
+
+    const warehouseName = warehouseSelect.options[warehouseSelect.selectedIndex].text;
+
+    stockInfoEl.innerHTML = '<i class="las la-spinner la-spin"></i> Checking current stock...';
+    
+    fetch(`/inventory/api/products/${productId}/stocks/?warehouse=${warehouseId}`)
+        .then(response => response.json())
+        .then(data => {
+            let totalStock = 0;
+            data.forEach(stock => {
+                totalStock += stock.quantity;
+            });
+            if (totalStock > 0) {
+                stockInfoEl.innerHTML = `<span class="text-success"><i class="las la-check-circle"></i> You have <strong>${totalStock}</strong> in stock at <strong>${warehouseName}</strong>.</span>`;
+            } else {
+                stockInfoEl.innerHTML = `<span class="text-warning"><i class="las la-exclamation-circle"></i> Currently out of stock at <strong>${warehouseName}</strong>.</span>`;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching stock:', error);
+            stockInfoEl.textContent = 'Failed to check current stock.';
+        });
+}
+
+document.getElementById('newProduct').addEventListener('change', fetchCurrentStock);
+document.getElementById('newWarehouse').addEventListener('change', fetchCurrentStock);
+
 function addItem() {
     const productSelect = document.getElementById('newProduct');
     const warehouseSelect = document.getElementById('newWarehouse');
@@ -203,6 +241,9 @@ function addItem() {
     productSelect.value = '';
     document.getElementById('newQty').value = '1';
     document.getElementById('newPrice').value = '';
+    
+    // Clear the stock info display
+    fetchCurrentStock();
 }
 
 function removeItem(index) {
