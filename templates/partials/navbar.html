@@ -140,10 +140,13 @@
                         <div class="dropdown-divider"></div>
 
                         <!-- Logout -->
-                        <a class="dropdown-item text-danger" href="{% url 'core:logout' %}">
-                            <i class="bx bx-power-off fs-15 align-middle me-1 text-danger"></i>
-                            <span>Logout</span>
-                        </a>
+                        <form method="post" action="{% url 'core:logout' %}" class="m-0 p-0">
+                            {% csrf_token %}
+                            <button type="submit" class="dropdown-item text-danger btn btn-link text-start w-100 border-0 bg-transparent rounded-0">
+                                <i class="bx bx-power-off fs-15 align-middle me-1 text-danger"></i>
+                                <span>Logout</span>
+                            </button>
+                        </form>
                     </div>
                 </div>
 
