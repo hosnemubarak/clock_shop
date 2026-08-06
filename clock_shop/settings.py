@@ -315,17 +315,17 @@ LOGGING = {
     'loggers': {
         # Django core loggers
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'] if DEBUG else ['console', 'file'],
             'level': 'INFO',
             'propagate': False,
         },
         'django.request': {
-            'handlers': ['console', 'file', 'error_file'],
+            'handlers': ['console'] if DEBUG else ['console', 'file', 'error_file'],
             'level': 'INFO',
             'propagate': False,
         },
         'django.security': {
-            'handlers': ['console', 'security_file'],
+            'handlers': ['console'] if DEBUG else ['console', 'security_file'],
             'level': 'INFO',
             'propagate': False,
         },
@@ -337,7 +337,7 @@ LOGGING = {
         
         # Application loggers
         'apps': {
-            'handlers': ['console', 'file', 'error_file'],
+            'handlers': ['console'] if DEBUG else ['console', 'file', 'error_file'],
             'level': 'DEBUG' if DEBUG else 'INFO',
             'propagate': False,
         },
