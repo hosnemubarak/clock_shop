@@ -135,6 +135,7 @@
         {% endif %}
     </div>
 
+
     {% if request.user.is_staff or request.user.is_superuser %}
     <div>
         <a href="{% url 'profit_report' %}" class="text-decoration-none">

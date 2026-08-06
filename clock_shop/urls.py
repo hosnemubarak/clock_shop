@@ -17,11 +17,9 @@ urlpatterns = [
     path('reports/', include('apps.reports.urls')),
 ]
 
-# Serve media files in both development and production
-# In production with high traffic, consider using a reverse proxy (nginx) instead
-urlpatterns += [
-    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
-]
-
 if settings.DEBUG:
+    # Serve static and media files in development
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    ]

@@ -52,7 +52,7 @@ services:
       CURRENCY_SYMBOL: ${CURRENCY_SYMBOL:-৳}
       LOW_STOCK_THRESHOLD: ${LOW_STOCK_THRESHOLD:-5}
     volumes:
-      - media_data:/app/media
+      - ./media:/app/media
       - logs_data:/app/logs
     depends_on:
       db:
