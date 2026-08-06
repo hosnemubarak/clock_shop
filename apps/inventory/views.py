@@ -61,7 +61,7 @@ def product_list(request):
     elif status_filter == 'inactive':
         products = products.filter(is_active=False)
     
-    products = paginate(request, products, 10)
+    products = paginate(request, products, 25)
 
     categories = Category.objects.filter(is_active=True)
     brands = Brand.objects.filter(is_active=True)
@@ -247,7 +247,7 @@ def category_list(request):
     if search:
         categories = categories.filter(Q(name__icontains=search) | Q(description__icontains=search))
     
-    categories = paginate(request, categories, 10)
+    categories = paginate(request, categories, 25)
 
     return render(request, 'inventory/category_list.html', {'categories': categories, 'search': search})
 
@@ -300,7 +300,7 @@ def brand_list(request):
     if search:
         brands = brands.filter(Q(name__icontains=search) | Q(description__icontains=search))
     
-    brands = paginate(request, brands, 10)
+    brands = paginate(request, brands, 25)
 
     return render(request, 'inventory/brand_list.html', {'brands': brands, 'search': search})
 
@@ -351,7 +351,7 @@ def purchase_list(request):
     """List all purchases."""
     purchases = Purchase.objects.select_related('created_by').prefetch_related('items')
     
-    purchases = paginate(request, purchases, 10)
+    purchases = paginate(request, purchases, 25)
 
     return render(request, 'inventory/purchase_list.html', {'purchases': purchases})
 
@@ -624,7 +624,7 @@ def stockout_list(request):
     if status:
         stockouts = stockouts.filter(status=status)
     
-    stockouts = paginate(request, stockouts, 10)
+    stockouts = paginate(request, stockouts, 25)
 
     warehouses = Warehouse.objects.filter(is_active=True)
     

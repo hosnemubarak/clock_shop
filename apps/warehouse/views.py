@@ -33,7 +33,7 @@ def warehouse_list(request):
     total_warehouses = warehouses.count()
     active_shops = warehouses.filter(is_shop=True, is_active=True).count()
 
-    warehouses = paginate(request, warehouses.order_by('name'), 10)
+    warehouses = paginate(request, warehouses.order_by('name'), 25)
 
     return render(request, 'warehouse/warehouse_list.html', {
         'warehouses': warehouses,
@@ -61,7 +61,7 @@ def warehouse_detail(request, pk):
             Q(product__brand__name__icontains=product_search)
         )
     
-    stocks = paginate(request, stocks, 10)
+    stocks = paginate(request, stocks, 25)
 
     context = {
         'warehouse': warehouse,
@@ -141,7 +141,7 @@ def transfer_list(request):
     if destination:
         transfers = transfers.filter(destination_warehouse_id=destination)
     
-    transfers = paginate(request, transfers, 10)
+    transfers = paginate(request, transfers, 25)
 
     # Get warehouses for filter dropdowns
     warehouses = Warehouse.objects.filter(is_active=True)

@@ -151,7 +151,7 @@ def audit_logs(request):
     # Get all users for filter dropdown
     users = User.objects.filter(auditlog__isnull=False).distinct().order_by('username')
     
-    logs = paginate(request, logs, 20)
+    logs = paginate(request, logs, 25)
 
     context = {
         'logs': logs,
@@ -346,7 +346,7 @@ def audit_logs(request):
     # Get all users for filter dropdown
     users = User.objects.filter(auditlog__isnull=False).distinct().order_by('username')
     
-    logs = paginate(request, logs, 20)
+    logs = paginate(request, logs, 25)
 
     context = {
         'logs': logs,

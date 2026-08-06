@@ -5,7 +5,7 @@ from django.utils import timezone
 from .models import AuditLog
 
 
-def paginate(request: Any, queryset: Any, per_page: int = 10, page_param: str = 'page') -> Page:
+def paginate(request: Any, queryset: Any, per_page: int = 25, page_param: str = 'page') -> Page:
     """Paginate a queryset using the request's page query param.
 
     Centralizes the repeated ``Paginator(qs, n)`` + ``get_page`` scaffolding in

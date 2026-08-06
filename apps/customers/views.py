@@ -47,7 +47,7 @@ def customer_list(request):
     elif status == 'inactive':
         customers = customers.filter(is_active=False)
     
-    customers = paginate(request, customers, 10)
+    customers = paginate(request, customers, 25)
 
     # Summary stats
     summary = Customer.objects.aggregate(
@@ -272,7 +272,7 @@ def payment_list(request):
     if customer_id:
         payments = payments.filter(customer_id=customer_id)
         
-    payments = paginate(request, payments, 10)
+    payments = paginate(request, payments, 25)
 
     customers = Customer.objects.filter(is_active=True).order_by('name')
 

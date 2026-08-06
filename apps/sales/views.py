@@ -82,7 +82,7 @@ def sale_list(request):
     if customer_id:
         sales = sales.filter(customer_id=customer_id)
     
-    sales = paginate(request, sales, 10)
+    sales = paginate(request, sales, 25)
 
     customers = Customer.objects.filter(is_active=True).order_by('name')
 
@@ -371,7 +371,7 @@ def return_list(request):
             Q(sale__invoice_number__icontains=search)
         )
 
-    returns = paginate(request, returns, 10)
+    returns = paginate(request, returns, 25)
     return render(request, 'sales/return_list.html', {
         'returns': returns,
         'search': search,

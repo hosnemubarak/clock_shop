@@ -255,7 +255,7 @@ def profit_report(request):
         profit_data.append(p)
     
     # Paginate profit by product
-    paginator = Paginator(profit_data, 20)
+    paginator = Paginator(profit_data, 25)
     page = request.GET.get('page')
     profit_by_product_page = paginator.get_page(page)
     
@@ -476,7 +476,7 @@ def stock_report(request):
     categories = Category.objects.filter(is_active=True)
     
     # Paginate stock summary
-    paginator = Paginator(list(stock_summary), 20)
+    paginator = Paginator(list(stock_summary), 25)
     page = request.GET.get('page')
     stock_summary_page = paginator.get_page(page)
     
@@ -577,7 +577,7 @@ def transfer_report(request):
     )
     
     # Paginate transfers
-    paginator = Paginator(transfers, 20)
+    paginator = Paginator(transfers, 25)
     page = request.GET.get('page')
     transfers_page = paginator.get_page(page)
     
@@ -677,7 +677,7 @@ def dead_stock_report(request):
     ).filter(quantity_sold__lte=5).order_by('quantity_sold')
     
     # Paginate dead stock
-    paginator = Paginator(dead_stock, 20)
+    paginator = Paginator(dead_stock, 25)
     page = request.GET.get('page')
     dead_stock_page = paginator.get_page(page)
     
@@ -757,7 +757,7 @@ def batch_report(request):
         })
     
     # Paginate stock data
-    paginator = Paginator(stock_data_list, 20)
+    paginator = Paginator(stock_data_list, 25)
     page = request.GET.get('page')
     stock_data_page = paginator.get_page(page)
     
