@@ -81,7 +81,7 @@ def warehouse_create(request):
         if form.is_valid():
             with transaction.atomic():
                 warehouse = form.save()
-                # Nothing else enforces a single retail shop, so ticking the box
+                # Nothing else enforces a single shop, so ticking the box
                 # here has to clear it everywhere else.
                 if warehouse.is_shop:
                     warehouse.set_as_shop()

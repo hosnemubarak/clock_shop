@@ -16,7 +16,7 @@ class Warehouse(TimeStampedModel):
     address = models.TextField(blank=True)
     phone = models.CharField(validators=[bd_phone_validator], max_length=20, blank=True)
     is_active = models.BooleanField(default=True)
-    is_shop = models.BooleanField(default=False, help_text='Is this a retail shop location?')
+    is_shop = models.BooleanField(default=False, help_text='Is this a shop location?')
     
     class Meta:
         ordering = ['name']

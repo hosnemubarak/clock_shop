@@ -59,7 +59,7 @@
                         <div class="col-md-6 mb-3">
                             <div class="form-check form-switch">
                                 {{ form.is_shop }}
-                                <label class="form-check-label"><strong>Retail Shop</strong></label>
+                                <label class="form-check-label"><strong>Shop</strong></label>
                             </div>
                             <small class="text-muted">Mark if this is a customer-facing retail location</small>
                             {% if form.is_shop.errors %}<div class="text-danger small mt-1">{{ form.is_shop.errors.0 }}</div>{% endif %}
@@ -86,7 +86,7 @@
                 <ul class="text-muted small mb-0">
                     <li class="mb-2">Warehouses store your inventory products</li>
                     <li class="mb-2">You can transfer stock between warehouses</li>
-                    <li class="mb-2">Mark a warehouse as "Retail Shop" if customers can shop there</li>
+                    <li class="mb-2">Mark a warehouse as "Shop" if customers can shop there</li>
                     <li>Each warehouse has unique stock levels</li>
                 </ul>
             </div>

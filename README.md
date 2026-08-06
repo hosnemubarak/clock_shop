@@ -64,7 +64,7 @@ Clock Shop is a full-featured business management solution that handles:
 - **Customer notes** - Internal notes and communication tracking
 
 ### Warehouse & Stock Transfer
-- **Multiple warehouses** - Support for warehouses and retail shop locations
+- **Multiple warehouses** - Support for warehouses and shop locations
 - **Batch-level transfers** - Transfer specific batches between locations
 - **Price preservation** - Original buy price maintained during transfers
 - **Full audit trail** - Complete transfer history with status tracking
@@ -388,7 +388,7 @@ Demo data includes:
 - **1 Category** - Clocks
 - **1 Brand** - Seiko
 - **1 Warehouse** - Main Warehouse (WH001)
-- **1 Retail Shop** - Retail Shop (RS001)
+- **1 Shop** - Shop (RS001)
 - **1 Product** - Classic Wall Clock (CLK-001)
 - **1 Customer** - Sample Customer
 
