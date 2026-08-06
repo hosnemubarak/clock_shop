@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
-{% load static %}
+{% load humanize static %}
 
 {% block title %}Dashboard | {{ SHOP_NAME }}{% endblock %}
 
@@ -180,18 +179,20 @@
         <a href="{% url 'inventory:product_list' %}" class="text-decoration-none d-block h-100">
             <div class="card card-animate h-100 mb-0">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <p class="fw-medium text-muted mb-0">Products & Inventory</p>
-                            <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ total_products }}">{{ total_products }}</span></h2>
-                            <p class="mb-0 text-muted mt-2"><span class="badge bg-success-subtle text-success fs-12"><i class="las la-cubes align-middle me-1"></i> {{ total_product_quantity }}</span> Total Units</p>
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted mb-0">Products & Inventory</p>
                         </div>
+                    </div>
+                    <div class="d-flex align-items-end justify-content-between mt-4">
                         <div>
-                            <div class="avatar-sm flex-shrink-0">
-                                <span class="avatar-title bg-secondary-subtle rounded-circle fs-2">
-                                    <i class="las la-box text-secondary"></i>
-                                </span>
-                            </div>
+                            <h4 class="fs-22 fw-semibold mb-4"><span class="counter-value" data-target="{{ total_products }}">{{ total_products }}</span></h4>
+                            <span class="text-secondary">View Products <i class="las la-arrow-right"></i></span>
+                        </div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-secondary-subtle rounded fs-3">
+                                <i class="las la-box text-secondary"></i>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -204,17 +205,20 @@
         <a href="{% url 'warehouse:warehouse_list' %}" class="text-decoration-none d-block h-100">
             <div class="card card-animate h-100 mb-0">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <p class="fw-medium text-muted mb-0">Total Warehouses</p>
-                            <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value" data-target="{{ total_warehouses }}">{{ total_warehouses }}</span></h2>
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <p class="text-uppercase fw-medium text-muted mb-0">Total Warehouses</p>
                         </div>
+                    </div>
+                    <div class="d-flex align-items-end justify-content-between mt-4">
                         <div>
-                            <div class="avatar-sm flex-shrink-0">
-                                <span class="avatar-title bg-info-subtle rounded-circle fs-2">
-                                    <i class="las la-warehouse text-info"></i>
-                                </span>
-                            </div>
+                            <h4 class="fs-22 fw-semibold mb-4"><span class="counter-value" data-target="{{ total_warehouses }}">{{ total_warehouses }}</span></h4>
+                            <span class="text-info">View Warehouses <i class="las la-arrow-right"></i></span>
+                        </div>
+                        <div class="avatar-sm flex-shrink-0">
+                            <span class="avatar-title bg-info-subtle rounded fs-3">
+                                <i class="las la-warehouse text-info"></i>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -325,7 +329,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="{% static 'js/apexcharts.min.js' %}"></script>
 <script src="{% static 'js/charts.js' %}?v=1"></script>
 <script>
 // Payment Status Data

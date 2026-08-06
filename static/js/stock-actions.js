@@ -15,12 +15,7 @@
      * {% csrf_token %}; falls back to the csrftoken cookie.
      */
     function getCsrfToken() {
-        var field = document.querySelector('[name=csrfmiddlewaretoken]');
-        if (field && field.value) {
-            return field.value;
-        }
-        var match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
-        return match ? decodeURIComponent(match[1]) : '';
+        return window.getCsrfToken ? window.getCsrfToken() : '';
     }
 
     function byId(id) {

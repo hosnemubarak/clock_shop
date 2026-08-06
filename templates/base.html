@@ -6,42 +6,22 @@
     <meta charset="utf-8" />
     <title>{% block title %}{{ SHOP_NAME|default:"Your Shop" }}{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta content="Clock Shop - Inventory & Sales Management System" name="description" />
+    <meta content="Clock Shop - Inventory &amp; Sales Management System" name="description" />
     <meta content="Your Shop" name="author" />
     <!-- App favicon -->
     <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
 
-
-    <!-- Layout config Js -->
+    <!-- Layout config Js — must run before body to avoid flash -->
     <script src="{% static 'js/layout.js' %}"></script>
     <!-- Bootstrap Css -->
     <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" type="text/css" />
     <!-- Icons Css -->
     <link href="{% static 'css/icons.min.css' %}" rel="stylesheet" type="text/css" />
-    <!-- App Css-->
+    <!-- App Css -->
     <link href="{% static 'css/app.min.css' %}" rel="stylesheet" type="text/css" />
     <link href="{% static 'css/custom.css' %}" rel="stylesheet" type="text/css" />
-    <!-- Tom Select for searchable dropdowns -->
-    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet" integrity="sha384-3bljoW7l4nTgpxifNAuotLa4NYLtoKwBGpmJ1B9bLTb+sIyQ2RnFBAkbkj1Xq257" crossorigin="anonymous">
 
-    <!-- Custom placeholder styling -->
-    <style>
-        ::placeholder {
-            color: #adb5bd !important;
-            opacity: 1 !important;
-        }
-        :-ms-input-placeholder {
-            color: #adb5bd !important;
-        }
-        ::-ms-input-placeholder {
-            color: #adb5bd !important;
-        }
-        .form-control::placeholder,
-        .form-select::placeholder {
-            color: #adb5bd !important;
-            font-style: italic;
-        }
-    </style>
+    {# Tom Select is NOT loaded here. Pages that use it include it via {% block extra_css %} / {% block extra_js %}. #}
 
     {% block extra_css %}{% endblock %}
 
@@ -90,25 +70,36 @@
     </div>
     <!-- END layout-wrapper -->
 
-    {% include 'partials/settings.html' %}
-    
+    {# Theme settings panel: only shown in development. In production this saves #}
+    {# 35KB of HTML from every page. Dark/Light toggle is in the navbar instead. #}
+    {% if debug %}{% include 'partials/settings.html' %}{% endif %}
+
     {% include 'partials/modals.html' %}
 
     <!-- JAVASCRIPT -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/simplebar@6.2.5/dist/simplebar.min.js" integrity="sha384-l8IvJMp/5DmN40VVHt+E1gMmidc7tsjOXrk7xG/wmx4+826R9fsYyRJUkYcmGaU/" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/node-waves@0.7.6/dist/waves.min.js" integrity="sha384-NyLmoo5NmClJKc1U/J2aG3ZeTOrp7r3nhd0lzF6+fi3UiwmNjGWql4wQJkqTC2at" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/feather-icons@4.29.1/dist/feather.min.js" integrity="sha384-En/3vVo7Wc+6Ogkkp7OUi5Oc7Zf4c+N/kRP3z7QVcJssy5Ud5MWcAvwWDAEFMga8" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js" integrity="sha384-DZEVpSJ4pM9MDuXkgydQD2RzczjPKUOeRgRpYNZ5fyMlf14Pn/3dZbgIpdtH2YRb" crossorigin="anonymous"></script>
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/simplebar.min.js' %}"></script>
+    <script src="{% static 'js/waves.min.js' %}"></script>
+    <script src="{% static 'js/feather.min.js' %}"></script>
     <script src="{% static 'js/plugins.js' %}"></script>
+    <script>
+        function getCsrfToken() {
+            var field = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (field && field.value) return field.value;
+            var match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+            return match ? decodeURIComponent(match[1]) : '';
+        }
+        window.getCsrfToken = getCsrfToken;
+    </script>
 
     {% block extra_js %}{% endblock %}
 
-    <!-- App js -->
+    <!-- App js — must come after extra_js so page scripts can call theme helpers -->
     <script src="{% static 'js/app.js' %}"></script>
-    
-    <!-- Auto-select zero values in number inputs for easier editing -->
+
     <script>
+        // Auto-select zero values in number inputs so the user doesn't have to
+        // triple-click or Ctrl+A before typing a new value.
         document.addEventListener('focusin', function(e) {
             if (e.target.tagName === 'INPUT' && (e.target.type === 'number' || e.target.type === 'text')) {
                 var val = e.target.value.trim();
@@ -118,17 +109,17 @@
             }
         });
 
-        // Helper for quantity +/- buttons
+        // Helper for quantity +/- buttons used in item-builder forms.
         function changeQty(btn, delta) {
             const container = btn.closest('.input-group') || btn.parentElement;
             const input = container.querySelector('input[type=number]');
             if (!input) return;
-            
+
             try {
-                if (delta > 0) input.stepUp(); 
+                if (delta > 0) input.stepUp();
                 else input.stepDown();
             } catch(e) {
-                // Fallback for browsers with issues
+                // Fallback for browsers with stepUp/stepDown issues
                 let val = parseFloat(input.value) || 0;
                 let step = parseFloat(input.getAttribute('step')) || 1;
                 let min = parseFloat(input.getAttribute('min'));
@@ -136,10 +127,21 @@
                 if (delta > 0 && (isNaN(max) || val + step <= max)) input.value = val + step;
                 else if (delta < 0 && (isNaN(min) || val - step >= min)) input.value = val - step;
             }
-            
-            input.dispatchEvent(new Event('input', {bubbles:true}));
-            input.dispatchEvent(new Event('change', {bubbles:true}));
+
+            input.dispatchEvent(new Event('input', {bubbles: true}));
+            input.dispatchEvent(new Event('change', {bubbles: true}));
         }
+
+        // Global keyboard shortcut: Alt+N → New Sale.
+        // Skipped when the user is typing in a form field.
+        document.addEventListener('keydown', function(e) {
+            if (e.altKey && (e.key === 'n' || e.key === 'N')) {
+                var tag = document.activeElement ? document.activeElement.tagName : '';
+                if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+                e.preventDefault();
+                window.location.href = '{% url "sales:sale_create" %}';
+            }
+        });
     </script>
 </body>
 

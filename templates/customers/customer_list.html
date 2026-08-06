@@ -72,24 +72,29 @@
                 <div class="col-md-4">
                     <select name="due" class="form-select">
                         <option value="">All Customers</option>
-                        <option value="has_due">With Outstanding</option>
-                        <option value="no_due">No Outstanding</option>
+                        <option value="has_due" {% if request.GET.due == 'has_due' %}selected{% endif %}>With Outstanding</option>
+                        <option value="no_due" {% if request.GET.due == 'no_due' %}selected{% endif %}>No Outstanding</option>
                     </select>
                 </div>
             {% endcapture %}
-            {% include 'includes/filter_bar.html' with fields=filter_fields %}
+            {% capture as filter_trailing %}
+                <div class="col-md text-md-end">
+                    <h5 class="card-title mb-0">All Customers <span class="badge bg-primary-subtle text-primary ms-2">{{ customers.paginator.count }}</span></h5>
+                </div>
+            {% endcapture %}
+            {% include 'includes/filter_bar.html' with fields=filter_fields trailing=filter_trailing %}
             <div class="card-body">
                 <div class="table-responsive min-h-300" >
                     <table class="table table-striped align-middle mb-0">
-                        <thead>
+                        <thead class="text-muted table-light">
                             <tr>
-                                <th>Name</th>
-                                <th>Phone</th>
-                                <th>Total Spend</th>
-                                <th>Paid</th>
-                                <th>Due</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th scope="col">Name</th>
+                                <th scope="col">Phone</th>
+                                <th scope="col">Total Spend</th>
+                                <th scope="col">Paid</th>
+                                <th scope="col">Due</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Actions</th>
                             </tr>
                         </thead>
                         <tbody>

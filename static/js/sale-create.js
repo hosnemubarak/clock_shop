@@ -57,7 +57,7 @@ function initSaleCreate() {
     var customerField = document.querySelector('[name="customer"]');
     var saleDateField = document.querySelector('[name="sale_date"]');
     var notesField = document.querySelector('[name="notes"]');
-    var csrfToken = (document.querySelector('[name="csrfmiddlewaretoken"]') || {}).value || '';
+    var csrfToken = window.getCsrfToken ? window.getCsrfToken() : ((document.querySelector('[name="csrfmiddlewaretoken"]') || {}).value || '');
 
     var money = new Intl.NumberFormat(undefined, {
         minimumFractionDigits: 2,

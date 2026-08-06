@@ -16,6 +16,9 @@ Params (all optional except title):
   Secondary action button:
     action2_url, action2_label, action2_icon, action2_class (default btn-info),
     action2_target, action2_onclick
+  Tertiary action button:
+    action3_url, action3_label, action3_icon, action3_class (default btn-secondary),
+    action3_target, action3_onclick
 
 Resolve URLs before including, e.g.:
   {% url 'sales:sale_create' as create_url %}
@@ -43,6 +46,11 @@ Resolve URLs before including, e.g.:
                 <button type="button" onclick="{{ action2_onclick }}" class="btn {{ action2_class|default:'btn-info' }}">{% if action2_icon %}<i class="{{ action2_icon }}"></i> {% endif %}{{ action2_label }}</button>
                 {% elif action2_url %}
                 <a href="{{ action2_url }}" class="btn {{ action2_class|default:'btn-info' }}"{% if action2_target %} target="{{ action2_target }}"{% endif %}>{% if action2_icon %}<i class="{{ action2_icon }}"></i> {% endif %}{{ action2_label }}</a>
+                {% endif %}
+                {% if action3_onclick and not action3_url %}
+                <button type="button" onclick="{{ action3_onclick }}" class="btn {{ action3_class|default:'btn-secondary' }}">{% if action3_icon %}<i class="{{ action3_icon }}"></i> {% endif %}{{ action3_label }}</button>
+                {% elif action3_url %}
+                <a href="{{ action3_url }}" class="btn {{ action3_class|default:'btn-secondary' }}"{% if action3_target %} target="{{ action3_target }}"{% endif %}>{% if action3_icon %}<i class="{{ action3_icon }}"></i> {% endif %}{{ action3_label }}</a>
                 {% endif %}
             </div>
             {% endif %}

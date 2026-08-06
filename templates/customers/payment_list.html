@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize static %}
 {% load core_tags %}
+
+{% block extra_css %}
+<link href="{% static 'css/tom-select.bootstrap5.min.css' %}" rel="stylesheet">
+{% endblock %}
 
 {% block title %}Payments | {{ SHOP_NAME }}{% endblock %}
 
@@ -51,16 +55,16 @@
             <div class="card-body">
                 <div class="table-responsive min-h-300" >
                     <table class="table table-striped align-middle mb-0">
-                        <thead>
+                        <thead class="text-muted table-light">
                             <tr>
-                                <th>Payment ID</th>
-                                <th>Date</th>
-                                <th>Customer</th>
-                                <th>Amount</th>
-                                <th>Method</th>
-                                <th>Reference</th>
-                                <th>Received By</th>
-                                <th class="text-end">Actions</th>
+                                <th scope="col">Payment ID</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Customer</th>
+                                <th scope="col">Amount</th>
+                                <th scope="col">Method</th>
+                                <th scope="col">Reference</th>
+                                <th scope="col">Received By</th>
+                                <th scope="col" class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -123,6 +127,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/tom-select.complete.min.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     new TomSelect('#customerFilter', {

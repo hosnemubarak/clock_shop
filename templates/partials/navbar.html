@@ -54,22 +54,22 @@
 
                 <!-- New Sale Button -->
                 <div class="ms-1 header-item d-flex">
-                    <a href="{% url 'sales:sale_create' %}" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" title="New Sale">
-                        <i class='las la-cart-plus fs-24'></i>
+                    <a href="{% url 'sales:sale_create' %}" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" title="New Sale (Alt+N)" aria-label="New Sale">
+                        <i class='las la-cart-plus fs-24' aria-hidden="true"></i>
                     </a>
                 </div>
 
                 <!-- Fullscreen Button -->
                 <div class="ms-1 header-item d-none d-sm-flex">
-                    <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" data-toggle="fullscreen">
-                        <i class='las la-expand fs-24'></i>
+                    <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" data-toggle="fullscreen" aria-label="Toggle fullscreen">
+                        <i class='las la-expand fs-24' aria-hidden="true"></i>
                     </button>
                 </div>
 
                 <!-- Dark/Light Mode -->
                 <div class="ms-1 header-item d-none d-sm-flex">
-                    <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle light-dark-mode">
-                        <i class='las la-moon fs-24'></i>
+                    <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle light-dark-mode" aria-label="Toggle dark mode">
+                        <i class='las la-moon fs-24' aria-hidden="true"></i>
                     </button>
                 </div>
 

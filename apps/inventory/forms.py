@@ -9,8 +9,8 @@ class CategoryForm(forms.ModelForm):
         model = Category
         fields = ['name', 'description', 'is_active']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Wall Clocks'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'e.g. Various styles of wall-mounted clocks'}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Electronics'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'e.g. General electronics category'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
@@ -20,8 +20,8 @@ class BrandForm(forms.ModelForm):
         model = Brand
         fields = ['name', 'description', 'is_active']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Seiko'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'e.g. Premium Japanese clock manufacturer'}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Acme Corp'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'e.g. Premium product manufacturer'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
@@ -64,10 +64,10 @@ class ProductForm(forms.ModelForm):
         fields = ['sku', 'brand', 'category', 'description', 
                   'default_selling_price', 'is_active']
         widgets = {
-            'sku': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. CLK-001'}),
+            'sku': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. PROD-001'}),
             'brand': forms.Select(attrs={'class': 'form-select'}),
             'category': forms.Select(attrs={'class': 'form-select'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'e.g. Traditional wooden pendulum clock with hourly chime'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'e.g. High quality product with advanced features'}),
             'default_selling_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'e.g. 299.99'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
@@ -101,7 +101,7 @@ class PurchaseForm(forms.ModelForm):
         model = Purchase
         fields = ['supplier', 'purchase_date', 'notes']
         widgets = {
-            'supplier': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. ABC Clock Distributors'}),
+            'supplier': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. ABC Distributors'}),
             'purchase_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'e.g. PO #2024-001, Delivery via courier'}),
         }

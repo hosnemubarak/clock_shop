@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
-{% load humanize %}
-{% load static %}
+{% load humanize static %}
 
 {% block title %}Sales Report | {{ SHOP_NAME }}{% endblock %}
 
@@ -248,7 +247,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="{% static 'js/apexcharts.min.js' %}"></script>
 <script src="{% static 'js/charts.js' %}?v=1"></script>
 <script>
 // Sales Period Data

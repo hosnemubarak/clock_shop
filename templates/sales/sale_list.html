@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
-{% load humanize %}
+{% load humanize static %}
 {% load core_tags %}
+
+{% block extra_css %}
+<link href="{% static 'css/tom-select.bootstrap5.min.css' %}" rel="stylesheet">
+{% endblock %}
 
 {% block title %}Sales | {{ SHOP_NAME }}{% endblock %}
 
@@ -44,20 +48,25 @@
                     </div>
                 </div>
             {% endcapture %}
-            {% include 'includes/filter_bar.html' with fields=filter_fields %}
+            {% capture as filter_trailing %}
+                <div class="col-md text-md-end">
+                    <h5 class="card-title mb-0">All Sales <span class="badge bg-primary-subtle text-primary ms-2">{{ sales.paginator.count }}</span></h5>
+                </div>
+            {% endcapture %}
+            {% include 'includes/filter_bar.html' with fields=filter_fields trailing=filter_trailing %}
             <div class="card-body">
                 <div class="table-responsive min-h-300" >
                     <table class="table table-striped align-middle mb-0">
-                        <thead>
+                        <thead class="text-muted table-light">
                             <tr>
-                                <th>Invoice #</th>
-                                <th>Customer</th>
-                                <th>Date</th>
-                                <th>Total</th>
-                                <th>Paid</th>
-                                <th>Due</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th scope="col">Invoice #</th>
+                                <th scope="col">Customer</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Total</th>
+                                <th scope="col">Paid</th>
+                                <th scope="col">Due</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -112,6 +121,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/tom-select.complete.min.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     new TomSelect('#customerFilter', {

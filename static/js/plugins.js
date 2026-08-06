@@ -1,6 +1,8 @@
 (function() {
-    var hasToast = document.querySelectorAll("[toast-list]").length > 0;
-    var hasChoices = document.querySelectorAll("[data-choices]").length > 0;
+    // Load Flatpickr only on pages that use date-picker inputs.
+    // Choices.js and Toastify are not used in this project:
+    // - Dropdowns use TomSelect instead of Choices.js
+    // - Notifications use Bootstrap alerts + modals.js instead of Toastify
     var hasFlatpickr = document.querySelectorAll("[data-provider]").length > 0;
 
     function loadScript(src) {
@@ -11,9 +13,7 @@
         document.body.appendChild(script);
     }
 
-    if (hasToast || hasChoices || hasFlatpickr) {
-        loadScript('https://cdn.jsdelivr.net/npm/toastify-js');
-        loadScript('https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js');
+    if (hasFlatpickr) {
         loadScript('https://cdn.jsdelivr.net/npm/flatpickr');
     }
 })();

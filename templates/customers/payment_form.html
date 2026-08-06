@@ -1,4 +1,9 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link href="{% static 'css/tom-select.bootstrap5.min.css' %}" rel="stylesheet">
+{% endblock %}
 
 {% block title %}Receive Payment | {{ SHOP_NAME }}{% endblock %}
 
@@ -400,4 +405,5 @@ document.getElementById('paymentForm').addEventListener('submit', function(e) {
 // Initialize
 attachInvoiceRadioHandlers();
 </script>
+<script src="{% static 'js/tom-select.complete.min.js' %}"></script>
 {% endblock %}

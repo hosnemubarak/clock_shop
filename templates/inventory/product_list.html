@@ -7,106 +7,74 @@
 
 {% block content %}
 {% url 'inventory:category_list' as inv_url %}
-{% include 'includes/page_header.html' with title='Products' breadcrumb=True parent_label='Inventory' parent_url=inv_url %}
-
-<!-- Filter Card -->
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header border-0 pb-0">
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                    <h5 class="card-title mb-0"><i class="las la-filter me-1"></i> Filters</h5>
-                    <div class="d-flex gap-2">
-                        <a href="{% url 'inventory:category_list' %}" class="btn btn-soft-primary">
-                            <i class="las la-tags me-1"></i> Categories
-                        </a>
-                        <a href="{% url 'inventory:brand_list' %}" class="btn btn-soft-info">
-                            <i class="las la-copyright me-1"></i> Brands
-                        </a>
-                        <a href="{% url 'inventory:product_create' %}" class="btn btn-success">
-                            <i class="las la-plus me-1"></i> Add Product
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <form method="get" id="filterForm">
-                    <div class="row g-3">
-                        <div class="col-md-8">
-                            <label class="form-label small text-muted">Search</label>
-                            <div class="input-group">
-                                <input type="text" name="search" class="form-control" placeholder="SKU, name, brand..." value="{{ search }}">
-                                <button type="submit" class="btn btn-primary"><i class="las la-search"></i></button>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small text-muted">Category</label>
-                            <select name="category" class="form-select" onchange="document.getElementById('filterForm').submit()">
-                                <option value="">All Categories</option>
-                                {% for cat in categories %}
-                                <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small text-muted">Brand</label>
-                            <select name="brand" class="form-select" onchange="document.getElementById('filterForm').submit()">
-                                <option value="">All Brands</option>
-                                {% for brand in brands %}
-                                <option value="{{ brand.id }}" {% if selected_brand == brand.id|stringformat:"s" %}selected{% endif %}>{{ brand.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small text-muted">Status</label>
-                            <select name="status" class="form-select" onchange="document.getElementById('filterForm').submit()">
-                                <option value="">All Status</option>
-                                <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active</option>
-                                <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small text-muted">Stock</label>
-                            <select name="stock" class="form-select" onchange="document.getElementById('filterForm').submit()">
-                                <option value="">All Stock</option>
-                                <option value="in" {% if selected_stock == 'in' %}selected{% endif %}>In Stock</option>
-                                <option value="low" {% if selected_stock == 'low' %}selected{% endif %}>Low Stock</option>
-                                <option value="out" {% if selected_stock == 'out' %}selected{% endif %}>Out of Stock</option>
-                            </select>
-                        </div>
-                        <div class="col-12 d-flex justify-content-end">
-                            {% if search or selected_category or selected_brand or selected_stock or selected_status %}
-                            <a href="{% url 'inventory:product_list' %}" class="btn btn-soft-danger" title="Clear Filters">
-                                <i class="las la-times me-1"></i> Clear Filters
-                            </a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+{% url 'inventory:product_create' as create_url %}
+{% url 'inventory:brand_list' as brand_url %}
+{% url 'inventory:category_list' as cat_url %}
+{% include 'includes/page_header.html' with title='Products' breadcrumb=True parent_label='Inventory' parent_url=inv_url action_url=create_url action_label='Add Product' action_icon='las la-plus' action2_url=brand_url action2_label='Brands' action2_icon='las la-copyright' action2_class='btn-soft-info' action3_url=cat_url action3_label='Categories' action3_icon='las la-tags' action3_class='btn-soft-primary' %}
 
 <!-- Products Table -->
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">All Products <span class="badge bg-primary-subtle text-primary ms-2">{{ products.paginator.count }}</span></h5>
-            </div>
+            {% capture as filter_fields %}
+                <div class="col-xl-4 col-md-12">
+                    <label for="searchField" class="visually-hidden">Search</label>
+                    <input type="text" id="searchField" name="search" class="form-control" placeholder="Search by SKU, name, brand..." value="{{ search }}">
+                </div>
+                <div class="col-xl-2 col-md-3">
+                    <label for="categoryFilter" class="visually-hidden">Category</label>
+                    <select id="categoryFilter" name="category" class="form-select">
+                        <option value="">All Categories</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-xl-2 col-md-3">
+                    <label for="brandFilter" class="visually-hidden">Brand</label>
+                    <select id="brandFilter" name="brand" class="form-select">
+                        <option value="">All Brands</option>
+                        {% for brand in brands %}
+                        <option value="{{ brand.id }}" {% if selected_brand == brand.id|stringformat:"s" %}selected{% endif %}>{{ brand.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-xl-2 col-md-3">
+                    <label for="statusFilter" class="visually-hidden">Status</label>
+                    <select id="statusFilter" name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="col-xl-2 col-md-3">
+                    <label for="stockFilter" class="visually-hidden">Stock</label>
+                    <select id="stockFilter" name="stock" class="form-select">
+                        <option value="">All Stock</option>
+                        <option value="in" {% if selected_stock == 'in' %}selected{% endif %}>In Stock</option>
+                        <option value="low" {% if selected_stock == 'low' %}selected{% endif %}>Low Stock</option>
+                        <option value="out" {% if selected_stock == 'out' %}selected{% endif %}>Out of Stock</option>
+                    </select>
+                </div>
+            {% endcapture %}
+            {% capture as filter_trailing %}
+                <div class="col-12 mt-3 pt-3 border-top">
+                    <h5 class="card-title mb-0">All Products <span class="badge bg-primary-subtle text-primary ms-2">{{ products.paginator.count }}</span></h5>
+                </div>
+            {% endcapture %}
+            {% include 'includes/filter_bar.html' with fields=filter_fields trailing=filter_trailing %}
             <div class="card-body">
                 <div class="table-responsive min-h-300" >
                     <table class="table table-striped table-nowrap align-middle mb-0">
-                        <thead>
+                        <thead class="text-muted table-light">
                             <tr>
-                                <th>Product (SKU - Brand)</th>
-                                <th>Category</th>
-                                <th>Stock</th>
-                                <th>Avg. Cost</th>
-                                <th>Sell Price</th>
-                                <th>Status</th>
-                                <th class="text-center">Actions</th>
+                                <th scope="col">Product</th>
+                                <th scope="col">Category</th>
+                                <th scope="col">Total Stock</th>
+                                <th scope="col">Avg Cost</th>
+                                <th scope="col">Selling Price</th>
+                                <th scope="col">Status</th>
+                                <th scope="col" class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -168,69 +136,7 @@
     </div>
 </div>
 
-<!-- Quick Add Stock Modal -->
-<div class="modal fade" id="quickAddStockModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Quick Add Stock: <span id="qasProductName" class="text-primary"></span></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="quickAddStockForm">
-                    {% csrf_token %}
-                    <input type="hidden" id="qasProductId">
-                    <div class="mb-3">
-                        <label class="form-label">Warehouse <span class="text-danger">*</span></label>
-                        <select id="qasWarehouse" class="form-select" required>
-                            <option value="">Select Warehouse...</option>
-                            {% for warehouse in warehouses %}
-                            <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Quantity <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <button class="btn btn-outline-secondary px-2" type="button" onclick="changeQty(this, -1)"><i class="las la-minus"></i></button>
-                                <input type="number" id="qasQuantity" class="form-control text-center px-0" min="1" required>
-                                <button class="btn btn-outline-secondary px-2" type="button" onclick="changeQty(this, 1)"><i class="las la-plus"></i></button>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Unit Cost Price <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
-                                <input type="number" id="qasUnitPrice" class="form-control" step="0.01" min="0" required>
-                            </div>
-                        </div>
-                    <hr class="my-3">
-                    <h6 class="text-muted mb-3 fs-12 text-uppercase">Supplier Details</h6>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Supplier</label>
-                            <input type="text" id="qasSupplier" class="form-control" placeholder="e.g. ABC Distributors">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Stock Date <span class="text-danger">*</span></label>
-                            <input type="date" id="qasPurchaseDate" class="form-control" required>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Notes</label>
-                        <textarea id="qasNotes" class="form-control" rows="2" placeholder="e.g. Invoice #12345"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" id="btnQuickAddStock" class="btn btn-primary" onclick="submitQuickAddStock()">Add Stock</button>
-            </div>
-        </div>
-    </div>
-</div>
+{% include 'includes/quick_add_stock_modal.html' %}
 {% endblock %}
 
 {% block extra_js %}

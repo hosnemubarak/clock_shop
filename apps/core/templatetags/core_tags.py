@@ -46,6 +46,8 @@ class CaptureNode(template.Node):
         self.varname = varname
 
     def render(self, context):
+        # SECURITY: Using mark_safe here is safe because the node list's output
+        # has already been through Django's auto-escape during the render() call.
         context[self.varname] = mark_safe(self.nodelist.render(context).strip())
         return ''
 
