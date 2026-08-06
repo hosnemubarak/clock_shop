@@ -14,4 +14,6 @@ urlpatterns = [
     path('unauthorized/', views.unauthorized, name='unauthorized'),
     path('staff/', views.staff_list, name='staff_list'),
     path('staff/<int:pk>/update-role/', views.update_staff_role, name='update_staff_role'),
+    path('profile/', views.profile_update, name='profile_update'),
+    path('password/', views.CustomPasswordChangeView.as_view(), name='password_change'),
 ]

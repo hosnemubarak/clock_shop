@@ -330,8 +330,8 @@ LOGGING = {
             'propagate': False,
         },
         'django.db.backends': {
-            'handlers': ['db_file'] if DEBUG else [],
-            'level': 'DEBUG' if DEBUG else 'INFO',
+            'handlers': ['console'] if DEBUG else [],
+            'level': 'DEBUG' if False else 'INFO',
             'propagate': False,
         },
         

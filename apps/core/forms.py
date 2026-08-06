@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth.models import User
 from .models import SystemSettings
 
 
@@ -78,3 +79,26 @@ class SystemSettingsForm(forms.ModelForm):
         if value is not None and value < 1:
             raise forms.ValidationError('Alert days must be at least 1')
         return value
+
+
+class UserProfileForm(forms.ModelForm):
+    """Form for updating user profile."""
+    
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First Name'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email Address'}),
+        }
+
+
+from django.contrib.auth.forms import PasswordChangeForm
+
+class CustomPasswordChangeForm(PasswordChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs['class'] = 'form-control'
+

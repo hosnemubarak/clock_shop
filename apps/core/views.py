@@ -515,5 +515,33 @@ def update_staff_role(request, pk):
                 
         staff.save()
         messages.success(request, f'Successfully updated settings for {staff.username}.')
-        
     return redirect('core:staff_list')
+
+
+@login_required
+def profile_update(request):
+    from .forms import UserProfileForm
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your profile was successfully updated!')
+            return redirect('core:dashboard')
+    else:
+        form = UserProfileForm(instance=request.user)
+    
+    return render(request, 'core/profile_update.html', {'form': form})
+
+
+from django.contrib.auth.views import PasswordChangeView
+from django.urls import reverse_lazy
+
+class CustomPasswordChangeView(PasswordChangeView):
+    from .forms import CustomPasswordChangeForm
+    form_class = CustomPasswordChangeForm
+    template_name = 'core/password_change.html'
+    success_url = reverse_lazy('core:dashboard')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Your password was successfully updated!')
+        return super().form_valid(form)
