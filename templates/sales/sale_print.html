@@ -1,12 +1,14 @@
 {% load humanize invoice_tags static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice {{ sale.invoice_number }}</title>
     <link href="{% static 'css/print.css' %}" rel="stylesheet" type="text/css" />
 </head>
+
 <body>
     <div class="no-print">
         <button onclick="window.print()" class="print-btn">Print Invoice</button>
@@ -17,10 +19,15 @@
 
         <!-- ===== COMPANY HEADER ===== -->
         <div class="header">
-            <h1>{{ SHOP_NAME }}</h1>
-            <p class="header-address">
-                {% if SHOP_ADDRESS %}{{ SHOP_ADDRESS }}{% else %}Shop{% endif %}
-            </p>
+            <div class="header-logo-container">
+                <img src="{% static 'images/skyzone-logo.png' %}" alt="{{ SHOP_NAME }} Logo" class="header-logo">
+            </div>
+            <div class="header-text">
+                <h1>{{ SHOP_NAME }}</h1>
+                <p class="header-address">
+                    {% if SHOP_ADDRESS %}{{ SHOP_ADDRESS }}{% else %}Shop{% endif %}
+                </p>
+            </div>
         </div>
 
         <!-- ===== DOCUMENT TYPE BANNER ===== -->
@@ -33,15 +40,15 @@
             <div class="bill-to-box">
                 <span class="section-label">Bill To</span>
                 {% if sale.customer %}
-                    <span class="customer-name">{{ sale.customer.name }}</span>
-                    {% if sale.customer.address %}
-                    <div class="info-row"><span class="lbl">Address:</span> {{ sale.customer.address }}</div>
-                    {% endif %}
-                    {% if sale.customer.phone %}
-                    <div class="info-row"><span class="lbl">Phone:</span> {{ sale.customer.phone }}</div>
-                    {% endif %}
+                <span class="customer-name">{{ sale.customer.name }}</span>
+                {% if sale.customer.address %}
+                <div class="info-row"><span class="lbl">Address:</span> {{ sale.customer.address }}</div>
+                {% endif %}
+                {% if sale.customer.phone %}
+                <div class="info-row"><span class="lbl">Phone:</span> {{ sale.customer.phone }}</div>
+                {% endif %}
                 {% else %}
-                    <span class="customer-name">Walk-in Customer</span>
+                <span class="customer-name">Walk-in Customer</span>
                 {% endif %}
             </div>
             <div class="meta-box">
@@ -81,9 +88,9 @@
                     <td class="item-sl">{{ forloop.counter|stringformat:"02d" }}</td>
                     <td class="item-name">
                         {% if item.is_custom %}
-                            {{ item.custom_description }} <em class="item-custom">(Custom)</em>
+                        {{ item.custom_description }} <em class="item-custom">(Custom)</em>
                         {% else %}
-                            {{ item.product.display_name }}
+                        {{ item.product.display_name }}
                         {% endif %}
                     </td>
                     <td class="text-right">{{ item.quantity|stringformat:"02d" }}</td>
@@ -139,7 +146,8 @@
                 {% else %}
                 <strong>Total Outstanding Amount:</strong>
                 {% endif %}
-                &#2547; {{ sale.customer.total_due|floatformat:0|intcomma }}/= ({{ sale.customer.total_due|amount_in_words }})
+                &#2547; {{ sale.customer.total_due|floatformat:0|intcomma }}/= ({{
+                sale.customer.total_due|amount_in_words }})
             </div>
             {% endif %}
 
@@ -174,6 +182,5 @@
 
     </div><!-- end invoice-paper -->
 </body>
+
 </html>
-
-

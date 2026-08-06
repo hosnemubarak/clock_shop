@@ -17,10 +17,15 @@
 
         <!-- ===== COMPANY HEADER ===== -->
         <div class="header">
-            <h1>{{ SHOP_NAME }}</h1>
-            <p class="header-address">
-                {% if SHOP_ADDRESS %}{{ SHOP_ADDRESS }}{% else %}Shop{% endif %}
-            </p>
+            <div class="header-logo-container">
+                <img src="{% static 'images/skyzone-logo.png' %}" alt="{{ SHOP_NAME }} Logo" class="header-logo">
+            </div>
+            <div class="header-text">
+                <h1>{{ SHOP_NAME }}</h1>
+                <p class="header-address">
+                    {% if SHOP_ADDRESS %}{{ SHOP_ADDRESS }}{% else %}Shop{% endif %}
+                </p>
+            </div>
         </div>
 
         <!-- ===== DOCUMENT TYPE BANNER ===== -->
