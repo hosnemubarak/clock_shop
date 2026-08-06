@@ -78,8 +78,8 @@ h1, h2, h3, h4, strong { color: #0f172a; }
    HEADER — Company Info
    ============================================================ */
 .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 3px solid #0f172a; margin-bottom: 0; }
-.header-logo { max-width: 280px; max-height: 90px; object-fit: contain; margin-bottom: 10px; }
-.header-text { text-align: right; }
+.header-logo { max-width: 250px; max-height: 80px; object-fit: contain; margin-bottom: 10px; }
+.header-text { text-align: left; flex: 1; margin-right: 40px; }
 .header-text h1 { margin: 0 0 6px 0; font-family: 'Montserrat', sans-serif; font-size: 26px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #0f172a; }
 .header-text p { margin: 0; color: #64748b; font-size: 11px; line-height: 1.9; }
 
