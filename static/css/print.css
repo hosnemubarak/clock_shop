@@ -1,126 +1,517 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap');
 
-* { box-sizing: border-box; }
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 
-body { 
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-    margin: 0 auto; 
-    padding: 20px; 
-    font-size: 13px; 
-    max-width: 800px; 
-    color: #334155; 
-    line-height: 1.5; 
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0 auto;
+    padding: 24px 28px;
+    font-size: 13px;
+    max-width: 820px;
+    color: #334155;
+    line-height: 1.5;
+    background: #f1f5f9;
+}
+
+h1, h2, h3, h4, strong { color: #0f172a; }
+
+/* ============================================================
+   PRINT TOOLBAR (screen only)
+   ============================================================ */
+.no-print {
+    position: sticky;
+    top: 0;
+    z-index: 100;
     display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+    align-items: center;
+    gap: 10px;
+    background: #0f172a;
+    padding: 10px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
-h1, h2, h3, h4, strong, th { color: #0f172a; }
+.print-btn {
+    padding: 8px 20px;
+    cursor: pointer;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.3px;
+}
+.print-btn:hover { background: #2563eb; }
 
-.main-content { 
+.back-link {
+    padding: 8px 16px;
+    color: #94a3b8;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 13px;
+    border-radius: 6px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: 'Inter', sans-serif;
+}
+.back-link:hover { color: #e2e8f0; }
+
+/* ============================================================
+   INVOICE PAPER
+   ============================================================ */
+.invoice-paper {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.06);
+    padding: 36px 40px;
+}
+
+/* ============================================================
+   HEADER — Company Info
+   ============================================================ */
+.header {
+    text-align: center;
+    padding-bottom: 16px;
+    border-bottom: 3px solid #0f172a;
+    margin-bottom: 0;
+}
+
+.header h1 {
+    margin: 0 0 6px 0;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #0f172a;
+}
+
+.header-address {
+    margin: 0;
+    color: #64748b;
+    font-size: 11px;
+    line-height: 1.9;
+}
+
+/* ============================================================
+   DOCUMENT TYPE BANNER
+   ============================================================ */
+.doc-type-banner {
+    text-align: center;
+    padding: 9px 0 11px;
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 18px;
+}
+
+.doc-type-banner .doc-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #475569;
+    margin: 0;
+}
+
+/* ============================================================
+   BILL TO / META INFO
+   ============================================================ */
+.invoice-info {
     display: flex;
-    flex-direction: column;
-    flex: 1;
-    margin-bottom: 20px; 
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 16px;
+    margin-bottom: 20px;
 }
-.main-content > table { margin-bottom: 0; }
-.bottom-content { margin-top: 0; }
 
-.header { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; }
-.header h1 { margin: 0 0 5px 0; font-family: 'Montserrat', sans-serif; font-size: 26px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #0f172a; }
-.header p { margin: 0; color: #64748b; font-size: 11px; }
-
-.invoice-info { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: flex-start; }
-.bill-to-box { width: 55%; }
-.invoice-info strong { font-weight: 600; color: #475569; display: inline-block; margin-bottom: 5px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-.meta-box { width: 40%; text-align: right; }
-
-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-th, td { border-bottom: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; }
-th { 
-    background: #f8fafc; 
-    font-weight: 600; 
-    text-transform: uppercase; 
-    font-size: 11px; 
-    letter-spacing: 0.5px; 
-    border-top: 1px solid #e2e8f0; 
-    border-bottom: 2px solid #e2e8f0; 
+.bill-to-box {
+    width: 55%;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 3px solid #0f172a;
+    border-radius: 0 6px 6px 0;
+    padding: 12px 16px;
 }
-td { font-size: 13px; }
+
+.bill-to-box .section-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #64748b;
+    margin: 0 0 8px 0;
+    display: block;
+}
+
+.bill-to-box .customer-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.bill-to-box .info-row {
+    font-size: 12px;
+    color: #475569;
+    margin-bottom: 2px;
+}
+
+.bill-to-box .info-row .lbl {
+    font-weight: 600;
+    color: #334155;
+}
+
+.meta-box {
+    width: 40%;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 4px 0;
+    align-self: flex-start;
+}
+
+.meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 16px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.meta-row:last-child { border-bottom: none; }
+
+.meta-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.meta-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: #0f172a;
+    text-align: right;
+}
+
+.invoice-num-val {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    font-family: 'Montserrat', sans-serif;
+    letter-spacing: 0.5px;
+}
+
+/* ============================================================
+   STATUS BADGES
+   ============================================================ */
+.status-paid {
+    background: #dcfce7;
+    color: #166534;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+.status-partial {
+    background: #fef9c3;
+    color: #854d0e;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+}
+.status-unpaid {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* ============================================================
+   ITEMS TABLE
+   ============================================================ */
+table { width: 100%; border-collapse: collapse; margin: 0; }
+
+/* The header row inside thead that wraps the company block */
+thead tr.doc-header-row th {
+    background: white;
+    border: none;
+    padding: 0;
+}
+
+/* The actual column headers */
+thead tr.col-header-row th {
+    background: #1e293b;
+    color: #f1f5f9;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 10px 12px;
+    text-align: left;
+    border: none;
+}
+thead tr.col-header-row th.text-right { text-align: right; }
+
+tbody tr td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 13px;
+    color: #334155;
+    vertical-align: middle;
+}
+tbody tr:last-child td { border-bottom: 2px solid #e2e8f0; }
+tbody tr:nth-child(even) td { background: #fafbfc; }
+
+.item-sl { color: #94a3b8; font-size: 12px; font-weight: 500; }
+.item-name { font-weight: 600; color: #0f172a; }
+.amount-cell { font-weight: 600; color: #0f172a; }
 
 .text-right { text-align: right; }
 
-.totals { margin-top: auto; }
-.totals table { width: 100%; max-width: 350px; margin-left: auto; margin-top: 0; }
-.totals td { border: none; padding: 6px 12px; }
-.totals-label { color: #64748b; font-weight: 500; }
-.totals-val { font-weight: 600; color: #0f172a; }
-.totals tr.grand-total td { 
-    font-weight: 700; 
-    font-size: 15px; 
-    border-top: 2px solid #e2e8f0; 
-    padding-top: 10px;
-    color: #0f172a; 
+/* ============================================================
+   TOTALS
+   ============================================================ */
+.totals {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 4px;
+    margin-bottom: 20px;
 }
-.totals tr.balance-due td { color: #ef4444; font-weight: 600; }
 
-.notes-section { margin-top: 25px; padding: 15px; background: #f8fafc; border-radius: 6px; border: 1px solid #f1f5f9; }
+.totals-inner {
+    width: 100%;
+    max-width: 320px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+}
 
-.signatures { display: flex; justify-content: space-between; margin-top: 40px; margin-bottom: 20px; }
-.signature-box { text-align: center; width: 28%; }
-.signature-line { border-top: 1px solid #cbd5e1; padding-top: 8px; font-weight: 600; font-size: 12px; color: #475569; }
+.totals-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    background: #f8fafc;
+}
+.totals-row:last-child { border-bottom: none; }
 
-.footer { margin-top: 20px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+.t-label { font-size: 12px; font-weight: 500; color: #64748b; }
+.t-value { font-size: 13px; font-weight: 600; color: #0f172a; }
 
-.print-btn {
-    padding: 10px 20px; 
-    cursor: pointer; 
-    background: #0f172a; 
-    color: white; 
-    border: none; 
-    border-radius: 4px; 
+.grand-total-row {
+    background: #0f172a !important;
+    padding: 12px 16px !important;
+}
+.grand-total-row .t-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #f1f5f9 !important;
+    letter-spacing: 0.3px;
+}
+.grand-total-row .t-value {
+    font-size: 16px;
+    font-weight: 800;
+    color: #ffffff !important;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.balance-due-row { background: #fef2f2 !important; }
+.balance-due-row .t-label { color: #dc2626 !important; font-weight: 700; }
+.balance-due-row .t-value { color: #dc2626 !important; font-weight: 700; }
+
+/* Legacy compat */
+.totals-label { color: #64748b; font-weight: 500; font-size: 12px; }
+.totals-val { font-weight: 600; color: #0f172a; font-size: 13px; }
+
+/* ============================================================
+   BOTTOM CONTENT
+   ============================================================ */
+.bottom-content { margin-top: 4px; }
+
+.in-words-section {
+    padding: 10px 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    font-size: 12px;
     font-weight: 500;
-}
-.back-link {
-    margin-left: 10px; 
-    color: #0f172a; 
-    text-decoration: none; 
-    font-weight: 500;
+    color: #334155;
 }
 
-.status-paid { color: #10b981; font-weight: 500; }
-.status-partial { color: #f59e0b; font-weight: 500; }
-.status-unpaid { color: #ef4444; font-weight: 500; }
-.footer-text { margin: 5px 0 0 0; font-size: 13px; font-weight: 600; color: #0f172a; }
-
-/* Hide browser headers/footers and adjust physical margins */
-@page { 
-    margin: 10mm; 
-    @bottom-right {
-        content: "Page " counter(page) " of " counter(pages);
-        font-family: 'DM Sans', sans-serif;
-        font-size: 10px;
-        color: #64748b;
-    }
-}
-@media print { 
-    body { 
-        padding: 0; 
-        max-width: none; 
-        background: white; 
-        display: block;
-        min-height: auto;
-    }
-    .no-print { display: none !important; } 
-    thead { display: table-header-group; }
-    tfoot { display: table-footer-group; }
-    tr, .invoice-info, .totals, .signatures, .bottom-content { page-break-inside: avoid; break-inside: avoid; }
-    h1, h2, h3, h4, p { page-break-inside: avoid; break-inside: avoid; }
+.in-words-section .iw-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #64748b;
+    display: block;
+    margin-bottom: 3px;
 }
 
+.outstanding-section {
+    padding: 10px 14px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-left: 3px solid #ef4444;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #dc2626;
+}
 
+.notes-section {
+    padding: 12px 16px;
+    background: #fefce8;
+    border: 1px solid #fde68a;
+    border-left: 3px solid #f59e0b;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: #78350f;
+}
+
+.notes-section .notes-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #92400e;
+    display: block;
+    margin-bottom: 4px;
+}
+
+/* ============================================================
+   SIGNATURES
+   ============================================================ */
+.signatures {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 36px;
+    margin-bottom: 20px;
+    gap: 20px;
+}
+
+.signature-box { text-align: center; flex: 1; }
+.signature-space { height: 52px; }
+
+.signature-line {
+    border-top: 1px dashed #94a3b8;
+    padding-top: 8px;
+    font-weight: 600;
+    font-size: 11px;
+    color: #64748b;
+    letter-spacing: 0.3px;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.footer {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+}
+
+.footer-text {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    letter-spacing: 0.5px;
+}
+
+.footer-sub {
+    margin: 4px 0 0;
+    font-size: 10px;
+    color: #94a3b8;
+}
+
+/* ============================================================
+   UTILITY / LEGACY COMPATIBILITY
+   ============================================================ */
 .w-5 { width: 5%; }
+.text-slate { color: #64748b; }
 .text-slate-dark { color: #0f172a; }
+.text-danger { color: #dc2626; }
+.table-header-dark { font-weight: 600; color: #0f172a; }
+.table-header-dark-sm { font-weight: 600; color: #0f172a; }
+.fw-semibold { font-weight: 600; }
 .mt-15px { margin-top: 15px; }
 .fs-13px { font-size: 13px; }
+.mb-20px { margin-bottom: 20px; }
+
+/* ============================================================
+   PRINT MEDIA
+   ============================================================ */
+@page {
+    size: A4;
+    margin: 14mm 12mm;
+    @bottom-right {
+        content: "Page " counter(page) " of " counter(pages);
+        font-family: 'Inter', sans-serif;
+        font-size: 9px;
+        color: #94a3b8;
+    }
+}
+
+@media print {
+    body {
+        padding: 0;
+        margin: 0;
+        max-width: none;
+        background: white;
+        display: block;
+        min-height: auto;
+        font-size: 12px;
+    }
+
+    .invoice-paper {
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+        background: white;
+    }
+
+    .no-print { display: none !important; }
+
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    thead { display: table-header-group; }
+    tfoot { display: table-footer-group; }
+
+    tr { page-break-inside: avoid; break-inside: avoid; }
+    .invoice-info { page-break-inside: avoid; break-inside: avoid; }
+    .totals {
+        page-break-inside: avoid; break-inside: avoid;
+        page-break-before: avoid; break-before: avoid;
+    }
+    .bottom-content { page-break-inside: avoid; break-inside: avoid; }
+    .signatures { page-break-inside: avoid; break-inside: avoid; }
+    .footer { page-break-inside: avoid; break-inside: avoid; }
+    .in-words-section, .outstanding-section, .notes-section {
+        page-break-inside: avoid; break-inside: avoid;
+    }
+}
+
+

@@ -1,112 +1,149 @@
-{% load humanize invoice_tags static %}
+﻿{% load humanize invoice_tags static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment Receipt #{{ payment.id }}</title>
     <link href="{% static 'css/print.css' %}" rel="stylesheet" type="text/css" />
 </head>
 <body>
-    <div class="no-print mb-20px" >
-        <button onclick="window.print()" class="print-btn">Print Receipt</button>
-        <button onclick="window.close()" class="back-link" style="margin-left:10px; cursor:pointer;">Close</button>
+    <div class="no-print">
+        <button onclick="window.print()" class="print-btn">Ã°Å¸â€“Â¨ Print Receipt</button>
+        <button onclick="window.close()" class="back-link">Ã¢Å“â€¢ Close</button>
     </div>
 
-    <div class="main-content">
+    <div class="invoice-paper">
+
+        <!-- ===== COMPANY HEADER ===== -->
+        <div class="header">
+            <h1>{{ SHOP_NAME }}</h1>
+            <p class="header-address">
+                {% if SHOP_ADDRESS %}{{ SHOP_ADDRESS }}{% else %}Shop{% endif %}
+            </p>
+        </div>
+
+        <!-- ===== DOCUMENT TYPE BANNER ===== -->
+        <div class="doc-type-banner">
+            <p class="doc-title">Payment Receipt</p>
+        </div>
+
+        <!-- ===== RECEIVED FROM & RECEIPT META ===== -->
+        <div class="invoice-info">
+            <div class="bill-to-box">
+                <span class="section-label">Received From</span>
+                {% if payment.customer %}
+                    <span class="customer-name">{{ payment.customer.name }}</span>
+                    {% if payment.customer.address %}
+                    <div class="info-row"><span class="lbl">Address:</span> {{ payment.customer.address }}</div>
+                    {% endif %}
+                    {% if payment.customer.phone %}
+                    <div class="info-row"><span class="lbl">Phone:</span> {{ payment.customer.phone }}</div>
+                    {% endif %}
+                {% else %}
+                    <span class="customer-name">Walk-in Customer</span>
+                {% endif %}
+            </div>
+            <div class="meta-box">
+                <div class="meta-row">
+                    <span class="meta-label">Receipt #</span>
+                    <span class="invoice-num-val">PR-{{ payment.id|stringformat:"06d" }}</span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">Date</span>
+                    <span class="meta-value">{{ payment.payment_date|date:"d M Y, h:i A" }}</span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">Method</span>
+                    <span class="meta-value">{{ payment.get_payment_method_display }}</span>
+                </div>
+                {% if payment.sale %}
+                <div class="meta-row">
+                    <span class="meta-label">For Invoice</span>
+                    <span class="meta-value">{{ payment.sale.invoice_number }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ===== PAYMENT DESCRIPTION TABLE ===== -->
         <table>
             <thead>
-                <tr>
-                    <th colspan="2" style="background: white; border: none; padding: 0;">
-                        <div class="header">
-                            <h1>{{ SHOP_NAME }}</h1>
-                            {% if SHOP_ADDRESS %}
-                            <p>{{ SHOP_ADDRESS|linebreaksbr }}</p>
-                            {% else %}
-                            <p>Shop</p>
-                            {% endif %}
-                            <h2 style="margin-top:20px; font-size:18px; color:#0f172a;">PAYMENT RECEIPT</h2>
-                        </div>
-
-                        <div class="invoice-info">
-                            <div class="bill-to-box">
-                                {% if payment.customer %}
-                                <strong>Received From:</strong> <span class="table-header-dark-sm">{{ payment.customer.name }}</span><br>
-                                {% if payment.customer.address %}<strong>Address:</strong> <span class="text-slate">{{ payment.customer.address }}</span><br>{% endif %}
-                                {% if payment.customer.phone %}<strong>Phone:</strong> <span class="text-slate">{{ payment.customer.phone }}</span><br>{% endif %}
-                                {% else %}
-                                <strong>Received From:</strong> <span class="table-header-dark-sm">Walk-in Customer</span>
-                                {% endif %}
-                            </div>
-                            <div class="meta-box">
-                                <strong>Receipt #:</strong> <span class="table-header-dark">PR-{{ payment.id|stringformat:"06d" }}</span><br>
-                                <strong>Date:</strong> {{ payment.payment_date|date:"F d, Y h:i A" }}<br>
-                                <strong>Method:</strong> {{ payment.get_payment_method_display }}<br>
-                                {% if payment.sale %}
-                                <strong>For Invoice:</strong> {{ payment.sale.invoice_number }}<br>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </th>
+                <tr class="col-header-row">
+                    <th>Description</th>
+                    <th class="text-right">Amount</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td style="padding: 15px; font-size:14px; border:1px solid #e2e8f0; border-top:2px solid #0f172a;">
-                        <strong>Description:</strong> <br>
-                        Payment received {% if payment.sale %}for Invoice #{{ payment.sale.invoice_number }}{% endif %}
-                        {% if payment.reference %}<br><strong>Ref:</strong> {{ payment.reference }}{% endif %}
-                        {% if payment.notes %} <br><span class="text-muted">{{ payment.notes }}</span>{% endif %}
+                    <td class="item-name">
+                        Payment received{% if payment.sale %} for Invoice #{{ payment.sale.invoice_number }}{% endif %}
+                        {% if payment.reference %}<br><span style="font-size:12px;color:#64748b;font-weight:400;">Ref: {{ payment.reference }}</span>{% endif %}
                     </td>
-                    <td class="text-right table-header-dark" style="padding: 15px; font-size:18px; vertical-align: top; border:1px solid #e2e8f0; border-top:2px solid #0f172a; width:150px;">
-                        <strong>৳</strong> {{ payment.amount|floatformat:0|intcomma }}
-                    </td>
+                    <td class="text-right amount-cell">&#2547; {{ payment.amount|floatformat:0|intcomma }}</td>
                 </tr>
             </tbody>
         </table>
 
+        <!-- ===== TOTALS ===== -->
         <div class="totals">
-            <table>
-                <tr class="grand-total">
-                    <td class="totals-label text-slate-dark">Amount Received:</td>
-                    <td class="text-right totals-val"><strong>৳</strong> {{ payment.amount|floatformat:0|intcomma }}</td>
-                </tr>
-            </table>
-        </div>
-    </div> <!-- end main-content -->
-
-    <div class="bottom-content">
-        <div class="mt-15px fw-semibold text-slate-dark fs-13px">
-            <strong class="text-slate">IN WORDS:</strong> 
-            {{ payment.amount|amount_in_words }}
-        </div>
-
-        {% if payment.customer and payment.customer.total_due > 0 %}
-        <div class="mt-15px fw-semibold text-danger fs-13px">
-            <strong>Total Outstanding Amount:</strong> 
-            <strong>৳</strong> {{ payment.customer.total_due|floatformat:0|intcomma }}/= ({{ payment.customer.total_due|amount_in_words }})
-        </div>
-        {% endif %}
-
-        {% if payment.notes %}
-        <div class="notes-section">
-            <strong class="text-slate">Notes:</strong> {{ payment.notes }}
-        </div>
-        {% endif %}
-
-        <div class="signatures">
-            <div class="signature-box">
-                <div class="signature-line">Customer</div>
-            </div>
-            <div class="signature-box">
-                <div class="signature-line">Prepared & Checked by</div>
-            </div>
-            <div class="signature-box">
-                <div class="signature-line">Sales Authority</div>
+            <div class="totals-inner">
+                <div class="totals-row grand-total-row">
+                    <span class="t-label">Amount Received</span>
+                    <span class="t-value">&#2547; {{ payment.amount|floatformat:0|intcomma }}</span>
+                </div>
             </div>
         </div>
 
-        <div class="footer">
-            <p class="footer-text">★ Thank you for your business! ★</p>
-        </div>
-    </div> <!-- end bottom-content -->
+        <!-- ===== BOTTOM CONTENT ===== -->
+        <div class="bottom-content">
+
+            <div class="in-words-section">
+                <span class="iw-label">In Words</span>
+                {{ payment.amount|amount_in_words }}
+            </div>
+
+            {% if payment.customer and payment.customer.total_due > 0 %}
+            <div class="outstanding-section">
+                <strong>Total Outstanding Amount:</strong>
+                &#2547; {{ payment.customer.total_due|floatformat:0|intcomma }}/= ({{ payment.customer.total_due|amount_in_words }})
+            </div>
+            {% endif %}
+
+            {% if payment.notes %}
+            <div class="notes-section">
+                <span class="notes-label">Notes</span>
+                {{ payment.notes }}
+            </div>
+            {% endif %}
+
+            <div class="signatures">
+                <div class="signature-box">
+                    <div class="signature-space"></div>
+                    <div class="signature-line">Customer</div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-space"></div>
+                    <div class="signature-line">Prepared &amp; Checked by</div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-space"></div>
+                    <div class="signature-line">Sales Authority</div>
+                </div>
+            </div>
+
+            <div class="footer">
+                <p class="footer-text">&#9733; Thank you for your business! &#9733;</p>
+                {% if SHOP_ADDRESS %}
+                <p class="footer-sub">{{ SHOP_NAME }} &mdash; {{ SHOP_ADDRESS }}</p>
+                {% endif %}
+            </div>
+
+        </div><!-- end bottom-content -->
+
+    </div><!-- end invoice-paper -->
 </body>
 </html>
+
+
+
