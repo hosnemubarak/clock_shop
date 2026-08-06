@@ -28,14 +28,6 @@
                     </select>
                 </div>
                 <div class="col-xl-3 col-lg-4 col-md-6">
-                    <select name="payment_status" class="form-select">
-                        <option value="">All Payment Status</option>
-                        <option value="paid" {% if payment_status == 'paid' %}selected{% endif %}>Paid</option>
-                        <option value="partial" {% if payment_status == 'partial' %}selected{% endif %}>Partial</option>
-                        <option value="unpaid" {% if payment_status == 'unpaid' %}selected{% endif %}>Unpaid</option>
-                    </select>
-                </div>
-                <div class="col-xl-3 col-lg-4 col-md-6">
                     <div class="input-group">
                         <span class="input-group-text">From</span>
                         <input type="date" name="date_from" class="form-control" title="Date From" value="{{ date_from|default_if_none:'' }}">
@@ -46,6 +38,14 @@
                         <span class="input-group-text">To</span>
                         <input type="date" name="date_to" class="form-control" title="Date To" value="{{ date_to|default_if_none:'' }}">
                     </div>
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <select name="payment_status" class="form-select">
+                        <option value="">All Payment Status</option>
+                        <option value="paid" {% if payment_status == 'paid' %}selected{% endif %}>Paid</option>
+                        <option value="partial" {% if payment_status == 'partial' %}selected{% endif %}>Partial</option>
+                        <option value="unpaid" {% if payment_status == 'unpaid' %}selected{% endif %}>Unpaid</option>
+                    </select>
                 </div>
             {% endcapture %}
             {% capture as filter_trailing %}

@@ -17,10 +17,10 @@
     <div class="col-12">
         <div class="card">
             {% capture as filter_fields %}
-                <div class="col-md-4">
-                    <input type="text" name="search" class="form-control" placeholder="Search by ID, Customer or Ref..." value="{{ search }}">
+                <div class="col-md-3">
+                    <input type="text" name="search" class="form-control" placeholder="Search by ID or Ref..." value="{{ search }}">
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <select name="customer" class="form-select" id="customerFilter">
                         <option value="">All Customers</option>
                         {% for c in customers %}
