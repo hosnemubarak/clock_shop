@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from .models import SystemSettings
 
 
@@ -101,4 +101,49 @@ class CustomPasswordChangeForm(PasswordChangeForm):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs['class'] = 'form-control'
+
+
+class StaffCreationForm(forms.ModelForm):
+    """Form for creating a new staff member."""
+    role = forms.ModelChoiceField(
+        queryset=Group.objects.all(),
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        empty_label="Select a Role"
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password'}),
+        required=True
+    )
+
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email', 'password']
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Username'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First Name'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email Address'}),
+        }
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data['password'])
+        
+        # New staff are active by default
+        user.is_active = True
+        
+        # If the selected role is Admin, they are a superuser
+        role = self.cleaned_data['role']
+        if role.name.lower() == 'admin':
+            user.is_superuser = True
+            user.is_staff = True
+        elif role.name.lower() in ['manager', 'cashier']:
+            user.is_staff = True
+            
+        if commit:
+            user.save()
+            user.groups.add(role)
+        return user
+
 

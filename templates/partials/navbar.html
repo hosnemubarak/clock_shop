@@ -120,6 +120,13 @@
                         </a>
                         {% endif %}
 
+                        {% if user.is_superuser %}
+                        <a class="dropdown-item" href="{% url 'core:staff_list' %}">
+                            <i class="bx bx-group fs-15 align-middle me-1"></i>
+                            <span>Staff Directory</span>
+                        </a>
+                        {% endif %}
+
                         <!-- Profile Details -->
                         <a class="dropdown-item" href="{% url 'core:profile_update' %}">
                             <i class="bx bx-user fs-15 align-middle me-1"></i>

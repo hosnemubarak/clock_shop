@@ -478,12 +478,26 @@ from apps.core.decorators import admin_required
 @login_required
 @admin_required
 def staff_list(request):
-    """List all staff members and their roles."""
+    """List all staff members and handle new staff creation."""
+    from .forms import StaffCreationForm
+    
+    if request.method == 'POST':
+        form = StaffCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Successfully added staff member {form.cleaned_data["username"]}.')
+            return redirect('core:staff_list')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = StaffCreationForm()
+        
     staff_members = User.objects.all().prefetch_related('groups').order_by('-is_superuser', 'username')
     roles = Group.objects.all()
     return render(request, 'core/staff_list.html', {
         'staff_members': staff_members,
-        'roles': roles
+        'roles': roles,
+        'form': form
     })
 
 @login_required
@@ -515,6 +529,48 @@ def update_staff_role(request, pk):
                 
         staff.save()
         messages.success(request, f'Successfully updated settings for {staff.username}.')
+    return redirect('core:staff_list')
+
+
+@login_required
+@admin_required
+def update_staff_password(request, pk):
+    """Update a staff member's password directly."""
+    if request.method == 'POST':
+        staff = get_object_or_404(User, pk=pk)
+        
+        # Don't allow modifying superusers through this interface unless it's yourself
+        if staff.is_superuser and staff != request.user:
+            messages.error(request, 'Cannot modify other superuser passwords through this interface.')
+            return redirect('core:staff_list')
+            
+        new_password = request.POST.get('new_password')
+        if new_password:
+            staff.set_password(new_password)
+            staff.save()
+            messages.success(request, f'Successfully updated password for {staff.username}.')
+        else:
+            messages.error(request, 'Password cannot be empty.')
+            
+    return redirect('core:staff_list')
+
+
+@login_required
+@admin_required
+def delete_staff(request, pk):
+    """Delete a staff member from the system."""
+    if request.method == 'POST':
+        staff = get_object_or_404(User, pk=pk)
+        
+        # Don't allow deleting superusers
+        if staff.is_superuser:
+            messages.error(request, 'Cannot delete a superuser. Demote them first if necessary.')
+            return redirect('core:staff_list')
+            
+        username = staff.username
+        staff.delete()
+        messages.success(request, f'Staff member {username} deleted successfully.')
+            
     return redirect('core:staff_list')
 
 
