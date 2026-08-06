@@ -77,9 +77,10 @@
                 <div class="dropdown header-item">
                     <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="d-flex align-items-center">
-                            <span class="rounded-circle header-profile-user bg-primary text-white d-flex align-items-center justify-content-center avatar-sm"
-                                >
-                                {% if user.first_name %}
+                            <span class="rounded-circle header-profile-user bg-primary text-white d-flex align-items-center justify-content-center avatar-sm">
+                                {% if user.is_superuser %}
+                                    <i class="las la-crown fs-20 text-white"></i>
+                                {% elif user.first_name %}
                                     {{ user.first_name|slice:":1"|upper }}
                                 {% else %}
                                     {{ user.username|slice:":1"|upper }}
@@ -95,6 +96,14 @@
                     </button>
 
                     <div class="dropdown-menu dropdown-menu-end">
+                        <h6 class="dropdown-header">
+                            Welcome {{ user.first_name|default:user.username }}!
+                            {% if user.is_superuser %}
+                            <br><span class="badge bg-success-subtle text-success mt-1"><i class="las la-crown me-1"></i>Administrator</span>
+                            {% elif user.is_staff %}
+                            <br><span class="badge bg-info-subtle text-info mt-1">Staff</span>
+                            {% endif %}
+                        </h6>
                         <!-- System Settings (Superuser only) -->
                         {% if user.is_superuser %}
                         <a class="dropdown-item" href="{% url 'core:system_settings' %}">
