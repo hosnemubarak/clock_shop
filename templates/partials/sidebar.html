@@ -36,7 +36,7 @@
                 
                 <!-- Dashboard -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'core:dashboard' %}">
+                    <a class="nav-link menu-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'core:dashboard' %}">
                         <i class="las la-tachometer-alt"></i> <span data-key="t-dashboard">{% trans "Dashboard" %}</span>
                     </a>
                 </li>
@@ -45,56 +45,56 @@
 
                 <!-- Products -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'inventory:product_list' %}">
+                    <a class="nav-link menu-link {% if request.resolver_match.app_name == 'inventory' and 'purchase' not in request.resolver_match.url_name %}active{% endif %}" href="{% url 'inventory:product_list' %}">
                         <i class="las la-boxes"></i> <span data-key="t-products">Products</span>
                     </a>
                 </li>
 
                 <!-- Stock In -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'inventory:purchase_list' %}">
+                    <a class="nav-link menu-link {% if request.resolver_match.app_name == 'inventory' and 'purchase' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'inventory:purchase_list' %}">
                         <i class="las la-truck"></i> <span data-key="t-purchases">Stock In</span>
                     </a>
                 </li>
 
                 <!-- Sales -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'sales:sale_list' %}">
+                    <a class="nav-link menu-link {% if request.resolver_match.app_name == 'sales' and 'return' not in request.resolver_match.url_name %}active{% endif %}" href="{% url 'sales:sale_list' %}">
                         <i class="las la-shopping-cart"></i> <span data-key="t-sales">Sales</span>
                     </a>
                 </li>
 
                 <!-- Returns -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'sales:return_list' %}">
+                    <a class="nav-link menu-link {% if request.resolver_match.app_name == 'sales' and 'return' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'sales:return_list' %}">
                         <i class="las la-undo"></i> <span data-key="t-returns">Returns</span>
                     </a>
                 </li>
 
                 <!-- Customers -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'customers:customer_list' %}">
+                    <a class="nav-link menu-link {% if request.resolver_match.app_name == 'customers' and 'payment' not in request.resolver_match.url_name %}active{% endif %}" href="{% url 'customers:customer_list' %}">
                         <i class="las la-users"></i> <span data-key="t-customers">Customers</span>
                     </a>
                 </li>
 
                 <!-- Payments -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'customers:payment_list' %}">
+                    <a class="nav-link menu-link {% if request.resolver_match.app_name == 'customers' and 'payment' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'customers:payment_list' %}">
                         <i class="las la-money-bill-wave"></i> <span data-key="t-payments">Payments</span>
                     </a>
                 </li>
 
                 <!-- Warehouse -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'warehouse:warehouse_list' %}">
+                    <a class="nav-link menu-link {% if request.resolver_match.app_name == 'warehouse' and 'transfer' not in request.resolver_match.url_name %}active{% endif %}" href="{% url 'warehouse:warehouse_list' %}">
                         <i class="las la-warehouse"></i> <span data-key="t-warehouses">Warehouses</span>
                     </a>
                 </li>
 
                 <!-- Transfers -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'warehouse:transfer_list' %}">
+                    <a class="nav-link menu-link {% if request.resolver_match.app_name == 'warehouse' and 'transfer' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'warehouse:transfer_list' %}">
                         <i class="las la-exchange-alt"></i> <span data-key="t-transfers">Transfers</span>
                     </a>
                 </li>
@@ -137,7 +137,7 @@
                 <!-- Audit Logs -->
                 {% if request.user|is_admin %}
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'core:audit_logs' %}">
+                    <a class="nav-link menu-link {% if request.resolver_match.url_name == 'audit_logs' %}active{% endif %}" href="{% url 'core:audit_logs' %}">
                         <i class="las la-history"></i> <span data-key="t-audit-logs">Audit Logs</span>
                     </a>
                 </li>
@@ -146,7 +146,7 @@
                 <!-- Staff Directory (Admin only) -->
                 {% if request.user|is_admin %}
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'core:staff_list' %}">
+                    <a class="nav-link menu-link {% if 'staff' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'core:staff_list' %}">
                         <i class="las la-users-cog"></i> <span data-key="t-staff">Staff Directory</span>
                     </a>
                 </li>
@@ -155,7 +155,7 @@
                 <!-- System Settings (Cashier, Manager and Admin) -->
                 {% if request.user|is_cashier %}
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="{% url 'core:system_settings' %}">
+                    <a class="nav-link menu-link {% if request.resolver_match.url_name == 'system_settings' %}active{% endif %}" href="{% url 'core:system_settings' %}">
                         <i class="las la-cog"></i> <span data-key="t-settings">System Settings</span>
                     </a>
                 </li>
