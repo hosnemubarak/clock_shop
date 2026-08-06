@@ -88,7 +88,7 @@
                             </span>
                             <span class="text-start ms-xl-2">
                                 <span class="d-none d-xl-inline-block fw-medium user-name-text fs-16">
-                                    {{ user.first_name|default:user.username }}
+                                    {% firstof user.first_name user.username %}
                                     <i class="las la-angle-down fs-12 ms-1"></i>
                                 </span>
                             </span>
@@ -97,7 +97,7 @@
 
                     <div class="dropdown-menu dropdown-menu-end">
                         <h6 class="dropdown-header">
-                            Welcome {{ user.first_name|default:user.username }}!
+                            Welcome {% firstof user.first_name user.username %}!
                             {% if user.is_superuser %}
                             <br><span class="badge bg-success-subtle text-success mt-1"><i class="las la-crown me-1"></i>Administrator</span>
                             {% elif user.is_staff %}
