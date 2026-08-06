@@ -186,7 +186,13 @@
                     </div>
                     <div class="d-flex align-items-end justify-content-between mt-4">
                         <div>
-                            <h4 class="fs-22 fw-semibold mb-4"><span class="counter-value" data-target="{{ total_products }}">{{ total_products }}</span></h4>
+                            <h4 class="fs-22 fw-semibold mb-2"><span class="counter-value" data-target="{{ total_products }}">{{ total_products }}</span> <span class="fs-14 text-muted fw-normal">Products</span></h4>
+                            <div class="mb-3">
+                                <span class="badge bg-secondary-subtle text-secondary fs-12 px-2 py-1 rounded-pill">
+                                    <i class="las la-layer-group fs-14 align-middle me-1"></i>
+                                    <span class="counter-value" data-target="{{ total_product_quantity }}">{{ total_product_quantity }}</span> Items in Stock
+                                </span>
+                            </div>
                             <span class="text-secondary">View Products <i class="las la-arrow-right"></i></span>
                         </div>
                         <div class="avatar-sm flex-shrink-0">

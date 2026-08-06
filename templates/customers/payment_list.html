@@ -12,16 +12,6 @@
 {% url 'customers:payment_create' as create_url %}
 {% include 'includes/page_header.html' with title='Payments' action_url=create_url action_label='Receive Payment' action_icon='las la-plus' %}
 
-<div class="row mb-3">
-    <div class="col-12">
-        <div class="alert alert-info d-flex align-items-center mb-0" role="alert">
-            <i class="las la-info-circle fs-3 me-2"></i>
-            <div>
-                <strong>Note:</strong> This list only displays general payments (such as advance payments or balance payoffs). Payments that are linked to specific invoices can be found in the <a href="{% url 'sales:sale_list' %}" class="alert-link">Sales</a> section.
-            </div>
-        </div>
-    </div>
-</div>
 
 <div class="row">
     <div class="col-12">
@@ -81,7 +71,13 @@
                                 </td>
                                 <td class="text-success fw-medium">{{ CURRENCY_SYMBOL }}{{ payment.amount|floatformat:0 }}</td>
                                 <td>{{ payment.get_payment_method_display }}</td>
-                                <td>{{ payment.reference|default:"-" }}</td>
+                                <td>
+                                    {% if payment.sale %}
+                                    <a href="{% url 'sales:sale_detail' payment.sale.pk %}" class="badge bg-info-subtle text-info">Sale #{{ payment.sale.pk }}</a>
+                                    {% else %}
+                                    {{ payment.reference|default:"-" }}
+                                    {% endif %}
+                                </td>
                                 <td>{{ payment.received_by.username|default:"-" }}</td>
                                 <td class="text-end">
                                     <a href="{% url 'customers:payment_print' payment.pk %}" class="btn btn-sm btn-outline-secondary" target="_blank" title="Print Receipt">

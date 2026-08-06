@@ -234,8 +234,8 @@ def customer_statement(request, pk):
 
 @cashier_required
 def payment_list(request):
-    """List all general payments (not linked to specific invoices)."""
-    payments = Payment.objects.select_related('customer', 'sale', 'received_by').filter(sale__isnull=True)
+    """List all payments (both general and sale-linked)."""
+    payments = Payment.objects.select_related('customer', 'sale', 'received_by').all()
     
     # Search
     search = request.GET.get('search', '')
