@@ -1,4 +1,4 @@
-﻿{% load humanize invoice_tags static %}
+{% load humanize invoice_tags static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -167,9 +167,7 @@
 
             <div class="footer">
                 <p class="footer-text">&#9733; Thank you for your business! &#9733;</p>
-                {% if SHOP_ADDRESS %}
-                <p class="footer-sub">{{ SHOP_NAME }} &mdash; {{ SHOP_ADDRESS }}</p>
-                {% endif %}
+                <p class="footer-sub">Goods sold are non-returnable and non-refundable after purchase.</p>
             </div>
 
         </div><!-- end bottom-content -->
