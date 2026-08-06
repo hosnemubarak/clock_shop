@@ -17,6 +17,9 @@
                 <tr>
                     <th colspan="5" style="background: white; border: none; padding: 0;">
                         <div class="header">
+                            {% if SHOP_LOGO_URL %}
+                            <img src="{{ SHOP_LOGO_URL }}" alt="{{ SHOP_NAME }} Logo" style="max-height: 80px; margin-bottom: 10px;">
+                            {% endif %}
                             <h1>{{ SHOP_NAME }}</h1>
                             {% if SHOP_ADDRESS %}
                             <p>{{ SHOP_ADDRESS|linebreaksbr }}</p>

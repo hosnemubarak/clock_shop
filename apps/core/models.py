@@ -52,6 +52,12 @@ class SystemSettings(models.Model):
         blank=True,
         help_text='Shop name displayed across the system'
     )
+    shop_logo = models.ImageField(
+        upload_to='shop_logo/',
+        null=True,
+        blank=True,
+        help_text='Shop logo used on invoices and reports'
+    )
     shop_address = models.TextField(
         blank=True,
         help_text='Shop address used on invoices and reports'
