@@ -104,29 +104,29 @@
 
                 <!-- Reports -->
                 <li class="nav-item">
-                    <a class="nav-link menu-link" href="#sidebarReports" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="sidebarReports">
+                    <a class="nav-link menu-link {% if request.resolver_match.app_name == 'reports' %}active{% endif %}" href="#sidebarReports" data-bs-toggle="collapse" role="button" aria-expanded="{% if request.resolver_match.app_name == 'reports' %}true{% else %}false{% endif %}" aria-controls="sidebarReports">
                         <i class="las la-chart-bar"></i> <span data-key="t-reports">Reports</span>
                     </a>
-                    <div class="collapse menu-dropdown" id="sidebarReports">
+                    <div class="collapse menu-dropdown {% if request.resolver_match.app_name == 'reports' %}show{% endif %}" id="sidebarReports">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item">
-                                <a href="{% url 'reports:sales_report' %}" class="nav-link" data-key="t-sales-report">Sales Report</a>
+                                <a href="{% url 'reports:sales_report' %}" class="nav-link" data-key="t-sales-report"><i class="las la-chart-line me-2 fs-16"></i> Sales Report</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'reports:profit_report' %}" class="nav-link" data-key="t-profit-report">Profit Report</a>
+                                <a href="{% url 'reports:profit_report' %}" class="nav-link" data-key="t-profit-report"><i class="las la-hand-holding-usd me-2 fs-16"></i> Profit Report</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'reports:stock_report' %}" class="nav-link" data-key="t-stock-report">Stock Report</a>
+                                <a href="{% url 'reports:stock_report' %}" class="nav-link" data-key="t-stock-report"><i class="las la-boxes me-2 fs-16"></i> Stock Report</a>
                             </li>
 
                             <li class="nav-item">
-                                <a href="{% url 'reports:transfer_report' %}" class="nav-link" data-key="t-transfer-history">Transfer History</a>
+                                <a href="{% url 'reports:transfer_report' %}" class="nav-link" data-key="t-transfer-history"><i class="las la-exchange-alt me-2 fs-16"></i> Transfer History</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'reports:dead_stock_report' %}" class="nav-link" data-key="t-dead-stock">Dead Stock</a>
+                                <a href="{% url 'reports:dead_stock_report' %}" class="nav-link" data-key="t-dead-stock"><i class="las la-exclamation-triangle me-2 fs-16"></i> Dead Stock</a>
                             </li>
                             <li class="nav-item">
-                                <a href="{% url 'reports:batch_report' %}" class="nav-link" data-key="t-stock-detail">Stock Detail Report</a>
+                                <a href="{% url 'reports:batch_report' %}" class="nav-link" data-key="t-stock-detail"><i class="las la-clipboard-list me-2 fs-16"></i> Stock Detail Report</a>
                             </li>
                         </ul>
                     </div>
