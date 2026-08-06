@@ -22,8 +22,7 @@
             <div class="header-text">
                 <h1>{{ SHOP_NAME }}</h1>
                 <p class="header-address">
-                    Shop No. 11-12 (3rd Floor), CDA Market, Jubilee Road, Chittagong, Bangladesh.<br>
-                    Phone: +8801833994455, Email: info@skyzoneintl.com
+                    {% if SHOP_ADDRESS %}{{ SHOP_ADDRESS|linebreaksbr }}{% else %}Shop{% endif %}
                 </p>
             </div>
             <div class="header-logo-container">
