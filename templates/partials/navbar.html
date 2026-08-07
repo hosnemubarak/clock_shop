@@ -24,7 +24,8 @@
                     </a>
                 </div>
 
-                <button type="button" class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger" id="topnav-hamburger-icon">
+                <button type="button" class="btn btn-sm px-3 fs-16 header-item vertical-menu-btn topnav-hamburger"
+                    id="topnav-hamburger-icon">
                     <span class="hamburger-icon">
                         <span></span>
                         <span></span>
@@ -37,14 +38,18 @@
             <div class="d-flex align-items-center">
                 <!-- Search Dropdown for Mobile -->
                 <div class="dropdown d-md-none topbar-head-dropdown header-item">
-                    <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" id="page-header-search-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle"
+                        id="page-header-search-dropdown" data-bs-toggle="dropdown" aria-haspopup="true"
+                        aria-expanded="false">
                         <i class="bx bx-search fs-22"></i>
                     </button>
-                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0" aria-labelledby="page-header-search-dropdown">
+                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0"
+                        aria-labelledby="page-header-search-dropdown">
                         <form class="p-3">
                             <div class="form-group m-0">
                                 <div class="input-group">
-                                    <input type="text" class="form-control" placeholder="Search ..." aria-label="Search">
+                                    <input type="text" class="form-control" placeholder="Search ..."
+                                        aria-label="Search">
                                     <button class="btn btn-primary" type="submit"><i class="las la-search"></i></button>
                                 </div>
                             </div>
@@ -54,41 +59,50 @@
 
                 <!-- New Sale Button -->
                 <div class="ms-1 header-item d-flex">
-                    <a href="{% url 'sales:sale_create' %}" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" data-bs-toggle="tooltip" data-bs-placement="bottom" title="New Sale" aria-label="New Sale">
+                    <a href="{% url 'sales:sale_create' %}"
+                        class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" data-bs-toggle="tooltip"
+                        data-bs-placement="bottom" title="New Sale" aria-label="New Sale">
                         <i class='las la-cart-plus fs-24' aria-hidden="true"></i>
                     </a>
                 </div>
 
                 <!-- Fullscreen Button -->
                 <div class="ms-1 header-item d-none d-sm-flex">
-                    <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" data-toggle="fullscreen" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Press F11 for permanent fullscreen" aria-label="Toggle fullscreen">
+                    <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle"
+                        data-toggle="fullscreen" data-bs-toggle="tooltip" data-bs-placement="bottom"
+                        title="Press F11 for permanent fullscreen" aria-label="Toggle fullscreen">
                         <i class='las la-expand fs-24' aria-hidden="true"></i>
                     </button>
                 </div>
 
                 <!-- Dark/Light Mode -->
                 <div class="ms-1 header-item d-none d-sm-flex">
-                    <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle light-dark-mode" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Toggle Dark/Light Mode" aria-label="Toggle dark mode">
+                    <button type="button"
+                        class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle light-dark-mode"
+                        data-bs-toggle="tooltip" data-bs-placement="bottom" title="Toggle Dark/Light Mode"
+                        aria-label="Toggle dark mode">
                         <i class='las la-moon fs-24' aria-hidden="true"></i>
                     </button>
                 </div>
 
                 <!-- User Dropdown -->
                 <div class="dropdown header-item">
-                    <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <button type="button" class="btn" id="page-header-user-dropdown" data-bs-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false">
                         <span class="d-flex align-items-center">
-                            <span class="rounded-circle header-profile-user bg-primary text-white d-flex align-items-center justify-content-center avatar-sm">
+                            <span
+                                class="rounded-circle header-profile-user bg-primary text-white d-flex align-items-center justify-content-center avatar-sm">
                                 {% if user.is_superuser %}
-                                    <i class="las la-crown fs-20 text-white"></i>
+                                <i class="las la-crown fs-20 text-white"></i>
                                 {% elif user.first_name %}
-                                    {{ user.first_name|slice:":1"|upper }}
+                                {{ user.first_name|slice:":1"|upper }}
                                 {% else %}
-                                    {{ user.username|slice:":1"|upper }}
+                                {{ user.username|slice:":1"|upper }}
                                 {% endif %}
                             </span>
                             <span class="text-start ms-xl-2">
                                 <span class="d-none d-xl-inline-block fw-medium user-name-text fs-16">
-                                    {{ user.first_name|default:user.username }}
+                                    {% firstof user.first_name user.username %}
                                     <i class="las la-angle-down fs-12 ms-1"></i>
                                 </span>
                             </span>
@@ -97,9 +111,10 @@
 
                     <div class="dropdown-menu dropdown-menu-end">
                         <h6 class="dropdown-header">
-                            Welcome {{ user.first_name|default:user.username }}!
+                            Welcome {% firstof user.first_name user.username %}!
                             {% if user.is_superuser %}
-                            <br><span class="badge bg-success-subtle text-success mt-1"><i class="las la-crown me-1"></i>Administrator</span>
+                            <br><span class="badge bg-success-subtle text-success mt-1"><i
+                                    class="las la-crown me-1"></i>Administrator</span>
                             {% elif user.is_staff %}
                             <br><span class="badge bg-info-subtle text-info mt-1">Staff</span>
                             {% endif %}
@@ -136,13 +151,14 @@
                             <i class="bx bx-lock-alt fs-15 align-middle me-1"></i>
                             <span>Change Password</span>
                         </a>
-                        
+
                         <div class="dropdown-divider"></div>
 
                         <!-- Logout -->
                         <form method="post" action="{% url 'core:logout' %}" class="m-0 p-0">
                             {% csrf_token %}
-                            <button type="submit" class="dropdown-item text-danger btn btn-link text-start w-100 border-0 bg-transparent rounded-0">
+                            <button type="submit"
+                                class="dropdown-item text-danger btn btn-link text-start w-100 border-0 bg-transparent rounded-0">
                                 <i class="bx bx-power-off fs-15 align-middle me-1 text-danger"></i>
                                 <span>Logout</span>
                             </button>

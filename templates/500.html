@@ -1,6 +1,6 @@
-{% extends 'base.html' %}
+{% extends 'base_error.html' %}
 
-{% block title %}Server Error | {{ SHOP_NAME }}{% endblock %}
+{% block title %}Server Error{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -14,15 +14,9 @@
             <p class="text-muted mb-4">
                 Something went wrong on our end. Please contact the developer team for assistance.
             </p>
-            <p class="text-muted">
-                <i class="las la-envelope me-1"></i> Contact: <strong>h.m.tasmir.cse@gmail.com</strong>
-            </p>
             <div class="d-flex justify-content-center gap-2">
-                <a href="{% url 'core:dashboard' %}" class="btn btn-primary">
-                    <i class="las la-home me-1"></i> Dashboard
-                </a>
-                <a href="javascript:location.reload()" class="btn btn-outline-secondary">
-                    <i class="las la-redo-alt me-1"></i> Try Again
+                <a href="/" class="btn btn-primary">
+                    <i class="las la-home me-1"></i> Homepage
                 </a>
             </div>
         </div>
