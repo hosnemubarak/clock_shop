@@ -117,6 +117,15 @@
                 </li>
                 {% endif %}
 
+                <!-- Quotations -->
+                {% if perms.quotations.view_quotation %}
+                <li class="nav-item">
+                    <a class="nav-link menu-link {% if request.resolver_match.app_name == 'quotations' %}active{% endif %}" href="{% url 'quotations:quotation_list' %}">
+                        <i class="las la-file-invoice"></i> <span data-key="t-quotations">Quotations</span>
+                    </a>
+                </li>
+                {% endif %}
+
                 {% if perms.core.view_sales_report or perms.core.view_profit_report or perms.core.view_stock_report or perms.core.view_transfer_report or perms.core.view_dead_stock_report %}
                 <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-analytics">Analytics</span></li>
 

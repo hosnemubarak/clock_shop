@@ -12,7 +12,7 @@ class Command(BaseCommand):
         # 1. Cashier
         cashier_group, _ = Group.objects.get_or_create(name='Cashier')
         cashier_perms = Permission.objects.filter(
-            content_type__app_label__in=['sales', 'customers', 'inventory', 'warehouse']
+            content_type__app_label__in=['sales', 'customers', 'inventory', 'warehouse', 'quotations']
         ).exclude(codename__startswith='delete_')
         
         # Add basic core permissions
@@ -26,7 +26,7 @@ class Command(BaseCommand):
         # 2. Manager
         manager_group, _ = Group.objects.get_or_create(name='Manager')
         manager_perms = Permission.objects.filter(
-            content_type__app_label__in=['sales', 'customers', 'inventory', 'warehouse']
+            content_type__app_label__in=['sales', 'customers', 'inventory', 'warehouse', 'quotations']
         )
         
         report_perms = Permission.objects.filter(
@@ -42,7 +42,7 @@ class Command(BaseCommand):
         admin_group, _ = Group.objects.get_or_create(name='Admin')
         admin_perms = Permission.objects.filter(
             content_type__app_label__in=[
-                'sales', 'customers', 'inventory', 'warehouse', 'core', 'auth', 'sessions', 'admin', 'contenttypes'
+                'sales', 'customers', 'inventory', 'warehouse', 'quotations', 'core', 'auth', 'sessions', 'admin', 'contenttypes'
             ]
         )
         admin_group.permissions.set(admin_perms)

@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load humanize static %}
+{% load core_tags %}
+
+{% block title %}Quotations | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+{% url 'quotations:quotation_create' as create_url %}
+{% include 'includes/page_header.html' with title='Quotations' action_url=create_url action_label='New Quotation' action_icon='las la-plus' %}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            {% capture as filter_fields %}
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <input type="text" name="search" class="form-control" placeholder="Search by number, title, client..." value="{{ search }}">
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text">From</span>
+                        <input type="date" name="date_from" class="form-control" title="Date From" value="{{ date_from|default_if_none:'' }}">
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text">To</span>
+                        <input type="date" name="date_to" class="form-control" title="Date To" value="{{ date_to|default_if_none:'' }}">
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="draft" {% if status == 'draft' %}selected{% endif %}>Draft</option>
+                        <option value="sent" {% if status == 'sent' %}selected{% endif %}>Sent</option>
+                        <option value="accepted" {% if status == 'accepted' %}selected{% endif %}>Accepted</option>
+                        <option value="rejected" {% if status == 'rejected' %}selected{% endif %}>Rejected</option>
+                        <option value="expired" {% if status == 'expired' %}selected{% endif %}>Expired</option>
+                    </select>
+                </div>
+            {% endcapture %}
+            {% capture as filter_trailing %}
+                <div class="col-md text-md-end">
+                    <h5 class="card-title mb-0">All Quotations <span class="badge bg-primary-subtle text-primary ms-2">{{ quotations.paginator.count }}</span></h5>
+                </div>
+            {% endcapture %}
+            {% include 'includes/filter_bar.html' with fields=filter_fields trailing=filter_trailing %}
+            <div class="card-body">
+                <div class="table-responsive min-h-300" >
+                    <table class="table table-striped align-middle mb-0">
+                        <thead class="text-muted table-light">
+                            <tr>
+                                <th scope="col">Quotation #</th>
+                                <th scope="col">Title</th>
+                                <th scope="col">Client</th>
+                                <th scope="col">Date</th>
+                                <th scope="col">Total</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for q in quotations %}
+                            <tr>
+                                <td><a href="{% url 'quotations:quotation_detail' q.pk %}" class="fw-medium">{{ q.quotation_number }}</a></td>
+                                <td>{{ q.title|truncatechars:40 }}</td>
+                                <td>{{ q.client_name|default:"—" }}</td>
+                                <td>{{ q.quotation_date|date:"M d, Y" }}</td>
+                                <td>{{ CURRENCY_SYMBOL }}{{ q.total_amount|floatformat:0|intcomma }}</td>
+                                <td>
+                                    {% if q.status == 'draft' %}
+                                    <span class="badge bg-secondary">Draft</span>
+                                    {% elif q.status == 'sent' %}
+                                    <span class="badge bg-info">Sent</span>
+                                    {% elif q.status == 'accepted' %}
+                                    <span class="badge bg-success">Accepted</span>
+                                    {% elif q.status == 'rejected' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                    {% elif q.status == 'expired' %}
+                                    <span class="badge bg-warning">Expired</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% capture as row_menu %}
+                                            <li><a class="dropdown-item" href="{% url 'quotations:quotation_detail' q.pk %}"><i class="las la-eye me-2"></i>View</a></li>
+                                            <li><a class="dropdown-item" href="{% url 'quotations:quotation_print' q.pk %}" target="_blank"><i class="las la-print me-2"></i>Print</a></li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteModal{{ q.pk }}"><i class="las la-trash me-2"></i>Delete</a>
+                                            </li>
+                                    {% endcapture %}
+                                    {% include 'includes/row_actions.html' with menu=row_menu %}
+                                </td>
+                            </tr>
+                            
+                            <!-- Delete Modal -->
+                            <div class="modal fade" id="deleteModal{{ q.pk }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content text-start">
+                                        <form action="{% url 'quotations:quotation_delete' q.pk %}" method="post">
+                                            {% csrf_token %}
+                                            <div class="modal-header border-0 pb-0">
+                                                <h5 class="modal-title">Confirm Deletion</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body p-4">
+                                                <div class="text-center mt-2">
+                                                    <i class="las la-trash-alt display-4 text-danger mb-3"></i>
+                                                    <h5 class="fs-15 mb-3">Are you sure you want to delete quotation <strong>{{ q.quotation_number }}</strong>?</h5>
+                                                    <p class="text-muted">This action cannot be undone.</p>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer justify-content-center border-0 pt-0">
+                                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% empty %}
+                            {% include 'includes/empty_state.html' with colspan=7 message='No quotations found' %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% with page_obj=quotations %}
+                {% include 'includes/pagination.html' %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

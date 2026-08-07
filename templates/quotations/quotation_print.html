@@ -1,0 +1,168 @@
+{% load humanize invoice_tags static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quotation {{ quotation.quotation_number }}</title>
+    <link href="{% static 'css/print.css' %}" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+    <div class="no-print">
+        <button onclick="window.print()" class="print-btn">Print Quotation</button>
+        <a href="{% url 'quotations:quotation_detail' quotation.pk %}" class="back-link">&larr; Back to Quotation</a>
+    </div>
+
+    <div class="invoice-paper">
+
+        <!-- ===== COMPANY HEADER ===== -->
+        <div class="header">
+            <div class="header-text">
+                <h1>{{ SHOP_NAME }}</h1>
+                <p class="header-address">
+                    {% if SHOP_ADDRESS %}{{ SHOP_ADDRESS|linebreaksbr }}{% else %}Shop{% endif %}
+                </p>
+            </div>
+            <div class="header-logo-container">
+                <img src="{% static 'images/skyzone-logo.png' %}" alt="{{ SHOP_NAME }} Logo" class="header-logo">
+            </div>
+        </div>
+
+        <!-- ===== DOCUMENT TYPE BANNER ===== -->
+        <div class="doc-type-banner">
+            <p class="doc-title">Quotation</p>
+        </div>
+
+        <!-- ===== CLIENT INFO & QUOTATION META ===== -->
+        <div class="invoice-info">
+            <div class="bill-to-box">
+                <span class="section-label">Prepared For</span>
+                {% if quotation.client_name %}
+                <span class="customer-name">{{ quotation.client_name }}</span>
+                {% if quotation.client_address %}
+                <div class="info-row"><span class="lbl">Address:</span> {{ quotation.client_address }}</div>
+                {% endif %}
+                {% if quotation.client_phone %}
+                <div class="info-row"><span class="lbl">Phone:</span> {{ quotation.client_phone }}</div>
+                {% endif %}
+                {% else %}
+                <span class="customer-name">—</span>
+                {% endif %}
+            </div>
+            <div class="meta-box">
+                <div class="meta-row">
+                    <span class="meta-label">Quotation #</span>
+                    <span class="invoice-num-val">{{ quotation.quotation_number }}</span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">Date</span>
+                    <span class="meta-value">{{ quotation.quotation_date|date:"d M Y" }}</span>
+                </div>
+                {% if quotation.valid_until %}
+                <div class="meta-row">
+                    <span class="meta-label">Valid Until</span>
+                    <span class="meta-value">{{ quotation.valid_until|date:"d M Y" }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ===== QUOTATION TITLE ===== -->
+        <div style="padding: 6px 0 10px; font-weight: 600; font-size: 13px;">
+            Re: {{ quotation.title }}
+        </div>
+
+        <!-- ===== ITEMS TABLE ===== -->
+        <table>
+            <thead>
+                <tr class="col-header-row">
+                    <th class="w-5">SL.</th>
+                    <th>Product</th>
+                    <th class="text-right">Qty</th>
+                    <th class="text-right">Price</th>
+                    <th class="text-right">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in quotation.items.all %}
+                <tr>
+                    <td class="item-sl">{{ forloop.counter|stringformat:"02d" }}</td>
+                    <td class="item-name">
+                        {% if item.is_custom %}
+                        {{ item.custom_description }}
+                        {% elif item.product %}
+                        {{ item.product.display_name }}
+                        {% else %}
+                        Item
+                        {% endif %}
+                    </td>
+                    <td class="text-right">{{ item.quantity|stringformat:"02d" }}</td>
+                    <td class="text-right">{{ item.unit_price|floatformat:0 }}</td>
+                    <td class="text-right amount-cell">{{ item.total_price|floatformat:0 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- ===== TOTALS ===== -->
+        <div class="totals">
+            <div class="totals-inner">
+                <div class="totals-row">
+                    <span class="t-label">Subtotal</span>
+                    <span class="t-value">&#2547; {{ quotation.subtotal|floatformat:0|intcomma }}</span>
+                </div>
+                {% if quotation.discount_amount > 0 %}
+                <div class="totals-row">
+                    <span class="t-label">Discount</span>
+                    <span class="t-value">- &#2547; {{ quotation.discount_amount|floatformat:0|intcomma }}</span>
+                </div>
+                {% endif %}
+                <div class="totals-row grand-total-row">
+                    <span class="t-label">Total</span>
+                    <span class="t-value">&#2547; {{ quotation.total_amount|floatformat:0|intcomma }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== BOTTOM CONTENT ===== -->
+        <div class="bottom-content">
+
+            <div class="in-words-section">
+                <span class="iw-label">In Words</span>
+                {{ quotation.total_amount|amount_in_words }}
+            </div>
+
+            {% if quotation.notes %}
+            <div class="notes-section">
+                <span class="notes-label">Notes / Terms</span>
+                {{ quotation.notes }}
+            </div>
+            {% endif %}
+
+            <div class="signatures">
+                <div class="signature-box" style="visibility: hidden;">
+                    <!-- Spacer so the signatures align to the right side if there are only 2 -->
+                </div>
+                <div class="signature-box">
+                    <div class="signature-space"></div>
+                    <div class="signature-line">Prepared By</div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-space"></div>
+                    <div class="signature-line">Authorized Signature</div>
+                </div>
+            </div>
+
+            <div class="footer">
+                <p class="footer-text">&#9733; Thank you for considering our quotation! &#9733;</p>
+                <p class="footer-sub">This quotation is valid for the period mentioned above. Prices may vary after the validity date.</p>
+            </div>
+
+        </div><!-- end bottom-content -->
+
+    </div><!-- end invoice-paper -->
+</body>
+
+</html>

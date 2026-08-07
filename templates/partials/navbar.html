@@ -66,6 +66,17 @@
                     </a>
                 </div>
 
+                <!-- New Quotation Button -->
+                {% if perms.quotations.add_quotation %}
+                <div class="ms-1 header-item d-flex">
+                    <a href="{% url 'quotations:quotation_create' %}"
+                        class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle" data-bs-toggle="tooltip"
+                        data-bs-placement="bottom" title="New Quotation" aria-label="New Quotation">
+                        <i class='las la-file-invoice fs-24' aria-hidden="true"></i>
+                    </a>
+                </div>
+                {% endif %}
+
                 <!-- Fullscreen Button -->
                 <div class="ms-1 header-item d-none d-sm-flex">
                     <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle"

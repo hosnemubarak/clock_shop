@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}New Quotation | {{ SHOP_NAME }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/sale-create.css' %}?v=2">
+{% endblock %}
+
+{% block content %}
+<div id="quotationPage"
+     class="sale-page"
+     data-search-url="{% url 'quotations:api_product_search' %}"
+     data-save-url="{% url 'quotations:api_quotation_save' %}"
+     data-list-url="{% url 'quotations:quotation_list' %}"
+     data-print-url="{% url 'quotations:quotation_print' 0 %}"
+     data-detail-url="{% url 'quotations:quotation_detail' 0 %}"
+     data-currency="{{ CURRENCY_SYMBOL }}">
+
+    {% include 'includes/page_header.html' with title='New Quotation' %}
+
+    <form id="quotationForm" novalidate>
+        {% csrf_token %}
+
+        <!-- 1. Quotation Info -->
+        <div class="card mb-3 sale-customer-card">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-lg-5">
+                        <label for="quotationTitle" class="form-label sale-field__label">
+                            Quotation Title <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="quotationTitle"
+                               placeholder="e.g. Office Clocks for ABC Ltd" required>
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <label for="clientName" class="form-label sale-field__label">
+                            Client Name
+                        </label>
+                        <input type="text" class="form-control" id="clientName"
+                               placeholder="Client name (optional)">
+                    </div>
+                    <div class="col-12 col-lg-3">
+                        <label for="quotationDate" class="form-label sale-field__label">
+                            Date
+                        </label>
+                        <input type="date" class="form-control" id="quotationDate"
+                               value="{{ today }}">
+                    </div>
+                </div>
+                <div class="row g-3 mt-1">
+                    <div class="col-12 col-lg-4">
+                        <label for="clientPhone" class="form-label sale-field__label">
+                            Client Phone
+                        </label>
+                        <input type="text" class="form-control" id="clientPhone"
+                               placeholder="Phone number (optional)">
+                    </div>
+                    <div class="col-12 col-lg-5">
+                        <label for="clientAddress" class="form-label sale-field__label">
+                            Client Address
+                        </label>
+                        <input type="text" class="form-control" id="clientAddress"
+                               placeholder="Address (optional)">
+                    </div>
+                    <div class="col-12 col-lg-3">
+                        <label for="validUntil" class="form-label sale-field__label">
+                            Valid Until
+                        </label>
+                        <input type="date" class="form-control" id="validUntil">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-lg-8">
+                <!-- 2. Product search -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="sale-search">
+                            <label for="productSearch" class="form-label fw-medium mb-1">
+                                Add Product
+                            </label>
+                            <div class="sale-search__control">
+                                <i class="las la-search sale-search__icon" aria-hidden="true"></i>
+                                <input type="search"
+                                       class="form-control form-control-lg sale-search__input"
+                                       id="productSearch"
+                                       placeholder="Search by SKU, brand, or category&hellip;"
+                                       autocomplete="off"
+                                       role="combobox"
+                                       aria-expanded="false"
+                                       aria-autocomplete="list"
+                                       aria-controls="searchResults">
+                                <div class="spinner-border spinner-border-sm text-primary sale-search__spinner"
+                                     id="searchSpinner" role="status" hidden>
+                                    <span class="visually-hidden">Searching&hellip;</span>
+                                </div>
+                            </div>
+                            <div id="searchHelp" class="form-text">
+                                Search for existing products, or <button type="button" class="btn btn-link btn-sm p-0 align-baseline" id="btnAddCustom">add a custom item</button>.
+                            </div>
+                            <ul class="sale-search__results list-unstyled"
+                                id="searchResults"
+                                role="listbox"
+                                aria-label="Product search results"
+                                hidden></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Quotation items -->
+                <div class="card mb-3" id="cartCard">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h5 class="card-title mb-0">Quotation Items</h5>
+                        <span class="badge bg-primary-subtle text-primary" id="cartCount">0 items</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0 sale-cart">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col" class="ps-3">Product</th>
+                                        <th scope="col" class="text-end" style="width: 8rem;">Unit Price</th>
+                                        <th scope="col" class="text-center" style="width: 9rem;">Qty</th>
+                                        <th scope="col" class="text-end" style="width: 8rem;">Total</th>
+                                        <th scope="col" style="width: 3rem;">
+                                            <span class="visually-hidden">Remove</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cartBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="sale-cart__empty" id="cartEmpty">
+                            <i class="las la-box" aria-hidden="true"></i>
+                            <p class="mb-1 fw-medium">No products yet</p>
+                            <p class="mb-0 small">
+                                Search above or add a custom item to get started.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="sale-summary">
+                    <!-- 4. Summary -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="sale-total">
+                                <span class="sale-total__label">Subtotal</span>
+                                <span class="sale-total__value" id="sumSubtotal">{{ CURRENCY_SYMBOL }}0</span>
+                            </div>
+
+                            <div class="sale-total">
+                                <label class="sale-total__label mb-0" for="orderDiscount">Discount</label>
+                                <div class="input-group input-group-sm sale-total__input">
+                                    <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
+                                    <input type="number" class="form-control text-end sale-num"
+                                           id="orderDiscount" value="0" step="1" min="0"
+                                           inputmode="numeric">
+                                </div>
+                            </div>
+
+                            <hr class="my-2">
+
+                            <div class="sale-total sale-total--grand">
+                                <span class="sale-total__label">Grand Total</span>
+                                <span class="sale-total__value text-primary" id="sumGrand">{{ CURRENCY_SYMBOL }}0</span>
+                            </div>
+
+                            <hr class="my-2">
+
+                            <div class="mt-3">
+                                <label for="quotationNotes" class="form-label fw-medium mb-1">
+                                    Notes <span class="text-muted fw-normal">(optional)</span>
+                                </label>
+                                <textarea class="form-control" id="quotationNotes" rows="3"
+                                          placeholder="Terms, conditions, or additional notes..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Actions -->
+                    <div class="sale-actions d-grid gap-2">
+                        <button type="button" class="btn btn-success btn-lg" id="btnSave">
+                            <i class="las la-save fs-5 align-middle me-1"></i>
+                            Save Quotation
+                        </button>
+                        <button type="button" class="btn btn-light" id="btnReset">
+                            Clear all
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- Custom Item Modal -->
+    <div class="modal fade" id="customItemModal" tabindex="-1" aria-labelledby="customItemTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-semibold" id="customItemTitle">Add Custom Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label for="customDesc" class="form-label">Description <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="customDesc" placeholder="e.g. Installation Service">
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label for="customPrice" class="form-label">Unit Price</label>
+                            <input type="number" class="form-control" id="customPrice" value="0" min="0" step="1">
+                        </div>
+                        <div class="col-6">
+                            <label for="customQty" class="form-label">Quantity</label>
+                            <input type="number" class="form-control" id="customQty" value="1" min="1" step="1">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="btnCustomAdd">
+                        <i class="las la-plus me-1"></i> Add Item
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-4">
+                    <i class="las la-check-circle text-success" style="font-size: 3.5rem;" aria-hidden="true"></i>
+                    <h5 class="mt-2 mb-1">Quotation Saved</h5>
+                    <p class="text-muted mb-4">
+                        Quotation <span class="fw-semibold" id="successNumber"></span> has been created.
+                    </p>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-primary" id="btnPrintQuotation">
+                            <i class="las la-print me-1"></i> Print Quotation
+                        </button>
+                        <button type="button" class="btn btn-success" id="btnNewQuotation">
+                            Create Another
+                        </button>
+                        <a class="btn btn-link" id="linkViewQuotation" href="#">View this quotation</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/quotation-create.js' %}?v=1"></script>
+{% endblock %}
