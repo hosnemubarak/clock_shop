@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from apps.core.decorators import cashier_required, admin_required
+from apps.core.decorators import has_permission
 from django.contrib.auth.models import User, Group
 from django.contrib.auth import login
 from django.contrib import messages
@@ -17,7 +17,7 @@ from apps.customers.models import Customer, Payment
 from apps.warehouse.models import Warehouse
 
 
-@cashier_required
+@has_permission('core.view_dashboard')
 def dashboard(request):
     """Main dashboard view with key metrics."""
     today = timezone.localtime().date()
@@ -122,7 +122,7 @@ def dashboard(request):
     return render(request, 'core/dashboard.html', context)
 
 
-@admin_required
+@has_permission('core.view_audit_logs')
 def audit_logs(request):
     """View audit logs."""
     from django.db.models import Q
@@ -317,7 +317,7 @@ def system_settings(request):
     return render(request, 'core/dashboard.html', context)
 
 
-@admin_required
+@has_permission('core.view_audit_logs')
 def audit_logs(request):
     """View audit logs."""
     from django.db.models import Q
@@ -443,10 +443,10 @@ def is_superuser(user):
     return user.is_superuser
 
 
-from apps.core.decorators import cashier_required
+from apps.core.decorators import has_permission
 
 @login_required
-@cashier_required
+@has_permission('core.change_systemsettings')
 def system_settings(request):
     """View and update system settings."""
     settings = SystemSettings.get_settings()
@@ -473,10 +473,10 @@ def unauthorized(request):
     """View shown to logged-in users who lack the required role to view a page."""
     return render(request, 'core/unauthorized.html')
 
-from apps.core.decorators import admin_required
+from apps.core.decorators import has_permission
 
 @login_required
-@admin_required
+@has_permission('auth.view_user')
 def staff_list(request):
     """List all staff members and handle new staff creation."""
     from .forms import StaffCreationForm
@@ -501,7 +501,7 @@ def staff_list(request):
     })
 
 @login_required
-@admin_required
+@has_permission('auth.change_user')
 def update_staff_role(request, pk):
     """Update a staff member's role and status."""
     if request.method == 'POST':
@@ -533,7 +533,7 @@ def update_staff_role(request, pk):
 
 
 @login_required
-@admin_required
+@has_permission('auth.change_user')
 def update_staff_password(request, pk):
     """Update a staff member's password directly."""
     if request.method == 'POST':
@@ -556,7 +556,7 @@ def update_staff_password(request, pk):
 
 
 @login_required
-@admin_required
+@has_permission('auth.delete_user')
 def delete_staff(request, pk):
     """Delete a staff member from the system."""
     if request.method == 'POST':

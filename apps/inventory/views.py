@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from apps.core.decorators import cashier_required, manager_required
+from apps.core.decorators import has_permission
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Q, Sum, ProtectedError
@@ -20,7 +20,7 @@ from apps.core.utils import create_audit_log, paginate
 logger = logging.getLogger(__name__)
 
 
-@cashier_required
+@has_permission('inventory.view_product')
 def product_list(request):
     """List all products with filtering."""
     products = Product.objects.select_related('category', 'brand').order_by('-updated_at')
@@ -80,7 +80,7 @@ def product_list(request):
     return render(request, 'inventory/product_list.html', context)
 
 
-@cashier_required
+@has_permission('inventory.view_product')
 def product_detail(request, pk):
     """View product details with stock information."""
     product = get_object_or_404(Product, pk=pk)
@@ -95,7 +95,7 @@ def product_detail(request, pk):
     }
     return render(request, 'inventory/product_detail.html', context)
 
-@cashier_required
+@has_permission('inventory.view_product')
 def product_stock_history(request, pk):
     """View full chronological stock history for a product."""
     product = get_object_or_404(Product, pk=pk)
@@ -108,7 +108,7 @@ def product_stock_history(request, pk):
     return render(request, 'inventory/product_history.html', context)
 
 
-@cashier_required
+@has_permission('inventory.add_product')
 def product_create(request):
     """Create a new product."""
     if request.method == 'POST':
@@ -186,7 +186,7 @@ def product_create(request):
     })
 
 
-@cashier_required
+@has_permission('inventory.change_product')
 def product_edit(request, pk):
     """Edit a product."""
     product = get_object_or_404(Product, pk=pk)
@@ -208,7 +208,7 @@ def product_edit(request, pk):
     })
 
 
-@cashier_required
+@has_permission('inventory.delete_product')
 def product_delete(request, pk):
     """Delete a product."""
     product = get_object_or_404(Product, pk=pk)
@@ -237,7 +237,7 @@ def product_delete(request, pk):
     return render(request, 'inventory/product_confirm_delete.html', {'product': product})
 
 
-@cashier_required
+@has_permission('inventory.view_category')
 def category_list(request):
     """List all categories."""
     categories = Category.objects.annotate(product_count=Sum('products__total_stock'))
@@ -252,7 +252,7 @@ def category_list(request):
     return render(request, 'inventory/category_list.html', {'categories': categories, 'search': search})
 
 
-@cashier_required
+@has_permission('inventory.add_category')
 def category_create(request):
     """Create a new category."""
     if request.method == 'POST':
@@ -268,7 +268,7 @@ def category_create(request):
     return render(request, 'inventory/category_form.html', {'form': form, 'title': 'Add Category'})
 
 
-@cashier_required
+@has_permission('inventory.change_category')
 def category_edit(request, pk):
     """Edit a category."""
     category = get_object_or_404(Category, pk=pk)
@@ -290,7 +290,7 @@ def category_edit(request, pk):
     })
 
 
-@cashier_required
+@has_permission('inventory.view_brand')
 def brand_list(request):
     """List all brands."""
     brands = Brand.objects.all()
@@ -305,7 +305,7 @@ def brand_list(request):
     return render(request, 'inventory/brand_list.html', {'brands': brands, 'search': search})
 
 
-@cashier_required
+@has_permission('inventory.add_brand')
 def brand_create(request):
     """Create a new brand."""
     if request.method == 'POST':
@@ -321,7 +321,7 @@ def brand_create(request):
     return render(request, 'inventory/brand_form.html', {'form': form, 'title': 'Add Brand'})
 
 
-@cashier_required
+@has_permission('inventory.change_brand')
 def brand_edit(request, pk):
     """Edit a brand."""
     brand = get_object_or_404(Brand, pk=pk)
@@ -346,7 +346,7 @@ def brand_edit(request, pk):
 
 
 
-@cashier_required
+@has_permission('inventory.view_purchase')
 def purchase_list(request):
     """List all purchases."""
     purchases = Purchase.objects.select_related('created_by').prefetch_related('items')
@@ -356,7 +356,7 @@ def purchase_list(request):
     return render(request, 'inventory/purchase_list.html', {'purchases': purchases})
 
 
-@cashier_required
+@has_permission('inventory.add_purchase')
 def purchase_create(request):
     """Create a new purchase order with items."""
     warehouses = Warehouse.objects.filter(is_active=True)
@@ -482,7 +482,7 @@ def purchase_create(request):
     return render(request, 'inventory/purchase_form.html', context)
 
 
-@cashier_required
+@has_permission('inventory.view_purchase')
 def purchase_detail(request, pk):
     """View purchase details."""
     purchase = get_object_or_404(
@@ -492,7 +492,7 @@ def purchase_detail(request, pk):
     return render(request, 'inventory/purchase_detail.html', {'purchase': purchase})
 
 
-@cashier_required
+@has_permission('inventory.view_product')
 def api_product_stocks(request, product_id):
     """API endpoint to get available stocks for a product."""
     warehouse_id = request.GET.get('warehouse')
@@ -511,7 +511,7 @@ def api_product_stocks(request, product_id):
     return JsonResponse(data, safe=False)
 
 
-@cashier_required
+@has_permission('inventory.add_purchase')
 def api_quick_add_stock(request, product_id):
     """API endpoint to quickly add stock to a product."""
     if request.method != 'POST':
@@ -596,7 +596,7 @@ def api_quick_add_stock(request, product_id):
 
 
 # Stock Out Views
-@cashier_required
+@has_permission('inventory.view_stockout')
 def stockout_list(request):
     """List all stock out records."""
     stockouts = StockOut.objects.select_related('warehouse', 'created_by').all()
@@ -641,7 +641,7 @@ def stockout_list(request):
     return render(request, 'inventory/stockout_list.html', context)
 
 
-@cashier_required
+@has_permission('inventory.add_stockout')
 def stockout_create(request):
     """Create a new stock out record."""
     warehouses = Warehouse.objects.filter(is_active=True)
@@ -720,7 +720,7 @@ def stockout_create(request):
     return render(request, 'inventory/stockout_form.html', context)
 
 
-@cashier_required
+@has_permission('inventory.view_stockout')
 def stockout_detail(request, pk):
     """View stock out details."""
     stockout = get_object_or_404(
@@ -732,7 +732,7 @@ def stockout_detail(request, pk):
     return render(request, 'inventory/stockout_detail.html', {'stockout': stockout})
 
 
-@cashier_required
+@has_permission('inventory.change_stockout')
 def stockout_cancel(request, pk):
     """Cancel a stock out record."""
     stockout = get_object_or_404(StockOut, pk=pk)
@@ -750,7 +750,7 @@ def stockout_cancel(request, pk):
     return redirect('inventory:stockout_detail', pk=pk)
 
 
-@cashier_required
+@has_permission('inventory.view_productstock')
 def api_warehouse_stocks(request, warehouse_id):
     """API endpoint to get available stocks for a warehouse."""
     product_id = request.GET.get('product')

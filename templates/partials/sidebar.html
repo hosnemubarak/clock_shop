@@ -35,71 +35,89 @@
                 <li class="menu-title"><span data-key="t-menu">{% trans "Menu" %}</span></li>
                 
                 <!-- Dashboard -->
+                {% if perms.core.view_dashboard %}
                 <li class="nav-item">
                     <a class="nav-link menu-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'core:dashboard' %}">
                         <i class="las la-tachometer-alt"></i> <span data-key="t-dashboard">{% trans "Dashboard" %}</span>
                     </a>
                 </li>
+                {% endif %}
 
                 <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-pages">Management</span></li>
 
                 <!-- Products -->
+                {% if perms.inventory.view_product %}
                 <li class="nav-item">
                     <a class="nav-link menu-link {% if request.resolver_match.app_name == 'inventory' and 'purchase' not in request.resolver_match.url_name %}active{% endif %}" href="{% url 'inventory:product_list' %}">
                         <i class="las la-boxes"></i> <span data-key="t-products">Products</span>
                     </a>
                 </li>
+                {% endif %}
 
                 <!-- Stock In -->
+                {% if perms.inventory.view_purchase %}
                 <li class="nav-item">
                     <a class="nav-link menu-link {% if request.resolver_match.app_name == 'inventory' and 'purchase' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'inventory:purchase_list' %}">
                         <i class="las la-truck"></i> <span data-key="t-purchases">Stock In</span>
                     </a>
                 </li>
+                {% endif %}
 
                 <!-- Sales -->
+                {% if perms.sales.view_sale %}
                 <li class="nav-item">
                     <a class="nav-link menu-link {% if request.resolver_match.app_name == 'sales' and 'return' not in request.resolver_match.url_name %}active{% endif %}" href="{% url 'sales:sale_list' %}">
                         <i class="las la-shopping-cart"></i> <span data-key="t-sales">Sales</span>
                     </a>
                 </li>
+                {% endif %}
 
                 <!-- Returns -->
+                {% if perms.sales.view_salereturn %}
                 <li class="nav-item">
                     <a class="nav-link menu-link {% if request.resolver_match.app_name == 'sales' and 'return' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'sales:return_list' %}">
                         <i class="las la-undo"></i> <span data-key="t-returns">Returns</span>
                     </a>
                 </li>
+                {% endif %}
 
                 <!-- Customers -->
+                {% if perms.customers.view_customer %}
                 <li class="nav-item">
                     <a class="nav-link menu-link {% if request.resolver_match.app_name == 'customers' and 'payment' not in request.resolver_match.url_name %}active{% endif %}" href="{% url 'customers:customer_list' %}">
                         <i class="las la-users"></i> <span data-key="t-customers">Customers</span>
                     </a>
                 </li>
+                {% endif %}
 
                 <!-- Payments -->
+                {% if perms.customers.view_payment %}
                 <li class="nav-item">
                     <a class="nav-link menu-link {% if request.resolver_match.app_name == 'customers' and 'payment' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'customers:payment_list' %}">
                         <i class="las la-money-bill-wave"></i> <span data-key="t-payments">Payments</span>
                     </a>
                 </li>
+                {% endif %}
 
                 <!-- Warehouse -->
+                {% if perms.warehouse.view_warehouse %}
                 <li class="nav-item">
                     <a class="nav-link menu-link {% if request.resolver_match.app_name == 'warehouse' and 'transfer' not in request.resolver_match.url_name %}active{% endif %}" href="{% url 'warehouse:warehouse_list' %}">
                         <i class="las la-warehouse"></i> <span data-key="t-warehouses">Warehouses</span>
                     </a>
                 </li>
+                {% endif %}
 
                 <!-- Transfers -->
+                {% if perms.warehouse.view_transfer %}
                 <li class="nav-item">
                     <a class="nav-link menu-link {% if request.resolver_match.app_name == 'warehouse' and 'transfer' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'warehouse:transfer_list' %}">
                         <i class="las la-exchange-alt"></i> <span data-key="t-transfers">Transfers</span>
                     </a>
                 </li>
+                {% endif %}
 
-                {% if request.user|is_manager %}
+                {% if perms.core.view_sales_report or perms.core.view_profit_report or perms.core.view_stock_report or perms.core.view_transfer_report or perms.core.view_dead_stock_report %}
                 <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-analytics">Analytics</span></li>
 
                 <!-- Reports -->
@@ -109,30 +127,38 @@
                     </a>
                     <div class="collapse menu-dropdown {% if request.resolver_match.app_name == 'reports' %}show{% endif %}" id="sidebarReports">
                         <ul class="nav nav-sm flex-column">
+                            {% if perms.core.view_sales_report %}
                             <li class="nav-item">
                                 <a href="{% url 'reports:sales_report' %}" class="nav-link {% if request.resolver_match.url_name == 'sales_report' %}active{% endif %}" data-key="t-sales-report"><i class="las la-chart-line me-2 fs-16"></i> Sales Report</a>
                             </li>
+                            {% endif %}
+                            {% if perms.core.view_profit_report %}
                             <li class="nav-item">
                                 <a href="{% url 'reports:profit_report' %}" class="nav-link {% if request.resolver_match.url_name == 'profit_report' %}active{% endif %}" data-key="t-profit-report"><i class="las la-hand-holding-usd me-2 fs-16"></i> Profit Report</a>
                             </li>
+                            {% endif %}
+                            {% if perms.core.view_stock_report %}
                             <li class="nav-item">
                                 <a href="{% url 'reports:stock_report' %}" class="nav-link {% if request.resolver_match.url_name == 'stock_report' %}active{% endif %}" data-key="t-stock-report"><i class="las la-boxes me-2 fs-16"></i> Stock Report</a>
                             </li>
-
+                            {% endif %}
+                            {% if perms.core.view_transfer_report %}
                             <li class="nav-item">
                                 <a href="{% url 'reports:transfer_report' %}" class="nav-link {% if request.resolver_match.url_name == 'transfer_report' %}active{% endif %}" data-key="t-transfer-history"><i class="las la-exchange-alt me-2 fs-16"></i> Transfer History</a>
                             </li>
+                            {% endif %}
+                            {% if perms.core.view_dead_stock_report %}
                             <li class="nav-item">
                                 <a href="{% url 'reports:dead_stock_report' %}" class="nav-link {% if request.resolver_match.url_name == 'dead_stock_report' %}active{% endif %}" data-key="t-dead-stock"><i class="las la-exclamation-triangle me-2 fs-16"></i> Dead Stock</a>
                             </li>
+                            {% endif %}
                         </ul>
                     </div>
                 </li>
                 {% endif %}
 
                 <!-- Audit Logs -->
-                <!-- Audit Logs -->
-                {% if request.user|is_admin %}
+                {% if perms.core.view_audit_logs %}
                 <li class="nav-item">
                     <a class="nav-link menu-link {% if request.resolver_match.url_name == 'audit_logs' %}active{% endif %}" href="{% url 'core:audit_logs' %}">
                         <i class="las la-history"></i> <span data-key="t-audit-logs">Audit Logs</span>
@@ -140,8 +166,8 @@
                 </li>
                 {% endif %}
 
-                <!-- Staff Directory (Admin only) -->
-                {% if request.user|is_admin %}
+                <!-- Staff Directory -->
+                {% if perms.auth.view_user %}
                 <li class="nav-item">
                     <a class="nav-link menu-link {% if 'staff' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'core:staff_list' %}">
                         <i class="las la-users-cog"></i> <span data-key="t-staff">Staff Directory</span>
@@ -149,8 +175,8 @@
                 </li>
                 {% endif %}
 
-                <!-- System Settings (Cashier, Manager and Admin) -->
-                {% if request.user|is_cashier %}
+                <!-- System Settings -->
+                {% if perms.core.change_systemsettings %}
                 <li class="nav-item">
                     <a class="nav-link menu-link {% if request.resolver_match.url_name == 'system_settings' %}active{% endif %}" href="{% url 'core:system_settings' %}">
                         <i class="las la-cog"></i> <span data-key="t-settings">System Settings</span>

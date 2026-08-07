@@ -42,3 +42,18 @@ def custom_user_passes_test(test_func):
 admin_required = custom_user_passes_test(is_admin)
 manager_required = custom_user_passes_test(is_manager)
 cashier_required = custom_user_passes_test(is_cashier)
+
+def has_permission(perm):
+    """
+    Decorator for views that checks whether a user has a particular permission enabled,
+    redirecting to the unauthorized page if necessary.
+    """
+    def check_perms(user):
+        if user.is_superuser:
+            return True
+        if isinstance(perm, str):
+            perms = (perm,)
+        else:
+            perms = perm
+        return user.has_perms(perms)
+    return custom_user_passes_test(check_perms)
