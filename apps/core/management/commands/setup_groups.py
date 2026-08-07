@@ -6,50 +6,45 @@ class Command(BaseCommand):
     help = 'Creates default groups and assigns appropriate permissions'
 
     def handle(self, *args, **options):
+        # Base queries
+        all_perms = Permission.objects.all()
+        
         # 1. Cashier
-        # Can create sales and register customers.
         cashier_group, _ = Group.objects.get_or_create(name='Cashier')
-        cashier_permissions = Permission.objects.filter(
+        cashier_perms = Permission.objects.filter(
             content_type__app_label__in=['sales', 'customers', 'inventory', 'warehouse']
-        ).exclude(
-            codename__startswith='delete_'
-        )
-        cashier_group.permissions.set(cashier_permissions)
+        ).exclude(codename__startswith='delete_')
+        
+        # Add basic core permissions
+        dashboard_perm = Permission.objects.filter(codename='view_dashboard').first()
+        if dashboard_perm:
+            cashier_perms = list(cashier_perms) + [dashboard_perm]
+            
+        cashier_group.permissions.set(cashier_perms)
         self.stdout.write(self.style.SUCCESS('Successfully configured Cashier group.'))
 
         # 2. Manager
-        # Can manage inventory, process returns, and view reports.
         manager_group, _ = Group.objects.get_or_create(name='Manager')
-        manager_permissions = Permission.objects.filter(
-            content_type__app_label__in=['inventory', 'warehouse']
+        manager_perms = Permission.objects.filter(
+            content_type__app_label__in=['sales', 'customers', 'inventory', 'warehouse']
         )
         
-        # Add returns permission for Manager
-        return_permissions = Permission.objects.filter(
-            content_type__app_label='sales',
-            content_type__model__in=['salereturn', 'salereturnitem']
+        report_perms = Permission.objects.filter(
+            codename__in=[
+                'view_dashboard', 'view_sales_report', 'view_profit_report', 
+                'view_stock_report', 'view_transfer_report', 'view_dead_stock_report'
+            ]
         )
-
-        # Reports permissions (if any view permissions are needed for reports app or global viewing)
-        reports_permissions = Permission.objects.filter(
-            content_type__app_label='reports'
-        )
-
-        manager_group.permissions.set(list(manager_permissions) + list(return_permissions) + list(reports_permissions))
+        manager_group.permissions.set(list(manager_perms) + list(report_perms))
         self.stdout.write(self.style.SUCCESS('Successfully configured Manager group.'))
 
         # 3. Admin
-        # View audit logs and manage staff (must be superuser).
         admin_group, _ = Group.objects.get_or_create(name='Admin')
-        admin_permissions = Permission.objects.filter(
-            content_type__app_label='core',
-            content_type__model='auditlog'
+        admin_perms = Permission.objects.filter(
+            content_type__app_label__in=[
+                'sales', 'customers', 'inventory', 'warehouse', 'core', 'auth', 'sessions', 'admin', 'contenttypes'
+            ]
         )
-        # Admin needs to manage staff
-        staff_permissions = Permission.objects.filter(
-            content_type__app_label='auth',
-            content_type__model__in=['user', 'group']
-        )
-        admin_group.permissions.set(list(admin_permissions) + list(staff_permissions))
+        admin_group.permissions.set(admin_perms)
         self.stdout.write(self.style.SUCCESS('Successfully configured Admin group.'))
-        self.stdout.write(self.style.WARNING('Note: Users assigned to Admin should also be marked as superuser (is_superuser=True) for full management access as per requirements.'))
+        self.stdout.write(self.style.WARNING('Note: Admins should also be is_superuser=True for full django-admin access.'))

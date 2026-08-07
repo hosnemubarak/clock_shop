@@ -89,6 +89,15 @@ class SystemSettings(models.Model):
     class Meta:
         verbose_name = 'System Settings'
         verbose_name_plural = 'System Settings'
+        permissions = [
+            ("view_dashboard", "Can view dashboard"),
+            ("view_sales_report", "Can view sales report"),
+            ("view_profit_report", "Can view profit report"),
+            ("view_stock_report", "Can view stock report"),
+            ("view_transfer_report", "Can view transfer history report"),
+            ("view_dead_stock_report", "Can view dead stock report"),
+            ("view_audit_logs", "Can view audit logs"),
+        ]
     
     def __str__(self):
         return 'System Settings'

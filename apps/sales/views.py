@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from apps.core.decorators import cashier_required, manager_required
+from apps.core.decorators import has_permission
 from django.contrib import messages
 from django.db.models import Case, IntegerField, Q, Sum, Value, When
 from django.db.models.functions import Coalesce
@@ -32,7 +32,7 @@ def _to_int_or(value, fallback):
     return parsed if parsed > 0 else fallback
 
 
-@cashier_required
+@has_permission('sales.view_sale')
 def sale_list(request):
     """List all sales with filtering."""
     sales = Sale.objects.select_related('customer', 'created_by').all()
@@ -100,7 +100,7 @@ def sale_list(request):
     return render(request, 'sales/sale_list.html', context)
 
 
-@cashier_required
+@has_permission('sales.view_sale')
 def sale_detail(request, pk):
     """View sale/invoice details."""
     sale = get_object_or_404(
@@ -121,7 +121,7 @@ def sale_detail(request, pk):
     return render(request, 'sales/sale_detail.html', context)
 
 
-@cashier_required
+@has_permission('sales.add_sale')
 def sale_create(request):
     """Render the sale screen.
 
@@ -148,7 +148,7 @@ def sale_create(request):
     return render(request, 'sales/sale_form.html', context)
 
 
-@cashier_required
+@has_permission('sales.change_sale')
 def sale_cancel(request, pk):
     """Cancel a sale and restore stock."""
     sale = get_object_or_404(Sale, pk=pk)
@@ -184,7 +184,7 @@ def sale_cancel(request, pk):
     return redirect('sales:sale_detail', pk=sale.pk)
 
 
-@cashier_required
+@has_permission('sales.add_payment')
 def sale_payment(request, pk):
     """Record payment for a sale."""
     sale_base = get_object_or_404(Sale, pk=pk)
@@ -236,7 +236,7 @@ def sale_payment(request, pk):
     return redirect('sales:sale_detail', pk=sale_base.pk)
 
 
-@cashier_required
+@has_permission('sales.view_sale')
 def sale_print(request, pk):
     """Print-friendly invoice view."""
     sale = get_object_or_404(
@@ -248,7 +248,7 @@ def sale_print(request, pk):
     return render(request, 'sales/sale_print.html', {'sale': sale})
 
 
-@cashier_required
+@has_permission('inventory.view_product')
 def api_product_search(request):
     """Search sellable products for the sale screen.
 
@@ -309,7 +309,7 @@ def api_product_search(request):
     })
 
 
-@cashier_required
+@has_permission('sales.add_sale')
 @transaction.atomic
 def pos_checkout(request):
     """API endpoint to process a POS checkout."""
@@ -359,7 +359,7 @@ def _returned_quantities(sale):
     return {row['sale_item_id']: row['total'] for row in rows}
 
 
-@cashier_required
+@has_permission('sales.view_salereturn')
 def return_list(request):
     """List sale returns."""
     returns = SaleReturn.objects.select_related('sale', 'created_by').all()
@@ -378,7 +378,7 @@ def return_list(request):
     })
 
 
-@cashier_required
+@has_permission('sales.view_salereturn')
 def return_detail(request, pk):
     """View a sale return."""
     sale_return = get_object_or_404(
@@ -390,7 +390,7 @@ def return_detail(request, pk):
     return render(request, 'sales/return_detail.html', {'sale_return': sale_return})
 
 
-@cashier_required
+@has_permission('sales.add_salereturn')
 def return_create(request):
     """Create a sale return against a completed sale and restock the items.
 
