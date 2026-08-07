@@ -35,9 +35,6 @@ echo "Creating cache table..."
 python manage.py createcachetable
 
 
-# Collect static files (if not already done)
-echo "Collecting static files..."
-python manage.py collectstatic --noinput
 
 echo "=== Clock Shop Ready ==="
 echo "Starting Gunicorn server on port 8000..."

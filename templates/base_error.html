@@ -1,0 +1,34 @@
+{% load static %}
+<!doctype html>
+<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="light" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable">
+
+<head>
+    <meta charset="utf-8" />
+    <title>{% block title %}Error{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+
+    <!-- Layout config Js -->
+    <script src="{% static 'js/layout.js' %}"></script>
+    <!-- Bootstrap Css -->
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet" type="text/css" />
+    <!-- Icons Css -->
+    <link href="{% static 'css/icons.min.css' %}" rel="stylesheet" type="text/css" />
+    <!-- App Css -->
+    <link href="{% static 'css/app.min.css' %}" rel="stylesheet" type="text/css" />
+    <link href="{% static 'css/custom.css' %}" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+    <div class="d-flex align-items-center justify-content-center min-vh-100 w-100 bg-light">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'js/plugins.js' %}"></script>
+</body>
+
+</html>
