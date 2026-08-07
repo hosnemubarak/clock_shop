@@ -48,7 +48,17 @@ docker compose exec web python manage.py setup_groups
 docker compose exec web python manage.py setup_walkin_customer
 ```
 
-### 5. Troubleshooting (Docker)
+### 5. Setup Reverse Proxy & SSL (Nginx)
+To expose your application securely, configure Nginx as a reverse proxy:
+
+1. Install Nginx and Certbot: `sudo apt install nginx certbot python3-certbot-nginx`
+2. Copy the example configuration provided in `docs/nginx-docker-example.conf`.
+3. Replace `example.com` with your domain and save it to `/etc/nginx/sites-available/yourdomain.com.conf`.
+4. Enable the site: `sudo ln -s /etc/nginx/sites-available/yourdomain.com.conf /etc/nginx/sites-enabled/`
+5. Test and reload Nginx: `sudo nginx -t && sudo systemctl reload nginx`
+6. Obtain an SSL certificate: `sudo certbot --nginx -d yourdomain.com` (Certbot will automatically configure SSL and auto-renewal).
+
+### 6. Troubleshooting (Docker)
 - **View Logs:** `docker compose logs -f web`
 - **Restart App:** `docker compose restart web`
 - **Rebuild Image:** `docker compose up -d --build web`
