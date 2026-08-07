@@ -7,26 +7,70 @@
 
 <div class="row">
     <div class="col-xl-3 col-md-6">
-        <div class="card card-animate">
+        <div class="card card-animate border-0 shadow-sm mb-4">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Total Transfers</p>
-                <h4 class="fs-22 fw-semibold mt-4">{{ transfer_summary.total_transfers|default:0 }}</h4>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-uppercase fw-semibold text-muted mb-1">Total Transfers</p>
+                        <h4 class="fs-22 fw-bold mb-0">{{ transfer_summary.total_transfers|default:0 }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-primary-subtle text-primary rounded fs-3">
+                            <i class="las la-exchange-alt"></i>
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-xl-3 col-md-6">
-        <div class="card card-animate">
+        <div class="card card-animate border-0 shadow-sm mb-4">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Completed</p>
-                <h4 class="fs-22 fw-semibold mt-4 text-success">{{ transfer_summary.completed|default:0 }}</h4>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-uppercase fw-semibold text-muted mb-1">Completed</p>
+                        <h4 class="fs-22 fw-bold mb-0 text-success">{{ transfer_summary.completed|default:0 }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-success-subtle text-success rounded fs-3">
+                            <i class="las la-check-circle"></i>
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-xl-3 col-md-6">
-        <div class="card card-animate">
+        <div class="card card-animate border-0 shadow-sm mb-4">
             <div class="card-body">
-                <p class="text-uppercase fw-medium text-muted mb-0">Pending</p>
-                <h4 class="fs-22 fw-semibold mt-4 text-warning">{{ transfer_summary.pending|default:0 }}</h4>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-uppercase fw-semibold text-muted mb-1">Pending</p>
+                        <h4 class="fs-22 fw-bold mb-0 text-warning">{{ transfer_summary.pending|default:0 }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-warning-subtle text-warning rounded fs-3">
+                            <i class="las la-clock"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-uppercase fw-semibold text-muted mb-1">Cancelled</p>
+                        <h4 class="fs-22 fw-bold mb-0 text-danger">{{ transfer_summary.cancelled|default:0 }}</h4>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-danger-subtle text-danger rounded fs-3">
+                            <i class="las la-times-circle"></i>
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -34,8 +78,8 @@
 
 <div class="row">
     <div class="col-12">
-        <div class="card">
-            <div class="card-header">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header border-bottom-dashed">
                 <form method="get" class="row g-3 align-items-end">
                     <div class="col-xl-3 col-lg-4 col-md-6">
                         <label class="form-label">From Date</label>
@@ -60,57 +104,76 @@
                             {% if request.GET %}
                             <a href="{{ request.path }}" class="btn btn-soft-danger"><i class="las la-times"></i> Clear</a>
                             {% endif %}
-                            <!-- <button type="submit" name="export" value="pdf" class="btn btn-outline-danger" formtarget="_blank"><i class="las la-file-pdf"></i> PDF</button> -->
-                            <!-- <button type="submit" name="export" value="excel" class="btn btn-outline-success"><i class="las la-file-excel"></i> Excel</button> -->
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="card-body">
-                <div class="table-responsive min-h-300" >
-                    <table class="table table-striped mb-0">
-                        <thead>
+        </div>
+        
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header border-bottom-dashed align-items-center d-flex">
+                <h5 class="card-title mb-0 flex-grow-1">
+                    <i class="las la-exchange-alt text-primary me-1"></i> Transfer History
+                    <i class="las la-info-circle text-muted ms-1 fs-16" style="cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="Log of all stock movements between warehouses."></i>
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-borderless align-middle mb-0">
+                        <thead class="table-light text-muted">
                             <tr>
-                                <th>Transfer #</th>
+                                <th class="ps-4">Transfer #</th>
                                 <th>From</th>
                                 <th>To</th>
-                                <th>Items</th>
+                                <th class="text-center">Items</th>
                                 <th>Date</th>
                                 <th>Status</th>
-                                <th>Created By</th>
+                                <th class="pe-4">Created By</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for t in transfers %}
                             <tr>
-                                <td><a href="{% url 'warehouse:transfer_detail' t.pk %}">{{ t.transfer_number }}</a></td>
+                                <td class="ps-4 fw-medium"><a href="{% url 'warehouse:transfer_detail' t.pk %}" class="fw-bold">{{ t.transfer_number }}</a></td>
                                 <td>{{ t.source_warehouse.name }}</td>
                                 <td>{{ t.destination_warehouse.name }}</td>
-                                <td>{{ t.items.count }}</td>
+                                <td class="text-center"><span class="badge bg-light text-body border px-2 py-1">{{ t.items.count }}</span></td>
                                 <td>{{ t.transfer_date|date:"M d, Y" }}</td>
                                 <td>
                                     {% if t.status == 'completed' %}
-                                    <span class="badge bg-success">Completed</span>
+                                    <span class="badge bg-success-subtle text-success px-2 py-1">Completed</span>
                                     {% elif t.status == 'pending' %}
-                                    <span class="badge bg-warning">Pending</span>
+                                    <span class="badge bg-warning-subtle text-warning px-2 py-1">Pending</span>
                                     {% else %}
-                                    <span class="badge bg-danger">Cancelled</span>
+                                    <span class="badge bg-danger-subtle text-danger px-2 py-1">Cancelled</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ t.created_by.username|default:"-" }}</td>
+                                <td class="pe-4 text-muted">{{ t.created_by.username|default:"-" }}</td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="7" class="text-center text-muted">No transfers</td></tr>
+                            <tr><td colspan="7" class="text-center text-muted py-4">No transfers found.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
                 
-                {% with page_obj=transfers %}
-                {% include 'includes/pagination.html' %}
-                {% endwith %}
+                <div class="px-4 py-3 border-top border-top-dashed">
+                    {% with page_obj=transfers %}
+                    {% include 'includes/pagination.html' %}
+                    {% endwith %}
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Initialize Tooltips
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+});
+</script>
 {% endblock %}

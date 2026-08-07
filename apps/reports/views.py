@@ -261,7 +261,12 @@ def profit_report(request):
         'product__sku', 'product__brand__name', 'product__category__name'
     ).annotate(
         quantity_sold=Sum(F('quantity') - F('returned_quantity')),
-        revenue=Sum((F('quantity') - F('returned_quantity')) * F('unit_price')),
+        revenue=Sum(
+            ExpressionWrapper(
+                ((F('unit_price') * F('quantity') - F('discount')) * (F('quantity') - F('returned_quantity'))) / F('quantity'),
+                output_field=DecimalField()
+            )
+        ),
         cost=Sum((F('quantity') - F('returned_quantity')) * F('cost_price')),
     ).annotate(
         profit=F('revenue') - F('cost'),
@@ -287,7 +292,12 @@ def profit_report(request):
     ).values(
         'product__category__name'
     ).annotate(
-        revenue=Sum((F('quantity') - F('returned_quantity')) * F('unit_price')),
+        revenue=Sum(
+            ExpressionWrapper(
+                ((F('unit_price') * F('quantity') - F('discount')) * (F('quantity') - F('returned_quantity'))) / F('quantity'),
+                output_field=DecimalField()
+            )
+        ),
         cost=Sum((F('quantity') - F('returned_quantity')) * F('cost_price')),
     ).annotate(
         profit=F('revenue') - F('cost'),
@@ -304,7 +314,12 @@ def profit_report(request):
     ).values(
         'warehouse__name', 'warehouse__is_shop'
     ).annotate(
-        revenue=Sum((F('quantity') - F('returned_quantity')) * F('unit_price')),
+        revenue=Sum(
+            ExpressionWrapper(
+                ((F('unit_price') * F('quantity') - F('discount')) * (F('quantity') - F('returned_quantity'))) / F('quantity'),
+                output_field=DecimalField()
+            )
+        ),
         cost=Sum((F('quantity') - F('returned_quantity')) * F('cost_price')),
     ).annotate(
         profit=F('revenue') - F('cost'),
@@ -314,7 +329,12 @@ def profit_report(request):
     totals = SaleItem.objects.filter(
         **base_filter
     ).aggregate(
-        total_revenue=Sum((F('quantity') - F('returned_quantity')) * F('unit_price')),
+        total_revenue=Sum(
+            ExpressionWrapper(
+                ((F('unit_price') * F('quantity') - F('discount')) * (F('quantity') - F('returned_quantity'))) / F('quantity'),
+                output_field=DecimalField()
+            )
+        ),
         total_cost=Sum((F('quantity') - F('returned_quantity')) * F('cost_price')),
     )
     totals['total_profit'] = (totals['total_revenue'] or Decimal('0')) - (totals['total_cost'] or Decimal('0'))
@@ -695,7 +715,7 @@ def dead_stock_report(request):
     ).values(
         'product__id', 'product__sku', 'product__brand__name'
     ).annotate(
-        quantity_sold=Sum('quantity')
+        quantity_sold=Sum(F('quantity') - F('returned_quantity'))
     ).filter(quantity_sold__lte=5).order_by('quantity_sold')
     
     # Paginate dead stock
@@ -756,84 +776,3 @@ def dead_stock_report(request):
 
     return render(request, 'reports/dead_stock_report.html', context)
 
-
-@manager_required
-def batch_report(request):
-    """Detailed stock report."""
-    warehouse_id = request.GET.get('warehouse')
-    product_id = request.GET.get('product')
-    
-    stocks = ProductStock.objects.select_related('product', 'warehouse').all()
-    
-    if warehouse_id:
-        stocks = stocks.filter(warehouse_id=warehouse_id)
-    if product_id:
-        stocks = stocks.filter(product_id=product_id)
-    
-    stock_data_list = []
-    for stock in stocks.filter(quantity__gt=0)[:100]:
-        stock_data_list.append({
-            'stock': stock,
-            'age_days': 0, # not applicable anymore
-            'value': stock.quantity * stock.product.average_cost,
-        })
-    
-    # Paginate stock data
-    paginator = Paginator(stock_data_list, 25)
-    page = request.GET.get('page')
-    stock_data_page = paginator.get_page(page)
-    
-    warehouses = Warehouse.objects.filter(is_active=True)
-    products = Product.objects.filter(is_active=True)
-    
-    context = {
-        'stock_data': stock_data_page,
-        'warehouses': warehouses,
-        'products': products,
-        'selected_warehouse': warehouse_id,
-        'selected_product': product_id,
-    }
-    
-    export = request.GET.get('export')
-    if export:
-        pdf_context = {**context, 'stock_data': stock_data_list}
-
-        def get_excel_data():
-            data = []
-            for item in stock_data_list:
-                b = item['stock']
-                data.append([
-                    b.product.display_name,
-                    b.warehouse.name,
-                    b.quantity,
-                    b.product.average_cost,
-                    item['value']
-                ])
-            return data
-
-        filters_dict = {}
-        if warehouse_id:
-            try:
-                filters_dict['Warehouse'] = warehouses.get(id=warehouse_id).name
-            except Exception:
-                pass
-        if product_id:
-            try:
-                filters_dict['Product'] = products.get(id=product_id).name
-            except Exception:
-                pass
-
-        export_response = handle_export(
-            request=request,
-            context=pdf_context,
-            filename='Stock_Detail_Report',
-            pdf_template='reports/pdf/batch_report.html',
-            excel_title='Stock Detail Report',
-            filters_dict=filters_dict,
-            headers=['Product', 'Warehouse', 'Quantity', 'WAC', 'Value'],
-            data_func=get_excel_data
-        )
-        if export_response:
-            return export_response
-
-    return render(request, 'reports/batch_report.html', context)
