@@ -10,5 +10,4 @@ urlpatterns = [
     path('stock/', views.stock_report, name='stock_report'),
     path('transfers/', views.transfer_report, name='transfer_report'),
     path('dead-stock/', views.dead_stock_report, name='dead_stock_report'),
-    path('batches/', views.batch_report, name='batch_report'),
 ]

@@ -125,9 +125,6 @@
                             <li class="nav-item">
                                 <a href="{% url 'reports:dead_stock_report' %}" class="nav-link {% if request.resolver_match.url_name == 'dead_stock_report' %}active{% endif %}" data-key="t-dead-stock"><i class="las la-exclamation-triangle me-2 fs-16"></i> Dead Stock</a>
                             </li>
-                            <li class="nav-item">
-                                <a href="{% url 'reports:batch_report' %}" class="nav-link {% if request.resolver_match.url_name == 'batch_report' %}active{% endif %}" data-key="t-stock-detail"><i class="las la-clipboard-list me-2 fs-16"></i> Stock Detail Report</a>
-                            </li>
                         </ul>
                     </div>
                 </li>

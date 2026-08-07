@@ -9,7 +9,7 @@
     {% if selected_product %}
         <strong>Product:</strong> 
         {% for prod in products %}
-            {% if prod.id|stringformat:"s" == selected_product %}{{ prod.name }}{% endif %}
+            {% if prod.id|stringformat:"s" == selected_product %}{{ prod.display_name }}{% endif %}
         {% endfor %}
         <br>
     {% endif %}
