@@ -146,8 +146,7 @@
                 {% else %}
                 <strong>Total Outstanding Amount:</strong>
                 {% endif %}
-                &#2547; {{ sale.customer.total_due|floatformat:0|intcomma }}/= ({{
-                sale.customer.total_due|amount_in_words }})
+                &#2547; {{ sale.customer.total_due|floatformat:0|intcomma }}/= ({{ sale.customer.total_due|amount_in_words }})
             </div>
             {% endif %}
 
