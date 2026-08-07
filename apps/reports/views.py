@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from apps.core.decorators import manager_required, admin_required
 from django.core.paginator import Paginator
-from django.db.models import Sum, Count, F, Q, Avg
+from django.db.models import Sum, Count, F, Q, Avg, ExpressionWrapper, DecimalField
 from django.db.models.functions import Coalesce, TruncMonth, TruncWeek
 from django.utils import timezone
 from datetime import timedelta, date
@@ -49,12 +49,13 @@ def sales_report(request):
         sale_date__lte=date_to
     )
     
-    # Filter by shop if selected (based on sale items' batch warehouse)
+    # Filter by shop if selected
     if shop_id:
-        sales = sales.filter(
-            items__warehouse_id=shop_id,
-            items__is_custom=False
-        ).distinct()
+        shop_sale_ids = SaleItem.objects.filter(
+            warehouse_id=shop_id,
+            is_custom=False
+        ).values('sale_id')
+        sales = sales.filter(id__in=shop_sale_ids)
     
     # Summary stats
     summary = sales.aggregate(
@@ -103,24 +104,38 @@ def sales_report(request):
         is_custom=False,
         product__isnull=False
     ).values(
-        'product__sku', 'product__brand__name'
+        'product__id', 'product__sku', 'product__brand__name'
     ).annotate(
         quantity_sold=Sum(F('quantity') - F('returned_quantity')),
-        total_revenue=Sum((F('quantity') - F('returned_quantity')) * F('unit_price')),
-        total_profit=Sum((F('quantity') - F('returned_quantity')) * (F('unit_price') - F('cost_price')))
+        total_revenue=Sum(
+            ExpressionWrapper(
+                ((F('unit_price') * F('quantity') - F('discount')) * (F('quantity') - F('returned_quantity'))) / F('quantity'),
+                output_field=DecimalField()
+            )
+        ),
+        total_profit=Sum(
+            ExpressionWrapper(
+                (((F('unit_price') * F('quantity') - F('discount')) * (F('quantity') - F('returned_quantity'))) / F('quantity')) - (F('cost_price') * (F('quantity') - F('returned_quantity'))),
+                output_field=DecimalField()
+            )
+        )
     ).order_by('-total_revenue')[:10]
     
     # Shop-wise sales breakdown (for comparison)
     shop_sales = []
     if not shop_id:  # Only show breakdown when viewing all shops
         for shop in shops:
+            shop_sale_ids = SaleItem.objects.filter(
+                warehouse=shop,
+                is_custom=False
+            ).values('sale_id')
+            
             shop_total = Sale.objects.filter(
+                id__in=shop_sale_ids,
                 status='completed',
                 sale_date__gte=date_from,
-                sale_date__lte=date_to,
-                items__warehouse=shop,
-                items__is_custom=False
-            ).distinct().aggregate(
+                sale_date__lte=date_to
+            ).aggregate(
                 total=Sum('total_amount'),
                 cost=Sum('total_cost'),
                 count=Count('id')
@@ -134,13 +149,20 @@ def sales_report(request):
                     'count': shop_total['count'] or 0
                 })
     
+    top_products_list = list(top_products)
+    for p in top_products_list:
+        if p['total_revenue'] and p['total_revenue'] > 0:
+            p['margin'] = round((p['total_profit'] / p['total_revenue']) * 100, 2)
+        else:
+            p['margin'] = 0
+            
     context = {
         'date_from': date_from,
         'date_to': date_to,
         'group_by': group_by,
         'summary': summary,
         'sales_by_period': sales_data,
-        'top_products': top_products,
+        'top_products': top_products_list,
         'shops': shops,
         'selected_shop': shop_id,
         'shop_sales': shop_sales,
