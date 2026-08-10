@@ -71,7 +71,9 @@
                                 <th scope="col">Product</th>
                                 <th scope="col">Category</th>
                                 <th scope="col">Total Stock</th>
+                                {% if SHOW_AVG_COST %}
                                 <th scope="col">Avg Cost</th>
+                                {% endif %}
                                 <th scope="col">Selling Price</th>
                                 <th scope="col">Status</th>
                                 <th scope="col" class="text-center">Actions</th>
@@ -95,7 +97,9 @@
                                     <span class="badge bg-success">{{ product.total_stock }}</span>
                                     {% endif %}
                                 </td>
+                                {% if SHOW_AVG_COST %}
                                 <td>{{ CURRENCY_SYMBOL }}{{ product.average_cost|floatformat:0 }}</td>
+                                {% endif %}
                                 <td>{{ CURRENCY_SYMBOL }}{{ product.default_selling_price|floatformat:0 }}</td>
                                 <td>
                                     {% if product.is_active %}
@@ -122,7 +126,7 @@
                                 </td>
                             </tr>
                             {% empty %}
-                            {% include 'includes/empty_state.html' with colspan=8 message='No products found' %}
+                            {% include 'includes/empty_state.html' with colspan=7 message='No products found' %}
                             {% endfor %}
                         </tbody>
                     </table>

@@ -78,6 +78,13 @@ def global_context(request):
     if not shop_name or shop_name == 'Clock Shop' or not shop_address:
         settings_warning = True
         
+    show_avg_cost = False
+    if request.user.is_authenticated and db_settings:
+        if db_settings.avg_cost_visibility == 'all_users':
+            show_avg_cost = True
+        elif request.user.is_staff or request.user.is_superuser:
+            show_avg_cost = True
+
     return {
         'SHOP_NAME': shop_name,
         'SHOP_ADDRESS': shop_address,
@@ -87,4 +94,5 @@ def global_context(request):
         'DAYS_UNTIL_EXPIRY': days_until_expiry,
         'ALLOW_WALKIN_CUSTOMERS': allow_walkin,
         'SETTINGS_WARNING': settings_warning,
+        'SHOW_AVG_COST': show_avg_cost,
     }

@@ -96,7 +96,8 @@ function loadWarehouseStocks(warehouseId) {
             }
             data.forEach(stock => {
                 stockData[stock.product_id] = stock;
-                stockSelect.innerHTML += `<option value="${stock.product_id}">${stock.product_sku} (${stock.quantity} avail @ ${window.CURRENCY_SYMBOL}${stock.average_cost})</option>`;
+                let costStr = stock.average_cost !== null ? ` @ ${window.CURRENCY_SYMBOL}${stock.average_cost}` : '';
+                stockSelect.innerHTML += `<option value="${stock.product_id}">${stock.product_sku} (${stock.quantity} avail${costStr})</option>`;
             });
             
             // Initialize Tom Select for searchable stock dropdown
@@ -170,7 +171,8 @@ function addItem() {
     // Update the stock select option to show new available quantity
     if (window.stockTomSelect) {
         const s = stockData[productId];
-        const newText = `${s.product_sku} (${s.quantity} avail @ ${window.CURRENCY_SYMBOL}${s.average_cost})`;
+        let costStr = s.average_cost !== null ? ` @ ${window.CURRENCY_SYMBOL}${s.average_cost}` : '';
+        const newText = `${s.product_sku} (${s.quantity} avail${costStr})`;
         
         // Remove and re-add the option to avoid Tom Select errors
         window.stockTomSelect.removeOption(productId);
@@ -197,7 +199,8 @@ function removeItem(index) {
         // Update the stock select option
         if (window.stockTomSelect) {
             const s = stockData[item.product_id];
-            const newText = `${s.product_sku} (${s.quantity} avail @ ${window.CURRENCY_SYMBOL}${s.average_cost})`;
+            let costStr = s.average_cost !== null ? ` @ ${window.CURRENCY_SYMBOL}${s.average_cost}` : '';
+            const newText = `${s.product_sku} (${s.quantity} avail${costStr})`;
             
             // Remove and re-add the option to avoid Tom Select errors
             window.stockTomSelect.removeOption(item.product_id);
@@ -215,8 +218,12 @@ function renderItems() {
     let grandTotal = 0;
     
     items.forEach(item => {
-        const total = item.quantity * parseFloat(item.buy_price);
-        grandTotal += total;
+        let totalValStr = '-';
+        if (item.buy_price !== null) {
+            const total = item.quantity * parseFloat(item.buy_price);
+            grandTotal += total;
+            totalValStr = `${window.CURRENCY_SYMBOL}${total.toFixed(2)}`;
+        }
         html += `
             <tr>
                 <td>
@@ -224,7 +231,7 @@ function renderItems() {
                 </td>
                 <!-- No Batch cell -->
                 <td class="text-center">${item.quantity}</td>
-                <td class="text-end">${window.CURRENCY_SYMBOL}${total.toFixed(2)}</td>
+                <td class="text-end">${totalValStr}</td>
                 <td class="text-center">
                     <button type="button" aria-label="Remove item" class="btn btn-soft-danger btn-sm" onclick="removeItem(${item.index})">
                         <i class="las la-times"></i>

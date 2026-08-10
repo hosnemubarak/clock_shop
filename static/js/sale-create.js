@@ -182,7 +182,7 @@ function initSaleCreate() {
                 ' aria-disabled="' + (out ? 'true' : 'false') + '">' +
                     '<div class="sale-result__body">' +
                         '<div class="sale-result__title">' + highlight(row.display_name, query) + 
-                        ' <span class="badge bg-light text-secondary border ms-2">Avg Cost: ' + fmt(toMinor(row.average_cost)) + '</span></div>' +
+                        (row.average_cost !== null ? ' <span class="badge bg-light text-secondary border ms-2">Avg Cost: ' + fmt(toMinor(row.average_cost)) + '</span>' : '') + '</div>' +
                         '<div class="sale-result__meta">' +
                             metaHtml +
                         '</div>' +

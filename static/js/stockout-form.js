@@ -123,19 +123,21 @@ function renderItems() {
     const tbody = document.getElementById('itemsTableBody');
     
     if (items.length === 0) {
+        const colspan = document.getElementById('summaryValue') ? 5 : 3;
         tbody.innerHTML = `<tr id="emptyRow">
-            <td colspan="5" class="text-center text-muted py-4">No items added yet</td>
+            <td colspan="${colspan}" class="text-center text-muted py-4">No items added yet</td>
         </tr>`;
         document.getElementById('submitBtn').disabled = true;
     } else {
         tbody.innerHTML = '';
+        const showCost = document.getElementById('summaryValue') !== null;
         items.forEach((item, index) => {
             const total = item.quantity * item.unit_cost;
             tbody.innerHTML += `<tr>
                 <td>${item.product_sku}</td>
                 <td class="text-center">${item.quantity}</td>
-                <td class="text-end">${window.CURRENCY_SYMBOL}${item.unit_cost.toFixed(2)}</td>
-                <td class="text-end">${window.CURRENCY_SYMBOL}${total.toFixed(2)}</td>
+                ${showCost ? `<td class="text-end">${window.CURRENCY_SYMBOL}${item.unit_cost.toFixed(2)}</td>
+                <td class="text-end">${window.CURRENCY_SYMBOL}${total.toFixed(2)}</td>` : ''}
                 <td class="text-center">
                     <button type="button" aria-label="Remove item" class="btn btn-sm btn-soft-danger" onclick="removeItem(${index})">
                         <i class="las la-trash"></i>
@@ -157,6 +159,10 @@ function updateSummary() {
     
     document.getElementById('summaryItems').textContent = totalItems;
     document.getElementById('summaryQty').textContent = totalQty;
-    document.getElementById('summaryValue').textContent = window.CURRENCY_SYMBOL + totalValue.toFixed(2);
-    document.getElementById('totalValue').textContent = window.CURRENCY_SYMBOL + totalValue.toFixed(2);
+    
+    const sumValEl = document.getElementById('summaryValue');
+    if (sumValEl) {
+        sumValEl.textContent = window.CURRENCY_SYMBOL + totalValue.toFixed(2);
+        document.getElementById('totalValue').textContent = window.CURRENCY_SYMBOL + totalValue.toFixed(2);
+    }
 }

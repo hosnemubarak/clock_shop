@@ -47,6 +47,11 @@ class SystemSettings(models.Model):
     Singleton model for system-wide settings.
     Values here override environment variables.
     """
+    AVG_COST_VISIBILITY_CHOICES = [
+        ('admin_only', 'Admin Only'),
+        ('all_users', 'All Users'),
+    ]
+
     shop_name = models.CharField(
         max_length=200,
         blank=True,
@@ -78,6 +83,14 @@ class SystemSettings(models.Model):
         default=True,
         help_text='Allow sales to walk-in customers without an account'
     )
+    
+    avg_cost_visibility = models.CharField(
+        max_length=20,
+        choices=AVG_COST_VISIBILITY_CHOICES,
+        default='admin_only',
+        help_text="Who can view the average cost of products"
+    )
+
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(
         User,

@@ -12,6 +12,7 @@ import logging
 
 from .models import Sale, SaleReturn, SaleReturnItem
 from .forms import SaleForm, PaymentForm
+from apps.core.models import SystemSettings
 from apps.inventory.models import Product, ProductStock
 from apps.warehouse.models import Warehouse
 from apps.customers.models import Customer, Payment
@@ -292,6 +293,13 @@ def api_product_search(request):
     limit = min(_to_int_or(request.GET.get('limit'), PRODUCT_SEARCH_LIMIT), 100)
     rows = list(products[:limit])
 
+    db_settings = SystemSettings.get_settings()
+    show_avg_cost = False
+    if db_settings and db_settings.avg_cost_visibility == 'all_users':
+        show_avg_cost = True
+    elif request.user.is_staff or request.user.is_superuser:
+        show_avg_cost = True
+
     return JsonResponse({
         'results': [{
             'id': p.id,
@@ -300,7 +308,7 @@ def api_product_search(request):
             'category': p.category.name if p.category else '',
             'display_name': p.display_name,
             'price': str(p.default_selling_price),
-            'average_cost': str(p.average_cost),
+            'average_cost': str(p.average_cost) if show_avg_cost else None,
             'shop_stock': p.shop_stock,
             'total_stock': p.total_stock,
         } for p in rows],

@@ -131,24 +131,28 @@
                                     <th>Product</th>
                                     <!-- No Batch column -->
                                     <th class="text-center">Qty</th>
+                                    {% if SHOW_AVG_COST %}
                                     <th class="text-end">Unit Cost</th>
                                     <th class="text-end">Total</th>
+                                    {% endif %}
                                     <th class="text-center w-60px" >Action</th>
                                 </tr>
                             </thead>
                             <tbody id="itemsTableBody">
                                 <tr id="emptyRow">
-                                    <td colspan="5" class="text-center text-muted py-4">
+                                    <td colspan="{% if SHOW_AVG_COST %}5{% else %}3{% endif %}" class="text-center text-muted py-4">
                                         No items added yet
                                     </td>
                                 </tr>
                             </tbody>
                             <tfoot class="table-light">
+                                {% if SHOW_AVG_COST %}
                                 <tr>
                                     <th colspan="3" class="text-end">Total Value:</th>
                                     <th class="text-end" id="totalValue">{{ CURRENCY_SYMBOL }}0.00</th>
                                     <th></th>
                                 </tr>
+                                {% endif %}
                             </tfoot>
                         </table>
                     </div>
@@ -171,11 +175,13 @@
                         <span class="text-muted">Total Quantity:</span>
                         <span class="fw-medium" id="summaryQty">0</span>
                     </div>
+                    {% if SHOW_AVG_COST %}
                     <hr>
                     <div class="d-flex justify-content-between">
                         <span class="fw-medium">Total Value:</span>
                         <span class="fw-bold text-danger fs-5" id="summaryValue">{{ CURRENCY_SYMBOL }}0.00</span>
                     </div>
+                    {% endif %}
                 </div>
                 <div class="card-footer">
                     <div class="d-grid gap-2">

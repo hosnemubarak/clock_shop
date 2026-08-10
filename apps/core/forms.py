@@ -16,6 +16,7 @@ class SystemSettingsForm(forms.ModelForm):
             'low_stock_threshold',
             'alert_days_before_expiry',
             'allow_walkin_customers',
+            'avg_cost_visibility',
         ]
         widgets = {
             'shop_name': forms.TextInput(attrs={
@@ -47,6 +48,9 @@ class SystemSettingsForm(forms.ModelForm):
             }),
             'allow_walkin_customers': forms.CheckboxInput(attrs={
                 'class': 'form-check-input'
+            }),
+            'avg_cost_visibility': forms.Select(attrs={
+                'class': 'form-select'
             }),
         }
         labels = {

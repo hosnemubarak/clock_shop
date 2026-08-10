@@ -11,6 +11,7 @@ import json
 import logging
 
 from .models import Product, Category, Brand, ProductStock, Purchase, PurchaseItem, StockOut, StockOutItem
+from apps.core.models import SystemSettings
 from .services import get_product_stock_history
 from .forms import (ProductForm, CategoryForm, BrandForm, 
                     PurchaseForm, PurchaseItemForm, StockOutForm)
@@ -500,12 +501,19 @@ def api_product_stocks(request, product_id):
     
     if warehouse_id:
         stocks = stocks.filter(warehouse_id=warehouse_id)
+        
+    db_settings = SystemSettings.get_settings()
+    show_avg_cost = False
+    if db_settings and db_settings.avg_cost_visibility == 'all_users':
+        show_avg_cost = True
+    elif request.user.is_staff or request.user.is_superuser:
+        show_avg_cost = True
     
     data = [{
         'id': s.id,
         'quantity': s.quantity,
         'warehouse': s.warehouse.name,
-        'average_cost': str(s.product.average_cost),
+        'average_cost': str(s.product.average_cost) if show_avg_cost else None,
     } for s in stocks]
     
     return JsonResponse(data, safe=False)
@@ -761,13 +769,20 @@ def api_warehouse_stocks(request, warehouse_id):
     
     # Both product_name and product_sku are emitted because two templates consume
     # this: stockout_form.html reads neither, transfer_form.html reads product_sku.
+    db_settings = SystemSettings.get_settings()
+    show_avg_cost = False
+    if db_settings and db_settings.avg_cost_visibility == 'all_users':
+        show_avg_cost = True
+    elif request.user.is_staff or request.user.is_superuser:
+        show_avg_cost = True
+
     data = [{
         'id': s.id,
         'product_id': s.product_id,
         'product_name': s.product.display_name,
         'product_sku': s.product.sku,
         'quantity': s.quantity,
-        'average_cost': str(s.product.average_cost),
+        'average_cost': str(s.product.average_cost) if show_avg_cost else None,
     } for s in stocks]
     
     return JsonResponse(data, safe=False)
