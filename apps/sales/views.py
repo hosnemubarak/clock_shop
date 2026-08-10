@@ -297,7 +297,7 @@ def api_product_search(request):
     show_avg_cost = False
     if db_settings and db_settings.avg_cost_visibility == 'all_users':
         show_avg_cost = True
-    elif request.user.is_staff or request.user.is_superuser:
+    elif request.user.is_superuser:
         show_avg_cost = True
 
     return JsonResponse({
