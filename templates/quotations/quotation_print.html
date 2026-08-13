@@ -111,17 +111,17 @@
             <div class="totals-inner">
                 <div class="totals-row">
                     <span class="t-label">Subtotal</span>
-                    <span class="t-value">&#2547; {{ quotation.subtotal|floatformat:0|intcomma }}</span>
+                    <span class="t-value"><b>৳</b> {{ quotation.subtotal|floatformat:0|intcomma }}</span>
                 </div>
                 {% if quotation.discount_amount > 0 %}
                 <div class="totals-row">
                     <span class="t-label">Discount</span>
-                    <span class="t-value">- &#2547; {{ quotation.discount_amount|floatformat:0|intcomma }}</span>
+                    <span class="t-value">- <b>৳</b> {{ quotation.discount_amount|floatformat:0|intcomma }}</span>
                 </div>
                 {% endif %}
                 <div class="totals-row grand-total-row">
                     <span class="t-label">Total</span>
-                    <span class="t-value">&#2547; {{ quotation.total_amount|floatformat:0|intcomma }}</span>
+                    <span class="t-value"><b>৳</b> {{ quotation.total_amount|floatformat:0|intcomma }}</span>
                 </div>
             </div>
         </div>

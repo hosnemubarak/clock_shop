@@ -12,7 +12,7 @@ body {
     padding: 24px 28px;
     font-size: 13px;
     max-width: 820px;
-    color: #334155;
+    color: #000000;
     line-height: 1.5;
     background: #f1f5f9;
 }
@@ -81,7 +81,7 @@ h1, h2, h3, h4, strong { color: #0f172a; }
 .header-logo { max-width: 250px; max-height: 80px; object-fit: contain; margin-bottom: 10px; }
 .header-text { text-align: left; flex: 1; margin-right: 40px; }
 .header-text h1 { margin: 0 0 6px 0; font-family: 'Montserrat', sans-serif; font-size: 26px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #0f172a; }
-.header-text p { margin: 0; color: #64748b; font-size: 11px; line-height: 1.9; }
+.header-text p { margin: 0; color: #000000; font-size: 12px; line-height: 1.9; }
 
 /* ============================================================
    DOCUMENT TYPE BANNER
@@ -94,11 +94,11 @@ h1, h2, h3, h4, strong { color: #0f172a; }
 }
 
 .doc-type-banner .doc-title {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: 3px;
     text-transform: uppercase;
-    color: #475569;
+    color: #000000;
     margin: 0;
 }
 
@@ -123,11 +123,11 @@ h1, h2, h3, h4, strong { color: #0f172a; }
 }
 
 .bill-to-box .section-label {
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: #64748b;
+    color: #000000;
     margin: 0 0 8px 0;
     display: block;
 }
@@ -141,14 +141,14 @@ h1, h2, h3, h4, strong { color: #0f172a; }
 }
 
 .bill-to-box .info-row {
-    font-size: 12px;
-    color: #475569;
+    font-size: 13px;
+    color: #000000;
     margin-bottom: 2px;
 }
 
 .bill-to-box .info-row .lbl {
     font-weight: 600;
-    color: #334155;
+    color: #000000;
 }
 
 .meta-box {
@@ -171,9 +171,9 @@ h1, h2, h3, h4, strong { color: #0f172a; }
 .meta-row:last-child { border-bottom: none; }
 
 .meta-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 600;
-    color: #64748b;
+    color: #000000;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -252,13 +252,13 @@ tbody tr td {
     padding: 9px 12px;
     border-bottom: 1px solid #f1f5f9;
     font-size: 13px;
-    color: #334155;
+    color: #000000;
     vertical-align: middle;
 }
 tbody tr:last-child td { border-bottom: 2px solid #e2e8f0; }
 tbody tr:nth-child(even) td { background: #fafbfc; }
 
-.item-sl { color: #94a3b8; font-size: 12px; font-weight: 500; }
+.item-sl { color: #000000; font-size: 12px; font-weight: 500; }
 .item-name { font-weight: 600; color: #0f172a; }
 .amount-cell { font-weight: 600; color: #0f172a; }
 
@@ -292,7 +292,7 @@ tbody tr:nth-child(even) td { background: #fafbfc; }
 }
 .totals-row:last-child { border-bottom: none; }
 
-.t-label { font-size: 12px; font-weight: 500; color: #64748b; }
+.t-label { font-size: 12px; font-weight: 500; color: #000000; }
 .t-value { font-size: 13px; font-weight: 600; color: #0f172a; }
 
 .grand-total-row {
@@ -317,7 +317,7 @@ tbody tr:nth-child(even) td { background: #fafbfc; }
 .balance-due-row .t-value { color: #dc2626 !important; font-weight: 700; }
 
 /* Legacy compat */
-.totals-label { color: #64748b; font-weight: 500; font-size: 12px; }
+.totals-label { color: #000000; font-weight: 500; font-size: 12px; }
 .totals-val { font-weight: 600; color: #0f172a; font-size: 13px; }
 
 /* ============================================================
@@ -331,17 +331,17 @@ tbody tr:nth-child(even) td { background: #fafbfc; }
     border: 1px solid #e2e8f0;
     border-radius: 6px;
     margin-bottom: 12px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 500;
-    color: #334155;
+    color: #000000;
 }
 
 .in-words-section .iw-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 1px;
     text-transform: uppercase;
-    color: #64748b;
+    color: #000000;
     display: block;
     margin-bottom: 3px;
 }
@@ -353,7 +353,7 @@ tbody tr:nth-child(even) td { background: #fafbfc; }
     border-left: 3px solid #ef4444;
     border-radius: 0 6px 6px 0;
     margin-bottom: 12px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     color: #dc2626;
 }
@@ -365,12 +365,12 @@ tbody tr:nth-child(even) td { background: #fafbfc; }
     border-left: 3px solid #f59e0b;
     border-radius: 0 6px 6px 0;
     margin-bottom: 12px;
-    font-size: 12px;
+    font-size: 13px;
     color: #78350f;
 }
 
 .notes-section .notes-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -397,8 +397,8 @@ tbody tr:nth-child(even) td { background: #fafbfc; }
     border-top: 1px dashed #94a3b8;
     padding-top: 8px;
     font-weight: 600;
-    font-size: 11px;
-    color: #64748b;
+    font-size: 12px;
+    color: #000000;
     letter-spacing: 0.3px;
 }
 
@@ -414,16 +414,16 @@ tbody tr:nth-child(even) td { background: #fafbfc; }
 
 .footer-text {
     margin: 0;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
-    color: #475569;
+    color: #000000;
     letter-spacing: 0.5px;
 }
 
 .footer-sub {
     margin: 4px 0 0;
-    font-size: 10px;
-    color: #94a3b8;
+    font-size: 12px;
+    color: #000000;
 }
 
 /* ============================================================

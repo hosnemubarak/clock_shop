@@ -106,26 +106,26 @@
             <div class="totals-inner">
                 <div class="totals-row">
                     <span class="t-label">Subtotal</span>
-                    <span class="t-value">&#2547; {{ sale.subtotal|floatformat:0|intcomma }}</span>
+                    <span class="t-value"><b>৳</b> {{ sale.subtotal|floatformat:0|intcomma }}</span>
                 </div>
                 {% if sale.discount_amount > 0 %}
                 <div class="totals-row">
                     <span class="t-label">Discount</span>
-                    <span class="t-value">- &#2547; {{ sale.discount_amount|floatformat:0|intcomma }}</span>
+                    <span class="t-value">- <b>৳</b> {{ sale.discount_amount|floatformat:0|intcomma }}</span>
                 </div>
                 {% endif %}
                 <div class="totals-row grand-total-row">
                     <span class="t-label">Total</span>
-                    <span class="t-value">&#2547; {{ sale.total_amount|floatformat:0|intcomma }}</span>
+                    <span class="t-value"><b>৳</b> {{ sale.total_amount|floatformat:0|intcomma }}</span>
                 </div>
                 <div class="totals-row">
                     <span class="t-label">Paid</span>
-                    <span class="t-value">&#2547; {{ sale.paid_amount|floatformat:0|intcomma }}</span>
+                    <span class="t-value"><b>৳</b> {{ sale.paid_amount|floatformat:0|intcomma }}</span>
                 </div>
                 {% if sale.due_amount > 0 %}
                 <div class="totals-row balance-due-row">
                     <span class="t-label">Balance Due</span>
-                    <span class="t-value">&#2547; {{ sale.due_amount|floatformat:0|intcomma }}</span>
+                    <span class="t-value"><b>৳</b> {{ sale.due_amount|floatformat:0|intcomma }}</span>
                 </div>
                 {% endif %}
             </div>
@@ -146,7 +146,7 @@
                 {% else %}
                 <strong>Total Outstanding Amount:</strong>
                 {% endif %}
-                &#2547; {{ sale.customer.total_due|floatformat:0|intcomma }}/= ({{ sale.customer.total_due|amount_in_words }})
+                <b>৳</b> {{ sale.customer.total_due|floatformat:0|intcomma }}/= ({{ sale.customer.total_due|amount_in_words }})
             </div>
             {% endif %}
 

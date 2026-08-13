@@ -83,9 +83,9 @@
                 <tr>
                     <td class="item-name">
                         Payment received{% if payment.sale %} for Invoice #{{ payment.sale.invoice_number }}{% endif %}
-                        {% if payment.reference %}<br><span style="font-size:12px;color:#64748b;font-weight:400;">Ref: {{ payment.reference }}</span>{% endif %}
+                        {% if payment.reference %}<br><span style="font-size:12px;font-weight:400;">Ref: {{ payment.reference }}</span>{% endif %}
                     </td>
-                    <td class="text-right amount-cell">&#2547; {{ payment.amount|floatformat:0|intcomma }}</td>
+                    <td class="text-right amount-cell"><b>৳</b> {{ payment.amount|floatformat:0|intcomma }}</td>
                 </tr>
             </tbody>
         </table>
@@ -95,7 +95,7 @@
             <div class="totals-inner">
                 <div class="totals-row grand-total-row">
                     <span class="t-label">Amount Received</span>
-                    <span class="t-value">&#2547; {{ payment.amount|floatformat:0|intcomma }}</span>
+                    <span class="t-value"><b>৳</b> {{ payment.amount|floatformat:0|intcomma }}</span>
                 </div>
             </div>
         </div>
@@ -111,7 +111,7 @@
             {% if payment.customer and payment.customer.total_due > 0 %}
             <div class="outstanding-section">
                 <strong>Total Outstanding Amount:</strong>
-                &#2547; {{ payment.customer.total_due|floatformat:0|intcomma }}/= ({{ payment.customer.total_due|amount_in_words }})
+                <b>৳</b> {{ payment.customer.total_due|floatformat:0|intcomma }}/= ({{ payment.customer.total_due|amount_in_words }})
             </div>
             {% endif %}
 
