@@ -445,13 +445,7 @@ tbody tr:nth-child(even) td { background: #fafbfc; }
    ============================================================ */
 @page {
     size: A4;
-    margin: 14mm 12mm;
-    @bottom-right {
-        content: "Page " counter(page) " of " counter(pages);
-        font-family: 'Inter', sans-serif;
-        font-size: 9px;
-        color: #94a3b8;
-    }
+    margin: 0;
 }
 
 @media print {
@@ -468,7 +462,7 @@ tbody tr:nth-child(even) td { background: #fafbfc; }
     .invoice-paper {
         box-shadow: none;
         border-radius: 0;
-        padding: 0;
+        padding: 14mm 12mm;
         background: white;
     }
 
