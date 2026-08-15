@@ -356,6 +356,160 @@ def pos_checkout(request):
 
 
 # ---------------------------------------------------------------------------
+# On-the-fly Stock Transfer (from Sale page)
+# ---------------------------------------------------------------------------
+
+@has_permission('warehouse.add_stocktransfer')
+def api_product_warehouse_stocks(request, product_id):
+    """Return per-warehouse stock for a product, excluding the shop.
+
+    Used by the sale screen's transfer modal to show which warehouses have
+    stock available for transfer into the shop.
+    """
+    shop = Warehouse.objects.filter(is_shop=True).first()
+    if not shop:
+        return JsonResponse({'stocks': [], 'error': 'No shop warehouse configured.'}, status=409)
+
+    stocks = ProductStock.objects.filter(
+        product_id=product_id,
+        quantity__gt=0,
+    ).exclude(
+        warehouse=shop,
+    ).select_related('warehouse').order_by('warehouse__name')
+
+    return JsonResponse({
+        'product_id': product_id,
+        'shop_stock': ProductStock.objects.filter(
+            product_id=product_id, warehouse=shop
+        ).values_list('quantity', flat=True).first() or 0,
+        'stocks': [{
+            'warehouse_id': s.warehouse_id,
+            'warehouse_name': s.warehouse.name,
+            'warehouse_code': s.warehouse.code,
+            'quantity': s.quantity,
+        } for s in stocks],
+    })
+
+
+@has_permission('warehouse.add_stocktransfer')
+def api_quick_transfer(request):
+    """Execute an immediate stock transfer from warehouse(s) to the shop.
+
+    Accepts JSON: { product_id: int, transfers: [{ warehouse_id, quantity }] }
+
+    Creates one StockTransfer per source warehouse, each with a single item,
+    then immediately completes it via the existing complete_transfer() method
+    which handles row locking, stock validation, and total_stock refresh.
+
+    Returns the product's updated shop stock so the JS can refresh the cart.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
+
+    try:
+        try:
+            data = json.loads(request.body)
+        except ValueError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON data.'}, status=400)
+
+        product_id = data.get('product_id')
+        transfers = data.get('transfers', [])
+
+        if not product_id:
+            return JsonResponse({'status': 'error', 'message': 'Product ID is required.'}, status=400)
+        if not transfers:
+            return JsonResponse({'status': 'error', 'message': 'At least one transfer is required.'}, status=400)
+
+        product = Product.objects.filter(pk=product_id, is_active=True).first()
+        if not product:
+            return JsonResponse({'status': 'error', 'message': 'Product not found.'}, status=404)
+
+        shop = Warehouse.objects.filter(is_shop=True).first()
+        if not shop:
+            return JsonResponse({'status': 'error', 'message': 'No shop warehouse configured.'}, status=409)
+
+        # Parse and validate all transfer entries before touching the database.
+        parsed = []
+        seen_warehouses = set()
+        for i, entry in enumerate(transfers, start=1):
+            try:
+                wh_id = int(entry.get('warehouse_id', 0))
+                qty = int(entry.get('quantity', 0))
+            except (TypeError, ValueError):
+                return JsonResponse({'status': 'error', 'message': f'Invalid data in transfer #{i}.'}, status=400)
+
+            if qty <= 0:
+                return JsonResponse({'status': 'error', 'message': f'Quantity must be positive in transfer #{i}.'}, status=400)
+            if wh_id == shop.pk:
+                return JsonResponse({'status': 'error', 'message': 'Cannot transfer from the shop to itself.'}, status=400)
+            if wh_id in seen_warehouses:
+                return JsonResponse({'status': 'error', 'message': f'Duplicate warehouse in transfer #{i}.'}, status=400)
+            seen_warehouses.add(wh_id)
+            parsed.append({'warehouse_id': wh_id, 'quantity': qty})
+
+        from apps.warehouse.models import StockTransfer, StockTransferItem
+
+        with transaction.atomic():
+            # Verify all source warehouses exist and are active.
+            wh_ids = [t['warehouse_id'] for t in parsed]
+            warehouses_map = {
+                w.id: w for w in Warehouse.objects.filter(id__in=wh_ids, is_active=True)
+            }
+            for t in parsed:
+                if t['warehouse_id'] not in warehouses_map:
+                    raise ValueError(f'Warehouse #{t["warehouse_id"]} not found or inactive.')
+
+            transfer_records = []
+            for t in parsed:
+                source = warehouses_map[t['warehouse_id']]
+                transfer = StockTransfer(
+                    source_warehouse=source,
+                    destination_warehouse=shop,
+                    transfer_date=timezone.now(),
+                    notes=f'Quick transfer from sale page: {product.display_name} x {t["quantity"]}',
+                    created_by=request.user,
+                )
+                transfer.save()  # Generates transfer_number
+
+                StockTransferItem.objects.create(
+                    transfer=transfer,
+                    product=product,
+                    quantity=t['quantity'],
+                )
+
+                # complete_transfer() handles select_for_update, stock validation,
+                # source decrement, destination increment, and update_total_stock.
+                transfer.complete_transfer()
+                transfer_records.append(transfer)
+
+                create_audit_log(request, 'TRANSFER', transfer, {
+                    'action': 'quick_transfer_from_sale',
+                    'source': source.name,
+                    'destination': shop.name,
+                    'product': product.display_name,
+                    'quantity': t['quantity'],
+                })
+
+        # Read the updated shop stock outside the transaction to return it.
+        new_shop_stock = ProductStock.objects.filter(
+            product=product, warehouse=shop
+        ).values_list('quantity', flat=True).first() or 0
+
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Transferred stock for {product.display_name} to {shop.name}.',
+            'new_shop_stock': new_shop_stock,
+            'transfers_created': len(transfer_records),
+        })
+
+    except ValueError as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    except Exception:
+        logger.exception('Quick transfer from sale page failed')
+        return JsonResponse({'status': 'error', 'message': 'An unexpected error occurred.'}, status=500)
+
+
+# ---------------------------------------------------------------------------
 # Sale Returns
 # ---------------------------------------------------------------------------
 

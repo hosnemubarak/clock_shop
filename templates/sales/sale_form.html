@@ -27,6 +27,8 @@
      data-customer-info-url="{% url 'customers:api_customer_info' 0 %}"
      data-receipt-url="{% url 'sales:sale_print' 0 %}"
      data-sale-list-url="{% url 'sales:sale_list' %}"
+     data-warehouse-stocks-url="{% url 'sales:api_product_warehouse_stocks' 0 %}"
+     data-quick-transfer-url="{% url 'sales:api_quick_transfer' %}"
      data-currency="{{ CURRENCY_SYMBOL }}"
      data-allow-walkin="{{ ALLOW_WALKIN_CUSTOMERS|yesno:'true,false' }}">
 
@@ -397,6 +399,119 @@
     </div>
 
     {% include 'partials/customer_modal.html' %}
+
+    <!-- Stock Transfer Modal ------------------------------------------------>
+    <div class="modal fade" id="stockTransferModal" tabindex="-1" aria-labelledby="stockTransferTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 pb-0 px-4 pt-4">
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" id="stockTransferTitle">
+                            <i class="las la-exchange-alt text-primary me-2"></i>Transfer Stock to Shop
+                        </h5>
+                        <p class="text-muted small mb-0 mt-1">Move stock from warehouse(s) to fulfill this sale</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 pb-4 pt-3">
+                    <!-- Product Info -->
+                    <div class="sale-transfer__product-card mb-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="sale-transfer__product-icon">
+                                <i class="las la-box"></i>
+                            </div>
+                            <div class="flex-grow-1 min-w-0">
+                                <h6 class="mb-0 fw-bold" id="transferProductName">Product</h6>
+                                <div class="text-muted small text-truncate" id="transferProductMeta"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stock Summary — 4 stat cards -->
+                    <div class="row g-2 mb-4">
+                        <div class="col-6 col-md-3">
+                            <div class="sale-transfer__stat">
+                                <div class="sale-transfer__stat-label">Required</div>
+                                <div class="sale-transfer__stat-value text-primary" id="transferRequiredQty">0</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="sale-transfer__stat">
+                                <div class="sale-transfer__stat-label">Shop Stock</div>
+                                <div class="sale-transfer__stat-value" id="transferShopStock">0</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="sale-transfer__stat">
+                                <div class="sale-transfer__stat-label">Total Stock</div>
+                                <div class="sale-transfer__stat-value text-primary" id="transferTotalStock">0</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="sale-transfer__stat sale-transfer__stat--shortage">
+                                <div class="sale-transfer__stat-label">Shortage</div>
+                                <div class="sale-transfer__stat-value text-danger" id="transferShortage">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Warehouse List -->
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label fw-semibold mb-0">
+                                <i class="las la-warehouse text-primary me-1"></i> Available Warehouses
+                            </label>
+                        </div>
+                        <div id="transferWarehouseList" class="sale-transfer__warehouse-list">
+                            <!-- Dynamic warehouse rows -->
+                            <div class="text-center text-muted py-4" id="transferLoading">
+                                <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                                    <span class="visually-hidden">Loading&hellip;</span>
+                                </div>
+                                Loading warehouse stock&hellip;
+                            </div>
+                            <div id="transferNoStock" class="text-center py-5" hidden>
+                                <div class="sale-transfer__empty-icon">
+                                    <i class="las la-box-open"></i>
+                                </div>
+                                <div class="text-muted mt-2">No warehouse stock available for this product</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transfer Summary -->
+                    <div class="sale-transfer__summary" id="transferSummary" hidden>
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div>
+                                        <div class="sale-transfer__summary-label">Transferring</div>
+                                        <div class="sale-transfer__summary-value" id="transferTotalQty">0</div>
+                                    </div>
+                                    <div class="sale-transfer__summary-arrow">
+                                        <i class="las la-long-arrow-alt-right"></i>
+                                    </div>
+                                    <div>
+                                        <div class="sale-transfer__summary-label">New Shop Stock</div>
+                                        <div class="sale-transfer__summary-value text-success" id="transferNewStock">0</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error message area -->
+                    <div class="alert alert-danger d-none mt-3 mb-0 py-2" id="transferError" role="alert"></div>
+                </div>
+                <div class="modal-footer border-top bg-light px-4 py-3">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary px-4" id="btnConfirmTransfer" disabled>
+                        <i class="las la-check-circle me-1"></i> Confirm Transfer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 

@@ -18,4 +18,6 @@ urlpatterns = [
     # API
     path('api/products/search/', views.api_product_search, name='api_product_search'),
     path('api/pos_checkout/', views.pos_checkout, name='pos_checkout'),
+    path('api/products/<int:product_id>/warehouse-stocks/', views.api_product_warehouse_stocks, name='api_product_warehouse_stocks'),
+    path('api/quick-transfer/', views.api_quick_transfer, name='api_quick_transfer'),
 ]

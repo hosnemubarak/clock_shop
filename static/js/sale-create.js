@@ -25,6 +25,8 @@ function initSaleCreate() {
         customerInfoUrl: page.dataset.customerInfoUrl,
         receiptUrl: page.dataset.receiptUrl,
         saleListUrl: page.dataset.saleListUrl,
+        warehouseStocksUrl: page.dataset.warehouseStocksUrl,
+        quickTransferUrl: page.dataset.quickTransferUrl,
         currency: page.dataset.currency || '',
         allowWalkin: page.dataset.allowWalkin === 'true'
     };
@@ -49,7 +51,12 @@ function initSaleCreate() {
      'confirmDueLabel', 'confirmDueAmount', 'btnConfirmSaleSubmit',
      'linkViewSale', 'newCustomerModal', 'newCustomerForm', 'newCustomerName',
      'newCustomerPhone', 'newCustomerEmail', 'newCustomerAddress',
-     'newCustomerCreditLimit', 'newCustomerNotes', 'newCustomerSaveBtn'
+     'newCustomerCreditLimit', 'newCustomerNotes', 'newCustomerSaveBtn',
+     'stockTransferModal', 'transferProductName', 'transferProductMeta',
+     'transferRequiredQty', 'transferShopStock', 'transferTotalStock', 'transferShortage',
+     'transferWarehouseList', 'transferLoading', 'transferNoStock',
+     'transferSummary', 'transferTotalQty', 'transferNewStock',
+     'transferError', 'btnConfirmTransfer'
     ].forEach(function (id) {
         el[id] = document.getElementById(id);
     });
@@ -129,12 +136,16 @@ function initSaleCreate() {
     var results = [];   // last search payload
     var activeIndex = -1;
     var submitting = false;
+    var transferring = false;
     var searchTimer = null;
     var searchAbort = null;
     var confirmModal = null;
     var successModal = null;
     var customerModal = null;
+    var transferModal = null;
     var lastSaleId = null;
+    var transferProductId = null;
+    var transferWarehouses = [];
 
     // Customer search mirrors the product search: its own last-payload list,
     // active row, debounce timer and in-flight abort controller.
@@ -167,19 +178,30 @@ function initSaleCreate() {
 
         el.searchResults.innerHTML = results.map(function (row, i) {
             var out = row.shop_stock <= 0;
+            var hasWarehouseStock = out && row.total_stock > 0;
+            var fullyOut = out && !hasWarehouseStock;
             var metaArr = [];
             if (row.brand) metaArr.push('Brand: ' + highlight(row.brand, query));
             if (row.category) metaArr.push('Category: ' + highlight(row.category, query));
             var metaHtml = metaArr.join(' &middot; ');
-            var stockBadge = out
-                ? '<span class="badge bg-danger-subtle text-danger">Out of stock</span>'
-                : '<span class="badge bg-success-subtle text-success">' + row.shop_stock + ' in shop</span>';
+            var stockBadges;
+            if (fullyOut) {
+                stockBadges = '<span class="badge bg-danger-subtle text-danger">Out of stock</span>';
+            } else if (hasWarehouseStock) {
+                stockBadges = '<span class="badge bg-warning-subtle text-warning">0 in shop</span>' +
+                    ' <span class="badge bg-primary-subtle text-primary">' + row.total_stock + ' total</span>';
+            } else {
+                stockBadges = '<span class="badge bg-success-subtle text-success">' + row.shop_stock + ' in shop</span>';
+                if (row.total_stock > row.shop_stock) {
+                    stockBadges += ' <span class="badge bg-primary-subtle text-primary">' + row.total_stock + ' total</span>';
+                }
+            }
 
             return '' +
-                '<li class="sale-result' + (out ? ' is-disabled' : '') + (i === activeIndex ? ' is-active' : '') + '"' +
+                '<li class="sale-result' + (fullyOut ? ' is-disabled' : '') + (i === activeIndex ? ' is-active' : '') + '"' +
                 ' id="saleResult' + i + '" role="option" data-index="' + i + '"' +
                 ' aria-selected="' + (i === activeIndex ? 'true' : 'false') + '"' +
-                ' aria-disabled="' + (out ? 'true' : 'false') + '">' +
+                ' aria-disabled="' + (fullyOut ? 'true' : 'false') + '">' +
                     '<div class="sale-result__body">' +
                         '<div class="sale-result__title">' + highlight(row.display_name, query) + 
                         (row.average_cost !== null ? ' <span class="badge bg-light text-secondary border ms-2">Avg Cost: ' + fmt(toMinor(row.average_cost)) + '</span>' : '') + '</div>' +
@@ -189,7 +211,7 @@ function initSaleCreate() {
                     '</div>' +
                     '<div class="sale-result__side">' +
                         '<div class="sale-result__price">' + fmt(toMinor(row.price)) + '</div>' +
-                        '<div class="small">' + stockBadge + '</div>' +
+                        '<div class="sale-result__badges">' + stockBadges + '</div>' +
                     '</div>' +
                 '</li>';
         }).join('');
@@ -248,7 +270,7 @@ function initSaleCreate() {
                 // A barcode scanner types the full SKU then Enter, faster than any
                 // human. If exactly one row came back on an exact SKU, add it.
                 var only = results.length === 1 ? results[0] : null;
-                if (only && only.sku.toLowerCase() === query.toLowerCase() && only.shop_stock > 0) {
+                if (only && only.sku.toLowerCase() === query.toLowerCase() && (only.shop_stock > 0 || only.total_stock > 0)) {
                     addToCart(only);
                 }
             })
@@ -284,7 +306,27 @@ function initSaleCreate() {
 
     function addToCart(row) {
         if (row.shop_stock <= 0) {
-            showAlert(row.display_name + ' has no stock in the shop and cannot be sold.');
+            // If there's stock in warehouses, allow adding but prompt transfer.
+            if (row.total_stock > 0) {
+                cart.push({
+                    productId: row.id,
+                    sku: row.sku,
+                    label: row.display_name,
+                    meta: [row.brand, row.category].filter(Boolean).join(' · '),
+                    brand: row.brand,
+                    unitPrice: toMinor(row.price),
+                    qty: 1,
+                    discount: 0,
+                    stock: row.shop_stock,
+                    totalStock: row.total_stock
+                });
+                clearAlert();
+                render();
+                resetSearch();
+                el.searchStatus.textContent = row.display_name + ' added — transfer stock to fulfil.';
+                return;
+            }
+            showAlert(row.display_name + ' has no stock anywhere and cannot be sold.');
             return;
         }
 
@@ -294,10 +336,16 @@ function initSaleCreate() {
 
         if (existing) {
             if (existing.qty + 1 > existing.stock) {
-                showAlert('Only ' + existing.stock + ' of ' + existing.sku + ' are in the shop.');
-                return;
+                // Allow adding beyond shop stock if warehouse stock exists.
+                if (existing.totalStock > existing.stock) {
+                    existing.qty += 1;
+                } else {
+                    showAlert('Only ' + existing.stock + ' of ' + existing.sku + ' are in the shop.');
+                    return;
+                }
+            } else {
+                existing.qty += 1;
             }
-            existing.qty += 1;
         } else {
             cart.push({
                 productId: row.id,
@@ -308,7 +356,8 @@ function initSaleCreate() {
                 unitPrice: toMinor(row.price),
                 qty: 1,
                 discount: 0,
-                stock: row.shop_stock
+                stock: row.shop_stock,
+                totalStock: row.total_stock
             });
         }
 
@@ -330,6 +379,35 @@ function initSaleCreate() {
         });
     }
 
+    function renderProductCell(line) {
+        var over = line.qty > line.stock;
+        var canTransfer = over && line.totalStock > line.stock;
+        // Stock badges: always show shop stock; show total if different
+        var stockLine = '<div class="sale-cart__stock">' +
+            '<span class="sale-cart__stock-badge' + (over ? ' is-low' : '') + '">' +
+            '<i class="las la-store-alt"></i> ' + line.stock + ' in shop</span>';
+        if (line.totalStock > line.stock) {
+            stockLine += '<span class="sale-cart__stock-badge is-total">' +
+                '<i class="las la-boxes"></i> ' + line.totalStock + ' total</span>';
+        }
+        stockLine += '</div>';
+        var stockWarning = '';
+        if (over) {
+            stockWarning = '<div class="sale-cart__shortage">' +
+                '<i class="las la-exclamation-triangle"></i> Need ' + (line.qty - line.stock) + ' more';
+            if (canTransfer) {
+                stockWarning += ' <button type="button" class="sale-transfer-btn" data-transfer="1"' +
+                    ' title="Transfer stock from warehouse">' +
+                    '<i class="las la-exchange-alt"></i> Transfer</button>';
+            }
+            stockWarning += '</div>';
+        }
+        return '<div class="fw-medium">' + escapeHtml(line.sku) + '</div>' +
+            (line.brand ? '<div class="text-muted small">' + escapeHtml(line.brand) + '</div>' : '') +
+            stockLine +
+            stockWarning;
+    }
+
     function render() {
         el.cartEmpty.hidden = cart.length > 0;
         el.cartCount.textContent = cart.length + (cart.length === 1 ? ' item' : ' items');
@@ -339,11 +417,7 @@ function initSaleCreate() {
             return '' +
                 '<tr class="sale-cart__row' + (over ? ' is-over-stock' : '') + '" data-id="' + line.productId + '">' +
                     '<td class="ps-3">' +
-                        '<div class="fw-medium">' + escapeHtml(line.sku) + '</div>' +
-                        (line.brand ? '<div class="text-muted small">' + escapeHtml(line.brand) + '</div>' : '') +
-                        (over
-                            ? '<div class="text-danger small">Only ' + line.stock + ' in shop</div>'
-                            : '') +
+                        renderProductCell(line) +
                     '</td>' +
                     '<td class="text-end">' +
                         '<input type="number" class="form-control form-control-sm text-end sale-num"' +
@@ -434,6 +508,9 @@ function initSaleCreate() {
         for (var i = 0; i < cart.length; i++) {
             var line = cart[i];
             if (line.qty > line.stock) {
+                if (line.totalStock > line.stock) {
+                    return line.sku + ' needs ' + (line.qty - line.stock) + ' more units. Use "Transfer Stock" to bring stock from a warehouse first.';
+                }
                 return 'Only ' + line.stock + ' of ' + line.sku + ' are in the shop.';
             }
             if (line.discount > lineSubtotal(line)) {
@@ -1003,6 +1080,12 @@ function initSaleCreate() {
             return;
         }
 
+        // Transfer Stock button click.
+        if (event.target.closest('[data-transfer]')) {
+            openTransferModal(line.productId);
+            return;
+        }
+
         var stepBtn = event.target.closest('[data-step]');
         if (stepBtn) {
             var next = line.qty + Number(stepBtn.dataset.step);
@@ -1010,6 +1093,14 @@ function initSaleCreate() {
                 return;
             }
             if (next > line.stock) {
+                // Allow going over stock if warehouse stock exists;
+                // the render() will show the Transfer Stock button.
+                if (line.totalStock > line.stock) {
+                    line.qty = next;
+                    clearAlert();
+                    render();
+                    return;
+                }
                 showAlert('Only ' + line.stock + ' of ' + line.sku + ' are in the shop.');
                 return;
             }
@@ -1033,9 +1124,14 @@ function initSaleCreate() {
         if (field === 'qty') {
             var typedQty = parseInt(event.target.value, 10);
             if (!isNaN(typedQty) && typedQty > line.stock) {
-                showAlert('Only ' + line.stock + ' of ' + line.sku + ' are in the shop.');
-                line.qty = line.stock;
-                event.target.value = line.stock;
+                // Allow typing above stock if warehouse stock exists.
+                if (line.totalStock > line.stock) {
+                    line.qty = Math.max(MIN_QTY, typedQty);
+                } else {
+                    showAlert('Only ' + line.stock + ' of ' + line.sku + ' are in the shop.');
+                    line.qty = line.stock;
+                    event.target.value = line.stock;
+                }
             } else {
                 line.qty = Math.max(MIN_QTY, typedQty || MIN_QTY);
             }
@@ -1048,6 +1144,7 @@ function initSaleCreate() {
         // Repaint the derived numbers only. A full render() would replace the
         // input the cashier is typing in and drop the caret to the end.
         row.classList.toggle('is-over-stock', line.qty > line.stock);
+        row.cells[0].innerHTML = renderProductCell(line);
         row.cells[4].textContent = fmt(lineTotal(line));
         renderTotals();
     });
@@ -1171,6 +1268,250 @@ function initSaleCreate() {
     confirmModal = new bootstrap.Modal(el.saleConfirmModal);
     successModal = new bootstrap.Modal(el.saleSuccessModal);
     customerModal = new bootstrap.Modal(el.newCustomerModal);
+    transferModal = el.stockTransferModal ? new bootstrap.Modal(el.stockTransferModal) : null;
+
+    // -------------------------------------------------------- stock transfer
+
+    /**
+     * Open the transfer modal for a product. Fetches warehouse stocks, then
+     * populates the modal with available warehouses and their quantities.
+     */
+    function openTransferModal(productId) {
+        var line = findLine(productId);
+        if (!line || !CFG.warehouseStocksUrl) {
+            return;
+        }
+
+        transferProductId = productId;
+        transferWarehouses = [];
+
+        // Fill product info.
+        el.transferProductName.textContent = line.label || line.sku;
+        el.transferProductMeta.textContent = line.meta || line.sku;
+        el.transferRequiredQty.textContent = line.qty;
+        el.transferShopStock.textContent = line.stock;
+        el.transferTotalStock.textContent = line.totalStock;
+        el.transferShortage.textContent = Math.max(0, line.qty - line.stock);
+
+        // Reset state.
+        el.transferLoading.hidden = false;
+        el.transferNoStock.hidden = true;
+        el.transferSummary.hidden = true;
+        el.transferError.classList.add('d-none');
+        el.btnConfirmTransfer.disabled = true;
+
+        // Remove any previous warehouse rows.
+        var oldRows = el.transferWarehouseList.querySelectorAll('.sale-transfer__row');
+        for (var i = 0; i < oldRows.length; i++) {
+            oldRows[i].remove();
+        }
+
+        transferModal.show();
+
+        // Fetch warehouse stocks.
+        var url = CFG.warehouseStocksUrl.replace(/0\/warehouse-stocks\/$/, productId + '/warehouse-stocks/');
+        fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('Failed to load warehouse stocks.');
+                }
+                return response.json();
+            })
+            .then(function (data) {
+                el.transferLoading.hidden = true;
+                transferWarehouses = data.stocks || [];
+
+                // Update shop stock from fresh data.
+                el.transferShopStock.textContent = data.shop_stock;
+                line.stock = data.shop_stock;
+                el.transferShortage.textContent = Math.max(0, line.qty - data.shop_stock);
+                // Update total stock (shop + sum of warehouse stocks)
+                var warehouseTotal = transferWarehouses.reduce(function (sum, wh) { return sum + wh.quantity; }, 0);
+                el.transferTotalStock.textContent = data.shop_stock + warehouseTotal;
+
+                if (!transferWarehouses.length) {
+                    el.transferNoStock.hidden = false;
+                    return;
+                }
+
+                renderTransferWarehouses(line);
+            })
+            .catch(function () {
+                el.transferLoading.hidden = true;
+                el.transferError.textContent = 'Could not load warehouse stock. Check your connection and try again.';
+                el.transferError.classList.remove('d-none');
+            });
+    }
+
+    /** Render the warehouse rows inside the transfer modal. */
+    function renderTransferWarehouses(line) {
+        var shortage = Math.max(0, line.qty - line.stock);
+        var remaining = shortage;
+        var fragment = document.createDocumentFragment();
+
+        transferWarehouses.forEach(function (wh, idx) {
+            // Pre-fill: distribute shortage across warehouses in order.
+            var prefill = Math.min(remaining, wh.quantity);
+            remaining = Math.max(0, remaining - prefill);
+
+            var row = document.createElement('div');
+            row.className = 'sale-transfer__row' + (prefill > 0 ? ' has-qty' : '');
+            row.dataset.warehouseId = wh.warehouse_id;
+            row.dataset.maxQty = wh.quantity;
+            row.innerHTML = '' +
+                '<div class="sale-transfer__row-icon">' +
+                    '<i class="las la-warehouse"></i>' +
+                '</div>' +
+                '<div class="sale-transfer__row-body">' +
+                    '<div class="sale-transfer__row-name">' + escapeHtml(wh.warehouse_name) + '</div>' +
+                    '<div class="sale-transfer__row-stock">' + wh.quantity + ' available</div>' +
+                '</div>' +
+                '<div class="sale-transfer__row-input">' +
+                    '<input type="number" class="form-control form-control-sm"' +
+                    ' value="' + prefill + '" min="0" max="' + wh.quantity + '"' +
+                    ' step="1" inputmode="numeric" data-transfer-qty="1"' +
+                    ' aria-label="Transfer quantity from ' + escapeHtml(wh.warehouse_name) + '">' +
+                    '<button type="button" class="btn btn-sm btn-outline-primary sale-transfer__max-btn" data-fill-max="1">Max</button>' +
+                '</div>';
+            fragment.appendChild(row);
+        });
+
+        // Insert before the loading/nostock elements.
+        el.transferWarehouseList.insertBefore(fragment, el.transferLoading);
+        updateTransferSummary();
+    }
+
+    /** Recalculate the transfer summary from the current input values. */
+    function updateTransferSummary() {
+        var inputs = el.transferWarehouseList.querySelectorAll('[data-transfer-qty]');
+        var total = 0;
+        var valid = true;
+
+        for (var i = 0; i < inputs.length; i++) {
+            var val = parseInt(inputs[i].value, 10) || 0;
+            var max = parseInt(inputs[i].max, 10) || 0;
+            if (val < 0 || val > max) {
+                valid = false;
+            }
+            total += val;
+        }
+
+        var line = findLine(transferProductId);
+        var shopStock = line ? line.stock : 0;
+
+        el.transferTotalQty.textContent = total;
+        el.transferNewStock.textContent = shopStock + total;
+        el.transferSummary.hidden = total <= 0;
+        el.btnConfirmTransfer.disabled = total <= 0 || !valid;
+
+        // Highlight rows with a quantity.
+        var rows = el.transferWarehouseList.querySelectorAll('.sale-transfer__row');
+        for (var j = 0; j < rows.length; j++) {
+            var inp = rows[j].querySelector('[data-transfer-qty]');
+            rows[j].classList.toggle('has-qty', inp && parseInt(inp.value, 10) > 0);
+        }
+    }
+
+    /** Execute the transfer via the API and update the cart line's stock. */
+    function confirmTransfer() {
+        if (transferring) {
+            return;
+        }
+
+        var inputs = el.transferWarehouseList.querySelectorAll('[data-transfer-qty]');
+        var transfers = [];
+        for (var i = 0; i < inputs.length; i++) {
+            var qty = parseInt(inputs[i].value, 10) || 0;
+            if (qty > 0) {
+                var row = inputs[i].closest('.sale-transfer__row');
+                transfers.push({
+                    warehouse_id: parseInt(row.dataset.warehouseId, 10),
+                    quantity: qty
+                });
+            }
+        }
+
+        if (!transfers.length) {
+            return;
+        }
+
+        transferring = true;
+        el.btnConfirmTransfer.disabled = true;
+        el.btnConfirmTransfer.innerHTML =
+            '<span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span> Transferring&hellip;';
+        el.transferError.classList.add('d-none');
+
+        fetch(CFG.quickTransferUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                product_id: transferProductId,
+                transfers: transfers
+            })
+        })
+            .then(function (response) {
+                return response.json().then(function (data) {
+                    return { ok: response.ok, data: data };
+                });
+            })
+            .then(function (result) {
+                if (!result.ok || result.data.status !== 'success') {
+                    el.transferError.textContent = result.data.message || 'Transfer failed.';
+                    el.transferError.classList.remove('d-none');
+                    return;
+                }
+
+                // Update the cart line's stock from the server response.
+                var line = findLine(transferProductId);
+                if (line) {
+                    line.stock = result.data.new_shop_stock;
+                    line.totalStock = line.totalStock; // keep as-is; totalStock is informational
+                }
+
+                transferModal.hide();
+                render();
+
+                if (typeof showSuccessModal === 'function') {
+                    showSuccessModal(result.data.message || 'Stock transferred successfully.');
+                }
+            })
+            .catch(function () {
+                el.transferError.textContent = 'Could not reach the server. Transfer was NOT completed.';
+                el.transferError.classList.remove('d-none');
+            })
+            .finally(function () {
+                transferring = false;
+                el.btnConfirmTransfer.disabled = false;
+                el.btnConfirmTransfer.innerHTML =
+                    '<i class="las la-exchange-alt me-1"></i> Confirm Transfer';
+            });
+    }
+
+    // Transfer modal event listeners.
+    if (el.stockTransferModal) {
+        el.transferWarehouseList.addEventListener('input', function (event) {
+            if (event.target.dataset.transferQty) {
+                updateTransferSummary();
+            }
+        });
+
+        el.transferWarehouseList.addEventListener('click', function (event) {
+            if (event.target.closest('[data-fill-max]')) {
+                var input = event.target.closest('.sale-transfer__row-input').querySelector('[data-transfer-qty]');
+                if (input) {
+                    input.value = input.max;
+                    updateTransferSummary();
+                }
+            }
+        });
+
+        el.btnConfirmTransfer.addEventListener('click', confirmTransfer);
+    }
 
     renderCustomerChip();
     render();
