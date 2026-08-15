@@ -10,6 +10,7 @@ class SystemSettingsForm(forms.ModelForm):
         model = SystemSettings
         fields = [
             'shop_name',
+            'logo',
             'shop_address',
             'currency_symbol',
             'license_expiry_date',
@@ -22,6 +23,9 @@ class SystemSettingsForm(forms.ModelForm):
             'shop_name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter shop name'
+            }),
+            'logo': forms.ClearableFileInput(attrs={
+                'class': 'form-control'
             }),
             'shop_address': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -55,6 +59,7 @@ class SystemSettingsForm(forms.ModelForm):
         }
         labels = {
             'shop_name': 'Shop Name',
+            'logo': 'Shop Logo',
             'shop_address': 'Shop Address',
             'currency_symbol': 'Currency Symbol',
             'license_expiry_date': 'License/Server Expiry Date',
@@ -64,6 +69,7 @@ class SystemSettingsForm(forms.ModelForm):
         }
         help_texts = {
             'shop_name': 'Leave blank to use environment variable (SHOP_NAME)',
+            'logo': 'Upload a logo image to display on invoices and reports',
             'shop_address': 'Address printed on invoices and reports',
             'currency_symbol': 'Symbol displayed before prices',
             'license_expiry_date': 'Date when server/license expires',

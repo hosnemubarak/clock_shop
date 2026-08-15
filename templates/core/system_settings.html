@@ -14,7 +14,7 @@
                 </h5>
             </div>
             <div class="card-body">
-                <form method="post">
+                <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     
                     <div class="row">
@@ -37,12 +37,20 @@
                     </div>
                     
                     <div class="row">
-                        <div class="col-12 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label class="form-label fw-medium">{{ form.shop_address.label }}</label>
                             {{ form.shop_address }}
                             <small class="text-muted">{{ form.shop_address.help_text }}</small>
                             {% if form.shop_address.errors %}
                             <div class="text-danger small">{{ form.shop_address.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">{{ form.logo.label }}</label>
+                            {{ form.logo }}
+                            <small class="text-muted">{{ form.logo.help_text }}</small>
+                            {% if form.logo.errors %}
+                            <div class="text-danger small">{{ form.logo.errors.0 }}</div>
                             {% endif %}
                         </div>
                     </div>

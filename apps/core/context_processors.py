@@ -29,6 +29,11 @@ def global_context(request):
     else:
         shop_address = getattr(django_settings, 'SHOP_ADDRESS', '')
     
+    # Shop logo
+    shop_logo = None
+    if db_settings and db_settings.logo:
+        shop_logo = db_settings.logo.url
+    
     
     # Currency symbol: DB value or env fallback
     if db_settings and db_settings.currency_symbol:
@@ -88,6 +93,7 @@ def global_context(request):
     return {
         'SHOP_NAME': shop_name,
         'SHOP_ADDRESS': shop_address,
+        'SHOP_LOGO': shop_logo,
         'CURRENCY_SYMBOL': currency_symbol,
         'LOW_STOCK_THRESHOLD': low_stock_threshold,
         'EXPIRY_ALERT': expiry_alert,

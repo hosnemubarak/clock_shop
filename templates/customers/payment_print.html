@@ -24,7 +24,11 @@
                 </p>
             </div>
             <div class="header-logo-container">
-                <img src="{% static 'images/skyzone-logo.png' %}" alt="{{ SHOP_NAME }} Logo" class="header-logo">
+                {% if SHOP_LOGO %}
+                    <img src="{{ SHOP_LOGO }}" alt="{{ SHOP_NAME }} Logo" class="header-logo">
+                {% else %}
+                    <img src="{% static 'images/skyzone-logo.png' %}" alt="{{ SHOP_NAME }} Logo" class="header-logo">
+                {% endif %}
             </div>
         </div>
 
