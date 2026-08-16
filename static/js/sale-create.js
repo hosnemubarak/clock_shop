@@ -28,7 +28,8 @@ function initSaleCreate() {
         warehouseStocksUrl: page.dataset.warehouseStocksUrl,
         quickTransferUrl: page.dataset.quickTransferUrl,
         currency: page.dataset.currency || '',
-        allowWalkin: page.dataset.allowWalkin === 'true'
+        allowWalkin: page.dataset.allowWalkin === 'true',
+        canQuickTransfer: page.dataset.canQuickTransfer === 'true'
     };
 
     var SEARCH_DEBOUNCE_MS = 180;
@@ -41,7 +42,7 @@ function initSaleCreate() {
     ['productSearch', 'searchResults', 'searchSpinner', 'searchStatus',
      'customerSearch', 'customerResults', 'customerSpinner', 'customerStatus',
      'customerChip', 'customerChipLabel', 'customerChipClear', 'customerWalkin',
-     'cartBody', 'cartEmpty', 'cartCount', 'sumSubtotal', 'sumGrand', 'sumDue',
+      'cartBody', 'cartEmpty', 'cartCount', 'sumSubtotal', 'sumGrand', 'mobileGrandTotal', 'sumDue',
      'dueLabel', 'orderDiscount', 'amountPaid', 'paymentMethod',
      'btnComplete', 'btnReset', 'customerMetaBox',
      'customerMetaName', 'customerMetaPhone', 'customerMetaDue', 'customerMetaDueRow',
@@ -130,6 +131,16 @@ function initSaleCreate() {
         // Kept as a no-op so existing call sites need no change.
     }
 
+    function readJsonResponse(response) {
+        var contentType = response.headers.get('content-type') || '';
+        if (contentType.indexOf('application/json') === -1) {
+            throw new Error('The server returned an unexpected response (' + response.status + ').');
+        }
+        return response.json().then(function (data) {
+            return { ok: response.ok, status: response.status, data: data };
+        });
+    }
+
     // ------------------------------------------------------------------ state
 
     var cart = [];      // [{ productId, sku, label, unitPrice, qty, discount, stock }]
@@ -146,6 +157,7 @@ function initSaleCreate() {
     var lastSaleId = null;
     var transferProductId = null;
     var transferWarehouses = [];
+    var transferAbort = null;
 
     // Customer search mirrors the product search: its own last-payload list,
     // active row, debounce timer and in-flight abort controller.
@@ -178,7 +190,7 @@ function initSaleCreate() {
 
         el.searchResults.innerHTML = results.map(function (row, i) {
             var out = row.shop_stock <= 0;
-            var hasWarehouseStock = out && row.total_stock > 0;
+            var hasWarehouseStock = out && CFG.canQuickTransfer && row.transferable_stock > 0;
             var fullyOut = out && !hasWarehouseStock;
             var metaArr = [];
             if (row.brand) metaArr.push('Brand: ' + highlight(row.brand, query));
@@ -189,11 +201,11 @@ function initSaleCreate() {
                 stockBadges = '<span class="badge bg-danger-subtle text-danger">Out of stock</span>';
             } else if (hasWarehouseStock) {
                 stockBadges = '<span class="badge bg-warning-subtle text-warning">0 in shop</span>' +
-                    ' <span class="badge bg-primary-subtle text-primary">' + row.total_stock + ' total</span>';
+                    ' <span class="badge bg-primary-subtle text-primary">' + row.transferable_stock + ' warehouse</span>';
             } else {
                 stockBadges = '<span class="badge bg-success-subtle text-success">' + row.shop_stock + ' in shop</span>';
-                if (row.total_stock > row.shop_stock) {
-                    stockBadges += ' <span class="badge bg-primary-subtle text-primary">' + row.total_stock + ' total</span>';
+                if (CFG.canQuickTransfer && row.transferable_stock > 0) {
+                    stockBadges += ' <span class="badge bg-primary-subtle text-primary">' + row.transferable_stock + ' warehouse</span>';
                 }
             }
 
@@ -203,10 +215,9 @@ function initSaleCreate() {
                 ' aria-selected="' + (i === activeIndex ? 'true' : 'false') + '"' +
                 ' aria-disabled="' + (fullyOut ? 'true' : 'false') + '">' +
                     '<div class="sale-result__body">' +
-                        '<div class="sale-result__title">' + highlight(row.display_name, query) + 
-                        (row.average_cost !== null ? ' <span class="badge bg-light text-secondary border ms-2">Avg Cost: ' + fmt(toMinor(row.average_cost)) + '</span>' : '') + '</div>' +
+                        '<div class="sale-result__title">' + highlight(row.display_name, query) + '</div>' +
                         '<div class="sale-result__meta">' +
-                            metaHtml +
+                            metaHtml + (row.average_cost !== null ? ' &middot; Avg cost ' + fmt(toMinor(row.average_cost)) : '') +
                         '</div>' +
                     '</div>' +
                     '<div class="sale-result__side">' +
@@ -270,7 +281,8 @@ function initSaleCreate() {
                 // A barcode scanner types the full SKU then Enter, faster than any
                 // human. If exactly one row came back on an exact SKU, add it.
                 var only = results.length === 1 ? results[0] : null;
-                if (only && only.sku.toLowerCase() === query.toLowerCase() && (only.shop_stock > 0 || only.total_stock > 0)) {
+                if (only && only.sku.toLowerCase() === query.toLowerCase() &&
+                        (only.shop_stock > 0 || (CFG.canQuickTransfer && only.transferable_stock > 0))) {
                     addToCart(only);
                 }
             })
@@ -304,10 +316,21 @@ function initSaleCreate() {
         }, 0);
     }
 
+    function availableOverall(line) {
+        return line.stock + (CFG.canQuickTransfer ? line.transferableStock : 0);
+    }
+
+    function availabilityMessage(line) {
+        if (CFG.canQuickTransfer && line.transferableStock > 0) {
+            return line.stock + ' in shop and ' + line.transferableStock + ' available in warehouses for ' + line.sku + '.';
+        }
+        return 'Only ' + line.stock + ' of ' + line.sku + ' are in the shop.';
+    }
+
     function addToCart(row) {
         if (row.shop_stock <= 0) {
             // If there's stock in warehouses, allow adding but prompt transfer.
-            if (row.total_stock > 0) {
+            if (CFG.canQuickTransfer && row.transferable_stock > 0) {
                 cart.push({
                     productId: row.id,
                     sku: row.sku,
@@ -318,6 +341,7 @@ function initSaleCreate() {
                     qty: 1,
                     discount: 0,
                     stock: row.shop_stock,
+                    transferableStock: row.transferable_stock,
                     totalStock: row.total_stock
                 });
                 clearAlert();
@@ -335,17 +359,11 @@ function initSaleCreate() {
         });
 
         if (existing) {
-            if (existing.qty + 1 > existing.stock) {
-                // Allow adding beyond shop stock if warehouse stock exists.
-                if (existing.totalStock > existing.stock) {
-                    existing.qty += 1;
-                } else {
-                    showAlert('Only ' + existing.stock + ' of ' + existing.sku + ' are in the shop.');
-                    return;
-                }
-            } else {
-                existing.qty += 1;
+            if (existing.qty + 1 > availableOverall(existing)) {
+                showAlert(availabilityMessage(existing), 'Availability reached');
+                return;
             }
+            existing.qty += 1;
         } else {
             cart.push({
                 productId: row.id,
@@ -357,6 +375,7 @@ function initSaleCreate() {
                 qty: 1,
                 discount: 0,
                 stock: row.shop_stock,
+                transferableStock: row.transferable_stock,
                 totalStock: row.total_stock
             });
         }
@@ -381,14 +400,14 @@ function initSaleCreate() {
 
     function renderProductCell(line) {
         var over = line.qty > line.stock;
-        var canTransfer = over && line.totalStock > line.stock;
+        var canTransfer = CFG.canQuickTransfer && over && line.transferableStock > 0;
         // Stock badges: always show shop stock; show total if different
         var stockLine = '<div class="sale-cart__stock">' +
             '<span class="sale-cart__stock-badge' + (over ? ' is-low' : '') + '">' +
             '<i class="las la-store-alt"></i> ' + line.stock + ' in shop</span>';
-        if (line.totalStock > line.stock) {
+        if (CFG.canQuickTransfer && line.transferableStock > 0) {
             stockLine += '<span class="sale-cart__stock-badge is-total">' +
-                '<i class="las la-boxes"></i> ' + line.totalStock + ' total</span>';
+                '<i class="las la-boxes"></i> ' + line.transferableStock + ' warehouse</span>';
         }
         stockLine += '</div>';
         var stockWarning = '';
@@ -416,34 +435,34 @@ function initSaleCreate() {
             var over = line.qty > line.stock;
             return '' +
                 '<tr class="sale-cart__row' + (over ? ' is-over-stock' : '') + '" data-id="' + line.productId + '">' +
-                    '<td class="ps-3">' +
-                        renderProductCell(line) +
+                    '<td class="ps-3 sale-cart__product">' +
+                        '<div class="sale-cart__product-content">' + renderProductCell(line) + '</div>' +
                     '</td>' +
-                    '<td class="text-end">' +
+                    '<td class="text-end sale-cart__price" data-label="Unit price">' +
                         '<input type="number" class="form-control form-control-sm text-end sale-num"' +
                         ' data-field="price" value="' + toMajor(line.unitPrice) + '"' +
                         ' step="1" min="0" inputmode="numeric"' +
                         ' aria-label="Unit price for ' + escapeHtml(line.sku) + '">' +
                     '</td>' +
-                    '<td>' +
+                    '<td class="sale-cart__quantity" data-label="Quantity">' +
                         '<div class="input-group input-group-sm sale-qty mx-auto">' +
                             '<button type="button" class="btn btn-outline-secondary" data-step="-1"' +
                             ' aria-label="Decrease quantity for ' + escapeHtml(line.sku) + '">&minus;</button>' +
                             '<input type="number" class="form-control sale-num" data-field="qty"' +
-                            ' value="' + line.qty + '" min="' + MIN_QTY + '" step="1" inputmode="numeric"' +
+                            ' value="' + line.qty + '" min="' + MIN_QTY + '" max="' + availableOverall(line) + '" step="1" inputmode="numeric"' +
                             ' aria-label="Quantity for ' + escapeHtml(line.sku) + '">' +
                             '<button type="button" class="btn btn-outline-secondary" data-step="1"' +
                             ' aria-label="Increase quantity for ' + escapeHtml(line.sku) + '">+</button>' +
                         '</div>' +
                     '</td>' +
-                    '<td class="text-end d-none">' +
+                    '<td class="text-end d-none sale-cart__discount">' +
                         '<input type="number" class="form-control form-control-sm sale-line-discount sale-num"' +
                         ' data-field="discount" value="' + toMajor(line.discount) + '"' +
                         ' step="1" min="0" inputmode="numeric"' +
                         ' aria-label="Discount for ' + escapeHtml(line.sku) + '">' +
                     '</td>' +
-                    '<td class="text-end fw-medium sale-num">' + fmt(lineTotal(line)) + '</td>' +
-                    '<td>' +
+                    '<td class="text-end fw-medium sale-num sale-cart__line-total" data-label="Line total">' + fmt(lineTotal(line)) + '</td>' +
+                    '<td class="sale-cart__remove">' +
                         '<button type="button" class="btn btn-sm btn-ghost-danger" data-remove="1"' +
                         ' aria-label="Remove ' + escapeHtml(line.sku) + ' from the sale">' +
                             '<i class="las la-trash-alt" aria-hidden="true"></i>' +
@@ -466,6 +485,9 @@ function initSaleCreate() {
 
         el.sumSubtotal.textContent = fmt(subtotal);
         el.sumGrand.textContent = fmt(grand);
+        if (el.mobileGrandTotal) {
+            el.mobileGrandTotal.textContent = fmt(grand);
+        }
 
         if (diff >= 0) {
             el.dueLabel.textContent = 'Change to return';
@@ -508,7 +530,7 @@ function initSaleCreate() {
         for (var i = 0; i < cart.length; i++) {
             var line = cart[i];
             if (line.qty > line.stock) {
-                if (line.totalStock > line.stock) {
+                if (CFG.canQuickTransfer && line.transferableStock > 0) {
                     return line.sku + ' needs ' + (line.qty - line.stock) + ' more units. Use "Transfer Stock" to bring stock from a warehouse first.';
                 }
                 return 'Only ' + line.stock + ' of ' + line.sku + ' are in the shop.';
@@ -1092,16 +1114,8 @@ function initSaleCreate() {
             if (next < MIN_QTY) {
                 return;
             }
-            if (next > line.stock) {
-                // Allow going over stock if warehouse stock exists;
-                // the render() will show the Transfer Stock button.
-                if (line.totalStock > line.stock) {
-                    line.qty = next;
-                    clearAlert();
-                    render();
-                    return;
-                }
-                showAlert('Only ' + line.stock + ' of ' + line.sku + ' are in the shop.');
+            if (next > availableOverall(line)) {
+                showAlert(availabilityMessage(line), 'Availability reached');
                 return;
             }
             line.qty = next;
@@ -1123,15 +1137,10 @@ function initSaleCreate() {
 
         if (field === 'qty') {
             var typedQty = parseInt(event.target.value, 10);
-            if (!isNaN(typedQty) && typedQty > line.stock) {
-                // Allow typing above stock if warehouse stock exists.
-                if (line.totalStock > line.stock) {
-                    line.qty = Math.max(MIN_QTY, typedQty);
-                } else {
-                    showAlert('Only ' + line.stock + ' of ' + line.sku + ' are in the shop.');
-                    line.qty = line.stock;
-                    event.target.value = line.stock;
-                }
+            if (!isNaN(typedQty) && typedQty > availableOverall(line)) {
+                showAlert(availabilityMessage(line), 'Availability reached');
+                line.qty = Math.max(MIN_QTY, availableOverall(line));
+                event.target.value = line.qty;
             } else {
                 line.qty = Math.max(MIN_QTY, typedQty || MIN_QTY);
             }
@@ -1144,8 +1153,8 @@ function initSaleCreate() {
         // Repaint the derived numbers only. A full render() would replace the
         // input the cashier is typing in and drop the caret to the end.
         row.classList.toggle('is-over-stock', line.qty > line.stock);
-        row.cells[0].innerHTML = renderProductCell(line);
-        row.cells[4].textContent = fmt(lineTotal(line));
+        row.querySelector('.sale-cart__product-content').innerHTML = renderProductCell(line);
+        row.querySelector('.sale-cart__line-total').textContent = fmt(lineTotal(line));
         renderTotals();
     });
 
@@ -1278,12 +1287,16 @@ function initSaleCreate() {
      */
     function openTransferModal(productId) {
         var line = findLine(productId);
-        if (!line || !CFG.warehouseStocksUrl) {
+        if (!line || !CFG.canQuickTransfer || !CFG.warehouseStocksUrl || !transferModal) {
             return;
         }
 
         transferProductId = productId;
         transferWarehouses = [];
+        if (transferAbort) {
+            transferAbort.abort();
+        }
+        transferAbort = new AbortController();
 
         // Fill product info.
         el.transferProductName.textContent = line.label || line.sku;
@@ -1311,25 +1324,28 @@ function initSaleCreate() {
         // Fetch warehouse stocks.
         var url = CFG.warehouseStocksUrl.replace(/0\/warehouse-stocks\/$/, productId + '/warehouse-stocks/');
         fetch(url, {
+            signal: transferAbort.signal,
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
-            .then(function (response) {
-                if (!response.ok) {
-                    throw new Error('Failed to load warehouse stocks.');
+            .then(readJsonResponse)
+            .then(function (result) {
+                if (transferProductId !== productId) {
+                    return;
                 }
-                return response.json();
-            })
-            .then(function (data) {
+                if (!result.ok) {
+                    throw new Error(result.data.message || 'Failed to load warehouse stocks.');
+                }
+                var data = result.data;
                 el.transferLoading.hidden = true;
                 transferWarehouses = data.stocks || [];
 
                 // Update shop stock from fresh data.
                 el.transferShopStock.textContent = data.shop_stock;
                 line.stock = data.shop_stock;
+                line.transferableStock = data.transferable_stock;
+                line.totalStock = data.total_stock;
                 el.transferShortage.textContent = Math.max(0, line.qty - data.shop_stock);
-                // Update total stock (shop + sum of warehouse stocks)
-                var warehouseTotal = transferWarehouses.reduce(function (sum, wh) { return sum + wh.quantity; }, 0);
-                el.transferTotalStock.textContent = data.shop_stock + warehouseTotal;
+                el.transferTotalStock.textContent = data.total_stock;
 
                 if (!transferWarehouses.length) {
                     el.transferNoStock.hidden = false;
@@ -1338,9 +1354,12 @@ function initSaleCreate() {
 
                 renderTransferWarehouses(line);
             })
-            .catch(function () {
+            .catch(function (error) {
+                if (error.name === 'AbortError') {
+                    return;
+                }
                 el.transferLoading.hidden = true;
-                el.transferError.textContent = 'Could not load warehouse stock. Check your connection and try again.';
+                el.transferError.textContent = error.message || 'Could not load warehouse stock. Check your connection and try again.';
                 el.transferError.classList.remove('d-none');
             });
     }
@@ -1370,10 +1389,10 @@ function initSaleCreate() {
                 '</div>' +
                 '<div class="sale-transfer__row-input">' +
                     '<input type="number" class="form-control form-control-sm"' +
-                    ' value="' + prefill + '" min="0" max="' + wh.quantity + '"' +
+                    ' value="' + prefill + '" min="0" max="' + Math.min(wh.quantity, shortage) + '"' +
                     ' step="1" inputmode="numeric" data-transfer-qty="1"' +
                     ' aria-label="Transfer quantity from ' + escapeHtml(wh.warehouse_name) + '">' +
-                    '<button type="button" class="btn btn-sm btn-outline-primary sale-transfer__max-btn" data-fill-max="1">Max</button>' +
+                    '<button type="button" class="btn btn-sm btn-outline-primary sale-transfer__max-btn" data-fill-shortage="1">Fill shortage</button>' +
                 '</div>';
             fragment.appendChild(row);
         });
@@ -1400,17 +1419,30 @@ function initSaleCreate() {
 
         var line = findLine(transferProductId);
         var shopStock = line ? line.stock : 0;
+        var shortage = line ? Math.max(0, line.qty - line.stock) : 0;
+        if (total > shortage) {
+            valid = false;
+        }
 
         el.transferTotalQty.textContent = total;
         el.transferNewStock.textContent = shopStock + total;
         el.transferSummary.hidden = total <= 0;
-        el.btnConfirmTransfer.disabled = total <= 0 || !valid;
+        el.btnConfirmTransfer.disabled = total <= 0 || total > shortage || !valid || transferring;
 
         // Highlight rows with a quantity.
         var rows = el.transferWarehouseList.querySelectorAll('.sale-transfer__row');
         for (var j = 0; j < rows.length; j++) {
             var inp = rows[j].querySelector('[data-transfer-qty]');
             rows[j].classList.toggle('has-qty', inp && parseInt(inp.value, 10) > 0);
+            var current = parseInt(inp.value, 10) || 0;
+            var remainingForRow = Math.max(0, shortage - total + current);
+            var warehouseMax = parseInt(rows[j].dataset.maxQty, 10) || 0;
+            inp.max = Math.min(warehouseMax, current + remainingForRow);
+            inp.disabled = total >= shortage && current === 0;
+            var fillButton = rows[j].querySelector('[data-fill-shortage]');
+            if (fillButton) {
+                fillButton.disabled = remainingForRow <= 0 || warehouseMax <= current;
+            }
         }
     }
 
@@ -1447,22 +1479,28 @@ function initSaleCreate() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({
                 product_id: transferProductId,
+                required_quantity: (findLine(transferProductId) || {}).qty,
                 transfers: transfers
             })
         })
-            .then(function (response) {
-                return response.json().then(function (data) {
-                    return { ok: response.ok, data: data };
-                });
-            })
+            .then(readJsonResponse)
             .then(function (result) {
                 if (!result.ok || result.data.status !== 'success') {
                     el.transferError.textContent = result.data.message || 'Transfer failed.';
                     el.transferError.classList.remove('d-none');
+                    if (result.status === 400 || result.status === 409) {
+                        var staleProductId = transferProductId;
+                        window.setTimeout(function () {
+                            if (staleProductId && findLine(staleProductId)) {
+                                openTransferModal(staleProductId);
+                            }
+                        }, 1200);
+                    }
                     return;
                 }
 
@@ -1470,7 +1508,8 @@ function initSaleCreate() {
                 var line = findLine(transferProductId);
                 if (line) {
                     line.stock = result.data.new_shop_stock;
-                    line.totalStock = line.totalStock; // keep as-is; totalStock is informational
+                    line.transferableStock = result.data.transferable_stock;
+                    line.totalStock = result.data.total_stock;
                 }
 
                 transferModal.hide();
@@ -1486,9 +1525,9 @@ function initSaleCreate() {
             })
             .finally(function () {
                 transferring = false;
-                el.btnConfirmTransfer.disabled = false;
                 el.btnConfirmTransfer.innerHTML =
                     '<i class="las la-exchange-alt me-1"></i> Confirm Transfer';
+                updateTransferSummary();
             });
     }
 
@@ -1501,16 +1540,37 @@ function initSaleCreate() {
         });
 
         el.transferWarehouseList.addEventListener('click', function (event) {
-            if (event.target.closest('[data-fill-max]')) {
+            if (event.target.closest('[data-fill-shortage]')) {
                 var input = event.target.closest('.sale-transfer__row-input').querySelector('[data-transfer-qty]');
                 if (input) {
-                    input.value = input.max;
+                    var line = findLine(transferProductId);
+                    var shortage = line ? Math.max(0, line.qty - line.stock) : 0;
+                    var allInputs = el.transferWarehouseList.querySelectorAll('[data-transfer-qty]');
+                    var usedElsewhere = 0;
+                    for (var i = 0; i < allInputs.length; i++) {
+                        if (allInputs[i] !== input) {
+                            usedElsewhere += parseInt(allInputs[i].value, 10) || 0;
+                        }
+                    }
+                    var warehouseMax = parseInt(input.closest('.sale-transfer__row').dataset.maxQty, 10) || 0;
+                    input.value = Math.min(warehouseMax, Math.max(0, shortage - usedElsewhere));
                     updateTransferSummary();
                 }
             }
         });
 
         el.btnConfirmTransfer.addEventListener('click', confirmTransfer);
+        el.stockTransferModal.addEventListener('hidden.bs.modal', function () {
+            if (transferAbort) {
+                transferAbort.abort();
+                transferAbort = null;
+            }
+            transferProductId = null;
+            transferWarehouses = [];
+            transferring = false;
+            el.btnConfirmTransfer.innerHTML =
+                '<i class="las la-exchange-alt me-1"></i> Confirm Transfer';
+        });
     }
 
     renderCustomerChip();

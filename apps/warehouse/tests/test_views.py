@@ -8,7 +8,7 @@ duplicate lines) before any item-builder JS refactor.
 import json
 
 from django.test import TestCase
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Permission, User
 from django.urls import reverse
 from django.utils import timezone
 from decimal import Decimal
@@ -20,6 +20,9 @@ from apps.warehouse.models import Warehouse, StockTransfer, StockTransferItem
 class TransferCreateViewTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='truser', password='password')
+        self.user.user_permissions.add(Permission.objects.get(
+            content_type__app_label='warehouse', codename='add_stocktransfer'
+        ))
         self.source = Warehouse.objects.create(name='Source', code='SRC')
         self.dest = Warehouse.objects.create(name='Dest', code='DST')
         self.category = Category.objects.create(name='Cat')

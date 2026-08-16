@@ -17,7 +17,12 @@ class Command(BaseCommand):
         cashier_group, _ = Group.objects.get_or_create(name='Cashier')
         cashier_perms = Permission.objects.filter(
             content_type__app_label__in=['sales', 'customers', 'inventory', 'warehouse', 'quotations']
-        ).exclude(codename__startswith='delete_').exclude(codename='set_opening_balance')
+        ).exclude(codename__startswith='delete_').exclude(
+            codename='set_opening_balance'
+        ).exclude(
+            content_type__app_label='warehouse',
+            content_type__model='stocktransfer',
+        )
         
         # Add basic core permissions
         dashboard_perm = Permission.objects.filter(codename='view_dashboard').first()

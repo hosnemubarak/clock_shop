@@ -4,7 +4,7 @@
 {% block title %}New Sale | {{ SHOP_NAME }}{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/sale-create.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'css/sale-create.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -29,6 +29,7 @@
      data-sale-list-url="{% url 'sales:sale_list' %}"
      data-warehouse-stocks-url="{% url 'sales:api_product_warehouse_stocks' 0 %}"
      data-quick-transfer-url="{% url 'sales:api_quick_transfer' %}"
+     data-can-quick-transfer="{{ can_quick_transfer|yesno:'true,false' }}"
      data-currency="{{ CURRENCY_SYMBOL }}"
      data-allow-walkin="{{ ALLOW_WALKIN_CUSTOMERS|yesno:'true,false' }}">
 
@@ -309,12 +310,16 @@
                     </div>
 
                     <!-- 6. Actions ------------------------------------------------>
-                    <div class="sale-actions d-grid gap-2">
+                    <div class="sale-actions">
+                        <div class="sale-actions__total">
+                            <span>Total</span>
+                            <strong id="mobileGrandTotal">{{ CURRENCY_SYMBOL }}0.00</strong>
+                        </div>
                         <button type="button" class="btn btn-success btn-lg" id="btnComplete">
                             <i class="las la-check-circle fs-5 align-middle me-1"></i>
                             Complete Sale
                         </button>
-                        <button type="button" class="btn btn-light" id="btnReset">
+                        <button type="button" class="btn btn-light sale-actions__reset" id="btnReset">
                             Clear sale
                         </button>
                     </div>
@@ -400,9 +405,10 @@
 
     {% include 'partials/customer_modal.html' %}
 
+    {% if can_quick_transfer %}
     <!-- Stock Transfer Modal ------------------------------------------------>
     <div class="modal fade" id="stockTransferModal" tabindex="-1" aria-labelledby="stockTransferTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header border-0 pb-0 px-4 pt-4">
                     <div>
@@ -512,9 +518,10 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/sale-create.js' %}?v=10"></script>
+<script src="{% static 'js/sale-create.js' %}?v=11"></script>
 {% endblock %}

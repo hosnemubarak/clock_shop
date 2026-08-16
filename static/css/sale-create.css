@@ -56,8 +56,9 @@
     top: calc(100% + 0.25rem);
     left: 0;
     right: 0;
-    max-height: 22rem;
+    max-height: min(22rem, 45dvh);
     overflow-y: auto;
+    overscroll-behavior: contain;
     margin: 0;
     padding: 0.25rem;
     background: var(--vz-secondary-bg, #fff);
@@ -257,6 +258,15 @@
     white-space: nowrap;
 }
 
+.sale-actions {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.sale-actions__total {
+    display: none;
+}
+
 /* ---------- Misc ---------- */
 
 .sale-hint kbd {
@@ -295,18 +305,135 @@
 /* Tablet and below: the totals panel stops floating and the action bar pins to
    the viewport so Complete Sale is always one tap away. */
 @media (max-width: 991.98px) {
+    #salePage {
+        padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+    }
+
     .sale-summary {
         position: static;
     }
 
-    .sale-actions {
-        position: sticky;
+    #salePage .sale-actions {
+        position: fixed;
+        left: 0;
+        right: 0;
         bottom: 0;
-        z-index: 5;
-        padding: 0.75rem;
-        margin: 0 -0.75rem -1rem;
+        z-index: 1030;
+        grid-template-columns: minmax(0, 1fr) minmax(10rem, 1fr);
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.625rem max(1rem, env(safe-area-inset-right)) calc(0.625rem + env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
         background: var(--vz-secondary-bg, #fff);
         border-top: 1px solid var(--vz-border-color, #e9ebec);
+        box-shadow: 0 -0.25rem 1rem rgba(30, 32, 37, 0.1);
+    }
+
+    .sale-actions__total {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        line-height: 1.15;
+    }
+
+    .sale-actions__total span {
+        color: #878a99;
+        font-size: 0.75rem;
+    }
+
+    .sale-actions__total strong {
+        overflow: hidden;
+        font-size: 1.125rem;
+        font-variant-numeric: tabular-nums;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .sale-actions__reset {
+        display: none;
+    }
+
+    #salePage .sale-cart,
+    #salePage .sale-cart tbody,
+    #salePage .sale-cart td {
+        display: block;
+        width: 100%;
+    }
+
+    #salePage .sale-cart thead {
+        display: none;
+    }
+
+    #salePage .table-responsive {
+        overflow: visible;
+    }
+
+    #salePage .sale-cart__row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 0.75rem 1rem;
+        padding: 1rem;
+        border-bottom: 1px solid var(--vz-border-color, #e9ebec);
+    }
+
+    #salePage .sale-cart__row td {
+        padding: 0;
+        border: 0;
+    }
+
+    #salePage .sale-cart__product {
+        grid-column: 1 / -1;
+    }
+
+    #salePage .sale-cart__price,
+    #salePage .sale-cart__quantity,
+    #salePage .sale-cart__line-total {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    #salePage .sale-cart__price::before,
+    #salePage .sale-cart__quantity::before,
+    #salePage .sale-cart__line-total::before {
+        content: attr(data-label);
+        color: #878a99;
+        font-size: 0.75rem;
+    }
+
+    #salePage .sale-cart__price,
+    #salePage .sale-cart__quantity {
+        grid-column: 1 / -1;
+    }
+
+    #salePage .sale-cart__price .form-control {
+        width: 8rem;
+        min-height: 2.75rem;
+    }
+
+    #salePage .sale-qty {
+        margin: 0 !important;
+        max-width: 9rem;
+    }
+
+    #salePage .sale-qty .btn,
+    #salePage .sale-qty .form-control,
+    #salePage .sale-cart__remove .btn,
+    #salePage .sale-transfer-btn,
+    #salePage .sale-customer__clear {
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+    }
+
+    #salePage .sale-cart__line-total {
+        grid-column: 1;
+        justify-content: flex-start;
+        font-size: 1rem;
+    }
+
+    #salePage .sale-cart__remove {
+        grid-column: 2;
+        justify-self: end;
     }
 }
 
@@ -315,8 +442,57 @@
         font-size: 1rem;
     }
 
+    .sale-result {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.25rem;
+        padding: 0.625rem;
+    }
+
+    .sale-result__title {
+        white-space: normal;
+    }
+
     .sale-result__side {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
         font-size: 0.8125rem;
+        text-align: left;
+    }
+
+    .sale-result__badges {
+        flex-direction: row;
+        margin: 0;
+    }
+
+    #salePage .sale-transfer__row {
+        display: grid;
+        grid-template-columns: 2.75rem minmax(0, 1fr);
+        gap: 0.625rem;
+        padding: 0.75rem;
+    }
+
+    #salePage .sale-transfer__row-input {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    #salePage .sale-transfer__row-input .form-control {
+        width: 100%;
+        min-height: 2.75rem;
+    }
+
+    #salePage .sale-transfer__max-btn,
+    #salePage .modal-footer .btn {
+        min-height: 2.75rem;
+    }
+
+    #salePage .sale-transfer__warehouse-list {
+        max-height: none;
+        padding-right: 0;
     }
 }
 

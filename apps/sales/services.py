@@ -33,7 +33,7 @@ class SaleService:
         Resolves D-6, D-7, and D-8 by extracting logic from view,
         handling JSON safely, and prefetching related objects.
         """
-        shop = Warehouse.objects.filter(is_shop=True).first()
+        shop = Warehouse.objects.filter(is_shop=True, is_active=True).first()
         if not shop:
             raise ValueError('No shop warehouse configured.')
             
@@ -124,7 +124,9 @@ class SaleService:
         # Prefetch to avoid N+1 queries in loop. Lock the stock rows in a stable
         # order so two concurrent checkouts cannot deadlock against each other.
         product_ids = sorted({item['product_id'] for item in parsed_items})
-        products_map = {p.id: p for p in Product.objects.filter(id__in=product_ids)}
+        products_map = {
+            p.id: p for p in Product.objects.filter(id__in=product_ids, is_active=True)
+        }
         stocks_map = {
             s.product_id: s
             for s in ProductStock.objects.select_for_update().filter(
@@ -138,7 +140,9 @@ class SaleService:
         for item_data in parsed_items:
             product = products_map.get(item_data['product_id'])
             if not product:
-                raise ValueError(f"Product with ID {item_data['product_id']} not found.")
+                raise ValueError(
+                    f"Product with ID {item_data['product_id']} not found or inactive."
+                )
 
             quantity = item_data['quantity']
             unit_price = item_data['unit_price']

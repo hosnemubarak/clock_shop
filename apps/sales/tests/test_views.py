@@ -7,19 +7,27 @@
 import json
 from decimal import Decimal
 
-from django.contrib.auth.models import User
-from django.test import TestCase
+from django.contrib.auth.models import Group, Permission, User
+from django.core.management import call_command
+from django.db import connection
+from django.test import TestCase, override_settings
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
 from apps.customers.models import Customer, Payment
 from apps.inventory.models import Brand, Category, Product, ProductStock
+from apps.core.models import AuditLog
 from apps.sales.models import Sale, SaleItem
-from apps.warehouse.models import Warehouse
+from apps.warehouse.models import StockTransfer, Warehouse
 
 
 class SaleScreenTestMixin:
     def setUp(self):
         self.user = User.objects.create_user(username='cashier', password='password')
+        self.user.user_permissions.add(*Permission.objects.filter(
+            content_type__app_label__in=['inventory', 'sales'],
+            codename__in=['view_product', 'add_sale'],
+        ))
         self.shop = Warehouse.objects.create(name='Main Shop', code='SHOP', is_shop=True)
         self.depot = Warehouse.objects.create(name='Back Depot', code='DEPOT', is_shop=False)
 
@@ -137,7 +145,22 @@ class ProductSearchApiTests(SaleScreenTestMixin, TestCase):
     def test_reports_shop_stock_separately_from_total(self):
         row = next(r for r in self.search(q='DEPOT-ONLY').json()['results'])
         self.assertEqual(row['shop_stock'], 0)
+        self.assertEqual(row['transferable_stock'], 7)
         self.assertEqual(row['total_stock'], 7)
+
+    def test_transferable_stock_excludes_inactive_and_shop_warehouses(self):
+        inactive = Warehouse.objects.create(
+            name='Closed Depot', code='CLOSED', is_active=False
+        )
+        ProductStock.objects.create(product=self.product, warehouse=self.depot, quantity=4)
+        ProductStock.objects.create(product=self.product, warehouse=inactive, quantity=9)
+        self.product.total_stock = 23
+        self.product.save(update_fields=['total_stock'])
+
+        row = next(r for r in self.search(q='SEIKO-5').json()['results'])
+        self.assertEqual(row['shop_stock'], 10)
+        self.assertEqual(row['transferable_stock'], 4)
+        self.assertEqual(row['total_stock'], 23)
 
     def test_limit_is_validated_and_capped(self):
         self.assertEqual(len(self.search(q='', limit=1).json()['results']), 1)
@@ -155,8 +178,23 @@ class ProductSearchApiTests(SaleScreenTestMixin, TestCase):
 
     def test_query_count_is_constant(self):
         """Search must not go N+1 as the result set grows."""
-        with self.assertNumQueries(4):
+        self.search(q='')
+        with CaptureQueriesContext(connection) as small_queries:
             self.search(q='')
+
+        for index in range(10):
+            Product.objects.create(
+                sku=f'QUERY-{index}',
+                category=self.clocks,
+                brand=self.casio,
+                default_selling_price=Decimal('10.00'),
+                average_cost=Decimal('5.00'),
+            )
+
+        with CaptureQueriesContext(connection) as large_queries:
+            self.search(q='')
+
+        self.assertEqual(len(large_queries), len(small_queries))
 
 
 class PosCheckoutTests(SaleScreenTestMixin, TestCase):
@@ -317,6 +355,16 @@ class PosCheckoutTests(SaleScreenTestMixin, TestCase):
         self.assertIn('Insufficient stock', response.json()['message'])
         self.assertNoWriteHappened()
 
+    def test_inactive_product_is_rejected(self):
+        self.product.is_active = False
+        self.product.save(update_fields=['is_active'])
+
+        response = self.checkout(self.cart())
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('inactive', response.json()['message'])
+        self.assertNoWriteHappened()
+
     def test_second_line_failure_rolls_back_the_first(self):
         response = self.checkout(self.cart(
             items=[
@@ -434,6 +482,23 @@ class SaleCreatePageTests(SaleScreenTestMixin, TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'sales/sale_form.html')
 
+    def test_transfer_affordances_follow_permission(self):
+        response = self.client.get(reverse('sales:sale_create'))
+        self.assertFalse(response.context['can_quick_transfer'])
+        self.assertNotContains(response, 'id="stockTransferModal"')
+        self.assertContains(response, 'data-can-quick-transfer="false"')
+
+        permission = Permission.objects.get(
+            content_type__app_label='warehouse', codename='add_stocktransfer'
+        )
+        self.user.user_permissions.add(permission)
+        self.user = User.objects.get(pk=self.user.pk)
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('sales:sale_create'))
+        self.assertTrue(response.context['can_quick_transfer'])
+        self.assertContains(response, 'id="stockTransferModal"')
+        self.assertContains(response, 'data-can-quick-transfer="true"')
+
     def test_payment_methods_come_from_the_model(self):
         """The template used to hardcode a 'mobile_money' option that is not a valid
         choice, so it persisted and then rendered blank on the payment reports."""
@@ -469,9 +534,193 @@ class SaleCreatePageTests(SaleScreenTestMixin, TestCase):
     def test_redirects_when_no_shop_warehouse_is_configured(self):
         Warehouse.objects.filter(is_shop=True).update(is_shop=False)
         response = self.client.get(reverse('sales:sale_create'))
-        self.assertRedirects(response, reverse('core:dashboard'))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('core:dashboard'))
 
     def test_requires_login(self):
         self.client.logout()
         response = self.client.get(reverse('sales:sale_create'))
         self.assertEqual(response.status_code, 302)
+
+
+class QuickTransferApiTests(SaleScreenTestMixin, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.transfer_permission = Permission.objects.get(
+            content_type__app_label='warehouse', codename='add_stocktransfer'
+        )
+        self.user.user_permissions.add(self.transfer_permission)
+        self.second_depot = Warehouse.objects.create(
+            name='Second Depot', code='DEPOT2', is_shop=False
+        )
+        ProductStock.objects.create(product=self.product, warehouse=self.depot, quantity=5)
+        ProductStock.objects.create(product=self.product, warehouse=self.second_depot, quantity=4)
+        self.product.update_total_stock()
+
+    def warehouse_stocks(self, product=None, **headers):
+        return self.client.get(
+            reverse(
+                'sales:api_product_warehouse_stocks',
+                args=[(product or self.product).id],
+            ),
+            **headers,
+        )
+
+    def transfer(self, transfers, required_quantity=12, product=None, **headers):
+        return self.client.post(
+            reverse('sales:api_quick_transfer'),
+            data=json.dumps({
+                'product_id': (product or self.product).id,
+                'required_quantity': required_quantity,
+                'transfers': transfers,
+            }),
+            content_type='application/json',
+            **headers,
+        )
+
+    def test_warehouse_stock_payload_excludes_inactive_warehouses(self):
+        inactive = Warehouse.objects.create(
+            name='Inactive Depot', code='INACTIVE', is_active=False
+        )
+        ProductStock.objects.create(product=self.product, warehouse=inactive, quantity=20)
+        self.product.update_total_stock()
+
+        response = self.warehouse_stocks()
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(body['shop_stock'], 10)
+        self.assertEqual(body['transferable_stock'], 9)
+        self.assertEqual(body['total_stock'], 39)
+        self.assertCountEqual(
+            [row['warehouse_id'] for row in body['stocks']],
+            [self.depot.id, self.second_depot.id],
+        )
+
+    def test_warehouse_stock_lookup_rejects_inactive_product(self):
+        self.product.is_active = False
+        self.product.save(update_fields=['is_active'])
+        response = self.warehouse_stocks()
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json()['status'], 'error')
+
+    def test_permission_denial_is_json_for_ajax_calls(self):
+        self.user.user_permissions.remove(self.transfer_permission)
+        self.user = User.objects.get(pk=self.user.pk)
+        self.client.force_login(self.user)
+
+        lookup = self.warehouse_stocks(HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        transfer = self.transfer(
+            [{'warehouse_id': self.depot.id, 'quantity': 1}],
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+        )
+
+        self.assertEqual(lookup.status_code, 403)
+        self.assertEqual(transfer.status_code, 403)
+        self.assertEqual(lookup.json()['status'], 'error')
+        self.assertIn('permission', transfer.json()['message'])
+
+    def test_permission_denial_preserves_normal_redirect(self):
+        self.user.user_permissions.remove(self.transfer_permission)
+        self.user = User.objects.get(pk=self.user.pk)
+        self.client.force_login(self.user)
+        response = self.warehouse_stocks()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('core:unauthorized'))
+
+    def test_successful_multi_source_transfer_moves_exact_shortage(self):
+        response = self.transfer([
+            {'warehouse_id': self.depot.id, 'quantity': 1},
+            {'warehouse_id': self.second_depot.id, 'quantity': 1},
+        ])
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(body['shop_stock'], 12)
+        self.assertEqual(body['transferable_stock'], 7)
+        self.assertEqual(body['total_stock'], 19)
+        self.assertEqual(body['transfers_created'], 2)
+        self.assertEqual(
+            ProductStock.objects.get(product=self.product, warehouse=self.shop).quantity, 12
+        )
+        self.assertEqual(
+            ProductStock.objects.get(product=self.product, warehouse=self.depot).quantity, 4
+        )
+        self.assertEqual(
+            ProductStock.objects.get(product=self.product, warehouse=self.second_depot).quantity, 3
+        )
+        self.assertEqual(
+            StockTransfer.objects.filter(status=StockTransfer.Status.COMPLETED).count(), 2
+        )
+        self.assertEqual(
+            AuditLog.objects.filter(
+                action=AuditLog.Action.TRANSFER,
+                changes__action='quick_transfer_from_sale',
+            ).count(),
+            2,
+        )
+
+    def test_transfer_rejects_over_shortage_and_invalid_sources(self):
+        inactive = Warehouse.objects.create(
+            name='Inactive Source', code='INACTSRC', is_active=False
+        )
+        cases = (
+            ('over shortage', [{'warehouse_id': self.depot.id, 'quantity': 3}], 12),
+            ('shop source', [{'warehouse_id': self.shop.id, 'quantity': 1}], 12),
+            ('duplicate source', [
+                {'warehouse_id': self.depot.id, 'quantity': 1},
+                {'warehouse_id': self.depot.id, 'quantity': 1},
+            ], 12),
+            ('inactive source', [{'warehouse_id': inactive.id, 'quantity': 1}], 12),
+            ('zero quantity', [{'warehouse_id': self.depot.id, 'quantity': 0}], 12),
+        )
+        for label, transfers, required in cases:
+            with self.subTest(case=label):
+                response = self.transfer(transfers, required_quantity=required)
+                self.assertEqual(response.status_code, 400)
+
+        self.assertEqual(StockTransfer.objects.count(), 0)
+        self.assertEqual(
+            ProductStock.objects.get(product=self.product, warehouse=self.shop).quantity, 10
+        )
+
+    def test_insufficient_later_source_rolls_back_everything(self):
+        response = self.transfer([
+            {'warehouse_id': self.depot.id, 'quantity': 1},
+            {'warehouse_id': self.second_depot.id, 'quantity': 99},
+        ], required_quantity=110)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('Insufficient stock', response.json()['message'])
+        self.assertEqual(StockTransfer.objects.count(), 0)
+        self.assertEqual(AuditLog.objects.filter(action=AuditLog.Action.TRANSFER).count(), 0)
+        self.assertEqual(
+            ProductStock.objects.get(product=self.product, warehouse=self.shop).quantity, 10
+        )
+        self.assertEqual(
+            ProductStock.objects.get(product=self.product, warehouse=self.depot).quantity, 5
+        )
+        self.assertEqual(
+            ProductStock.objects.get(product=self.product, warehouse=self.second_depot).quantity, 4
+        )
+
+    def test_stale_required_quantity_cannot_transfer_when_shop_now_covers_it(self):
+        response = self.transfer(
+            [{'warehouse_id': self.depot.id, 'quantity': 1}],
+            required_quantity=10,
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('already covers', response.json()['message'])
+        self.assertEqual(StockTransfer.objects.count(), 0)
+
+
+class QuickTransferGroupPolicyTests(TestCase):
+    @override_settings(ENABLE_RBAC=True)
+    def test_setup_groups_keeps_stock_transfer_permission_out_of_cashier(self):
+        call_command('setup_groups', verbosity=0)
+        permission = Permission.objects.get(
+            content_type__app_label='warehouse', codename='add_stocktransfer'
+        )
+        self.assertFalse(Group.objects.get(name='Cashier').permissions.filter(pk=permission.pk).exists())
+        self.assertTrue(Group.objects.get(name='Manager').permissions.filter(pk=permission.pk).exists())
+        self.assertTrue(Group.objects.get(name='Admin').permissions.filter(pk=permission.pk).exists())

@@ -119,7 +119,7 @@ def warehouse_edit(request, pk):
     })
 
 
-@has_permission('warehouse.view_transfer')
+@has_permission('warehouse.view_stocktransfer')
 def transfer_list(request):
     """List all stock transfers."""
     transfers = StockTransfer.objects.select_related(
@@ -152,7 +152,7 @@ def transfer_list(request):
     })
 
 
-@has_permission('warehouse.add_transfer')
+@has_permission('warehouse.add_stocktransfer')
 def transfer_create(request):
     """Create a new stock transfer."""
     warehouses = Warehouse.objects.filter(is_active=True)
@@ -243,7 +243,7 @@ def transfer_create(request):
     return render(request, 'warehouse/transfer_form.html', context)
 
 
-@has_permission('warehouse.view_transfer')
+@has_permission('warehouse.view_stocktransfer')
 def transfer_detail(request, pk):
     """View transfer details."""
     transfer = get_object_or_404(
@@ -255,7 +255,7 @@ def transfer_detail(request, pk):
     return render(request, 'warehouse/transfer_detail.html', {'transfer': transfer})
 
 
-@has_permission('warehouse.change_transfer')
+@has_permission('warehouse.change_stocktransfer')
 def transfer_complete(request, pk):
     """Complete a pending transfer."""
     transfer = get_object_or_404(StockTransfer, pk=pk)
@@ -278,7 +278,7 @@ def transfer_complete(request, pk):
     return redirect('warehouse:transfer_detail', pk=transfer.pk)
 
 
-@has_permission('warehouse.change_transfer')
+@has_permission('warehouse.change_stocktransfer')
 def transfer_cancel(request, pk):
     """Cancel a pending transfer."""
     transfer = get_object_or_404(StockTransfer, pk=pk)
