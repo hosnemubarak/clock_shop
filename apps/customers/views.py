@@ -12,8 +12,8 @@ from django.utils import timezone
 from decimal import Decimal
 
 from .models import Customer, Payment, CustomerNote
-from .forms import CustomerForm, PaymentForm, CustomerNoteForm
-from apps.sales.models import Sale
+from .forms import CustomerForm, OpeningBalanceForm, PaymentForm, CustomerNoteForm
+from apps.sales.models import Sale, SaleReturn
 from apps.core.utils import create_audit_log, paginate
 
 logger = logging.getLogger(__name__)
@@ -142,6 +142,40 @@ def customer_edit(request, pk):
     })
 
 
+@has_permission('customers.set_opening_balance')
+@transaction.atomic
+def opening_balance_set(request, pk):
+    """Set or amend a customer's pre-system outstanding debt."""
+    customer = get_object_or_404(Customer, pk=pk)
+
+    if request.method == 'POST':
+        old_amount = customer.opening_balance
+        old_date = customer.opening_balance_date
+        form = OpeningBalanceForm(request.POST, instance=customer)
+        if form.is_valid():
+            customer = form.save()
+            customer.recalculate_balance()
+            create_audit_log(request, 'UPDATE', customer, {
+                'opening_balance': {
+                    'old': str(old_amount),
+                    'new': str(customer.opening_balance),
+                },
+                'opening_balance_date': {
+                    'old': old_date.isoformat(),
+                    'new': customer.opening_balance_date.isoformat(),
+                },
+            })
+            messages.success(request, f'Opening balance for "{customer.name}" updated.')
+            return redirect('customers:customer_detail', pk=customer.pk)
+    else:
+        form = OpeningBalanceForm(instance=customer)
+
+    return render(request, 'customers/opening_balance_form.html', {
+        'customer': customer,
+        'form': form,
+    })
+
+
 @has_permission('customers.change_customer')
 def customer_add_note(request, pk):
     """Add a note to a customer."""
@@ -168,16 +202,22 @@ def customer_statement(request, pk):
     date_from = request.GET.get('date_from')
     date_to = request.GET.get('date_to')
     
-    # Get all transactions
+    # Get all persisted transactions in the requested window.
     sales = customer.sales.filter(status='completed')
     payments = customer.payments.all()
+    returns = SaleReturn.objects.filter(
+        sale__customer=customer,
+        sale__status='completed',
+    )
     
     if date_from:
         sales = sales.filter(sale_date__gte=date_from)
         payments = payments.filter(payment_date__date__gte=date_from)
+        returns = returns.filter(return_date__date__gte=date_from)
     if date_to:
         sales = sales.filter(sale_date__lte=date_to)
         payments = payments.filter(payment_date__date__lte=date_to)
+        returns = returns.filter(return_date__date__lte=date_to)
     
     # Opening balance: everything before the reporting window, so the running
     # balance carries forward instead of restarting at zero.
@@ -189,10 +229,35 @@ def customer_statement(request, pk):
         prior_payments = customer.payments.filter(
             payment_date__date__lt=date_from
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
-        opening_balance = prior_sales - prior_payments
+        prior_refunds = SaleReturn.objects.filter(
+            sale__customer=customer,
+            sale__status='completed',
+            return_date__date__lt=date_from,
+        ).aggregate(total=Sum('refund_amount'))['total'] or Decimal('0')
+        persistent_opening = (
+            customer.opening_balance
+            if customer.opening_balance_date.isoformat() < date_from
+            else Decimal('0')
+        )
+        opening_balance = persistent_opening + prior_sales + prior_refunds - prior_payments
 
     # Combine and sort transactions
     transactions = []
+    opening_in_window = (
+        (not date_from or customer.opening_balance_date.isoformat() >= date_from)
+        and (not date_to or customer.opening_balance_date.isoformat() <= date_to)
+    )
+    if opening_in_window and customer.opening_balance > 0:
+        transactions.append({
+            'date': customer.opening_balance_date,
+            'type': 'Opening Balance',
+            'reference': 'Opening Balance',
+            'debit': customer.opening_balance,
+            'credit': Decimal('0'),
+            'sort_order': 0,
+            'pk': customer.pk,
+        })
+
     for sale in sales:
         transactions.append({
             'date': sale.sale_date,
@@ -200,6 +265,19 @@ def customer_statement(request, pk):
             'reference': sale.invoice_number,
             'debit': sale.total_amount,
             'credit': Decimal('0'),
+            'sort_order': 1,
+            'pk': sale.pk,
+        })
+
+    for sale_return in returns:
+        transactions.append({
+            'date': timezone.localtime(sale_return.return_date).date(),
+            'type': 'Refund',
+            'reference': sale_return.return_number,
+            'debit': sale_return.refund_amount,
+            'credit': Decimal('0'),
+            'sort_order': 2,
+            'pk': sale_return.pk,
         })
 
     for payment in payments:
@@ -209,11 +287,13 @@ def customer_statement(request, pk):
             'reference': payment.reference or f'PMT-{payment.pk}',
             'debit': Decimal('0'),
             'credit': payment.amount,
+            'sort_order': 3,
+            'pk': payment.pk,
         })
 
     # sale_date is a date and payment_date a datetime; both are normalised to
     # dates above so they are mutually comparable.
-    transactions.sort(key=lambda x: x['date'])
+    transactions.sort(key=lambda x: (x['date'], x['sort_order'], x['pk']))
 
     # Calculate running balance
     balance = opening_balance
@@ -357,6 +437,8 @@ def api_customer_info(request, customer_id):
         'total_purchases': str(customer.total_purchases),
         'total_paid': str(customer.total_paid),
         'total_due': str(customer.total_due),
+        'opening_balance': str(customer.opening_balance),
+        'opening_balance_date': customer.opening_balance_date.isoformat(),
         'unpaid_invoices': list(unpaid),
     }
 

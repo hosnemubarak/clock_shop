@@ -36,7 +36,10 @@ class CustomerAdmin(admin.ModelAdmin):
             'fields': ('name', 'phone', 'email', 'address')
         }),
         ('Financial', {
-            'fields': ('total_purchases', 'total_paid', 'total_due', 'credit_limit')
+            'fields': (
+                'total_purchases', 'total_paid', 'total_due', 'credit_limit',
+                'opening_balance', 'opening_balance_date',
+            )
         }),
         ('Status & Notes', {
             'fields': ('is_active', 'notes')
@@ -46,6 +49,20 @@ class CustomerAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+        if not request.user.has_perm('customers.set_opening_balance'):
+            readonly.extend(['opening_balance', 'opening_balance_date'])
+        return readonly
+
+    def save_model(self, request, obj, form, change):
+        opening_changed = bool(
+            {'opening_balance', 'opening_balance_date'} & set(form.changed_data)
+        )
+        super().save_model(request, obj, form, change)
+        if opening_changed:
+            obj.recalculate_balance()
     
     def balance_display(self, obj):
         if obj.total_due > 0:

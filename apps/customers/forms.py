@@ -23,6 +23,23 @@ class CustomerForm(forms.ModelForm):
         }
 
 
+class OpeningBalanceForm(forms.ModelForm):
+    class Meta:
+        model = Customer
+        fields = ['opening_balance', 'opening_balance_date']
+        widgets = {
+            'opening_balance': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0',
+            }),
+            'opening_balance_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+            }),
+        }
+
+
 class PaymentForm(forms.ModelForm):
     class Meta:
         model = Payment

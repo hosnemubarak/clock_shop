@@ -62,8 +62,21 @@
                             </tr>
                             {% endfor %}
                         </tbody>
-                        {% if transactions %}
                         <tfoot class="table-light">
+                            {% if date_from %}
+                            <tr>
+                                <td colspan="5" class="text-end">Brought Forward:</td>
+                                <td class="text-end {% if opening_balance > 0 %}text-danger{% endif %}">
+                                    {{ CURRENCY_SYMBOL }}{{ opening_balance|floatformat:0 }}
+                                </td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <td colspan="5" class="text-end">Filtered Closing Balance:</td>
+                                <td class="text-end {% if closing_balance > 0 %}text-danger{% endif %}">
+                                    {{ CURRENCY_SYMBOL }}{{ closing_balance|floatformat:0 }}
+                                </td>
+                            </tr>
                             <tr class="fw-bold">
                                 <td colspan="5" class="text-end">Current Balance:</td>
                                 <td class="text-end {% if customer.total_due > 0 %}text-danger{% endif %}">
@@ -71,7 +84,6 @@
                                 </td>
                             </tr>
                         </tfoot>
-                        {% endif %}
                     </table>
                 </div>
             </div>

@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models import Q
 from django.core.validators import MinValueValidator, RegexValidator
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from decimal import Decimal
 from apps.core.models import TimeStampedModel
 from apps.core.validators import bd_phone_validator
@@ -37,6 +38,16 @@ class Customer(TimeStampedModel):
         default=Decimal('0.00'),
         help_text='Outstanding balance'
     )
+    opening_balance = models.DecimalField(
+        max_digits=14, decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.00'))],
+        default=Decimal('0.00'),
+        help_text='Outstanding debt from before this system was introduced'
+    )
+    opening_balance_date = models.DateField(
+        default=timezone.localdate,
+        help_text='Effective date of the opening balance'
+    )
     
     credit_limit = models.DecimalField(
         max_digits=12, decimal_places=2,
@@ -50,6 +61,9 @@ class Customer(TimeStampedModel):
     
     class Meta:
         ordering = ['name']
+        permissions = [
+            ('set_opening_balance', 'Can set customer opening balance'),
+        ]
         constraints = [
             models.UniqueConstraint(
                 fields=['email'],
@@ -107,7 +121,7 @@ class Customer(TimeStampedModel):
         net_paid = payments_total - refunds_total
         self.total_purchases = sales_total
         self.total_paid = net_paid
-        self.total_due = sales_total - net_paid
+        self.total_due = self.opening_balance + sales_total - net_paid
         self.save(update_fields=['total_purchases', 'total_paid', 'total_due'])
     
     def get_purchase_history(self):
