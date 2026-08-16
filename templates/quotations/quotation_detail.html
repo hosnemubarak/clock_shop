@@ -145,23 +145,23 @@
 </div>
 
 <!-- Delete Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade app-modal app-modal--danger app-modal--compact" id="deleteModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="quotationDeleteTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content text-start">
+        <div class="modal-content app-modal__content text-start">
             <form action="{% url 'quotations:quotation_delete' quotation.pk %}" method="post">
                 {% csrf_token %}
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title">Confirm Deletion</h5>
+                <div class="modal-header app-modal__header">
+                    <h5 class="modal-title app-modal__title" id="quotationDeleteTitle"><i class="las la-trash-alt app-modal__title-icon" aria-hidden="true"></i>Confirm Deletion</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-4">
+                <div class="modal-body app-modal__body">
                     <div class="text-center mt-2">
                         <i class="las la-trash-alt display-4 text-danger mb-3"></i>
                         <h5 class="fs-15 mb-3">Are you sure you want to delete quotation <strong>{{ quotation.quotation_number }}</strong>?</h5>
                         <p class="text-muted">This action cannot be undone.</p>
                     </div>
                 </div>
-                <div class="modal-footer justify-content-center border-0 pt-0">
+                <div class="modal-footer app-modal__footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-danger">Yes, Delete</button>
                 </div>

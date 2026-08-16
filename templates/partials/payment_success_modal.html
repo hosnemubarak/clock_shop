@@ -1,0 +1,23 @@
+{% load static %}
+{% if request.GET.print_payment %}
+<div class="modal fade app-modal app-modal--success app-modal--compact" id="paymentSuccessModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="paymentSuccessTitle" aria-hidden="true" data-payment-success-modal>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content app-modal__content">
+            <div class="modal-header app-modal__header">
+                <h5 class="modal-title app-modal__title" id="paymentSuccessTitle"><i class="las la-check-circle app-modal__title-icon" aria-hidden="true"></i>Payment Received</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body app-modal__body app-modal__result">
+                <i class="las la-check-circle app-modal__result-icon" aria-hidden="true"></i>
+                <p class="text-muted mb-0 mt-3">The payment has been successfully recorded.</p>
+            </div>
+            <div class="modal-footer app-modal__footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                <a href="{% url 'customers:payment_print' request.GET.print_payment %}" target="_blank" class="btn btn-primary" data-payment-print>
+                    <i class="las la-print me-1" aria-hidden="true"></i>Print Receipt
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}

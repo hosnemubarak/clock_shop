@@ -52,7 +52,7 @@ function initSaleCreate() {
      'confirmDueLabel', 'confirmDueAmount', 'btnConfirmSaleSubmit',
      'linkViewSale', 'newCustomerModal', 'newCustomerForm', 'newCustomerName',
      'newCustomerPhone', 'newCustomerEmail', 'newCustomerAddress',
-     'newCustomerCreditLimit', 'newCustomerNotes', 'newCustomerSaveBtn',
+      'newCustomerCreditLimit', 'newCustomerNotes', 'newCustomerSaveBtn', 'newCustomerError',
      'stockTransferModal', 'transferProductName', 'transferProductMeta',
      'transferRequiredQty', 'transferShopStock', 'transferTotalStock', 'transferShortage',
      'transferWarehouseList', 'transferLoading', 'transferNoStock',
@@ -109,26 +109,22 @@ function initSaleCreate() {
         return safe.replace(new RegExp('(' + needle + ')', 'ig'), '<mark>$1</mark>');
     }
 
-    /**
-     * Every error/warning on this page is surfaced through the shared modal
-     * (showValidationModal from modals.js, loaded globally in base.html) so the
-     * cashier gets one consistent, unmissable message instead of an inline banner.
-     * The inline #saleAlert region was removed; showAlert/clearAlert are kept so
-     * the many existing call sites keep working, now backed by the modal.
-     */
     function showAlert(message, title) {
         var text = message || 'Something went wrong.';
+        if (el.newCustomerModal && el.newCustomerModal.classList.contains('show') && typeof showModalError === 'function') {
+            showModalError(el.newCustomerError, text);
+            return;
+        }
         if (typeof showValidationModal === 'function') {
             showValidationModal(text, title || 'Notice');
             return;
         }
-        // Fallback if the shared modal helper somehow failed to load.
-        window.alert(text);
+        // Keep failures visible in development without bypassing the modal system.
+        console.error(text);
     }
 
     function clearAlert() {
-        // Modal-based messaging is dismissed by the user; nothing to clear here.
-        // Kept as a no-op so existing call sites need no change.
+        if (typeof clearModalError === 'function') clearModalError(el.newCustomerError);
     }
 
     function readJsonResponse(response) {
@@ -1197,6 +1193,7 @@ function initSaleCreate() {
             renderTotals();
         } else if (action.saleAction === 'new-customer') {
             el.newCustomerForm.reset();
+            clearAlert();
             el.newCustomerName.classList.remove('is-invalid');
             el.newCustomerPhone.classList.remove('is-invalid');
             customerModal.show();
@@ -1229,8 +1226,6 @@ function initSaleCreate() {
                         startNextSale();
                     }
                 );
-            } else if (window.confirm('Clear this sale and start over?')) {
-                startNextSale();
             }
         }
     });
@@ -1274,10 +1269,10 @@ function initSaleCreate() {
 
     // ------------------------------------------------------------------ init
 
-    confirmModal = new bootstrap.Modal(el.saleConfirmModal);
-    successModal = new bootstrap.Modal(el.saleSuccessModal);
-    customerModal = new bootstrap.Modal(el.newCustomerModal);
-    transferModal = el.stockTransferModal ? new bootstrap.Modal(el.stockTransferModal) : null;
+    confirmModal = bootstrap.Modal.getOrCreateInstance(el.saleConfirmModal);
+    successModal = bootstrap.Modal.getOrCreateInstance(el.saleSuccessModal);
+    customerModal = bootstrap.Modal.getOrCreateInstance(el.newCustomerModal);
+    transferModal = el.stockTransferModal ? bootstrap.Modal.getOrCreateInstance(el.stockTransferModal) : null;
 
     // -------------------------------------------------------- stock transfer
 

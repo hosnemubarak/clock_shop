@@ -20,7 +20,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 from functools import wraps
 
-def custom_user_passes_test(test_func, json_for_ajax=False):
+def custom_user_passes_test(test_func, json_for_ajax=False, json_message='You do not have permission to access this resource.'):
     """
     Custom decorator that redirects unauthorized authenticated users to an
     'unauthorized' page instead of throwing a 403 or redirecting to login.
@@ -41,7 +41,7 @@ def custom_user_passes_test(test_func, json_for_ajax=False):
             ):
                 return JsonResponse({
                     'status': 'error',
-                    'message': 'You do not have permission to transfer stock.',
+                    'message': json_message,
                 }, status=403)
                 
             # Authenticated but unauthorized -> Show access denied page
@@ -53,7 +53,7 @@ admin_required = custom_user_passes_test(is_admin)
 manager_required = custom_user_passes_test(is_manager)
 cashier_required = custom_user_passes_test(is_cashier)
 
-def has_permission(perm, json_for_ajax=False):
+def has_permission(perm, json_for_ajax=False, json_message='You do not have permission to access this resource.'):
     """
     Decorator for views that checks whether a user has a particular permission enabled,
     redirecting to the unauthorized page if necessary.
@@ -66,4 +66,4 @@ def has_permission(perm, json_for_ajax=False):
         else:
             perms = perm
         return user.has_perms(perms)
-    return custom_user_passes_test(check_perms, json_for_ajax=json_for_ajax)
+    return custom_user_passes_test(check_perms, json_for_ajax=json_for_ajax, json_message=json_message)

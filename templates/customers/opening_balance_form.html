@@ -20,7 +20,7 @@
                     {% csrf_token %}
                     {% include 'includes/form_errors.html' %}
                     <div class="mb-3">
-                        <label class="form-label">Opening Balance <span class="text-danger">*</span></label>
+                        <label for="{{ form.opening_balance.id_for_label }}" class="form-label">Opening Balance <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
                             {{ form.opening_balance }}
@@ -28,7 +28,7 @@
                         {% if form.opening_balance.errors %}<div class="text-danger small mt-1">{{ form.opening_balance.errors.0 }}</div>{% endif %}
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Effective Date <span class="text-danger">*</span></label>
+                        <label for="{{ form.opening_balance_date.id_for_label }}" class="form-label">Effective Date <span class="text-danger">*</span></label>
                         {{ form.opening_balance_date }}
                         {% if form.opening_balance_date.errors %}<div class="text-danger small mt-1">{{ form.opening_balance_date.errors.0 }}</div>{% endif %}
                     </div>

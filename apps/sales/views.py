@@ -372,7 +372,11 @@ def pos_checkout(request):
 # On-the-fly Stock Transfer (from Sale page)
 # ---------------------------------------------------------------------------
 
-@has_permission('warehouse.add_stocktransfer', json_for_ajax=True)
+@has_permission(
+    'warehouse.add_stocktransfer',
+    json_for_ajax=True,
+    json_message='You do not have permission to transfer stock.',
+)
 def api_product_warehouse_stocks(request, product_id):
     """Return per-warehouse stock for a product, excluding the shop.
 
@@ -412,7 +416,11 @@ def api_product_warehouse_stocks(request, product_id):
     })
 
 
-@has_permission('warehouse.add_stocktransfer', json_for_ajax=True)
+@has_permission(
+    'warehouse.add_stocktransfer',
+    json_for_ajax=True,
+    json_message='You do not have permission to transfer stock.',
+)
 def api_quick_transfer(request):
     """Execute an immediate stock transfer from warehouse(s) to the shop.
 

@@ -100,6 +100,7 @@ def customer_detail(request, pk):
         'payments': payments,
         'unpaid_invoices': unpaid_invoices,
         'product_summary': product_summary,
+        'opening_balance_form': OpeningBalanceForm(instance=customer),
     }
     return render(request, 'customers/customer_detail.html', context)
 
@@ -142,33 +143,61 @@ def customer_edit(request, pk):
     })
 
 
-@has_permission('customers.set_opening_balance')
-@transaction.atomic
+@has_permission(
+    'customers.set_opening_balance',
+    json_for_ajax=True,
+    json_message='You do not have permission to change opening balances.',
+)
 def opening_balance_set(request, pk):
     """Set or amend a customer's pre-system outstanding debt."""
-    customer = get_object_or_404(Customer, pk=pk)
-
+    is_ajax = (
+        request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        or request.content_type == 'application/json'
+    )
     if request.method == 'POST':
-        old_amount = customer.opening_balance
-        old_date = customer.opening_balance_date
-        form = OpeningBalanceForm(request.POST, instance=customer)
-        if form.is_valid():
-            customer = form.save()
-            customer.recalculate_balance()
-            create_audit_log(request, 'UPDATE', customer, {
-                'opening_balance': {
-                    'old': str(old_amount),
-                    'new': str(customer.opening_balance),
-                },
-                'opening_balance_date': {
-                    'old': old_date.isoformat(),
-                    'new': customer.opening_balance_date.isoformat(),
-                },
-            })
-            messages.success(request, f'Opening balance for "{customer.name}" updated.')
-            return redirect('customers:customer_detail', pk=customer.pk)
+        with transaction.atomic():
+            customer = get_object_or_404(
+                Customer.objects.select_for_update(),
+                pk=pk,
+            )
+            old_amount = customer.opening_balance
+            old_date = customer.opening_balance_date
+            form = OpeningBalanceForm(request.POST, instance=customer)
+            if form.is_valid():
+                customer = form.save()
+                customer.recalculate_balance()
+                create_audit_log(request, 'UPDATE', customer, {
+                    'opening_balance': {
+                        'old': str(old_amount),
+                        'new': str(customer.opening_balance),
+                    },
+                    'opening_balance_date': {
+                        'old': old_date.isoformat(),
+                        'new': customer.opening_balance_date.isoformat(),
+                    },
+                })
+                if is_ajax:
+                    return JsonResponse({
+                        'status': 'success',
+                        'customer_id': customer.pk,
+                        'opening_balance': str(customer.opening_balance),
+                        'opening_balance_date': customer.opening_balance_date.isoformat(),
+                        'total_due': str(customer.total_due),
+                    })
+                messages.success(request, f'Opening balance for "{customer.name}" updated.')
+                return redirect('customers:customer_detail', pk=customer.pk)
     else:
+        customer = get_object_or_404(Customer, pk=pk)
         form = OpeningBalanceForm(instance=customer)
+
+    if is_ajax and request.method == 'POST':
+        return JsonResponse({
+            'status': 'error',
+            'errors': {
+                field: [str(error) for error in errors]
+                for field, errors in form.errors.items()
+            },
+        }, status=400)
 
     return render(request, 'customers/opening_balance_form.html', {
         'customer': customer,

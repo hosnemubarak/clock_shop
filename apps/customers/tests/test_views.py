@@ -1,7 +1,8 @@
 """Tests for customer financial views and APIs."""
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.contrib.auth.models import Group, Permission, User
 from django.core.management import call_command
@@ -105,11 +106,97 @@ class OpeningBalanceViewTests(TestCase):
         self.assertEqual(audit.changes['opening_balance']['old'], '0.00')
         self.assertEqual(audit.changes['opening_balance']['new'], '350.00')
 
+    def test_modal_post_updates_balance_and_returns_json(self):
+        response = self.client.post(self.url, {
+            'opening_balance': '275.50',
+            'opening_balance_date': '2024-12-30',
+        }, HTTP_X_REQUESTED_WITH='XMLHttpRequest', HTTP_ACCEPT='application/json')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {
+            'status': 'success',
+            'customer_id': self.customer.pk,
+            'opening_balance': '275.50',
+            'opening_balance_date': '2024-12-30',
+            'total_due': '275.50',
+        })
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.opening_balance, Decimal('275.50'))
+        self.assertEqual(self.customer.total_due, Decimal('275.50'))
+        self.assertEqual(AuditLog.objects.count(), 1)
+
+    def test_modal_invalid_post_returns_errors_without_mutation(self):
+        response = self.client.post(self.url, {
+            'opening_balance': '-1.00',
+            'opening_balance_date': '2024-12-31',
+        }, HTTP_X_REQUESTED_WITH='XMLHttpRequest', HTTP_ACCEPT='application/json')
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('opening_balance', response.json()['errors'])
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.opening_balance, Decimal('0.00'))
+        self.assertFalse(AuditLog.objects.exists())
+
+    def test_future_date_is_rejected_for_html_and_modal_posts(self):
+        future_date = (timezone.localdate() + timedelta(days=1)).isoformat()
+        for ajax in (False, True):
+            with self.subTest(ajax=ajax):
+                headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'} if ajax else {}
+                response = self.client.post(self.url, {
+                    'opening_balance': '100.00',
+                    'opening_balance_date': future_date,
+                }, **headers)
+                self.assertEqual(response.status_code, 400 if ajax else 200)
+                self.assertContains(
+                    response,
+                    'The effective date cannot be in the future.',
+                    status_code=400 if ajax else 200,
+                )
+        self.customer.refresh_from_db()
+        self.assertEqual(self.customer.opening_balance, Decimal('0.00'))
+        self.assertFalse(AuditLog.objects.exists())
+
+    def test_post_locks_customer_before_update(self):
+        with patch(
+            'apps.customers.views.Customer.objects.select_for_update',
+            wraps=Customer.objects.select_for_update,
+        ) as select_for_update:
+            response = self.client.post(self.url, {
+                'opening_balance': '100.00',
+                'opening_balance_date': '2024-12-31',
+            })
+
+        self.assertEqual(response.status_code, 302)
+        select_for_update.assert_called_once_with()
+
     def test_unauthorized_user_is_redirected(self):
         self.user.user_permissions.clear()
         self.user = User.objects.get(pk=self.user.pk)
         response = self.client.get(self.url)
         self.assertRedirects(response, reverse('core:unauthorized'))
+
+    def test_unauthorized_modal_request_returns_generic_json_403(self):
+        self.user.user_permissions.clear()
+        self.user = User.objects.get(pk=self.user.pk)
+
+        response = self.client.post(
+            self.url,
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            HTTP_ACCEPT='application/json',
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json(), {
+            'status': 'error',
+            'message': 'You do not have permission to change opening balances.',
+        })
+
+    def test_anonymous_modal_request_redirects_to_login(self):
+        self.client.logout()
+        response = self.client.post(self.url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/login/', response.url)
 
     def test_invalid_post_does_not_change_customer_or_create_audit(self):
         response = self.client.post(self.url, {
@@ -130,6 +217,25 @@ class OpeningBalanceViewTests(TestCase):
         self.assertFalse(
             Group.objects.get(name='Cashier').permissions.filter(pk=self.permission.pk).exists()
         )
+
+    def test_customer_detail_renders_accessible_modal_for_authorized_user(self):
+        self.user.user_permissions.add(Permission.objects.get(codename='view_customer'))
+        response = self.client.get(reverse('customers:customer_detail', args=[self.customer.pk]))
+
+        self.assertContains(response, 'id="openingBalanceModal"')
+        self.assertContains(response, 'aria-labelledby="openingBalanceTitle"')
+        self.assertContains(response, 'id="id_opening_balance"')
+        self.assertContains(response, 'id="id_opening_balance_date"')
+        self.assertContains(response, 'static/js/customer-detail.js')
+
+    def test_customer_detail_hides_modal_without_opening_balance_permission(self):
+        self.user.user_permissions.clear()
+        self.user.user_permissions.add(Permission.objects.get(codename='view_customer'))
+        self.user = User.objects.get(pk=self.user.pk)
+        response = self.client.get(reverse('customers:customer_detail', args=[self.customer.pk]))
+
+        self.assertNotContains(response, 'id="openingBalanceModal"')
+        self.assertNotContains(response, 'static/js/customer-detail.js')
 
 
 @override_settings(SECURE_SSL_REDIRECT=False)

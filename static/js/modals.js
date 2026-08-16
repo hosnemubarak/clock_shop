@@ -1,69 +1,121 @@
-// Global modal helper functions
-let confirmCallback = null;
-let dangerCallback = null;
+// Global modal compatibility API.
+(function (window, document) {
+    'use strict';
 
-function showValidationModal(message, title = 'Validation Error') {
-    document.getElementById('validationModalTitle').innerHTML = `<i class="las la-exclamation-triangle me-1"></i> ${title}`;
-    document.getElementById('validationModalBody').textContent = message;
-    // Use getOrCreateInstance to prevent duplicate instances on rapid calls.
-    bootstrap.Modal.getOrCreateInstance(document.getElementById('validationModal')).show();
-}
+    var callbacks = { confirmModal: null, dangerModal: null };
+    var triggers = new WeakMap();
 
-function showSuccessModal(message, title = 'Success') {
-    document.getElementById('successModalTitle').innerHTML = `<i class="las la-check-circle me-1"></i> ${title}`;
-    document.getElementById('successModalBody').textContent = message;
-    bootstrap.Modal.getOrCreateInstance(document.getElementById('successModal')).show();
-}
+    function byId(id) {
+        return document.getElementById(id);
+    }
 
-function showConfirmModal(message, title, callback) {
-    document.getElementById('confirmModalTitle').innerHTML = `<i class="las la-question-circle me-1"></i> ${title}`;
-    document.getElementById('confirmModalBody').textContent = message;
-    confirmCallback = callback;
-    bootstrap.Modal.getOrCreateInstance(document.getElementById('confirmModal')).show();
-}
+    function modalInstance(root) {
+        if (!root || !window.bootstrap || !window.bootstrap.Modal) return null;
+        return window.bootstrap.Modal.getOrCreateInstance(root);
+    }
 
-function showDangerModal(message, title, callback) {
-    document.getElementById('dangerModalTitle').innerHTML = `<i class="las la-exclamation-triangle me-1"></i> ${title}`;
-    document.getElementById('dangerModalBody').textContent = message;
-    dangerCallback = callback;
-    bootstrap.Modal.getOrCreateInstance(document.getElementById('dangerModal')).show();
-}
+    function setContent(modalId, message, title) {
+        var root = byId(modalId);
+        if (!root) return null;
+        var titleNode = root.querySelector('[data-modal-title]');
+        var body = byId(modalId + 'Body');
+        if (titleNode) titleNode.textContent = title || '';
+        if (body) body.textContent = message == null ? '' : String(message);
+        return root;
+    }
 
-// Confirm button click handler
-document.addEventListener('DOMContentLoaded', function() {
-    const confirmBtn = document.getElementById('confirmModalBtn');
-    if (confirmBtn) {
-        confirmBtn.addEventListener('click', function() {
-            if (confirmCallback) {
-                confirmCallback();
-            }
-            bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+    function rememberTrigger(root) {
+        if (root && document.activeElement && document.activeElement !== document.body) {
+            triggers.set(root, document.activeElement);
+        }
+    }
+
+    function showMessage(modalId, message, title) {
+        var root = setContent(modalId, message, title);
+        var instance = modalInstance(root);
+        if (!instance) return false;
+        rememberTrigger(root);
+        instance.show();
+        return true;
+    }
+
+    function showValidationModal(message, title) {
+        return showMessage('validationModal', message, title || 'Validation Error');
+    }
+
+    function showSuccessModal(message, title) {
+        return showMessage('successModal', message, title || 'Success');
+    }
+
+    function showConfirmModal(message, title, callback) {
+        callbacks.confirmModal = typeof callback === 'function' ? callback : null;
+        return showMessage('confirmModal', message, title || 'Confirm Action');
+    }
+
+    function showDangerModal(message, title, callback) {
+        callbacks.dangerModal = typeof callback === 'function' ? callback : null;
+        return showMessage('dangerModal', message, title || 'Confirm Action');
+    }
+
+    function showModalError(target, message) {
+        var node = typeof target === 'string' ? byId(target) : target;
+        if (!node) return false;
+        node.textContent = message == null ? '' : String(message);
+        node.hidden = false;
+        node.classList.remove('d-none');
+        node.setAttribute('role', 'alert');
+        return true;
+    }
+
+    function clearModalError(target) {
+        var node = typeof target === 'string' ? byId(target) : target;
+        if (!node) return;
+        node.textContent = '';
+        node.hidden = true;
+        node.classList.add('d-none');
+    }
+
+    function bindAction(modalId, buttonId) {
+        var root = byId(modalId);
+        var button = byId(buttonId);
+        if (!root || !button) return;
+        button.addEventListener('click', function () {
+            var callback = callbacks[modalId];
+            callbacks[modalId] = null;
+            if (callback) callback();
+            var instance = modalInstance(root);
+            if (instance) instance.hide();
         });
     }
 
-    const dangerBtn = document.getElementById('dangerModalBtn');
-    if (dangerBtn) {
-        dangerBtn.addEventListener('click', function() {
-            if (dangerCallback) {
-                dangerCallback();
-            }
-            bootstrap.Modal.getInstance(document.getElementById('dangerModal')).hide();
-        });
-    }
+    document.addEventListener('DOMContentLoaded', function () {
+        bindAction('confirmModal', 'confirmModalBtn');
+        bindAction('dangerModal', 'dangerModalBtn');
 
-    // Clear stale callbacks when modals are dismissed (close X, backdrop click,
-    // Escape key) so a subsequent modal open never fires the previous action.
-    const confirmModal = document.getElementById('confirmModal');
-    if (confirmModal) {
-        confirmModal.addEventListener('hidden.bs.modal', function() {
-            confirmCallback = null;
+        ['validationModal', 'successModal', 'confirmModal', 'dangerModal'].forEach(function (modalId) {
+            var root = byId(modalId);
+            if (!root) return;
+            root.addEventListener('hidden.bs.modal', function () {
+                if (Object.prototype.hasOwnProperty.call(callbacks, modalId)) callbacks[modalId] = null;
+                var trigger = triggers.get(root);
+                triggers.delete(root);
+                if (trigger && trigger.isConnected && typeof trigger.focus === 'function') trigger.focus();
+            });
         });
-    }
 
-    const dangerModal = document.getElementById('dangerModal');
-    if (dangerModal) {
-        dangerModal.addEventListener('hidden.bs.modal', function() {
-            dangerCallback = null;
-        });
-    }
-});
+        var paymentModal = document.querySelector('[data-payment-success-modal]');
+        if (paymentModal) {
+            modalInstance(paymentModal).show();
+            var url = new URL(window.location.href);
+            url.searchParams.delete('print_payment');
+            window.history.replaceState({}, document.title, url.toString());
+        }
+    });
+
+    window.showValidationModal = showValidationModal;
+    window.showSuccessModal = showSuccessModal;
+    window.showConfirmModal = showConfirmModal;
+    window.showDangerModal = showDangerModal;
+    window.showModalError = showModalError;
+    window.clearModalError = clearModalError;
+})(window, document);

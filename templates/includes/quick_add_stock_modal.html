@@ -1,17 +1,18 @@
 <!-- Quick Add Stock Modal -->
-<div class="modal fade" id="quickAddStockModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Quick Add Stock: <span id="qasProductName" class="text-primary"></span></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal fade app-modal app-modal--form" id="quickAddStockModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="quickAddStockTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-sm-down">
+        <div class="modal-content app-modal__content">
+            <div class="modal-header app-modal__header">
+                <h5 class="modal-title app-modal__title" id="quickAddStockTitle">Quick Add Stock: <span id="qasProductName" class="text-primary"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body app-modal__body">
                 <form id="quickAddStockForm">
                     {% csrf_token %}
+                    <div id="quickAddStockError" class="alert alert-danger app-modal__error" role="alert" hidden></div>
                     <input type="hidden" id="qasProductId">
                     <div class="mb-3">
-                        <label class="form-label">Warehouse <span class="text-danger">*</span></label>
+                        <label for="qasWarehouse" class="form-label">Warehouse <span class="text-danger">*</span></label>
                         <select id="qasWarehouse" class="form-select" required>
                             <option value="">Select Warehouse...</option>
                             {% for warehouse in warehouses %}
@@ -21,15 +22,15 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                            <label for="qasQuantity" class="form-label">Quantity <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <button class="btn btn-outline-secondary px-2" type="button" onclick="changeQty(this, -1)"><i class="las la-minus"></i></button>
+                                <button class="btn btn-outline-secondary px-2" type="button" data-qty-change="-1" aria-label="Decrease quantity"><i class="las la-minus" aria-hidden="true"></i></button>
                                 <input type="number" id="qasQuantity" class="form-control text-center px-0" min="1" required>
-                                <button class="btn btn-outline-secondary px-2" type="button" onclick="changeQty(this, 1)"><i class="las la-plus"></i></button>
+                                <button class="btn btn-outline-secondary px-2" type="button" data-qty-change="1" aria-label="Increase quantity"><i class="las la-plus" aria-hidden="true"></i></button>
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Unit Cost Price <span class="text-danger">*</span></label>
+                            <label for="qasUnitPrice" class="form-label">Unit Cost Price <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
                                 <input type="number" id="qasUnitPrice" class="form-control" step="0.01" min="0" required>
@@ -41,23 +42,23 @@
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Supplier</label>
+                            <label for="qasSupplier" class="form-label">Supplier</label>
                             <input type="text" id="qasSupplier" class="form-control" placeholder="e.g. ABC Distributors">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Stock Date <span class="text-danger">*</span></label>
+                            <label for="qasPurchaseDate" class="form-label">Stock Date <span class="text-danger">*</span></label>
                             <input type="date" id="qasPurchaseDate" class="form-control" required>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Notes</label>
+                        <label for="qasNotes" class="form-label">Notes</label>
                         <textarea id="qasNotes" class="form-control" rows="2" placeholder="e.g. Invoice #12345"></textarea>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer app-modal__footer">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" id="btnQuickAddStock" class="btn btn-primary" onclick="submitQuickAddStock()">Add Stock</button>
+                <button type="button" id="btnQuickAddStock" class="btn btn-primary">Add Stock</button>
             </div>
         </div>
     </div>

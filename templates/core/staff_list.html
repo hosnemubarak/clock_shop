@@ -4,7 +4,7 @@
 {% block title %}Staff Directory | {{ SHOP_NAME }}{% endblock %}
 
 {% block content %}
-{% include 'includes/page_header.html' with title='Staff Directory' breadcrumb=True action_onclick="bootstrap.Modal.getOrCreateInstance(document.getElementById('addStaffModal')).show()" action_label='Add Staff' action_icon='las la-user-plus' action_class='btn-primary' %}
+{% include 'includes/page_header.html' with title='Staff Directory' breadcrumb=True action_modal_target='#addStaffModal' action_label='Add Staff' action_icon='las la-user-plus' action_class='btn-primary' %}
 
 <div class="row">
     <div class="col-12">
@@ -56,126 +56,22 @@
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end">
                                             <li>
-                                                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#roleModal{{ staff.id }}">
+                                                <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#staffRoleModal" data-action="{% url 'core:update_staff_role' staff.id %}" data-username="{{ staff.username }}" data-active="{% if staff.is_active %}true{% else %}false{% endif %}" data-role="{% for group in staff.groups.all %}{{ group.name }}{% if not forloop.last %},{% endif %}{% endfor %}">
                                                     <i class="las la-user-edit text-primary me-2 fs-15 align-middle"></i> Edit Role
-                                                </a>
+                                                </button>
                                             </li>
                                             <li>
-                                                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#passwordModal{{ staff.id }}">
+                                                <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#staffPasswordModal" data-action="{% url 'core:update_staff_password' staff.id %}" data-username="{{ staff.username }}">
                                                     <i class="las la-key text-warning me-2 fs-15 align-middle"></i> Change Password
-                                                </a>
+                                                </button>
                                             </li>
                                             <li>
                                                 <div class="dropdown-divider"></div>
-                                                <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteModal{{ staff.id }}">
+                                                <button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#staffDeleteModal" data-action="{% url 'core:delete_staff' staff.id %}" data-username="{{ staff.username }}">
                                                     <i class="las la-trash-alt me-2 fs-15 align-middle"></i> Delete Staff
-                                                </a>
+                                                </button>
                                             </li>
                                         </ul>
-                                    </div>
-                                    
-                                    <!-- Role Edit Modal -->
-                                    <div class="modal fade" id="roleModal{{ staff.id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content text-start">
-                                                <form action="{% url 'core:update_staff_role' staff.id %}" method="post">
-                                                    {% csrf_token %}
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">Edit Role: {{ staff.username }}</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Account Status</label>
-                                                            <select name="is_active" class="form-select">
-                                                                <option value="true" {% if staff.is_active %}selected{% endif %}>Approved (Active)</option>
-                                                                <option value="false" {% if not staff.is_active %}selected{% endif %}>Pending / Disabled</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label">System Role</label>
-                                                            <select name="role" class="form-select">
-                                                                <option value="">No Role (Locked Out)</option>
-                                                                {% for role in roles %}
-                                                                    <option value="{{ role.name }}" 
-                                                                        {% for g in staff.groups.all %}{% if g.name == role.name %}selected{% endif %}{% endfor %}>
-                                                                        {{ role.name }}
-                                                                    </option>
-                                                                {% endfor %}
-                                                            </select>
-                                                            <div class="form-text mt-2">
-                                                                <strong>Cashier:</strong> Can create sales and register customers.<br>
-                                                                <strong>Manager:</strong> Can manage inventory, process returns, and view reports.<br>
-                                                                <strong>Admin:</strong> View audit logs and manage staff (must be superuser).
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                                                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Change Password Modal -->
-                                    <div class="modal fade" id="passwordModal{{ staff.id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content text-start">
-                                                <form action="{% url 'core:update_staff_password' staff.id %}" method="post">
-                                                    {% csrf_token %}
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">Force Password Change: {{ staff.username }}</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <div class="alert alert-warning mb-3">
-                                                            <i class="las la-exclamation-triangle me-1"></i> You are forcing a new password for this user. They will be logged out of all active sessions.
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label">New Password <span class="text-danger">*</span></label>
-                                                            <div class="position-relative auth-pass-inputgroup mb-1">
-                                                                <input type="password" class="form-control pe-5" name="new_password" id="new_password_{{ staff.id }}" required placeholder="Enter new password">
-                                                                <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" data-target="new_password_{{ staff.id }}">
-                                                                    <i class="las la-eye align-middle fs-18"></i>
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                                                        <button type="submit" class="btn btn-warning">Update Password</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Delete Modal -->
-                                    <div class="modal fade" id="deleteModal{{ staff.id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content text-start">
-                                                <form action="{% url 'core:delete_staff' staff.id %}" method="post">
-                                                    {% csrf_token %}
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">Confirm Deletion</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <div class="text-center mt-2">
-                                                            <i class="las la-trash-alt display-4 text-danger mb-3"></i>
-                                                            <h5 class="fs-15 mb-3">Are you sure you want to delete <strong>{{ staff.username }}</strong>?</h5>
-                                                            <p class="text-muted">This will permanently remove their access to the system. However, records they created (sales, purchases) will remain intact.</p>
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer justify-content-center">
-                                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                                                        <button type="submit" class="btn btn-danger">Yes, Delete Staff</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
                                     </div>
                                     {% endif %}
                                 </td>
@@ -193,17 +89,46 @@
     </div>
 </div>
 
+<div class="modal fade app-modal app-modal--form" id="staffRoleModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="staffRoleTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
+        <div class="modal-content app-modal__content"><form id="staffRoleForm" method="post">{% csrf_token %}
+            <div class="modal-header app-modal__header"><h5 class="modal-title app-modal__title" id="staffRoleTitle">Edit Role: <span data-staff-name></span></h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+            <div class="modal-body app-modal__body">
+                <div class="mb-3"><label for="staffRoleActive" class="form-label">Account Status</label><select id="staffRoleActive" name="is_active" class="form-select"><option value="true">Approved (Active)</option><option value="false">Pending / Disabled</option></select></div>
+                <div><label for="staffRoleSelect" class="form-label">System Role</label><select id="staffRoleSelect" name="role" class="form-select"><option value="">No Role (Locked Out)</option>{% for role in roles %}<option value="{{ role.name }}">{{ role.name }}</option>{% endfor %}</select><div class="form-text mt-2"><strong>Cashier:</strong> Can create sales and register customers.<br><strong>Manager:</strong> Can manage inventory, process returns, and view reports.<br><strong>Admin:</strong> View audit logs and manage staff (must be superuser).</div></div>
+            </div>
+            <div class="modal-footer app-modal__footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save Changes</button></div>
+        </form></div>
+    </div>
+</div>
+
+<div class="modal fade app-modal app-modal--form app-modal--validation" id="staffPasswordModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="staffPasswordTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down"><div class="modal-content app-modal__content"><form id="staffPasswordForm" method="post">{% csrf_token %}
+        <div class="modal-header app-modal__header"><h5 class="modal-title app-modal__title" id="staffPasswordTitle">Force Password Change: <span data-staff-name></span></h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body app-modal__body"><div class="alert alert-warning"><i class="las la-exclamation-triangle me-1" aria-hidden="true"></i>This user will be logged out of all active sessions.</div><label for="staffNewPassword" class="form-label">New Password <span class="text-danger">*</span></label><div class="position-relative auth-pass-inputgroup"><input type="password" class="form-control pe-5" name="new_password" id="staffNewPassword" required placeholder="Enter new password"><button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" data-target="staffNewPassword" aria-label="Show or hide password"><i class="las la-eye align-middle fs-18"></i></button></div></div>
+        <div class="modal-footer app-modal__footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-warning">Update Password</button></div>
+    </form></div></div>
+</div>
+
+<div class="modal fade app-modal app-modal--danger app-modal--compact" id="staffDeleteModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="staffDeleteTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content app-modal__content"><form id="staffDeleteForm" method="post">{% csrf_token %}
+        <div class="modal-header app-modal__header"><h5 class="modal-title app-modal__title" id="staffDeleteTitle"><i class="las la-trash-alt app-modal__title-icon" aria-hidden="true"></i>Confirm Deletion</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body app-modal__body text-center"><p>Are you sure you want to delete <strong data-staff-name></strong>?</p><p class="text-muted mb-0">Their access will be removed permanently. Existing business records will remain intact.</p></div>
+        <div class="modal-footer app-modal__footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-danger">Yes, Delete Staff</button></div>
+    </form></div></div>
+</div>
+
 <!-- Add Staff Modal -->
-<div class="modal fade" id="addStaffModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
+<div class="modal fade app-modal app-modal--form" id="addStaffModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="addStaffTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-sm-down">
+        <div class="modal-content app-modal__content">
             <form action="{% url 'core:staff_list' %}" method="post">
                 {% csrf_token %}
-                <div class="modal-header">
-                    <h5 class="modal-title">Add New Staff</h5>
+                <div class="modal-header app-modal__header">
+                    <h5 class="modal-title app-modal__title" id="addStaffTitle">Add New Staff</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body app-modal__body">
                     {% if form.non_field_errors %}
                         <div class="alert alert-danger">
                             {% for error in form.non_field_errors %}
@@ -214,14 +139,14 @@
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">First Name</label>
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name</label>
                             {{ form.first_name }}
                             {% if form.first_name.errors %}
                                 <div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>
                             {% endif %}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Last Name</label>
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
                             {{ form.last_name }}
                             {% if form.last_name.errors %}
                                 <div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>
@@ -230,7 +155,7 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label">Email Address</label>
+                        <label for="{{ form.email.id_for_label }}" class="form-label">Email Address</label>
                         {{ form.email }}
                         {% if form.email.errors %}
                             <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
@@ -238,7 +163,7 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label">Username <span class="text-danger">*</span></label>
+                        <label for="{{ form.username.id_for_label }}" class="form-label">Username <span class="text-danger">*</span></label>
                         {{ form.username }}
                         {% if form.username.errors %}
                             <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
@@ -246,7 +171,7 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label">Password <span class="text-danger">*</span></label>
+                        <label for="{{ form.password.id_for_label }}" class="form-label">Password <span class="text-danger">*</span></label>
                         <div class="position-relative auth-pass-inputgroup mb-1">
                             {{ form.password }}
                             <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" data-target="{{ form.password.id_for_label }}">
@@ -263,14 +188,14 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label class="form-label">Role <span class="text-danger">*</span></label>
+                        <label for="{{ form.role.id_for_label }}" class="form-label">Role <span class="text-danger">*</span></label>
                         {{ form.role }}
                         {% if form.role.errors %}
                             <div class="text-danger small mt-1">{{ form.role.errors.0 }}</div>
                         {% endif %}
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer app-modal__footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Create Staff Member</button>
                 </div>
@@ -282,7 +207,7 @@
 {% if request.method == 'POST' and form.errors %}
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        var myModal = new bootstrap.Modal(document.getElementById('addStaffModal'), {
+        var myModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('addStaffModal'), {
             keyboard: false
         });
         myModal.show();
@@ -292,6 +217,20 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('#staffRoleModal, #staffPasswordModal, #staffDeleteModal').forEach(function(modal) {
+        modal.addEventListener('show.bs.modal', function(event) {
+            var trigger = event.relatedTarget;
+            var form = modal.querySelector('form');
+            form.action = trigger.dataset.action;
+            modal.querySelectorAll('[data-staff-name]').forEach(function(node) { node.textContent = trigger.dataset.username; });
+            if (modal.id === 'staffRoleModal') {
+                document.getElementById('staffRoleActive').value = trigger.dataset.active;
+                document.getElementById('staffRoleSelect').value = (trigger.dataset.role || '').split(',')[0];
+            }
+            if (modal.id === 'staffPasswordModal') document.getElementById('staffNewPassword').value = '';
+        });
+    });
+
     // Password toggle
     document.querySelectorAll('.password-addon').forEach(function(btn) {
         btn.addEventListener('click', function() {

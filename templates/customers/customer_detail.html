@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load humanize %}
+{% load static %}
 
 {% block title %}{{ customer.name }} | {{ SHOP_NAME }}{% endblock %}
 
@@ -50,7 +51,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
                         <p class="text-muted mb-1 text-uppercase small fw-semibold">Outstanding Due</p>
-                        <h4 class="mb-0 fw-bold {% if customer.total_due > 0 %}text-danger{% else %}text-success{% endif %}">
+                        <h4 id="customerTotalDue" data-customer-total-due class="mb-0 fw-bold {% if customer.total_due > 0 %}text-danger{% else %}text-success{% endif %}">
                             {{ CURRENCY_SYMBOL }}{{ customer.total_due|floatformat:0|intcomma }}
                         </h4>
                     </div>
@@ -72,13 +73,13 @@
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4 px-1">
     <div>
-        <span class="text-muted small">Opening balance effective {{ customer.opening_balance_date|date:"M d, Y" }}</span>
-        <span class="fw-semibold ms-2">{{ CURRENCY_SYMBOL }}{{ customer.opening_balance|floatformat:0|intcomma }}</span>
+        <span class="text-muted small">Opening balance effective <span id="customerOpeningBalanceDate" data-customer-opening-balance-date>{{ customer.opening_balance_date|date:"M d, Y" }}</span></span>
+        <span id="customerOpeningBalance" data-customer-opening-balance data-value="{{ customer.opening_balance }}" class="fw-semibold ms-2">{{ CURRENCY_SYMBOL }}{{ customer.opening_balance|floatformat:0|intcomma }}</span>
     </div>
     {% if perms.customers.set_opening_balance %}
-    <a href="{% url 'customers:opening_balance_set' customer.pk %}" class="btn btn-sm btn-outline-primary">
+    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#openingBalanceModal">
         <i class="las la-pen me-1"></i>{% if customer.opening_balance > 0 %}Edit{% else %}Set{% endif %} Opening Balance
-    </a>
+    </button>
     {% endif %}
 </div>
 
@@ -286,22 +287,40 @@
     </div>
 </div>
 
-{% if request.GET.print_payment %}
-<!-- Payment Success Modal -->
-<div class="modal fade" id="paymentSuccessModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+{% include 'partials/payment_success_modal.html' %}
+{% if perms.customers.set_opening_balance %}
+<div class="modal fade app-modal app-modal--form app-modal--compact" id="openingBalanceModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="openingBalanceTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-body text-center p-4">
-                <i class="las la-check-circle text-success" style="font-size: 4rem;"></i>
-                <h4 class="mt-3 mb-2">Payment Received</h4>
-                <p class="text-muted mb-4">The payment has been successfully recorded.</p>
-                <div class="d-grid gap-2">
-                    <a href="{% url 'customers:payment_print' request.GET.print_payment %}" target="_blank" class="btn btn-primary btn-lg" onclick="bootstrap.Modal.getInstance(document.getElementById('paymentSuccessModal')).hide()">
-                        <i class="las la-print me-1"></i> Print Receipt
-                    </a>
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+        <div class="modal-content app-modal__content">
+            <form id="openingBalanceForm" method="post" action="{% url 'customers:opening_balance_set' customer.pk %}" data-currency-symbol="{{ CURRENCY_SYMBOL }}" novalidate>
+                {% csrf_token %}
+                <div class="modal-header app-modal__header">
+                    <div>
+                        <h5 class="modal-title app-modal__title" id="openingBalanceTitle"><i class="las la-wallet app-modal__title-icon" aria-hidden="true"></i>Opening Balance</h5>
+                        <p class="app-modal__description">Update the old unpaid balance for {{ customer.name }}.</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            </div>
+                <div class="modal-body app-modal__body">
+                    <div id="openingBalanceError" class="app-modal__error alert alert-danger" hidden></div>
+                    <div class="mb-3">
+                        <label for="{{ opening_balance_form.opening_balance.id_for_label }}" class="form-label">Opening Balance <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>{{ opening_balance_form.opening_balance }}
+                        </div>
+                        <div id="openingBalanceAmountError" class="text-danger small mt-1" data-field-error="opening_balance" hidden></div>
+                    </div>
+                    <div class="mb-0">
+                        <label for="{{ opening_balance_form.opening_balance_date.id_for_label }}" class="form-label">Effective Date <span class="text-danger">*</span></label>
+                        {{ opening_balance_form.opening_balance_date }}
+                        <div id="openingBalanceDateError" class="text-danger small mt-1" data-field-error="opening_balance_date" hidden></div>
+                    </div>
+                </div>
+                <div class="modal-footer app-modal__footer d-flex justify-content-end">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="las la-times me-1"></i>Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="openingBalanceSubmit"><i class="las la-save me-1"></i><span data-submit-label>Save</span></button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -309,17 +328,5 @@
 {% endblock %}
 
 {% block extra_js %}
-{% if request.GET.print_payment %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var paymentModal = new bootstrap.Modal(document.getElementById('paymentSuccessModal'));
-    paymentModal.show();
-    
-    // Clean up URL
-    var url = new URL(window.location);
-    url.searchParams.delete('print_payment');
-    window.history.replaceState({}, document.title, url);
-});
-</script>
-{% endif %}
+{% if perms.customers.set_opening_balance %}<script src="{% static 'js/customer-detail.js' %}"></script>{% endif %}
 {% endblock %}

@@ -100,26 +100,7 @@
     </div>
 </div>
 
-{% if request.GET.print_payment %}
-<!-- Payment Success Modal -->
-<div class="modal fade" id="paymentSuccessModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-body text-center p-4">
-                <i class="las la-check-circle text-success" style="font-size: 4rem;"></i>
-                <h4 class="mt-3 mb-2">Payment Received</h4>
-                <p class="text-muted mb-4">The payment has been successfully recorded.</p>
-                <div class="d-grid gap-2">
-                    <a href="{% url 'customers:payment_print' request.GET.print_payment %}" target="_blank" class="btn btn-primary btn-lg" onclick="bootstrap.Modal.getInstance(document.getElementById('paymentSuccessModal')).hide()">
-                        <i class="las la-print me-1"></i> Print Receipt
-                    </a>
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
+{% include 'partials/payment_success_modal.html' %}
 {% endblock %}
 
 {% block extra_js %}
@@ -134,15 +115,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    {% if request.GET.print_payment %}
-    var paymentModal = new bootstrap.Modal(document.getElementById('paymentSuccessModal'));
-    paymentModal.show();
-    
-    // Clean up URL
-    var url = new URL(window.location);
-    url.searchParams.delete('print_payment');
-    window.history.replaceState({}, document.title, url);
-    {% endif %}
 });
 </script>
 {% endblock %}

@@ -2,19 +2,19 @@
 <!-- Standardized Modal Components -->
 
 <!-- Validation/Error Modal -->
-<div class="modal fade z-1070" id="validationModal" tabindex="-1" aria-hidden="true" >
+<div class="modal fade app-modal app-modal--validation app-modal--compact" id="validationModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="validationModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-warning-subtle">
-                <h5 class="modal-title text-warning" id="validationModalTitle">
-                    <i class="las la-exclamation-triangle me-1"></i> Validation Error
+        <div class="modal-content app-modal__content">
+            <div class="modal-header app-modal__header">
+                <h5 class="modal-title app-modal__title" id="validationModalTitle">
+                    <i class="las la-exclamation-triangle app-modal__title-icon" aria-hidden="true"></i><span data-modal-title>Validation Error</span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" id="validationModalBody">
+            <div class="modal-body app-modal__body" id="validationModalBody">
                 <!-- Message will be inserted here -->
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer app-modal__footer">
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
                     <i class="las la-check me-1"></i> OK
                 </button>
@@ -24,19 +24,19 @@
 </div>
 
 <!-- Success Modal -->
-<div class="modal fade z-1070" id="successModal" tabindex="-1" aria-hidden="true" >
+<div class="modal fade app-modal app-modal--success app-modal--compact" id="successModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="successModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-success-subtle">
-                <h5 class="modal-title text-success" id="successModalTitle">
-                    <i class="las la-check-circle me-1"></i> Success
+        <div class="modal-content app-modal__content">
+            <div class="modal-header app-modal__header">
+                <h5 class="modal-title app-modal__title" id="successModalTitle">
+                    <i class="las la-check-circle app-modal__title-icon" aria-hidden="true"></i><span data-modal-title>Success</span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" id="successModalBody">
+            <div class="modal-body app-modal__body" id="successModalBody">
                 <!-- Message will be inserted here -->
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer app-modal__footer">
                 <button type="button" class="btn btn-success" data-bs-dismiss="modal">
                     <i class="las la-check me-1"></i> OK
                 </button>
@@ -46,19 +46,19 @@
 </div>
 
 <!-- Confirmation Modal -->
-<div class="modal fade z-1070" id="confirmModal" tabindex="-1" aria-hidden="true" >
+<div class="modal fade app-modal app-modal--confirm app-modal--compact" id="confirmModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-primary-subtle">
-                <h5 class="modal-title text-primary" id="confirmModalTitle">
-                    <i class="las la-question-circle me-1"></i> Confirm Action
+        <div class="modal-content app-modal__content">
+            <div class="modal-header app-modal__header">
+                <h5 class="modal-title app-modal__title" id="confirmModalTitle">
+                    <i class="las la-question-circle app-modal__title-icon" aria-hidden="true"></i><span data-modal-title>Confirm Action</span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" id="confirmModalBody">
+            <div class="modal-body app-modal__body" id="confirmModalBody">
                 <!-- Message will be inserted here -->
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer app-modal__footer">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">
                     <i class="las la-times me-1"></i> Cancel
                 </button>
@@ -71,19 +71,19 @@
 </div>
 
 <!-- Danger/Delete Confirmation Modal -->
-<div class="modal fade z-1070" id="dangerModal" tabindex="-1" aria-hidden="true" >
+<div class="modal fade app-modal app-modal--danger app-modal--compact" id="dangerModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="dangerModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-danger-subtle">
-                <h5 class="modal-title text-danger" id="dangerModalTitle">
-                    <i class="las la-exclamation-triangle me-1"></i> Confirm Action
+        <div class="modal-content app-modal__content">
+            <div class="modal-header app-modal__header">
+                <h5 class="modal-title app-modal__title" id="dangerModalTitle">
+                    <i class="las la-exclamation-triangle app-modal__title-icon" aria-hidden="true"></i><span data-modal-title>Confirm Action</span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" id="dangerModalBody">
+            <div class="modal-body app-modal__body" id="dangerModalBody">
                 <!-- Message will be inserted here -->
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer app-modal__footer">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">
                     <i class="las la-times me-1"></i> Cancel
                 </button>

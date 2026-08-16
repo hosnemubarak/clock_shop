@@ -1,44 +1,45 @@
 <!-- New Customer Modal -->
-<div class="modal fade z-1060" id="newCustomerModal" tabindex="-1" aria-hidden="true" >
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title text-white">
-                    <i class="las la-user-plus me-1"></i> New Customer
+<div class="modal fade app-modal app-modal--form" id="newCustomerModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="newCustomerTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg modal-fullscreen-sm-down">
+        <div class="modal-content app-modal__content">
+            <div class="modal-header app-modal__header">
+                <h5 class="modal-title app-modal__title" id="newCustomerTitle">
+                    <i class="las la-user-plus app-modal__title-icon" aria-hidden="true"></i> New Customer
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body app-modal__body">
                 <form id="newCustomerForm">
+                    <div id="newCustomerError" class="alert alert-danger app-modal__error" role="alert" hidden></div>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Name <span class="text-danger">*</span></label>
+                            <label for="newCustomerName" class="form-label">Name <span class="text-danger">*</span></label>
                             <input type="text" id="newCustomerName" class="form-control" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Phone <span class="text-danger">*</span></label>
+                            <label for="newCustomerPhone" class="form-label">Phone <span class="text-danger">*</span></label>
                             <input type="text" id="newCustomerPhone" class="form-control" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Email</label>
+                            <label for="newCustomerEmail" class="form-label">Email</label>
                             <input type="email" id="newCustomerEmail" class="form-control">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Credit Limit</label>
+                            <label for="newCustomerCreditLimit" class="form-label">Credit Limit</label>
                             <input type="number" step="0.01" id="newCustomerCreditLimit" class="form-control" placeholder="e.g. 5000">
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Address</label>
+                            <label for="newCustomerAddress" class="form-label">Address</label>
                             <textarea id="newCustomerAddress" class="form-control" rows="1"></textarea>
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Notes</label>
+                            <label for="newCustomerNotes" class="form-label">Notes</label>
                             <textarea id="newCustomerNotes" class="form-control" rows="1" placeholder="Internal notes..."></textarea>
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer app-modal__footer">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                 <!-- Wired by the including page's script (id, not inline onclick) so the
                    handler does not have to be a global. -->

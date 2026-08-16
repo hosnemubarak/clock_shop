@@ -32,7 +32,8 @@
         byId('qasPurchaseDate').value = new Date().toISOString().split('T')[0];
         byId('qasNotes').value = '';
 
-        new bootstrap.Modal(byId('quickAddStockModal')).show();
+        var modal = bootstrap.Modal.getOrCreateInstance(byId('quickAddStockModal'));
+        modal.show();
     }
 
     function submitQuickAddStock() {
@@ -45,7 +46,7 @@
         var notes = byId('qasNotes').value;
 
         if (!warehouseId || !quantity || !unitPrice || !purchaseDate) {
-            showValidationModal('Please fill out all required fields.');
+            showModalError('quickAddStockError', 'Please fill out all required fields.');
             return;
         }
 
@@ -74,19 +75,33 @@
             if (data.success) {
                 window.location.reload();
             } else {
-                showValidationModal(data.error, 'Error');
+                showModalError('quickAddStockError', data.error || 'Unable to add stock.', 'Error');
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         })
         .catch(function () {
-            showValidationModal('An error occurred.', 'Error');
+            showModalError('quickAddStockError', 'An error occurred.');
             btn.innerHTML = originalText;
             btn.disabled = false;
         });
     }
 
-    // Exposed globally because the modal markup uses inline onclick handlers.
+    document.addEventListener('DOMContentLoaded', function () {
+        var modal = byId('quickAddStockModal');
+        var form = byId('quickAddStockForm');
+        if (!modal || !form) return;
+        modal.addEventListener('show.bs.modal', function () {
+            if (window.clearModalError) window.clearModalError('quickAddStockError');
+        });
+        form.addEventListener('click', function (event) {
+            var button = event.target.closest('[data-qty-change]');
+            if (button && window.changeQty) window.changeQty(button, Number(button.dataset.qtyChange));
+        });
+        byId('btnQuickAddStock').addEventListener('click', submitQuickAddStock);
+    });
+
+    // Keep the public functions for existing page triggers.
     window.openQuickAddStockModal = openQuickAddStockModal;
     window.submitQuickAddStock = submitQuickAddStock;
     window.getCsrfToken = window.getCsrfToken || getCsrfToken;

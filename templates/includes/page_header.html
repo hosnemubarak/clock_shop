@@ -12,7 +12,7 @@ Params (all optional except title):
 
   Primary action button:
     action_url, action_label, action_icon, action_class (default btn-success),
-    action_target, action_onclick
+    action_target, action_onclick, action_modal_target
   Secondary action button:
     action2_url, action2_label, action2_icon, action2_class (default btn-info),
     action2_target, action2_onclick
@@ -37,7 +37,9 @@ Resolve URLs before including, e.g.:
                     <li class="breadcrumb-item active">{{ active_label|default:title }}</li>
                 </ol>
                 {% endif %}
-                {% if action_onclick and not action_url %}
+                {% if action_modal_target and not action_url %}
+                <button type="button" data-bs-toggle="modal" data-bs-target="{{ action_modal_target }}" class="btn {{ action_class|default:'btn-success' }}">{% if action_icon %}<i class="{{ action_icon }}"></i> {% endif %}{{ action_label }}</button>
+                {% elif action_onclick and not action_url %}
                 <button type="button" onclick="{{ action_onclick }}" class="btn {{ action_class|default:'btn-success' }}">{% if action_icon %}<i class="{{ action_icon }}"></i> {% endif %}{{ action_label }}</button>
                 {% elif action_url %}
                 <a href="{{ action_url }}" class="btn {{ action_class|default:'btn-success' }}"{% if action_target %} target="{{ action_target }}"{% endif %}>{% if action_icon %}<i class="{{ action_icon }}"></i> {% endif %}{{ action_label }}</a>

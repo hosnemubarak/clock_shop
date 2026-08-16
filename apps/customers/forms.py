@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import timezone
 from .models import Customer, Payment, CustomerNote
 from apps.sales.models import Sale
 
@@ -38,6 +39,12 @@ class OpeningBalanceForm(forms.ModelForm):
                 'type': 'date',
             }),
         }
+
+    def clean_opening_balance_date(self):
+        effective_date = self.cleaned_data['opening_balance_date']
+        if effective_date > timezone.localdate():
+            raise forms.ValidationError('The effective date cannot be in the future.')
+        return effective_date
 
 
 class PaymentForm(forms.ModelForm):

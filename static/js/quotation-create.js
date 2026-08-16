@@ -198,7 +198,8 @@
   });
 
   /* ── Custom item ── */
-  const customModal = new bootstrap.Modal(document.getElementById('customItemModal'));
+  const customModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('customItemModal'));
+  const quotationSuccessModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('quotationSuccessModal'));
 
   $btnAddCustom.addEventListener('click', () => {
     document.getElementById('customDesc').value = '';
@@ -244,7 +245,7 @@
     $title.classList.remove('is-invalid');
 
     if (cart.length === 0) {
-      alert('Please add at least one item to the quotation.');
+      showValidationModal('Please add at least one item to the quotation.', 'No Items Added');
       return;
     }
 
@@ -292,13 +293,13 @@
         document.getElementById('btnNewQuotation').onclick = () => location.reload();
         document.getElementById('linkViewQuotation').href = DETAIL_URL.replace('/0/', '/' + qId + '/');
 
-        new bootstrap.Modal(document.getElementById('successModal')).show();
+        quotationSuccessModal.show();
       } else {
-        alert(data.message || 'Failed to save quotation.');
+        showValidationModal(data.message || 'Failed to save quotation.', 'Unable to Save Quotation');
       }
     } catch (err) {
       console.error('Save error', err);
-      alert('Network error. Please try again.');
+      showValidationModal('Network error. Please try again.', 'Unable to Save Quotation');
     } finally {
       $btnSave.disabled = false;
       $btnSave.innerHTML = '<i class="las la-save fs-5 align-middle me-1"></i> Save Quotation';
@@ -307,16 +308,22 @@
 
   /* ── Reset ── */
   $btnReset.addEventListener('click', () => {
-    if (cart.length > 0 && !confirm('Clear all items and start over?')) return;
-    cart = [];
-    $title.value = '';
-    $clientName.value = '';
-    $clientPhone.value = '';
-    $clientAddr.value = '';
-    $validUntil.value = '';
-    $discount.value = '0';
-    $notes.value = '';
-    renderCart();
+    const reset = () => {
+      cart = [];
+      $title.value = '';
+      $clientName.value = '';
+      $clientPhone.value = '';
+      $clientAddr.value = '';
+      $validUntil.value = '';
+      $discount.value = '0';
+      $notes.value = '';
+      renderCart();
+    };
+    if (cart.length > 0) {
+      showDangerModal('Clear all items and start over?', 'Clear quotation', reset);
+      return;
+    }
+    reset();
   });
 
   /* ── Init ── */
