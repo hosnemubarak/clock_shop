@@ -10,6 +10,12 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="mb-3">{{ customer.name }}</h5>
+                <div class="alert alert-info alert-border-left alert-dismissible fade show mb-4" role="alert">
+                    <i class="las la-info-circle me-1"></i>
+                    <strong>What is this?</strong><br>
+                    Enter any old unpaid balance the customer had before we started using this software. It will simply be added to their total due.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
                 <form method="post">
                     {% csrf_token %}
                     {% include 'includes/form_errors.html' %}
