@@ -101,6 +101,9 @@
 
   /* ── Cart rendering ── */
   function renderCart() {
+    // Calculate line totals before writing the row markup. Edit-mode items start
+    // with total=0 and would otherwise display that stale value until edited.
+    recalc();
     $cartBody.innerHTML = '';
     cart.forEach((item, idx) => {
       const row = document.createElement('tr');
@@ -129,7 +132,6 @@
         </td>`;
       $cartBody.appendChild(row);
     });
-    recalc();
   }
 
   /* ── Cart event delegation ── */
