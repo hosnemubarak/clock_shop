@@ -176,7 +176,7 @@
                                 </div>
                             </div>
                             <div id="searchHelp" class="form-text">
-                                Results appear as you type. Press <kbd>Enter</kbd> to add the highlighted product.
+                                Results appear as you type. Press <kbd>Enter</kbd> to add the highlighted product, or <button type="button" class="btn btn-link btn-sm p-0 align-baseline" id="btnSaleCustomAdd">add a custom item</button>.
                             </div>
                             <ul class="sale-search__results list-unstyled"
                                 id="searchResults"
@@ -220,7 +220,7 @@
                             <i class="las la-box" aria-hidden="true"></i>
                             <p class="mb-1 fw-medium">No products yet</p>
                             <p class="mb-0 small">
-                                Search above to add the first item.
+                                Search above or add a custom item to get started.
                             </p>
                         </div>
                     </div>
@@ -327,6 +327,40 @@
             </div>
         </div>
     </form>
+
+    <!-- Custom Item Modal -------------------------------------------------->
+    <div class="modal fade app-modal app-modal--form" id="saleCustomItemModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="saleCustomItemTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
+            <div class="modal-content app-modal__content">
+                <div class="modal-header app-modal__header">
+                    <h5 class="modal-title app-modal__title" id="saleCustomItemTitle">Add Custom Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body app-modal__body">
+                    <div class="mb-3">
+                        <label for="saleCustomDesc" class="form-label">Description <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="saleCustomDesc" maxlength="255" placeholder="e.g. Installation Service">
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <label for="saleCustomPrice" class="form-label">Unit Price</label>
+                            <input type="number" class="form-control" id="saleCustomPrice" value="0" min="0" step="1">
+                        </div>
+                        <div class="col-sm-6">
+                            <label for="saleCustomQty" class="form-label">Quantity</label>
+                            <input type="number" class="form-control" id="saleCustomQty" value="1" min="1" step="1">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer app-modal__footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="btnSaleCustomConfirm">
+                        <i class="las la-plus me-1"></i> Add Item
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Confirmation --------------------------------------------------------->
     <div class="modal fade app-modal app-modal--transaction" id="saleConfirmModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="saleConfirmTitle" aria-hidden="true">
@@ -522,5 +556,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/sale-create.js' %}?v=11"></script>
+<script src="{% static 'js/sale-create.js' %}?v=12"></script>
 {% endblock %}

@@ -46,8 +46,10 @@ function initSaleCreate() {
      'dueLabel', 'orderDiscount', 'amountPaid', 'paymentMethod',
      'btnComplete', 'btnReset', 'customerMetaBox',
      'customerMetaName', 'customerMetaPhone', 'customerMetaDue', 'customerMetaDueRow',
-     'customerLoyaltyBox', 'customerLoyalty',
-     'saleSuccessModal', 'successInvoice', 'btnPrintReceipt', 'btnNextSale',
+      'customerLoyaltyBox', 'customerLoyalty',
+      'saleCustomItemModal', 'saleCustomDesc', 'saleCustomPrice', 'saleCustomQty',
+      'btnSaleCustomAdd', 'btnSaleCustomConfirm',
+      'saleSuccessModal', 'successInvoice', 'btnPrintReceipt', 'btnNextSale',
      'saleConfirmModal', 'confirmGrandTotal', 'confirmItemsCount', 'confirmAmountPaid',
      'confirmDueLabel', 'confirmDueAmount', 'btnConfirmSaleSubmit',
      'linkViewSale', 'newCustomerModal', 'newCustomerForm', 'newCustomerName',
@@ -140,6 +142,7 @@ function initSaleCreate() {
     // ------------------------------------------------------------------ state
 
     var cart = [];      // [{ productId, sku, label, unitPrice, qty, discount, stock }]
+    var nextCustomId = -1;
     var results = [];   // last search payload
     var activeIndex = -1;
     var submitting = false;
@@ -313,10 +316,16 @@ function initSaleCreate() {
     }
 
     function availableOverall(line) {
+        if (line.isCustom) {
+            return Number.MAX_SAFE_INTEGER;
+        }
         return line.stock + (CFG.canQuickTransfer ? line.transferableStock : 0);
     }
 
     function availabilityMessage(line) {
+        if (line.isCustom) {
+            return '';
+        }
         if (CFG.canQuickTransfer && line.transferableStock > 0) {
             return line.stock + ' in shop and ' + line.transferableStock + ' available in warehouses for ' + line.sku + '.';
         }
@@ -390,11 +399,15 @@ function initSaleCreate() {
 
     function findLine(productId) {
         return cart.find(function (line) {
-            return line.productId === productId;
+            return (line.isCustom ? line.cartId : line.productId) === productId;
         });
     }
 
     function renderProductCell(line) {
+        if (line.isCustom) {
+            return '<div class="fw-medium">' + escapeHtml(line.customDescription) + '</div>' +
+                '<div class="text-muted small">Custom item</div>';
+        }
         var over = line.qty > line.stock;
         var canTransfer = CFG.canQuickTransfer && over && line.transferableStock > 0;
         // Stock badges: always show shop stock; show total if different
@@ -428,9 +441,10 @@ function initSaleCreate() {
         el.cartCount.textContent = cart.length + (cart.length === 1 ? ' item' : ' items');
 
         el.cartBody.innerHTML = cart.map(function (line) {
-            var over = line.qty > line.stock;
+            var over = !line.isCustom && line.qty > line.stock;
+            var displayLabel = line.isCustom ? line.customDescription : line.sku;
             return '' +
-                '<tr class="sale-cart__row' + (over ? ' is-over-stock' : '') + '" data-id="' + line.productId + '">' +
+                '<tr class="sale-cart__row' + (over ? ' is-over-stock' : '') + '" data-id="' + (line.isCustom ? line.cartId : line.productId) + '">' +
                     '<td class="ps-3 sale-cart__product">' +
                         '<div class="sale-cart__product-content">' + renderProductCell(line) + '</div>' +
                     '</td>' +
@@ -438,29 +452,29 @@ function initSaleCreate() {
                         '<input type="number" class="form-control form-control-sm text-end sale-num"' +
                         ' data-field="price" value="' + toMajor(line.unitPrice) + '"' +
                         ' step="1" min="0" inputmode="numeric"' +
-                        ' aria-label="Unit price for ' + escapeHtml(line.sku) + '">' +
+                         ' aria-label="Unit price for ' + escapeHtml(displayLabel) + '">' +
                     '</td>' +
                     '<td class="sale-cart__quantity" data-label="Quantity">' +
                         '<div class="input-group input-group-sm sale-qty mx-auto">' +
                             '<button type="button" class="btn btn-outline-secondary" data-step="-1"' +
-                            ' aria-label="Decrease quantity for ' + escapeHtml(line.sku) + '">&minus;</button>' +
+                             ' aria-label="Decrease quantity for ' + escapeHtml(displayLabel) + '">&minus;</button>' +
                             '<input type="number" class="form-control sale-num" data-field="qty"' +
                             ' value="' + line.qty + '" min="' + MIN_QTY + '" max="' + availableOverall(line) + '" step="1" inputmode="numeric"' +
-                            ' aria-label="Quantity for ' + escapeHtml(line.sku) + '">' +
+                            ' aria-label="Quantity for ' + escapeHtml(displayLabel) + '">' +
                             '<button type="button" class="btn btn-outline-secondary" data-step="1"' +
-                            ' aria-label="Increase quantity for ' + escapeHtml(line.sku) + '">+</button>' +
+                            ' aria-label="Increase quantity for ' + escapeHtml(displayLabel) + '">+</button>' +
                         '</div>' +
                     '</td>' +
                     '<td class="text-end d-none sale-cart__discount">' +
                         '<input type="number" class="form-control form-control-sm sale-line-discount sale-num"' +
                         ' data-field="discount" value="' + toMajor(line.discount) + '"' +
                         ' step="1" min="0" inputmode="numeric"' +
-                        ' aria-label="Discount for ' + escapeHtml(line.sku) + '">' +
+                         ' aria-label="Discount for ' + escapeHtml(displayLabel) + '">' +
                     '</td>' +
                     '<td class="text-end fw-medium sale-num sale-cart__line-total" data-label="Line total">' + fmt(lineTotal(line)) + '</td>' +
                     '<td class="sale-cart__remove">' +
                         '<button type="button" class="btn btn-sm btn-ghost-danger" data-remove="1"' +
-                        ' aria-label="Remove ' + escapeHtml(line.sku) + ' from the sale">' +
+                         ' aria-label="Remove ' + escapeHtml(displayLabel) + ' from the sale">' +
                             '<i class="las la-trash-alt" aria-hidden="true"></i>' +
                         '</button>' +
                     '</td>' +
@@ -525,14 +539,14 @@ function initSaleCreate() {
 
         for (var i = 0; i < cart.length; i++) {
             var line = cart[i];
-            if (line.qty > line.stock) {
+            if (!line.isCustom && line.qty > line.stock) {
                 if (CFG.canQuickTransfer && line.transferableStock > 0) {
                     return line.sku + ' needs ' + (line.qty - line.stock) + ' more units. Use "Transfer Stock" to bring stock from a warehouse first.';
                 }
                 return 'Only ' + line.stock + ' of ' + line.sku + ' are in the shop.';
             }
             if (line.discount > lineSubtotal(line)) {
-                return 'The discount on ' + line.sku + ' is more than the line total.';
+                return 'The discount on ' + (line.isCustom ? line.customDescription : line.sku) + ' is more than the line total.';
             }
         }
 
@@ -590,12 +604,18 @@ function initSaleCreate() {
 
         var payload = {
             items: cart.map(function (line) {
-                return {
+                var payload = {
                     product_id: line.productId,
                     quantity: line.qty,
                     unit_price: toMajor(line.unitPrice),
                     discount: toMajor(line.discount)
                 };
+                if (line.isCustom) {
+                    payload.product_id = null;
+                    payload.is_custom = true;
+                    payload.custom_description = line.customDescription;
+                }
+                return payload;
             }),
             customer_id: customerField ? customerField.value : '',
             sale_date: saleDateField ? saleDateField.value : '',
@@ -659,6 +679,45 @@ function initSaleCreate() {
         clearAlert();
         render();
         resetSearch();
+    }
+
+    function openCustomItemModal() {
+        el.saleCustomDesc.value = '';
+        el.saleCustomPrice.value = '0';
+        el.saleCustomQty.value = '1';
+        el.saleCustomDesc.classList.remove('is-invalid');
+        el.saleCustomItemModalInstance.show();
+    }
+
+    function addCustomItem() {
+        var description = el.saleCustomDesc.value.trim();
+        var price = toMinor(el.saleCustomPrice.value);
+        var quantity = parseInt(el.saleCustomQty.value, 10);
+        el.saleCustomDesc.classList.toggle('is-invalid', !description);
+        if (!description || description.length > 255 || isNaN(quantity) || quantity < MIN_QTY) {
+            showAlert(!description ? 'A custom item description is required.' :
+                (description.length > 255 ? 'Custom item description cannot exceed 255 characters.' :
+                    'Custom item quantity must be at least one.'), 'Invalid custom item');
+            return;
+        }
+        cart.push({
+            productId: null,
+            cartId: nextCustomId--,
+            isCustom: true,
+            customDescription: description,
+            sku: '',
+            label: description,
+            meta: 'Custom item',
+            unitPrice: price,
+            qty: quantity,
+            discount: 0,
+            stock: 0,
+            transferableStock: 0,
+            totalStock: 0
+        });
+        el.saleCustomItemModalInstance.hide();
+        clearAlert();
+        render();
     }
 
     /**
@@ -1099,7 +1158,7 @@ function initSaleCreate() {
         }
 
         // Transfer Stock button click.
-        if (event.target.closest('[data-transfer]')) {
+        if (event.target.closest('[data-transfer]') && !line.isCustom) {
             openTransferModal(line.productId);
             return;
         }
@@ -1133,7 +1192,7 @@ function initSaleCreate() {
 
         if (field === 'qty') {
             var typedQty = parseInt(event.target.value, 10);
-            if (!isNaN(typedQty) && typedQty > availableOverall(line)) {
+            if (!line.isCustom && !isNaN(typedQty) && typedQty > availableOverall(line)) {
                 showAlert(availabilityMessage(line), 'Availability reached');
                 line.qty = Math.max(MIN_QTY, availableOverall(line));
                 event.target.value = line.qty;
@@ -1148,7 +1207,7 @@ function initSaleCreate() {
 
         // Repaint the derived numbers only. A full render() would replace the
         // input the cashier is typing in and drop the caret to the end.
-        row.classList.toggle('is-over-stock', line.qty > line.stock);
+        row.classList.toggle('is-over-stock', !line.isCustom && line.qty > line.stock);
         row.querySelector('.sale-cart__product-content').innerHTML = renderProductCell(line);
         row.querySelector('.sale-cart__line-total').textContent = fmt(lineTotal(line));
         renderTotals();
@@ -1206,6 +1265,14 @@ function initSaleCreate() {
     el.btnComplete.addEventListener('click', completeSale);
     el.btnConfirmSaleSubmit.addEventListener('click', submitSale);
     el.newCustomerSaveBtn.addEventListener('click', saveNewCustomer);
+    el.btnSaleCustomAdd.addEventListener('click', openCustomItemModal);
+    el.btnSaleCustomConfirm.addEventListener('click', addCustomItem);
+    el.saleCustomDesc.addEventListener('input', function () {
+        el.saleCustomDesc.classList.remove('is-invalid');
+    });
+    el.saleCustomItemModal.addEventListener('hidden.bs.modal', function () {
+        el.saleCustomDesc.classList.remove('is-invalid');
+    });
 
     // Drop the invalid highlight as soon as the cashier starts fixing the field.
     [el.newCustomerName, el.newCustomerPhone].forEach(function (input) {
@@ -1272,6 +1339,7 @@ function initSaleCreate() {
     confirmModal = bootstrap.Modal.getOrCreateInstance(el.saleConfirmModal);
     successModal = bootstrap.Modal.getOrCreateInstance(el.saleSuccessModal);
     customerModal = bootstrap.Modal.getOrCreateInstance(el.newCustomerModal);
+        el.saleCustomItemModalInstance = bootstrap.Modal.getOrCreateInstance(el.saleCustomItemModal);
     transferModal = el.stockTransferModal ? bootstrap.Modal.getOrCreateInstance(el.stockTransferModal) : null;
 
     // -------------------------------------------------------- stock transfer

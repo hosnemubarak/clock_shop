@@ -47,16 +47,29 @@ class SaleService:
         for index, item_data in enumerate(items, start=1):
             if not isinstance(item_data, dict):
                 raise ValueError(f'Invalid cart item #{index}: {item_data!r}')
-            if item_data.get('product_id') in (None, ''):
+            is_custom = item_data.get('is_custom') is True
+            if not is_custom and item_data.get('product_id') in (None, ''):
                 raise ValueError(f'Cart item #{index} is missing a product.')
-            if item_data.get('unit_price') in (None, ''):
+            if not is_custom and item_data.get('unit_price') in (None, ''):
                 raise ValueError(f'Cart item #{index} is missing a unit price.')
 
-            quantity = _to_int(item_data.get('quantity'), f'quantity for item #{index}')
+            description = str(item_data.get('custom_description') or '').strip()
+            if is_custom and not description:
+                raise ValueError(f'Custom description for item #{index} is required.')
+            if is_custom and len(description) > 255:
+                raise ValueError(f'Custom description for item #{index} cannot exceed 255 characters.')
+
+            quantity = _to_int(
+                item_data.get('quantity', 1) if is_custom else item_data.get('quantity'),
+                f'quantity for item #{index}'
+            )
             if quantity <= 0:
                 raise ValueError(f'Quantity for item #{index} must be greater than zero.')
 
-            unit_price = _to_decimal(item_data.get('unit_price'), f'unit price for item #{index}')
+            unit_price = _to_decimal(
+                item_data.get('unit_price', 0) if is_custom else item_data.get('unit_price'),
+                f'unit price for item #{index}'
+            )
             if unit_price < 0:
                 raise ValueError(f'Unit price for item #{index} cannot be negative.')
 
@@ -70,10 +83,14 @@ class SaleService:
                 raise ValueError(f'Discount for item #{index} cannot exceed the line total.')
 
             parsed_items.append({
-                'product_id': _to_int(item_data.get('product_id'), f'product for item #{index}'),
+                'product_id': None if is_custom else _to_int(
+                    item_data.get('product_id'), f'product for item #{index}'
+                ),
                 'quantity': quantity,
                 'unit_price': unit_price,
                 'discount': discount,
+                'is_custom': is_custom,
+                'custom_description': description,
             })
 
         customer_id = data.get('customer_id')
@@ -123,7 +140,7 @@ class SaleService:
         
         # Prefetch to avoid N+1 queries in loop. Lock the stock rows in a stable
         # order so two concurrent checkouts cannot deadlock against each other.
-        product_ids = sorted({item['product_id'] for item in parsed_items})
+        product_ids = sorted({item['product_id'] for item in parsed_items if not item['is_custom']})
         products_map = {
             p.id: p for p in Product.objects.filter(id__in=product_ids, is_active=True)
         }
@@ -138,6 +155,20 @@ class SaleService:
         stocks_to_update = []
 
         for item_data in parsed_items:
+            if item_data['is_custom']:
+                sale_items_to_create.append(SaleItem(
+                    sale=sale,
+                    product=None,
+                    warehouse=None,
+                    quantity=item_data['quantity'],
+                    unit_price=item_data['unit_price'],
+                    cost_price=Decimal('0.00'),
+                    discount=item_data['discount'],
+                    is_custom=True,
+                    custom_description=item_data['custom_description'],
+                ))
+                continue
+
             product = products_map.get(item_data['product_id'])
             if not product:
                 raise ValueError(

@@ -92,7 +92,7 @@
                     <td class="item-sl">{{ forloop.counter|stringformat:"02d" }}</td>
                     <td class="item-name">
                         {% if item.is_custom %}
-                        {{ item.custom_description }} <em class="item-custom">(Custom)</em>
+                        {{ item.custom_description }}
                         {% else %}
                         {{ item.product.display_name }}
                         {% endif %}

@@ -198,6 +198,97 @@ class ProductSearchApiTests(SaleScreenTestMixin, TestCase):
 
 
 class PosCheckoutTests(SaleScreenTestMixin, TestCase):
+    def test_custom_only_sale_has_no_inventory_impact(self):
+        response = self.checkout({
+            'items': [{
+                'product_id': None,
+                'is_custom': True,
+                'custom_description': 'Installation service',
+                'quantity': 2,
+                'unit_price': '125.00',
+            }],
+            'payment_amount': '250.00',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        sale = Sale.objects.get(pk=response.json()['sale_id'])
+        item = sale.items.get()
+        self.assertTrue(item.is_custom)
+        self.assertIsNone(item.product)
+        self.assertIsNone(item.warehouse)
+        self.assertEqual(item.custom_description, 'Installation service')
+        self.assertEqual(item.cost_price, Decimal('0.00'))
+        self.assertEqual(sale.subtotal, Decimal('250.00'))
+        self.assertEqual(sale.total_cost, Decimal('0.00'))
+        self.assertEqual(ProductStock.objects.get(product=self.product, warehouse=self.shop).quantity, 10)
+
+    def test_mixed_sale_deducts_stock_only_for_product_line(self):
+        response = self.checkout(self.cart(
+            items=[
+                {'product_id': self.product.id, 'quantity': 1, 'unit_price': '1000.00'},
+                {'product_id': None, 'is_custom': True, 'custom_description': 'Gift wrap',
+                 'quantity': 2, 'unit_price': '25.00'},
+            ],
+            payment_amount='1050.00',
+        ))
+
+        self.assertEqual(response.status_code, 200)
+        sale = Sale.objects.get(pk=response.json()['sale_id'])
+        self.assertEqual(sale.items.count(), 2)
+        self.assertEqual(sale.subtotal, Decimal('1050.00'))
+        self.assertEqual(
+            ProductStock.objects.get(product=self.product, warehouse=self.shop).quantity, 9
+        )
+
+    def test_custom_sale_needs_no_product_permission_or_stock_rows(self):
+        view_product = Permission.objects.get(
+            content_type__app_label='inventory', codename='view_product'
+        )
+        self.user.user_permissions.remove(view_product)
+        ProductStock.objects.all().delete()
+
+        response = self.checkout({
+            'items': [{
+                'is_custom': True,
+                'custom_description': 'Legacy balance',
+                'quantity': 1,
+                'unit_price': '50.00',
+            }],
+            'payment_amount': '50.00',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        item = SaleItem.objects.get()
+        self.assertTrue(item.is_custom)
+        self.assertIsNone(item.product)
+        self.assertIsNone(item.warehouse)
+
+    def test_custom_item_validation_is_atomic(self):
+        cases = (
+            ({'is_custom': True, 'custom_description': '', 'quantity': 1, 'unit_price': '1'}, 'description'),
+            ({'is_custom': True, 'custom_description': 'x' * 256, 'quantity': 1, 'unit_price': '1'}, '255'),
+            ({'is_custom': True, 'custom_description': 'Service', 'quantity': 1, 'unit_price': '-1'}, 'negative'),
+            ({'is_custom': True, 'custom_description': 'Service', 'quantity': 0, 'unit_price': '1'}, 'greater than zero'),
+        )
+        for item, fragment in cases:
+            with self.subTest(item=item):
+                response = self.checkout({'items': [item], 'payment_amount': '1'})
+                self.assertEqual(response.status_code, 400)
+                self.assertIn(fragment, response.json()['message'])
+                self.assertNoWriteHappened()
+
+    def test_invalid_product_after_custom_rolls_back(self):
+        response = self.checkout({
+            'items': [
+                {'is_custom': True, 'custom_description': 'Service', 'quantity': 1, 'unit_price': '10'},
+                {'product_id': 999999, 'quantity': 1, 'unit_price': '10'},
+            ],
+            'payment_amount': '20',
+        })
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('not found', response.json()['message'])
+        self.assertNoWriteHappened()
+
     def test_walk_in_cash_sale(self):
         response = self.checkout(self.cart())
         self.assertEqual(response.status_code, 200)
@@ -481,6 +572,11 @@ class SaleCreatePageTests(SaleScreenTestMixin, TestCase):
         response = self.client.get(reverse('sales:sale_create'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'sales/sale_form.html')
+        self.assertContains(response, 'id="btnSaleCustomAdd"')
+        self.assertContains(response, 'id="saleCustomItemModal"')
+        self.assertContains(response, 'id="saleCustomDesc"')
+        self.assertContains(response, 'id="saleCustomPrice"')
+        self.assertContains(response, 'id="saleCustomQty"')
 
     def test_transfer_affordances_follow_permission(self):
         response = self.client.get(reverse('sales:sale_create'))
