@@ -463,8 +463,112 @@ tbody tr:nth-child(even) td { background: #fafbfc; }
     .invoice-paper {
         box-shadow: none;
         border-radius: 0;
-        padding: 14mm 12mm;
+        padding: 8mm 12mm;
         background: white;
+    }
+
+    .header {
+        padding-bottom: 10px;
+    }
+
+    .header-logo {
+        max-height: 68px;
+        margin-bottom: 4px;
+    }
+
+    .header-text h1 {
+        margin-bottom: 3px;
+        font-size: 24px;
+    }
+
+    .header-text p {
+        line-height: 1.5;
+    }
+
+    .doc-type-banner {
+        padding: 6px 0 7px;
+        margin-bottom: 12px;
+    }
+
+    .invoice-info {
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .bill-to-box {
+        padding: 8px 12px;
+    }
+
+    .bill-to-box .section-label {
+        margin-bottom: 4px;
+    }
+
+    .meta-row {
+        padding: 5px 12px;
+    }
+
+    thead tr.col-header-row th {
+        padding: 7px 10px;
+    }
+
+    tbody tr td {
+        padding: 6px 10px;
+    }
+
+    .totals {
+        margin-top: 3px;
+        margin-bottom: 10px;
+    }
+
+    .totals-row {
+        padding: 5px 12px;
+    }
+
+    .grand-total-row {
+        padding: 8px 12px !important;
+    }
+
+    .bottom-content {
+        margin-top: 2px;
+    }
+
+    .in-words-section,
+    .outstanding-section {
+        padding: 7px 11px;
+        margin-bottom: 8px;
+    }
+
+    .notes-section {
+        padding: 8px 12px;
+        margin-bottom: 8px;
+    }
+
+    .signatures {
+        margin-top: 20px;
+        margin-bottom: 10px;
+        gap: 16px;
+    }
+
+    .signature-space {
+        height: 32px;
+    }
+
+    .signature-line {
+        padding-top: 5px;
+    }
+
+    .footer {
+        margin-top: 8px;
+        padding-top: 8px;
+    }
+
+    .footer-text {
+        font-size: 12px;
+    }
+
+    .footer-sub {
+        margin-top: 2px;
+        font-size: 11px;
     }
 
     .no-print { display: none !important; }
@@ -483,7 +587,6 @@ tbody tr:nth-child(even) td { background: #fafbfc; }
         page-break-inside: avoid; break-inside: avoid;
         page-break-before: avoid; break-before: avoid;
     }
-    .bottom-content { page-break-inside: avoid; break-inside: avoid; }
     .signatures { page-break-inside: avoid; break-inside: avoid; }
     .footer { page-break-inside: avoid; break-inside: avoid; }
     .in-words-section, .outstanding-section, .notes-section {
