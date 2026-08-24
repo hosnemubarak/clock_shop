@@ -1,5 +1,5 @@
 /**
- * quotation-create.js — Quotation creation screen.
+ * quotation-create.js — Shared quotation creation and editing screen.
  * Simplified version of sale-create.js (no customer, payment, stock validation).
  */
 (function () {
@@ -11,6 +11,9 @@
 
   const SEARCH_URL  = page.dataset.searchUrl;
   const SAVE_URL    = page.dataset.saveUrl;
+  const CREATE_URL  = page.dataset.createUrl;
+  const UPDATE_URL  = page.dataset.updateUrl;
+  const IS_EDIT     = Boolean(UPDATE_URL);
   const LIST_URL    = page.dataset.listUrl;
   const PRINT_URL   = page.dataset.printUrl;
   const DETAIL_URL  = page.dataset.detailUrl;
@@ -45,8 +48,41 @@
   let nextCustomId = -1;
   let searchTimer  = null;
 
+  function loadInitialData() {
+    const initialNode = document.getElementById('quotationInitialData');
+    if (!initialNode) return;
+
+    const initial = JSON.parse(initialNode.textContent);
+    $title.value = initial.title || '';
+    $clientName.value = initial.client_name || '';
+    $clientPhone.value = initial.client_phone || '';
+    $clientAddr.value = initial.client_address || '';
+    $date.value = initial.quotation_date || '';
+    $validUntil.value = initial.valid_until || '';
+    $discount.value = initial.discount || '0';
+    $notes.value = initial.notes || '';
+    cart = (initial.items || []).map(item => ({
+      id: item.product_id,
+      sku: item.sku || '',
+      name: item.display_name || 'Product removed',
+      price: parseFloat(item.unit_price) || 0,
+      qty: Math.max(1, parseInt(item.quantity) || 1),
+      discount: Math.max(0, parseFloat(item.discount) || 0),
+      isCustom: Boolean(item.is_custom),
+      customDesc: item.custom_description || '',
+      total: 0,
+    }));
+  }
+
   /* ── Helpers ── */
   const fmt = (n) => CURRENCY + Number(n).toLocaleString('en-IN');
+  const escapeHtml = (value) => String(value).replace(/[&<>'"]/g, char => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#39;',
+    '"': '&quot;',
+  })[char]);
 
   function recalc() {
     let sub = 0;
@@ -70,18 +106,18 @@
       const row = document.createElement('tr');
       row.innerHTML = `
         <td class="ps-3">
-          <span class="fw-medium">${item.isCustom ? item.customDesc : item.name}</span>
-          ${!item.isCustom && item.sku ? '<br><small class="text-muted">' + item.sku + '</small>' : ''}
+          <span class="fw-medium">${escapeHtml(item.isCustom ? item.customDesc : item.name)}</span>
+          ${!item.isCustom && item.sku ? '<br><small class="text-muted">' + escapeHtml(item.sku) + '</small>' : ''}
         </td>
         <td class="text-end">
           <input type="number" class="form-control form-control-sm text-end sale-num cart-price"
-                 data-idx="${idx}" value="${item.price}" min="0" step="1" style="width:6rem;margin-left:auto;">
+                 data-idx="${idx}" value="${escapeHtml(item.price)}" min="0" step="1" style="width:6rem;margin-left:auto;">
         </td>
         <td class="text-center">
           <div class="input-group input-group-sm justify-content-center" style="width:7rem;margin:auto;">
             <button type="button" class="btn btn-light cart-qty-btn" data-idx="${idx}" data-dir="-1">−</button>
             <input type="number" class="form-control text-center sale-num cart-qty"
-                   data-idx="${idx}" value="${item.qty}" min="1" style="width:3rem;">
+                    data-idx="${idx}" value="${escapeHtml(item.qty)}" min="1" style="width:3rem;">
             <button type="button" class="btn btn-light cart-qty-btn" data-idx="${idx}" data-dir="1">+</button>
           </div>
         </td>
@@ -152,8 +188,8 @@
           li.innerHTML = `
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <span class="fw-medium">${p.display_name}</span>
-                <br><small class="text-muted">${p.sku} ${p.brand ? '· ' + p.brand : ''}</small>
+                 <span class="fw-medium">${escapeHtml(p.display_name)}</span>
+                 <br><small class="text-muted">${escapeHtml(p.sku)} ${p.brand ? '· ' + escapeHtml(p.brand) : ''}</small>
               </div>
               <span class="badge bg-primary-subtle text-primary">${CURRENCY}${Number(p.price).toLocaleString('en-IN')}</span>
             </div>`;
@@ -250,7 +286,7 @@
     }
 
     $btnSave.disabled = true;
-    $btnSave.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+    $btnSave.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> ' + (IS_EDIT ? 'Updating...' : 'Saving...');
 
     const payload = {
       title: title,
@@ -272,7 +308,7 @@
     };
 
     try {
-      const resp = await fetch(SAVE_URL, {
+      const resp = await fetch(IS_EDIT ? UPDATE_URL : SAVE_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -291,6 +327,9 @@
           window.open(PRINT_URL.replace('/0/', '/' + qId + '/'), '_blank');
         };
         document.getElementById('btnNewQuotation').onclick = () => location.reload();
+        if (IS_EDIT) {
+          document.getElementById('btnNewQuotation').onclick = () => { window.location.href = CREATE_URL; };
+        }
         document.getElementById('linkViewQuotation').href = DETAIL_URL.replace('/0/', '/' + qId + '/');
 
         quotationSuccessModal.show();
@@ -302,7 +341,7 @@
       showValidationModal('Network error. Please try again.', 'Unable to Save Quotation');
     } finally {
       $btnSave.disabled = false;
-      $btnSave.innerHTML = '<i class="las la-save fs-5 align-middle me-1"></i> Save Quotation';
+      $btnSave.innerHTML = '<i class="las la-save fs-5 align-middle me-1"></i> ' + (IS_EDIT ? 'Update Quotation' : 'Save Quotation');
     }
   });
 
@@ -327,5 +366,6 @@
   });
 
   /* ── Init ── */
+  loadInitialData();
   renderCart();
 })();

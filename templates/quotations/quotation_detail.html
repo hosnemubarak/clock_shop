@@ -5,7 +5,12 @@
 
 {% block content %}
 {% url 'quotations:quotation_print' quotation.pk as print_url %}
+{% if perms.quotations.change_quotation %}
+{% url 'quotations:quotation_edit' quotation.pk as edit_url %}
+{% include 'includes/page_header.html' with title='Quotation: '|add:quotation.quotation_number action_url=print_url action_label='Print' action_icon='las la-print' action_class='btn-primary' action_target='_blank' action2_url=edit_url action2_label='Edit' action2_icon='las la-pen' action2_class='btn-info' %}
+{% else %}
 {% include 'includes/page_header.html' with title='Quotation: '|add:quotation.quotation_number action_url=print_url action_label='Print' action_icon='las la-print' action_class='btn-primary' action_target='_blank' %}
+{% endif %}
 
 <div class="row">
     <div class="col-lg-8">
@@ -132,6 +137,11 @@
         <div class="card">
             <div class="card-body">
                 <div class="d-grid gap-2">
+                    {% if perms.quotations.change_quotation %}
+                    <a href="{% url 'quotations:quotation_edit' quotation.pk %}" class="btn btn-info">
+                        <i class="las la-pen me-1"></i> Edit Quotation
+                    </a>
+                    {% endif %}
                     <a href="{% url 'quotations:quotation_print' quotation.pk %}" class="btn btn-primary" target="_blank">
                         <i class="las la-print me-1"></i> Print Quotation
                     </a>

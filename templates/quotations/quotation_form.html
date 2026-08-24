@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}New Quotation | {{ SHOP_NAME }}{% endblock %}
+{% block title %}{% if is_edit %}Edit {{ quotation.quotation_number }}{% else %}New Quotation{% endif %} | {{ SHOP_NAME }}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/sale-create.css' %}?v=3">
@@ -12,12 +12,19 @@
      class="sale-page"
      data-search-url="{% url 'quotations:api_product_search' %}"
      data-save-url="{% url 'quotations:api_quotation_save' %}"
+     data-create-url="{% url 'quotations:quotation_create' %}"
+     {% if is_edit %}data-update-url="{% url 'quotations:api_quotation_update' quotation.pk %}" data-quotation-id="{{ quotation.pk }}"{% endif %}
      data-list-url="{% url 'quotations:quotation_list' %}"
      data-print-url="{% url 'quotations:quotation_print' 0 %}"
      data-detail-url="{% url 'quotations:quotation_detail' 0 %}"
      data-currency="{{ CURRENCY_SYMBOL }}">
 
-    {% include 'includes/page_header.html' with title='New Quotation' %}
+    {% if is_edit %}
+        {% include 'includes/page_header.html' with title='Edit Quotation: '|add:quotation.quotation_number %}
+        {{ initial_data|json_script:"quotationInitialData" }}
+    {% else %}
+        {% include 'includes/page_header.html' with title='New Quotation' %}
+    {% endif %}
 
     <form id="quotationForm" novalidate>
         {% csrf_token %}
@@ -190,7 +197,7 @@
                     <div class="sale-actions d-grid gap-2">
                         <button type="button" class="btn btn-success btn-lg" id="btnSave">
                             <i class="las la-save fs-5 align-middle me-1"></i>
-                            Save Quotation
+                            {% if is_edit %}Update Quotation{% else %}Save Quotation{% endif %}
                         </button>
                         <button type="button" class="btn btn-light" id="btnReset">
                             Clear all
@@ -240,13 +247,13 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content app-modal__content">
                 <div class="modal-header app-modal__header">
-                    <h5 class="modal-title app-modal__title" id="quotationSuccessTitle">Quotation Saved</h5>
+                    <h5 class="modal-title app-modal__title" id="quotationSuccessTitle">Quotation {% if is_edit %}Updated{% else %}Saved{% endif %}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body app-modal__body app-modal__result">
                     <i class="las la-check-circle app-modal__result-icon" aria-hidden="true"></i>
                     <p class="text-muted mb-4">
-                        Quotation <span class="fw-semibold" id="successNumber"></span> has been created.
+                        Quotation <span class="fw-semibold" id="successNumber"></span> has been {% if is_edit %}updated{% else %}created{% endif %}.
                     </p>
                     <div class="d-grid gap-2">
                         <button type="button" class="btn btn-primary" id="btnPrintQuotation">
@@ -265,5 +272,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/quotation-create.js' %}?v=1"></script>
+<script src="{% static 'js/quotation-create.js' %}?v=2"></script>
 {% endblock %}
