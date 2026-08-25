@@ -15,20 +15,29 @@
 
     <div class="invoice-paper">
 
+        <!-- ===== WATERMARK ===== -->
+        <div class="watermark">
+            {% if SHOP_LOGO %}
+                <img src="{{ SHOP_LOGO }}" alt="">
+            {% else %}
+                <img src="{% static 'images/skyzone-logo.png' %}" alt="">
+            {% endif %}
+        </div>
+
         <!-- ===== COMPANY HEADER ===== -->
         <div class="header">
-            <div class="header-text">
-                <h1>{{ SHOP_NAME }}</h1>
-                <p class="header-address">
-                    {% if SHOP_ADDRESS %}{{ SHOP_ADDRESS|linebreaksbr }}{% else %}Shop{% endif %}
-                </p>
-            </div>
             <div class="header-logo-container">
                 {% if SHOP_LOGO %}
                     <img src="{{ SHOP_LOGO }}" alt="{{ SHOP_NAME }} Logo" class="header-logo">
                 {% else %}
                     <img src="{% static 'images/skyzone-logo.png' %}" alt="{{ SHOP_NAME }} Logo" class="header-logo">
                 {% endif %}
+            </div>
+            <div class="header-text">
+                <h1><span class="brand-main">SKY ZONE</span> <span class="brand-sub">INTERNATIONAL</span></h1>
+                <p class="header-address">
+                    {% if SHOP_ADDRESS %}{{ SHOP_ADDRESS|linebreaksbr }}{% else %}Shop{% endif %}
+                </p>
             </div>
         </div>
 
