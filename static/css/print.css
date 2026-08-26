@@ -136,7 +136,7 @@ table, .totals, .bottom-content { position: relative; z-index: 1; }
 .header-text h1 {
     margin: 0 0 6px 0;
     font-family: 'Montserrat', sans-serif;
-    font-size: 30px;
+    font-size: 32px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 2px;
@@ -662,7 +662,7 @@ tbody tr:nth-child(even) td { background: #fafbfc; }
 
     .header-text h1 {
         margin-bottom: 3px;
-        font-size: 30px;
+        font-size: 32px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
