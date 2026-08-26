@@ -11,7 +11,7 @@
 
 <body>
     <div class="no-print">
-        <button onclick="window.print()" class="print-btn">Print Quotation</button>
+        <button onclick="window.printInvoiceDocument()" class="print-btn">Print Quotation</button>
         <a href="{% url 'quotations:quotation_detail' quotation.pk %}" class="back-link">&larr; Back to Quotation</a>
     </div>
 
@@ -27,7 +27,7 @@
         </div>
 
         <!-- ===== COMPANY HEADER ===== -->
-        <div class="header">
+        <div class="header" data-print-full-header>
             <div class="header-logo-container">
                 {% if SHOP_LOGO %}
                     <img src="{{ SHOP_LOGO }}" alt="{{ SHOP_NAME }} Logo" class="header-logo">
@@ -36,7 +36,7 @@
                 {% endif %}
             </div>
             <div class="header-text">
-                <h1><span class="brand-main">SKY ZONE</span> <span class="brand-sub">INTERNATIONAL</span></h1>
+                <h1>{{ SHOP_NAME|default:"Shop" }}</h1>
                 <p class="header-address">
                     {% if SHOP_ADDRESS %}{{ SHOP_ADDRESS|linebreaksbr }}{% else %}Shop{% endif %}
                 </p>
@@ -83,12 +83,12 @@
         </div>
 
         <!-- ===== QUOTATION TITLE ===== -->
-        <div style="padding: 6px 0 10px; font-weight: 600; font-size: 13px;">
+        <div data-print-document-title style="padding: 6px 0 10px; font-weight: 600; font-size: 13px;">
             Re: {{ quotation.title }}
         </div>
 
         <!-- ===== ITEMS TABLE ===== -->
-        <table>
+        <table data-print-items>
             <thead>
                 <tr class="col-header-row">
                     <th class="w-5">SL.</th>
@@ -177,6 +177,7 @@
         </div><!-- end bottom-content -->
 
     </div><!-- end invoice-paper -->
+    <script src="{% static 'js/print-pagination.js' %}"></script>
 </body>
 
 </html>

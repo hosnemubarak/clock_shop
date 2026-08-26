@@ -622,119 +622,189 @@ tbody tr:nth-child(even) td { background: #fafbfc; }
     margin: 0;
 }
 
+.print-pages {
+    display: none;
+    font-size: 12px;
+}
+.print-page {
+    width: 210mm;
+    height: 297mm;
+    overflow: hidden;
+    position: relative;
+    background: white;
+}
+.print-page-content {
+    width: 100%;
+    height: 281mm;
+    padding: 8mm 12mm 0;
+    overflow: hidden;
+    position: relative;
+}
+.print-page > .watermark {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    transform: none;
+    z-index: 0;
+}
+.print-page > .watermark img {
+    display: block;
+    width: 420px;
+    max-width: 70%;
+    margin: 0;
+}
+.print-final-content { position: relative; z-index: 1; }
+.print-page .header {
+    flex-direction: row;
+    align-items: center;
+    padding-bottom: 10px;
+}
+.print-page .header-logo {
+    max-width: 280px;
+    max-height: 90px;
+    margin-bottom: 0;
+}
+.print-page .header-text {
+    margin-left: 24px;
+    width: auto;
+}
+.print-page .header-text h1 {
+    margin-bottom: 3px;
+    font-size: 32px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.print-page .header-text p { line-height: 1.5; }
+.print-page .doc-type-banner {
+    padding: 6px 0 7px;
+    margin-bottom: 12px;
+}
+.print-page .invoice-info {
+    flex-direction: row;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.print-page .bill-to-box { flex: 1; width: auto; padding: 8px 12px; }
+.print-page .meta-box { width: 42%; }
+.print-page .bill-to-box .section-label { margin-bottom: 4px; }
+.print-page .meta-row { padding: 5px 12px; }
+.print-page thead tr.col-header-row th { padding: 7px 10px; }
+.print-page tbody tr td { padding: 6px 10px; }
+.print-page .totals { margin-top: 3px; margin-bottom: 10px; }
+.print-page .totals-inner { max-width: 320px; }
+.print-page .totals-row { padding: 5px 12px; }
+.print-page .grand-total-row { padding: 8px 12px !important; }
+.print-page .bottom-content { margin-top: 2px; }
+.print-page .in-words-section,
+.print-page .outstanding-section { padding: 7px 11px; margin-bottom: 8px; }
+.print-page .notes-section { padding: 8px 12px; margin-bottom: 8px; }
+.print-page .signatures {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    gap: 16px;
+}
+.print-page .signature-box { min-width: 0; }
+.print-page .signature-space { height: 32px; }
+.print-page .signature-line { padding-top: 5px; }
+.print-page .footer { margin-top: 8px; padding-top: 8px; }
+.print-page .footer-text { font-size: 12px; }
+.print-page .footer-sub { margin-top: 2px; font-size: 11px; }
+.print-page-number {
+    position: absolute;
+    right: 12mm;
+    bottom: 5mm;
+    min-width: 26mm;
+    padding-top: 1.5mm;
+    border-top: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    text-align: right;
+}
+.print-pages.is-measuring {
+    display: block;
+    position: fixed;
+    left: -300mm;
+    top: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
 @media print {
+    html,
     body {
-        padding: 0;
+        width: 210mm;
         margin: 0;
+        padding: 0;
         max-width: none;
         background: white;
-        display: block;
-        min-height: auto;
         font-size: 12px;
     }
 
-    .no-print { display: none !important; }
-
-    .invoice-paper {
+    body > .no-print { display: none !important; }
+    body > .invoice-paper {
         box-shadow: none;
         border-radius: 0;
         padding: 8mm 12mm;
+        overflow: visible;
         background: white;
     }
+    body.print-pagination-ready > .invoice-paper { display: none !important; }
+    body > .print-pages.is-ready { display: block !important; }
 
-    /* Restore horizontal header for print */
-    .header {
-        flex-direction: row;
-        align-items: center;
-        padding-bottom: 10px;
+    body:not(.print-pagination-ready) > .invoice-paper .watermark {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
+        transform: none;
+    }
+    body:not(.print-pagination-ready) > .invoice-paper .watermark img {
+        display: block;
+        width: 420px;
+        max-width: 70%;
+        margin: 0;
     }
 
-    .header-logo {
-        max-width: 280px;
-        max-height: 90px;
-        margin-bottom: 0;
+    .print-page {
+        margin: 0;
+        page-break-after: always;
+        break-after: page;
+    }
+    .print-page:last-child {
+        page-break-after: auto;
+        break-after: auto;
     }
 
-    .header-text {
-        margin-left: 24px;
-        width: auto;
+    .print-page tr,
+    .print-page .invoice-info,
+    .print-page .totals,
+    .print-page .signatures,
+    .print-page .footer,
+    .print-page .in-words-section,
+    .print-page .outstanding-section,
+    .print-page .notes-section {
+        page-break-inside: avoid;
+        break-inside: avoid;
     }
 
-    .header-text h1 {
-        margin-bottom: 3px;
-        font-size: 32px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .header-text p { line-height: 1.5; }
-
-    .doc-type-banner {
-        padding: 6px 0 7px;
-        margin-bottom: 12px;
-    }
-
-    .invoice-info {
-        flex-direction: row;
-        gap: 12px;
-        margin-bottom: 12px;
-    }
-
-    .bill-to-box { flex: 1; width: auto; padding: 8px 12px; }
-    .meta-box    { width: 42%; }
-
-    .bill-to-box .section-label { margin-bottom: 4px; }
-
-    .meta-row { padding: 5px 12px; }
-
-    thead tr.col-header-row th { padding: 7px 10px; }
-    tbody tr td { padding: 6px 10px; }
-
-    .totals        { margin-top: 3px; margin-bottom: 10px; }
-    .totals-inner  { max-width: 320px; }
-    .totals-row    { padding: 5px 12px; }
-
-    .grand-total-row { padding: 8px 12px !important; }
-
-    .bottom-content { margin-top: 2px; }
-
-    .in-words-section,
-    .outstanding-section { padding: 7px 11px; margin-bottom: 8px; }
-
-    .notes-section { padding: 8px 12px; margin-bottom: 8px; }
-
-    .signatures {
-        flex-direction: row;
-        flex-wrap: nowrap;
-        margin-top: 20px;
-        margin-bottom: 10px;
-        gap: 16px;
-    }
-
-    .signature-box { min-width: 0; }
-    .signature-space { height: 32px; }
-    .signature-line  { padding-top: 5px; }
-
-    .footer      { margin-top: 8px; padding-top: 8px; }
-    .footer-text { font-size: 12px; }
-    .footer-sub  { margin-top: 2px; font-size: 11px; }
-
-    /* Force color printing */
     * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
-
-    /* Page-break rules */
-    thead { display: table-header-group; }
-    tfoot { display: table-footer-group; }
-    tr              { page-break-inside: avoid; break-inside: avoid; }
-    .invoice-info   { page-break-inside: avoid; break-inside: avoid; }
-    .totals         { page-break-inside: avoid; break-inside: avoid; page-break-before: avoid; break-before: avoid; }
-    .signatures     { page-break-inside: avoid; break-inside: avoid; }
-    .footer         { page-break-inside: avoid; break-inside: avoid; }
-    .in-words-section,
-    .outstanding-section,
-    .notes-section  { page-break-inside: avoid; break-inside: avoid; }
 }

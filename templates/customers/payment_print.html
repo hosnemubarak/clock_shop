@@ -9,7 +9,7 @@
 </head>
 <body>
     <div class="no-print">
-        <button onclick="window.print()" class="print-btn">Print Receipt</button>
+        <button onclick="window.printInvoiceDocument()" class="print-btn">Print Receipt</button>
         <button onclick="window.close()" class="back-link">&times; Close</button>
     </div>
 
@@ -25,7 +25,7 @@
         </div>
 
         <!-- ===== COMPANY HEADER ===== -->
-        <div class="header">
+        <div class="header" data-print-full-header>
             <div class="header-logo-container">
                 {% if SHOP_LOGO %}
                     <img src="{{ SHOP_LOGO }}" alt="{{ SHOP_NAME }} Logo" class="header-logo">
@@ -34,7 +34,7 @@
                 {% endif %}
             </div>
             <div class="header-text">
-                <h1><span class="brand-main">SKY ZONE</span> <span class="brand-sub">INTERNATIONAL</span></h1>
+                <h1>{{ SHOP_NAME|default:"Shop" }}</h1>
                 <p class="header-address">
                     {% if SHOP_ADDRESS %}{{ SHOP_ADDRESS|linebreaksbr }}{% else %}Shop{% endif %}
                 </p>
@@ -85,7 +85,7 @@
         </div>
 
         <!-- ===== PAYMENT DESCRIPTION TABLE ===== -->
-        <table>
+        <table data-print-items>
             <thead>
                 <tr class="col-header-row">
                     <th>Description</th>
@@ -159,6 +159,7 @@
         </div><!-- end bottom-content -->
 
     </div><!-- end invoice-paper -->
+    <script src="{% static 'js/print-pagination.js' %}"></script>
 </body>
 </html>
 
