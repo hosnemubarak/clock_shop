@@ -93,6 +93,26 @@
     color: #031e3b;
 }
 
+/* 5. Auth Logo responsive height */
+.auth-logo {
+    height: 45px;
+}
+@media (min-width: 768px) {
+    .auth-logo {
+        height: 75px;
+    }
+}
+
+/* 6. Dashboard Logo responsive height */
+.dashboard-logo-lg {
+    height: 40px;
+}
+@media (min-width: 768px) {
+    .dashboard-logo-lg {
+        height: 60px;
+    }
+}
+
 /* Custom Utility Classes */
 
 .min-h-300 {
