@@ -38,16 +38,16 @@ Resolve URLs before including, e.g.:
                 </ol>
                 {% endif %}
                 {% if action_modal_target and not action_url %}
-                <button type="button" data-bs-toggle="modal" data-bs-target="{{ action_modal_target }}" class="btn {{ action_class|default:'btn-success' }}">{% if action_icon %}<i class="{{ action_icon }}"></i> {% endif %}{{ action_label }}</button>
+                <button type="button" data-bs-toggle="modal" data-bs-target="{{ action_modal_target }}" class="btn {{ action_class|default:'btn-primary' }}">{% if action_icon %}<i class="{{ action_icon }}"></i> {% endif %}{{ action_label }}</button>
                 {% elif action_onclick and not action_url %}
-                <button type="button" onclick="{{ action_onclick }}" class="btn {{ action_class|default:'btn-success' }}">{% if action_icon %}<i class="{{ action_icon }}"></i> {% endif %}{{ action_label }}</button>
+                <button type="button" onclick="{{ action_onclick }}" class="btn {{ action_class|default:'btn-primary' }}">{% if action_icon %}<i class="{{ action_icon }}"></i> {% endif %}{{ action_label }}</button>
                 {% elif action_url %}
-                <a href="{{ action_url }}" class="btn {{ action_class|default:'btn-success' }}"{% if action_target %} target="{{ action_target }}"{% endif %}>{% if action_icon %}<i class="{{ action_icon }}"></i> {% endif %}{{ action_label }}</a>
+                <a href="{{ action_url }}" class="btn {{ action_class|default:'btn-primary' }}"{% if action_target %} target="{{ action_target }}"{% endif %}>{% if action_icon %}<i class="{{ action_icon }}"></i> {% endif %}{{ action_label }}</a>
                 {% endif %}
                 {% if action2_onclick and not action2_url %}
-                <button type="button" onclick="{{ action2_onclick }}" class="btn {{ action2_class|default:'btn-info' }}">{% if action2_icon %}<i class="{{ action2_icon }}"></i> {% endif %}{{ action2_label }}</button>
+                <button type="button" onclick="{{ action2_onclick }}" class="btn {{ action2_class|default:'btn-soft-primary' }}">{% if action2_icon %}<i class="{{ action2_icon }}"></i> {% endif %}{{ action2_label }}</button>
                 {% elif action2_url %}
-                <a href="{{ action2_url }}" class="btn {{ action2_class|default:'btn-info' }}"{% if action2_target %} target="{{ action2_target }}"{% endif %}>{% if action2_icon %}<i class="{{ action2_icon }}"></i> {% endif %}{{ action2_label }}</a>
+                <a href="{{ action2_url }}" class="btn {{ action2_class|default:'btn-soft-primary' }}"{% if action2_target %} target="{{ action2_target }}"{% endif %}>{% if action2_icon %}<i class="{{ action2_icon }}"></i> {% endif %}{{ action2_label }}</a>
                 {% endif %}
                 {% if action3_onclick and not action3_url %}
                 <button type="button" onclick="{{ action3_onclick }}" class="btn {{ action3_class|default:'btn-secondary' }}">{% if action3_icon %}<i class="{{ action3_icon }}"></i> {% endif %}{{ action3_label }}</button>

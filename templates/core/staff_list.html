@@ -42,7 +42,7 @@
                                         <span class="badge bg-danger">Superuser / Admin</span>
                                     {% else %}
                                         {% for group in staff.groups.all %}
-                                            <span class="badge bg-info">{{ group.name }}</span>
+                                            <span class="badge bg-primary">{{ group.name }}</span>
                                         {% empty %}
                                             <span class="badge bg-secondary">No Role</span>
                                         {% endfor %}
@@ -276,7 +276,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 strengthBar.className = 'progress-bar bg-warning';
                 strengthText.innerText = 'Fair - Try adding uppercase or special characters';
             } else if (strength <= 75) {
-                strengthBar.className = 'progress-bar bg-info';
+                strengthBar.className = 'progress-bar bg-primary';
                 strengthText.innerText = 'Good - Almost there';
             } else {
                 strengthBar.className = 'progress-bar bg-success';

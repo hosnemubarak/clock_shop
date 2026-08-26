@@ -73,7 +73,7 @@
                                 <td>{{ payment.get_payment_method_display }}</td>
                                 <td>
                                     {% if payment.sale %}
-                                    <a href="{% url 'sales:sale_detail' payment.sale.pk %}" class="badge bg-info-subtle text-info">Sale #{{ payment.sale.pk }}</a>
+                                    <a href="{% url 'sales:sale_detail' payment.sale.pk %}" class="badge bg-primary-subtle text-primary">Sale #{{ payment.sale.pk }}</a>
                                     {% else %}
                                     {{ payment.reference|default:"-" }}
                                     {% endif %}

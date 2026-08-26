@@ -7,7 +7,7 @@
 {% url 'warehouse:transfer_create' as transfer_url %}
 {% if request.user|is_cashier %}
     {% url 'warehouse:warehouse_edit' warehouse.pk as edit_url %}
-    {% include 'includes/page_header.html' with title=warehouse.name action_url=edit_url action_label='Edit' action_icon='las la-pen' action_class='btn-primary' action2_url=transfer_url action2_label='Transfer Stock' action2_icon='las la-exchange-alt' action2_class='btn-info' %}
+    {% include 'includes/page_header.html' with title=warehouse.name action_url=edit_url action_label='Edit' action_icon='las la-pen' action_class='btn-primary' action2_url=transfer_url action2_label='Transfer Stock' action2_icon='las la-exchange-alt' action2_class='btn-soft-primary' %}
 {% else %}
     {% include 'includes/page_header.html' with title=warehouse.name action_url=transfer_url action_label='Transfer Stock' action_icon='las la-exchange-alt' action_class='btn-info' %}
 {% endif %}
@@ -105,7 +105,7 @@
                     </tr>
                     <tr>
                         <td class="text-muted">Type</td>
-                        <td>{% if warehouse.is_shop %}<span class="badge bg-info">Shop</span>{% else %}Warehouse{% endif %}</td>
+                        <td>{% if warehouse.is_shop %}<span class="badge bg-primary">Shop</span>{% else %}Warehouse{% endif %}</td>
                     </tr>
                     <tr>
                         <td class="text-muted">Phone</td>

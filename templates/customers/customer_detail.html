@@ -7,7 +7,7 @@
 {% block content %}
 {% url 'customers:customer_edit' customer.pk as edit_url %}
 {% url 'customers:customer_statement' customer.pk as statement_url %}
-{% include 'includes/page_header.html' with title='Customer Details' action_url=edit_url action_label='Edit' action_icon='las la-pen' action_class='btn-primary' action2_url=statement_url action2_label='Statement' action2_icon='las la-file-alt' action2_class='btn-info' %}
+{% include 'includes/page_header.html' with title='Customer Details' action_url=edit_url action_label='Edit' action_icon='las la-pen' action_class='btn-primary' action2_url=statement_url action2_label='Statement' action2_icon='las la-file-alt' action2_class='btn-soft-primary' %}
 
 <!-- Stat Cards Row -->
 <div class="row mb-4">
@@ -103,7 +103,7 @@
                 <ul class="list-unstyled mb-0">
                     <li class="d-flex mb-3">
                         <div class="avatar-xs me-3 flex-shrink-0">
-                            <span class="avatar-title bg-light text-secondary rounded fs-5"><i class="las la-phone"></i></span>
+                            <span class="avatar-title bg-light text-primary rounded fs-5"><i class="las la-phone"></i></span>
                         </div>
                         <div>
                             <p class="mb-0 text-muted small">Phone</p>
@@ -112,7 +112,7 @@
                     </li>
                     <li class="d-flex mb-3">
                         <div class="avatar-xs me-3 flex-shrink-0">
-                            <span class="avatar-title bg-light text-secondary rounded fs-5"><i class="las la-envelope"></i></span>
+                            <span class="avatar-title bg-light text-primary rounded fs-5"><i class="las la-envelope"></i></span>
                         </div>
                         <div>
                             <p class="mb-0 text-muted small">Email</p>
@@ -121,7 +121,7 @@
                     </li>
                     <li class="d-flex">
                         <div class="avatar-xs me-3 flex-shrink-0">
-                            <span class="avatar-title bg-light text-secondary rounded fs-5"><i class="las la-map-marker"></i></span>
+                            <span class="avatar-title bg-light text-primary rounded fs-5"><i class="las la-map-marker"></i></span>
                         </div>
                         <div>
                             <p class="mb-0 text-muted small">Address</p>
@@ -252,7 +252,7 @@
                                         <td class="ps-4">{{ payment.payment_date|date:"M d, Y H:i" }}</td>
                                         <td class="text-success fw-medium">{{ CURRENCY_SYMBOL }}{{ payment.amount|floatformat:0 }}</td>
                                         <td>
-                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
                                                 {{ payment.get_payment_method_display }}
                                             </span>
                                         </td>

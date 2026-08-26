@@ -1,6 +1,6 @@
 /* =============================================================
    BRAND PRIMARY COLOR OVERRIDE
-   Replaces the default Velzon theme primary (#438a7a teal) with
+   Replaces the default Velzon theme primary (#042A52 teal) with
    Skyzone Dark Blue (#042A52) across all components globally.
    ============================================================= */
 
@@ -78,6 +78,19 @@
 .btn-primary.btn-animation {
     background-color: #042A52 !important;
     border-color: #042A52 !important;
+}
+
+/* 4. Pagination overrides */
+.page-item.active .page-link {
+    background-color: #042A52 !important;
+    border-color: #042A52 !important;
+    color: #ffffff !important;
+}
+.page-link {
+    color: #042A52;
+}
+.page-link:hover {
+    color: #031e3b;
 }
 
 /* Custom Utility Classes */

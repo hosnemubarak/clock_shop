@@ -48,14 +48,14 @@
             <div class="card-body">
                 <div class="d-flex gap-2">
                     {% if request.user|is_cashier %}
-                    <a href="{% url 'warehouse:warehouse_create' %}" class="btn btn-success flex-grow-1">
+                    <a href="{% url 'warehouse:warehouse_create' %}" class="btn btn-primary flex-grow-1">
                         <i class="las la-plus"></i> Add Warehouse
                     </a>
                     {% endif %}
                     <a href="{% url 'warehouse:transfer_list' %}" class="btn btn-primary flex-grow-1">
                         <i class="las la-exchange-alt"></i> View Transfers
                     </a>
-                    <a href="{% url 'warehouse:transfer_create' %}" class="btn btn-info flex-grow-1">
+                    <a href="{% url 'warehouse:transfer_create' %}" class="btn btn-soft-primary flex-grow-1">
                         <i class="las la-truck"></i> New Transfer
                     </a>
                 </div>
@@ -106,7 +106,7 @@
                                 <td>{{ warehouse.phone|default:"-" }}</td>
                                 <td>
                                     {% if warehouse.is_shop %}
-                                    <span class="badge bg-info-subtle text-info">Shop</span>
+                                    <span class="badge bg-primary-subtle text-primary">Shop</span>
                                     {% else %}
                                     <span class="badge bg-secondary-subtle text-secondary">Warehouse</span>
                                     {% endif %}
