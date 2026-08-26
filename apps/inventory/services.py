@@ -64,7 +64,7 @@ def get_product_stock_history(product, limit=None):
             'date': so.stockout.date,
             'type': 'STOCK_OUT',
             'type_label': f'Stock Out ({so.stockout.get_reason_display()})',
-            'reference': so.stockout.reference_number,
+            'reference': so.stockout.stockout_number,
             'warehouse': so.stockout.warehouse.name if so.stockout.warehouse else 'N/A',
             'quantity': -so.quantity,
             'price': so.cost_price,
