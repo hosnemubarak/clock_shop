@@ -6,7 +6,7 @@
 {% block content %}
 {% url 'inventory:stockout_list' as stockout_url %}
 {% url 'inventory:purchase_create' as create_url %}
-{% include 'includes/page_header.html' with title='Stock In Records' action_url=stockout_url action_label='Stock Out' action_icon='las la-minus-circle' action_class='btn-outline-danger' action2_url=create_url action2_label='Add Stock' action2_icon='las la-plus' action2_class='btn-success' %}
+{% include 'includes/page_header.html' with title='Stock In Records' action_url=stockout_url action_label='Stock Out' action_icon='las la-minus-circle' action_class='btn-outline-danger' action2_url=create_url action2_label='Add Stock' action2_icon='las la-plus' action2_class='btn-primary' %}
 
 <div class="row">
     <div class="col-12">
