@@ -81,7 +81,7 @@ def get_product_stock_history(product, limit=None):
             'date': ti.transfer.transfer_date,
             'type': 'TRANSFER',
             'type_label': 'Transfer',
-            'reference': ti.transfer.reference_number,
+            'reference': ti.transfer.transfer_number,
             'warehouse': f"{ti.transfer.source_warehouse.name} ➔ {ti.transfer.destination_warehouse.name}",
             'quantity': ti.quantity,
             'price': 0,

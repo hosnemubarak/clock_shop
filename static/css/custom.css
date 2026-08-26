@@ -1,3 +1,85 @@
+/* =============================================================
+   BRAND PRIMARY COLOR OVERRIDE
+   Replaces the default Velzon theme primary (#438a7a teal) with
+   Skyzone Dark Blue (#042A52) across all components globally.
+   ============================================================= */
+
+/* 1. CSS variable overrides — covers links, badges, focus rings,
+      and any component reading from --in-primary / --vz-primary  */
+:root {
+    /* Core primary */
+    --in-primary:                #042A52;
+    --in-primary-rgb:            4, 42, 82;
+    --in-primary-text-emphasis:  #021422;
+    --in-primary-bg-subtle:      #e8eef5;
+    --in-primary-border-subtle:  #b0c4d8;
+
+    /* Bootstrap / VZ compat aliases */
+    --vz-primary:                #042A52;
+    --vz-primary-rgb:            4, 42, 82;
+    --vz-primary-bg-subtle:      #e8eef5;
+    --vz-primary-border-subtle:  #b0c4d8;
+    --vz-link-color:             #042A52;
+    --vz-link-hover-color:       #D99B1F;
+    --vz-component-active-bg:    #042A52;
+
+    /* Link colors */
+    --in-link-color:             #042A52;
+    --in-link-color-rgb:         4, 42, 82;
+    --in-link-hover-color:       #D99B1F;
+    --in-link-hover-color-rgb:   217, 155, 31;
+
+    /* Sidebar / nav active states */
+    --in-vertical-menu-item-hover-color:         #D99B1F;
+    --in-vertical-menu-item-active-color:        #042A52;
+    --in-vertical-menu-item-active-bgcolor:      linear-gradient(to right, rgba(4, 42, 82, 0.1) 30%, transparent 100%);
+    --in-vertical-menu-sub-item-hover-color:     #D99B1F;
+    --in-vertical-menu-sub-item-active-color:    #042A52;
+    --in-vertical-menu-bg-dark:                  #042A52;
+    --in-topnav-item-color-active:               #042A52;
+}
+
+/* Fix for Data-Theme Overrides */
+[data-topbar="dark"] {
+    --in-header-bg-dark: #042A52;
+    --in-header-item-color-dark: #b0c4d8;
+}
+
+[data-sidebar="dark"] {
+    --in-vertical-menu-item-hover-color-dark: #D99B1F;
+    --in-vertical-menu-sub-item-hover-color-dark: #D99B1F;
+}
+
+/* 2. btn-primary — override the hardcoded teal values inside the selector */
+.btn-primary {
+    --in-btn-bg:                #042A52;
+    --in-btn-border-color:      #042A52;
+    --in-btn-hover-bg:          #031e3b;
+    --in-btn-hover-border-color:#021833;
+    --in-btn-active-bg:         #021833;
+    --in-btn-active-border-color:#01142a;
+    --in-btn-focus-shadow-rgb:  4, 42, 82;
+    background-color: #042A52 !important;
+    border-color: #042A52 !important;
+}
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:focus-visible {
+    background-color: #031e3b !important;
+    border-color: #021833 !important;
+}
+.btn-primary:active,
+.btn-primary.active {
+    background-color: #021833 !important;
+    border-color: #01142a !important;
+}
+
+/* 3. btn-primary animation variant (hardcoded in app.min.css) */
+.btn-primary.btn-animation {
+    background-color: #042A52 !important;
+    border-color: #042A52 !important;
+}
+
 /* Custom Utility Classes */
 
 .min-h-300 {
@@ -68,8 +150,8 @@
 
 /* ---- Application modal system ---- */
 .app-modal {
-    --app-modal-accent: var(--vz-primary, #405189);
-    --app-modal-accent-rgb: 64, 81, 137;
+    --app-modal-accent: var(--vz-primary, #042A52);
+    --app-modal-accent-rgb: 4, 42, 82;
 }
 
 .app-modal--validation {

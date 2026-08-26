@@ -90,7 +90,7 @@
 }
 
 .sale-result.is-active {
-    outline: 2px solid var(--vz-primary, #405189);
+    outline: 2px solid var(--vz-primary, #042A52);
     outline-offset: -2px;
 }
 
@@ -562,7 +562,7 @@
     font-size: 0.8125rem;
     font-weight: 500;
     line-height: 1.25;
-    color: var(--vz-primary, #405189);
+    color: var(--vz-primary, #042A52);
     background: var(--vz-primary-bg-subtle, #eaecf4);
     border: 1px solid var(--vz-primary-border-subtle, #c6cbe1);
     border-radius: 6px;
@@ -626,7 +626,7 @@
     padding: var(--space-2);
     background: var(--vz-secondary-bg, #fff);
     border: 1px solid var(--vz-border-color, #e9ebec);
-    border-left: 3px solid var(--vz-primary, #405189);
+    border-left: 3px solid var(--vz-primary, #042A52);
     border-radius: 8px;
 }
 
@@ -639,7 +639,7 @@
     height: 2.75rem;
     font-size: 1.375rem;
     color: #fff;
-    background: var(--vz-primary, #405189);
+    background: var(--vz-primary, #042A52);
     border-radius: 8px;
 }
 
@@ -738,9 +738,9 @@
 }
 
 .sale-cart__stock-badge.is-total {
-    color: var(--vz-primary, #405189);
-    background: rgba(64, 81, 137, 0.1);
-    border-color: rgba(64, 81, 137, 0.2);
+    color: var(--vz-primary, #042A52);
+    background: rgba(4, 42, 82, 0.1);
+    border-color: rgba(4, 42, 82, 0.2);
 }
 
 .sale-cart__shortage {
@@ -774,9 +774,9 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    color: var(--vz-primary, #405189);
-    background: rgba(64, 81, 137, 0.08);
-    border: 1px solid rgba(64, 81, 137, 0.25);
+    color: var(--vz-primary, #042A52);
+    background: rgba(4, 42, 82, 0.08);
+    border: 1px solid rgba(4, 42, 82, 0.25);
     border-radius: 4px;
     cursor: pointer;
     white-space: nowrap;
@@ -786,9 +786,9 @@
 
 .sale-transfer-btn:hover,
 .sale-transfer-btn:focus-visible {
-    background: rgba(64, 81, 137, 0.15);
-    border-color: rgba(64, 81, 137, 0.45);
-    color: var(--vz-primary, #405189);
+    background: rgba(4, 42, 82, 0.15);
+    border-color: rgba(4, 42, 82, 0.45);
+    color: var(--vz-primary, #042A52);
     outline: none;
 }
 
@@ -813,8 +813,8 @@
     width: 2.75rem;
     height: 2.75rem;
     font-size: 1.375rem;
-    color: var(--vz-primary, #405189);
-    background: rgba(64, 81, 137, 0.1);
+    color: var(--vz-primary, #042A52);
+    background: rgba(4, 42, 82, 0.1);
     border-radius: 8px;
     flex-shrink: 0;
 }
@@ -889,12 +889,12 @@
 }
 
 .sale-transfer__row:hover {
-    border-color: rgba(64, 81, 137, 0.35);
+    border-color: rgba(4, 42, 82, 0.35);
 }
 
 .sale-transfer__row.has-qty {
-    border-color: var(--vz-primary, #405189);
-    box-shadow: 0 0 0 1px rgba(64, 81, 137, 0.15);
+    border-color: var(--vz-primary, #042A52);
+    box-shadow: 0 0 0 1px rgba(4, 42, 82, 0.15);
 }
 
 .sale-transfer__row-icon {
@@ -904,8 +904,8 @@
     width: 2.25rem;
     height: 2.25rem;
     font-size: 1.125rem;
-    color: var(--vz-primary, #405189);
-    background: rgba(64, 81, 137, 0.08);
+    color: var(--vz-primary, #042A52);
+    background: rgba(4, 42, 82, 0.08);
     border-radius: 6px;
     flex-shrink: 0;
 }

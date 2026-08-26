@@ -8,7 +8,7 @@
 (function (window, document) {
     'use strict';
 
-    var DEFAULT_COLORS = ["#405189", "#0ab39c", "#f7b84b"];
+    var DEFAULT_COLORS = ["#042A52", "#0ab39c", "#f7b84b"];
 
     /**
      * @param {string} id       element id carrying the data-colors attribute

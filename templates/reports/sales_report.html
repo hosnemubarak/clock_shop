@@ -322,7 +322,7 @@ var salesPeriodValues = [{% for row in sales_by_period %}{{ row.total|default:0 
 var profitPeriodValues = [{% for row in sales_by_period %}{{ row.profit|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}];
 
 // Sales Period Bar Chart
-var salesChartColors = getChartColorsArray("sales-period-chart", ["#405189", "#0ab39c"]);
+var salesChartColors = getChartColorsArray("sales-period-chart", ["#042A52", "#0ab39c"]);
 if (document.getElementById("sales-period-chart") && salesPeriodLabels.length > 0) {
     var options = {
         chart: {
@@ -366,7 +366,7 @@ var topProductLabels = [{% for p in top_products %}"{{ p.product__sku|escapejs }
 var topProductValues = [{% for p in top_products %}{{ p.total_revenue|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}];
 
 // Top Products Horizontal Bar Chart
-var topProductsColors = getChartColorsArray("top-products-chart", ["#405189", "#0ab39c"]);
+var topProductsColors = getChartColorsArray("top-products-chart", ["#042A52", "#0ab39c"]);
 if (document.getElementById("top-products-chart") && topProductLabels.length > 0) {
     var options2 = {
         chart: {
