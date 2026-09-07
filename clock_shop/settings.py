@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'apps.warehouse',
     'apps.reports',
     'apps.quotations',
+    'apps.notifications',
+    'django_rq',
 ]
 
 MIDDLEWARE = [
@@ -181,6 +183,27 @@ CACHES = {
         'LOCATION': 'clock_shop_cache',
     }
 }
+
+# =============================================================================
+# REDIS / RQ CONFIGURATION
+# =============================================================================
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+
+RQ_QUEUES = {
+    'default': {
+        'URL': REDIS_URL,
+        'DEFAULT_TIMEOUT': 300,
+    },
+}
+
+# Notification settings
+NOTIFICATION_MAX_RETRIES = int(os.environ.get('NOTIFICATION_MAX_RETRIES', '3'))
+
+# RQ settings: Windows does not support os.fork(), so use SimpleWorker
+if os.name == 'nt':
+    RQ = {
+        'WORKER_CLASS': 'rq.worker.SimpleWorker',
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},

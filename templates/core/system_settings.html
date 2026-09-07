@@ -123,6 +123,75 @@
                     </div>
                     
                     <hr class="my-4">
+                    <h6 class="text-info mb-3"><i class="las la-paper-plane me-1"></i> Telegram Notifications</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">{{ telegram_form.bot_token.label }}</label>
+                            <div class="input-group">
+                                {{ telegram_form.bot_token }}
+                                <button class="btn btn-outline-secondary" type="button" id="toggleBotToken" title="Show/Hide">
+                                    <i class="las la-eye" id="tokenEyeIcon"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">{{ telegram_form.bot_token.help_text }}</small>
+                            {% if telegram_form.bot_token.errors %}
+                            <div class="text-danger small">{{ telegram_form.bot_token.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-medium">{{ telegram_form.chat_id.label }}</label>
+                            {{ telegram_form.chat_id }}
+                            <small class="text-muted">{{ telegram_form.chat_id.help_text }}</small>
+                            {% if telegram_form.chat_id.errors %}
+                            <div class="text-danger small">{{ telegram_form.chat_id.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row align-items-center">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-medium d-block">Status</label>
+                            {% if telegram_settings.status == 'active' %}
+                            <span class="badge bg-success-subtle text-success fs-12 px-3 py-2" id="telegramStatusBadge">
+                                <i class="las la-check-circle me-1"></i> Active
+                            </span>
+                            {% else %}
+                            <span class="badge bg-danger-subtle text-danger fs-12 px-3 py-2" id="telegramStatusBadge">
+                                <i class="las la-times-circle me-1"></i> Inactive
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-medium d-block">Last Tested</label>
+                            <span class="text-muted small">
+                                {% if telegram_settings.last_tested_at %}
+                                    {{ telegram_settings.last_tested_at|date:"M d, Y H:i" }}
+                                {% else %}
+                                    Never
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-medium d-block">Last Notification</label>
+                            <span class="text-muted small">
+                                {% if telegram_settings.last_notified_at %}
+                                    {{ telegram_settings.last_notified_at|date:"M d, Y H:i" }}
+                                {% else %}
+                                    Never
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-info btn-sm" id="testTelegramBtn">
+                            <i class="las la-vial me-1"></i> Test Configuration
+                        </button>
+                        <span class="ms-2 small" id="testResult"></span>
+                    </div>
+                    
+                    <hr class="my-4">
                     
                     <div class="d-flex justify-content-between">
                         <a href="{% url 'core:dashboard' %}" class="btn btn-light">
@@ -192,4 +261,84 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Toggle bot token visibility
+    document.getElementById('toggleBotToken').addEventListener('click', function() {
+        var tokenInput = document.getElementById('id_bot_token');
+        var icon = document.getElementById('tokenEyeIcon');
+        if (tokenInput.type === 'password') {
+            tokenInput.type = 'text';
+            icon.classList.remove('la-eye');
+            icon.classList.add('la-eye-slash');
+        } else {
+            tokenInput.type = 'password';
+            icon.classList.remove('la-eye-slash');
+            icon.classList.add('la-eye');
+        }
+    });
+
+    // Test Telegram configuration via AJAX
+    document.getElementById('testTelegramBtn').addEventListener('click', function() {
+        var btn = this;
+        var resultSpan = document.getElementById('testResult');
+        var badge = document.getElementById('telegramStatusBadge');
+        var botTokenInput = document.getElementById('id_bot_token');
+        var chatIdInput = document.getElementById('id_chat_id');
+
+        var botToken = botTokenInput ? botTokenInput.value.trim() : '';
+        var chatId = chatIdInput ? chatIdInput.value.trim() : '';
+
+        if (!botToken && !chatId) {
+            resultSpan.textContent = 'Please enter Bot Token and Chat ID before testing.';
+            resultSpan.className = 'ms-2 small text-danger fw-medium';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="las la-spinner la-spin me-1"></i> Testing...';
+        resultSpan.textContent = '';
+        resultSpan.className = 'ms-2 small';
+
+        var csrfToken = (window.getCsrfToken ? window.getCsrfToken() : '') || 
+                        (document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : '');
+
+        fetch("{% url 'notifications:test_telegram' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                bot_token: botToken,
+                chat_id: chatId
+            }),
+        })
+        .then(function(response) { return response.json().then(function(data) { return {ok: response.ok, data: data}; }); })
+        .then(function(result) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="las la-vial me-1"></i> Test Configuration';
+
+            if (result.ok) {
+                resultSpan.textContent = result.data.message;
+                resultSpan.className = 'ms-2 small text-success fw-medium';
+                badge.className = 'badge bg-success-subtle text-success fs-12 px-3 py-2';
+                badge.innerHTML = '<i class="las la-check-circle me-1"></i> Active';
+            } else {
+                resultSpan.textContent = result.data.message;
+                resultSpan.className = 'ms-2 small text-danger fw-medium';
+                badge.className = 'badge bg-danger-subtle text-danger fs-12 px-3 py-2';
+                badge.innerHTML = '<i class="las la-times-circle me-1"></i> Inactive';
+            }
+        })
+        .catch(function(err) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="las la-vial me-1"></i> Test Configuration';
+            resultSpan.textContent = 'Network error. Please try again.';
+            resultSpan.className = 'ms-2 small text-danger fw-medium';
+        });
+    });
+</script>
 {% endblock %}

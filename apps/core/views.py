@@ -449,22 +449,32 @@ from apps.core.decorators import has_permission
 @has_permission('core.change_systemsettings')
 def system_settings(request):
     """View and update system settings."""
+    from apps.notifications.models import TelegramSetting
+    from apps.notifications.forms import TelegramSettingForm
+
     settings = SystemSettings.get_settings()
-    
+    telegram_settings = TelegramSetting.get_settings()
+
     if request.method == 'POST':
         form = SystemSettingsForm(request.POST, request.FILES, instance=settings)
-        if form.is_valid():
+        telegram_form = TelegramSettingForm(request.POST, instance=telegram_settings)
+
+        if form.is_valid() and telegram_form.is_valid():
             settings = form.save(commit=False)
             settings.updated_by = request.user
             settings.save()
+            telegram_form.save()
             messages.success(request, 'System settings updated successfully.')
             return redirect('core:system_settings')
     else:
         form = SystemSettingsForm(instance=settings)
-    
+        telegram_form = TelegramSettingForm(instance=telegram_settings)
+
     context = {
         'form': form,
         'settings': settings,
+        'telegram_form': telegram_form,
+        'telegram_settings': telegram_settings,
     }
     return render(request, 'core/system_settings.html', context)
 

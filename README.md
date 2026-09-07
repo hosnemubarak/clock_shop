@@ -38,6 +38,7 @@ Clock Shop is a full-featured business management solution that handles:
 - **Comprehensive reporting** with visual charts
 - **Stock out management** for damaged/lost/expired items
 - **Complete audit trail** for all operations
+- **Telegram notifications** for real-time sale and payment alerts
 
 ## Features
 
@@ -79,6 +80,16 @@ Clock Shop is a full-featured business management solution that handles:
 - **Batch analysis** - Stock age and batch-level tracking
 - **Transfer history** - Complete inter-warehouse movement records
 
+### Telegram Notifications
+- **Real-time alerts** - Instant Telegram messages for new sales and payments
+- **Background processing** - Notifications sent via Django-RQ (Redis) without blocking user operations
+- **Fault-tolerant** - Notification failures never affect business operations (sales, payments, etc.)
+- **Retry mechanism** - Failed notifications automatically retried with exponential backoff
+- **Deduplication** - Prevents duplicate notifications when signals fire multiple times
+- **UI configuration** - Configure Telegram bot from System Settings with a test button
+- **Notification log** - Full audit trail of all sent/failed notifications in Django admin
+- **Extensible** - Reusable notification service; new channels can be added without changing business logic
+
 ### Security & Audit
 - **Login required** - All views protected by authentication
 - **Dynamic Permission-Based Access Control** - Granular permissions can be assigned to users or groups via the Django Admin Panel. The system comes with three default groups configured via `setup_groups`:
@@ -102,6 +113,8 @@ Clock Shop is a full-featured business management solution that handles:
 | CSS | Custom + Bootstrap |
 | Static Files | WhiteNoise |
 | Server | Gunicorn (production) |
+| Background Tasks | Django-RQ + Redis |
+| Notifications | Apprise (Telegram) |
 
 ## Quick Start
 
@@ -410,7 +423,8 @@ clock_shop/
 │   ├── sales/          # Sales, invoices, POS
 │   ├── customers/      # Customer management, payments
 │   ├── warehouse/      # Warehouses, stock transfers
-│   └── reports/        # All reporting modules
+│   ├── reports/        # All reporting modules
+│   └── notifications/  # Telegram notifications (signals, services, tasks)
 ├── templates/          # Django templates (Invoika-based)
 ├── static/            # CSS, JS, images
 ├── clock_shop/        # Django project settings
@@ -484,6 +498,8 @@ cp .env.example .env
 | `CURRENCY_SYMBOL` | `৳` | Currency symbol |
 | `LOW_STOCK_THRESHOLD` | `5` | Low stock alert threshold |
 | `ENABLE_RBAC` | `True` | Set to `False` to disable strict Role-Based Access Control |
+| `REDIS_URL` | `redis://localhost:6379/0` | Redis URL for background task queue (Django-RQ) |
+| `NOTIFICATION_MAX_RETRIES` | `3` | Max retry attempts for failed Telegram notifications |
 | `POSTGRES_DB` | `clock_shop` | Docker PostgreSQL database |
 | `POSTGRES_USER` | `clock_shop` | Docker PostgreSQL user |
 | `POSTGRES_PASSWORD` | (required) | Docker PostgreSQL password |
@@ -636,7 +652,59 @@ Django>=4.2,<5.0
 Pillow>=10.0.0
 whitenoise>=6.6.0
 python-dotenv>=1.0.0
+apprise>=1.9.0
+django-rq>=2.10.0
+redis>=5.0.0
 ```
+
+## Telegram Notifications Setup
+
+The application supports real-time Telegram notifications for sales and payment events.
+
+### Prerequisites
+
+1. **Redis** — required for background task processing
+   ```bash
+   # Option A: Docker (recommended)
+   docker run -d -p 6379:6379 redis:alpine
+
+   # Option B: Already included in docker-compose.yml
+   ```
+
+2. **Telegram Bot** — create one via [@BotFather](https://t.me/BotFather) on Telegram
+
+### Configuration
+
+1. Go to **System Settings** → **Telegram Notifications** section
+2. Enter your **Bot Token** (from @BotFather)
+3. Enter your **Chat ID** (the group/channel ID to receive notifications)
+4. Click **Save Settings**
+5. Click **Test Configuration** to verify it works
+
+### Running the Background Worker
+
+```bash
+# Local development
+python manage.py rqworker default
+
+# Docker (worker runs automatically via docker-compose)
+docker compose up -d
+```
+
+### Notification Events
+
+| Event | Example Message |
+|-------|----------------|
+| New Sale | `New Sale #INV-0123 — Customer: John Doe — Total: ৳25,000` |
+| Payment Received | `Payment Received — Sale #INV-0123 — Amount: ৳10,000 — Customer: John Doe` |
+
+### Failure Handling
+
+- Notifications are processed **asynchronously** — they never block or affect business operations
+- If Telegram is unavailable, sales and payments still complete normally
+- Failed notifications are retried automatically (configurable via `NOTIFICATION_MAX_RETRIES`)
+- All notification attempts are logged in Django admin under **Notification Logs**
+- The RQ dashboard is available at `/django-rq/` for monitoring background jobs
 
 ## Contributing
 

@@ -32,11 +32,16 @@ python manage.py migrate --noinput
 
 # Create cache table
 echo "Creating cache table..."
-python manage.py createcachetable
-
-
+python manage.py createcachetable || true
 
 echo "=== Clock Shop Ready ==="
+
+# If arguments were provided to entrypoint (e.g. rqworker), execute them
+if [ $# -gt 0 ]; then
+    echo "Executing command: $@"
+    exec "$@"
+fi
+
 echo "Starting Gunicorn server on port 8000..."
 
 # Start Gunicorn

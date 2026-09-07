@@ -42,6 +42,8 @@ services:
     environment:
       # Database
       DATABASE_URL: postgres://${POSTGRES_USER:-clock_shop}:${POSTGRES_PASSWORD:-clock_shop_password}@db:5432/${POSTGRES_DB:-clock_shop}
+      # Redis
+      REDIS_URL: redis://redis:6379/0
       # Security
       SECRET_KEY: ${SECRET_KEY:-change-this-secret-key-in-production}
       DEBUG: ${DEBUG:-False}
@@ -57,6 +59,44 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ==========================================================================
+  # Redis (Message Broker for Background Tasks)
+  # ==========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: clock_shop_redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================================================
+  # RQ Worker (Background Task Processor)
+  # ==========================================================================
+  rq_worker:
+    build: .
+    container_name: clock_shop_rq_worker
+    restart: unless-stopped
+    command: python manage.py rqworker default
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-clock_shop}:${POSTGRES_PASSWORD:-clock_shop_password}@db:5432/${POSTGRES_DB:-clock_shop}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-change-this-secret-key-in-production}
+      DEBUG: ${DEBUG:-False}
+      SHOP_NAME: ${SHOP_NAME:-Your Shop}
+      CURRENCY_SYMBOL: ${CURRENCY_SYMBOL:-৳}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
 
 volumes:
@@ -65,4 +105,6 @@ volumes:
   media_data:
     driver: local
   logs_data:
+    driver: local
+  redis_data:
     driver: local

@@ -21,6 +21,8 @@ urlpatterns = [
     path('warehouse/', include('apps.warehouse.urls')),
     path('reports/', include('apps.reports.urls')),
     path('quotations/', include('apps.quotations.urls')),
+    path('notifications/', include('apps.notifications.urls')),
+    path('django-rq/', include('django_rq.urls')),
 ]
 
 # Serve media files in both development and production
