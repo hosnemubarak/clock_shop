@@ -6,11 +6,12 @@ from .models import Sale, SaleItem, SaleReturn, SaleReturnItem
 class SaleItemInline(admin.TabularInline):
     model = SaleItem
     extra = 0
-    readonly_fields = ['product', 'warehouse', 'quantity', 'unit_price', 'cost_price', 'discount', 'is_custom', 'custom_description']
-    can_delete = False
-    
-    def has_add_permission(self, request, obj=None):
-        return False
+    fields = [
+        'product', 'warehouse', 'is_custom', 'custom_description',
+        'quantity', 'unit_price', 'cost_price', 'discount', 'returned_quantity',
+    ]
+    readonly_fields = ['product', 'warehouse', 'is_custom', 'custom_description']
+    can_delete = True
 
 
 @admin.register(Sale)
@@ -63,6 +64,13 @@ class SaleAdmin(admin.ModelAdmin):
             obj.get_status_display()
         )
     status_badge.short_description = 'Status'
+
+    def save_formset(self, request, form, formset, change):
+        """Recalculate sale totals after inline item changes."""
+        super().save_formset(request, form, formset, change)
+        if formset.model is SaleItem:
+            sale = form.instance
+            sale.calculate_totals()
 
 
 class SaleReturnItemInline(admin.TabularInline):
