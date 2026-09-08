@@ -17,10 +17,10 @@ class TelegramSettingAdmin(admin.ModelAdmin):
 
 @admin.register(NotificationLog)
 class NotificationLogAdmin(admin.ModelAdmin):
-    list_display = ['event_type', 'event_id', 'status', 'attempts', 'created_at', 'sent_at']
+    list_display = ['event_type', 'event_id', 'status', 'attempts', 'created_at', 'send_started_at', 'sent_at']
     list_filter = ['status', 'event_type']
     search_fields = ['event_type', 'event_id', 'message']
-    readonly_fields = ['event_type', 'event_id', 'message', 'status', 'error_message', 'attempts', 'created_at', 'sent_at']
+    readonly_fields = ['event_type', 'event_id', 'message', 'status', 'error_message', 'attempts', 'created_at', 'send_started_at', 'sent_at']
     ordering = ['-created_at']
 
     def has_add_permission(self, request):

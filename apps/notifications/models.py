@@ -74,6 +74,7 @@ class NotificationLog(models.Model):
     """Log of sent notifications for deduplication and auditing."""
     class Status(models.TextChoices):
         PENDING = 'pending', 'Pending'
+        SENDING = 'sending', 'Sending'
         SENT = 'sent', 'Sent'
         FAILED = 'failed', 'Failed'
 
@@ -96,6 +97,7 @@ class NotificationLog(models.Model):
     error_message = models.TextField(blank=True)
     attempts = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    send_started_at = models.DateTimeField(null=True, blank=True)
     sent_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:

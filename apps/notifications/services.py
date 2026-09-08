@@ -1,10 +1,33 @@
 import logging
 
 import apprise
-from django.db import IntegrityError
+from django.db import transaction
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
+
+
+def enqueue_notification(log_entry):
+    """Enqueue one durable notification using its stable RQ job ID."""
+    try:
+        import django_rq
+        queue = django_rq.get_queue('default')
+        from .tasks import send_notification_task
+        job_id = f'notification-{log_entry.pk}'
+        if queue.fetch_job(job_id) is None:
+            queue.enqueue(send_notification_task, log_entry.pk, job_id=job_id)
+        return True
+    except Exception:
+        logger.warning(
+            'Redis/RQ enqueue failed for notification log %s', log_entry.pk,
+            exc_info=True,
+        )
+        try:
+            log_entry.error_message = 'Failed to enqueue notification in RQ'
+            log_entry.save(update_fields=['error_message'])
+        except Exception:
+            logger.exception('Unable to record notification enqueue failure')
+        return False
 
 
 def _get_apprise_url():
@@ -86,69 +109,31 @@ def notify(event_type, event_id, message):
     error here would roll back the business transaction.  Every code path is
     wrapped in try/except and failures are logged instead of propagated.
 
-    Deduplication: if a log entry for (event_type, event_id) already exists,
-    the notification is skipped silently.
+    Deduplication is enforced by the database constraint on (event_type,
+    event_id). Dispatch is RQ-only; notification delivery must never run in a
+    request thread or an untracked daemon thread.
     """
     try:
         from .models import TelegramSetting, NotificationLog
 
-        # Skip if Telegram is not configured
-        settings = TelegramSetting.get_settings()
-        if not settings.apprise_url:
-            return None
-
-        # Deduplicate — IntegrityError means a duplicate; any other DB error
-        # is also swallowed so it never affects the caller.
-        try:
-            log_entry = NotificationLog.objects.create(
-                event_type=event_type,
-                event_id=str(event_id),
-                message=message,
-            )
-        except IntegrityError:
+        log_entry, created = NotificationLog.objects.get_or_create(
+            event_type=event_type,
+            event_id=str(event_id),
+            defaults={
+                'message': message,
+            },
+        )
+        if not created:
             logger.debug('Duplicate notification skipped: %s:%s', event_type, event_id)
             return None
 
-        # Dispatch background task:
-        # 1. If RQ workers are active on Redis, enqueue to the Redis queue.
-        # 2. If no RQ worker is currently running (or Redis is unavailable),
-        #    dispatch asynchronously via background daemon thread so the notification
-        #    is delivered immediately without blocking the user's web request.
-        try:
-            import django_rq
-            from rq import Worker
-            queue = django_rq.get_queue('default')
-            from .tasks import send_notification_task
+        def _enqueue():
+            enqueue_notification(log_entry)
 
-            workers = Worker.all(connection=queue.connection)
-            if workers:
-                queue.enqueue(send_notification_task, log_entry.pk)
-            else:
-                import threading
-                t = threading.Thread(
-                    target=send_notification_task,
-                    args=(log_entry.pk,),
-                    daemon=True,
-                )
-                t.start()
-        except Exception:
-            logger.warning(
-                'Redis/RQ error for notification %s:%s, using background thread fallback',
-                event_type, event_id, exc_info=True,
-            )
-            try:
-                import threading
-                from .tasks import send_notification_task
-                t = threading.Thread(
-                    target=send_notification_task,
-                    args=(log_entry.pk,),
-                    daemon=True,
-                )
-                t.start()
-            except Exception:
-                log_entry.status = 'failed'
-                log_entry.error_message = 'Failed to dispatch background task'
-                log_entry.save(update_fields=['status', 'error_message'])
+        if transaction.get_autocommit():
+            _enqueue()
+        else:
+            transaction.on_commit(_enqueue)
 
         return log_entry
 

@@ -84,8 +84,8 @@ Clock Shop is a full-featured business management solution that handles:
 - **Real-time alerts** - Instant Telegram messages for new sales and payments
 - **Background processing** - Notifications sent via Django-RQ (Redis) without blocking user operations
 - **Fault-tolerant** - Notification failures never affect business operations (sales, payments, etc.)
-- **Retry mechanism** - Failed notifications automatically retried with exponential backoff
-- **Deduplication** - Prevents duplicate notifications when signals fire multiple times
+- **At-most-once delivery** - Each durable notification is claimed atomically and sent once
+- **Database idempotency** - Unique event keys and stable RQ job IDs prevent duplicate dispatch
 - **UI configuration** - Configure Telegram bot from System Settings with a test button
 - **Notification log** - Full audit trail of all sent/failed notifications in Django admin
 - **Extensible** - Reusable notification service; new channels can be added without changing business logic
@@ -499,7 +499,7 @@ cp .env.example .env
 | `LOW_STOCK_THRESHOLD` | `5` | Low stock alert threshold |
 | `ENABLE_RBAC` | `True` | Set to `False` to disable strict Role-Based Access Control |
 | `REDIS_URL` | `redis://localhost:6379/0` | Redis URL for background task queue (Django-RQ) |
-| `NOTIFICATION_MAX_RETRIES` | `3` | Max retry attempts for failed Telegram notifications |
+| `NOTIFICATION_MAX_RETRIES` | `3` | Legacy setting; automatic notification retries are disabled to prevent duplicate Telegram messages |
 | `POSTGRES_DB` | `clock_shop` | Docker PostgreSQL database |
 | `POSTGRES_USER` | `clock_shop` | Docker PostgreSQL user |
 | `POSTGRES_PASSWORD` | (required) | Docker PostgreSQL password |
@@ -702,7 +702,8 @@ docker compose up -d
 
 - Notifications are processed **asynchronously** — they never block or affect business operations
 - If Telegram is unavailable, sales and payments still complete normally
-- Failed notifications are retried automatically (configurable via `NOTIFICATION_MAX_RETRIES`)
+- Failed notifications are recorded as terminal failures after one send attempt; replay requires explicit operational review because a provider timeout may mean Telegram accepted the message
+- Notification rows are claimed atomically before Apprise is called, so multiple workers cannot send the same row concurrently
 - All notification attempts are logged in Django admin under **Notification Logs**
 - The RQ dashboard is available at `/django-rq/` for monitoring background jobs
 

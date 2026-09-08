@@ -6,8 +6,9 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils import timezone
 
-from apps.notifications.models import TelegramSetting
+from apps.notifications.models import NotificationLog, TelegramSetting
 from apps.notifications.services import send_test_notification
+from apps.notifications.tasks import send_notification_task
 from apps.notifications.signals import format_sale_message, format_payment_message
 from apps.sales.models import Sale
 from apps.customers.models import Customer, Payment
@@ -141,3 +142,53 @@ class TelegramNotificationTests(TestCase):
         self.assertIn(sale.invoice_number, msg)
         self.assertIn('Partially Paid', msg)
         self.assertIn('admin_test', msg)
+
+    @patch('django_rq.get_queue')
+    def test_notify_deduplicates_event_and_uses_stable_job_id(self, mock_get_queue):
+        from apps.notifications.services import notify
+
+        TelegramSetting.objects.create(bot_token='token', chat_id='chat')
+        queue = mock_get_queue.return_value
+        queue.fetch_job.return_value = None
+
+        with self.captureOnCommitCallbacks(execute=True):
+            first = notify('payment_received', 42, 'payment')
+            second = notify('payment_received', 42, 'payment')
+
+        self.assertIsNotNone(first)
+        self.assertIsNone(second)
+        self.assertEqual(NotificationLog.objects.count(), 1)
+        queue.enqueue.assert_called_once_with(
+            send_notification_task, first.pk, job_id=f'notification-{first.pk}'
+        )
+
+    @patch('apps.notifications.services.send_telegram')
+    def test_task_claims_once_and_does_not_retry(self, mock_send):
+        TelegramSetting.objects.create(bot_token='token', chat_id='chat')
+        log_entry = NotificationLog.objects.create(
+            event_type='payment_received', event_id='42', message='payment'
+        )
+        mock_send.side_effect = RuntimeError('telegram unavailable')
+
+        send_notification_task(log_entry.pk)
+        send_notification_task(log_entry.pk)
+
+        log_entry.refresh_from_db()
+        self.assertEqual(mock_send.call_count, 1)
+        self.assertEqual(log_entry.status, NotificationLog.Status.FAILED)
+        self.assertEqual(log_entry.attempts, 1)
+
+    @patch('apps.notifications.services.send_telegram')
+    def test_task_success_is_terminal(self, mock_send):
+        TelegramSetting.objects.create(bot_token='token', chat_id='chat')
+        log_entry = NotificationLog.objects.create(
+            event_type='payment_received', event_id='42', message='payment'
+        )
+
+        send_notification_task(log_entry.pk)
+        send_notification_task(log_entry.pk)
+
+        log_entry.refresh_from_db()
+        self.assertEqual(mock_send.call_count, 1)
+        self.assertEqual(log_entry.status, NotificationLog.Status.SENT)
+        self.assertEqual(log_entry.attempts, 1)
