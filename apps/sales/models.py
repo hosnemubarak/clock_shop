@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction as db_transaction, IntegrityError
 from django.db.models import Sum
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
@@ -11,6 +11,53 @@ def quantize_amount(value):
     if not isinstance(value, Decimal):
         value = Decimal(str(value))
     return value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+
+# Number formats: short global running numbers (e.g. INV10001, RET10001).
+# Legacy invoices used INV/YYYYMMDD/0000 numbers; both formats coexist
+# safely because they can never be the same string.
+INVOICE_NUMBER_FORMAT = 'INV{:05d}'
+RETURN_NUMBER_FORMAT = 'RET{:05d}'
+
+
+class DocumentSequence(models.Model):
+    """
+    Monotonic counter for document numbers (invoices, returns).
+
+    Values are issued under a row lock (select_for_update) so concurrent
+    creation attempts can never generate the same number.
+    """
+    KEY_CHOICES = [
+        ('invoice', 'Invoice'),
+        ('return', 'Return'),
+    ]
+
+    key = models.CharField(max_length=20, unique=True, choices=KEY_CHOICES)
+    value = models.PositiveIntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Document Sequence'
+        verbose_name_plural = 'Document Sequences'
+
+    def __str__(self):
+        return f'{self.get_key_display()}: {self.value}'
+
+    @classmethod
+    def next_value(cls, key):
+        """Atomically increment and return the next value for a key."""
+        with db_transaction.atomic():
+            try:
+                seq = cls.objects.select_for_update().get(key=key)
+            except cls.DoesNotExist:
+                try:
+                    seq = cls.objects.create(key=key, value=0)
+                except IntegrityError:
+                    # A concurrent first-use created the row; lock it now
+                    seq = cls.objects.select_for_update().get(key=key)
+            seq.value += 1
+            seq.save(update_fields=['value'])
+            return seq.value
 
 
 class Sale(TimeStampedModel):
@@ -86,18 +133,11 @@ class Sale(TimeStampedModel):
     
     def save(self, *args, **kwargs):
         if not self.invoice_number:
-            import datetime
-            prefix = f"INV{datetime.date.today().strftime('%Y%m%d')}"
-            last = Sale.objects.filter(
-                invoice_number__startswith=prefix
-            ).order_by('-invoice_number').first()
-            if last:
-                last_num = int(last.invoice_number[-4:])
-                self.invoice_number = f"{prefix}{last_num + 1:04d}"
-            else:
-                self.invoice_number = f"{prefix}0001"
+            self.invoice_number = INVOICE_NUMBER_FORMAT.format(
+                DocumentSequence.next_value('invoice')
+            )
         super().save(*args, **kwargs)
-    
+
     @property
     def due_amount(self):
         """Amount still due."""
@@ -366,16 +406,9 @@ class SaleReturn(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         if not self.return_number:
-            import datetime
-            prefix = f"RET{datetime.date.today().strftime('%Y%m%d')}"
-            last = SaleReturn.objects.filter(
-                return_number__startswith=prefix
-            ).order_by('-return_number').first()
-            if last:
-                last_num = int(last.return_number[-4:])
-                self.return_number = f"{prefix}{last_num + 1:04d}"
-            else:
-                self.return_number = f"{prefix}0001"
+            self.return_number = RETURN_NUMBER_FORMAT.format(
+                DocumentSequence.next_value('return')
+            )
         super().save(*args, **kwargs)
 
     def process_return(self):

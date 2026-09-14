@@ -20,7 +20,7 @@ from apps.customers.models import Customer, Payment
 from apps.inventory.models import Batch, Brand, Category, Product
 from apps.warehouse.models import Warehouse
 
-from .models import Sale, SaleItem, SaleReturn, SaleReturnItem
+from .models import Sale, SaleItem, SaleReturn, SaleReturnItem, DocumentSequence
 
 
 class SaleReturnTestBase(TestCase):
@@ -147,6 +147,72 @@ class SaleReturnTestBase(TestCase):
 
 
 class SaleReturnProcessingTests(SaleReturnTestBase):
+
+    def test_document_numbering(self):
+        """Invoice and return numbers are short global running numbers."""
+        DocumentSequence.objects.filter(key='invoice').update(value=10000)
+        DocumentSequence.objects.filter(key='return').update(value=10000)
+
+        first = self.create_sale(lines=[
+            {'product': self.product_a, 'batch': self.batch_a,
+             'quantity': 1, 'unit_price': '100'},
+        ])
+        second = self.create_sale(lines=[
+            {'product': self.product_b, 'batch': self.batch_b,
+             'quantity': 1, 'unit_price': '50'},
+        ])
+        self.assertEqual(first.invoice_number, 'INV10001')
+        self.assertEqual(second.invoice_number, 'INV10002')
+
+        item = first.items.first()
+        sale_return = self.create_return(first, [(item, 1)])
+        self.assertEqual(sale_return.return_number, 'RET10001')
+
+    def test_numbering_coexists_with_legacy_format(self):
+        """Legacy long numbers never collide with the new short format."""
+        DocumentSequence.objects.filter(key='invoice').update(value=10000)
+
+        legacy = Sale.objects.create(
+            invoice_number='INV202609140006',
+            sale_date=timezone.now(),
+            status='completed',
+            created_by=self.user,
+        )
+        new_sale = self.create_sale(lines=[
+            {'product': self.product_a, 'batch': self.batch_a,
+             'quantity': 1, 'unit_price': '100'},
+        ])
+        self.assertNotEqual(legacy.invoice_number, new_sale.invoice_number)
+        self.assertEqual(new_sale.invoice_number, 'INV10001')
+        self.assertEqual(Sale.objects.filter(
+            invoice_number=new_sale.invoice_number
+        ).count(), 1)
+
+    def test_document_sequence_unique_and_atomic(self):
+        """Concurrent number issuance never yields duplicates."""
+        from threading import Thread, Lock
+
+        results = []
+        results_lock = Lock()
+
+        def issue():
+            value = DocumentSequence.next_value('invoice')
+            with results_lock:
+                results.append(value)
+
+        try:
+            threads = [Thread(target=issue) for _ in range(10)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+        finally:
+            # Threads commit on their own connections; restore the seed
+            DocumentSequence.objects.filter(key='invoice').update(value=10000)
+
+        self.assertEqual(len(results), 10)
+        self.assertEqual(len(set(results)), 10, 'Duplicate numbers issued')
+        self.assertEqual(sorted(results), list(range(10001, 10011)))
 
     def test_full_return_registered_customer(self):
         sale = self.make_worked_example_sale()
