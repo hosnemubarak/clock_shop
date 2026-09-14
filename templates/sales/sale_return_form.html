@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+
+{% block title %}Return Items - {{ sale.invoice_number }} | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Return Items: {{ sale.invoice_number }}</h4>
+            <div class="page-title-right">
+                <a href="{% url 'sale_detail' sale.pk %}" class="btn btn-secondary">
+                    <i class="las la-arrow-left"></i> Back to Invoice
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Select Items to Return</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="returnForm"
+                      data-invoice-discount="{{ sale.discount_amount }}"
+                      data-invoice-tax="{{ sale.tax_amount }}"
+                      data-invoice-total="{{ sale.total_amount }}"
+                      data-remaining-gross="{{ remaining_gross }}">
+                    {% csrf_token %}
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item</th>
+                                    <th class="text-center">Sold</th>
+                                    <th class="text-center">Returned</th>
+                                    <th class="text-center">Max Returnable</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-center" style="width: 130px;">Return Qty</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in items %}
+                                <tr {% if entry.item.is_custom %}class="table-warning"{% endif %}
+                                    data-unit-price="{{ entry.item.unit_price }}"
+                                    data-item-discount="{{ entry.item.discount }}"
+                                    data-sold-qty="{{ entry.item.quantity }}">
+                                    <td>
+                                        {% if entry.item.is_custom %}
+                                            {{ entry.item.custom_description }}
+                                            <br><small class="text-muted">Custom Entry - no stock effect</small>
+                                        {% else %}
+                                            <a href="{% url 'product_detail' entry.item.product.pk %}">{{ entry.item.product.sku }}</a>
+                                            <br><small class="text-muted"><code>{{ entry.item.batch.batch_number }}</code></small>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">{{ entry.item.quantity }}</td>
+                                    <td class="text-center">{{ entry.returned }}</td>
+                                    <td class="text-center">
+                                        {% if entry.returnable > 0 %}
+                                            <span class="badge bg-success-subtle text-success">{{ entry.returnable }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Fully Returned</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">{{ CURRENCY_SYMBOL }}{{ entry.item.unit_price|floatformat:2 }}</td>
+                                    <td class="text-center">
+                                        {% if entry.returnable > 0 %}
+                                        <input type="number" name="return_qty_{{ entry.item.pk }}"
+                                               class="form-control form-control-sm return-qty-input"
+                                               min="1" max="{{ entry.returnable }}" step="1"
+                                               value="{{ entry.entered }}" placeholder="0">
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mb-3 mt-3">
+                        <label class="form-label">Reason <span class="text-danger">*</span></label>
+                        <textarea name="reason" class="form-control" rows="2" required
+                                  placeholder="e.g. Damaged item, customer changed mind...">{{ request.POST.reason|default:'' }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" class="form-control" rows="2"
+                                  placeholder="Any additional notes (optional)">{{ request.POST.notes|default:'' }}</textarea>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Invoice Summary</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted">Invoice #</td>
+                        <td class="fw-medium">{{ sale.invoice_number }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Date</td>
+                        <td>{{ sale.sale_date|date:"F d, Y" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Customer</td>
+                        <td>
+                            {% if sale.customer %}
+                            <a href="{% url 'customer_detail' sale.customer.pk %}">{{ sale.customer.name }}</a>
+                            {% else %}
+                            Walk-in Customer
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Invoice Total</td>
+                        <td>{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Paid</td>
+                        <td class="text-success">{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2 }}</td>
+                    </tr>
+                    {% if sale.due_amount > 0 %}
+                    <tr>
+                        <td class="text-muted">Due</td>
+                        <td class="text-danger">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2 }}</td>
+                    </tr>
+                    {% elif sale.due_amount < 0 %}
+                    <tr>
+                        <td class="text-muted">Credit</td>
+                        <td class="text-primary">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2 }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if sale.total_returned_amount > 0 %}
+                    <tr>
+                        <td class="text-muted">Already Returned</td>
+                        <td class="text-warning">{{ CURRENCY_SYMBOL }}{{ sale.total_returned_amount|floatformat:2 }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+
+        <div class="card border-primary">
+            <div class="card-header bg-primary-subtle">
+                <h5 class="card-title mb-0">Refund Summary</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted">Items Value</td>
+                        <td class="text-end" id="previewLineGross">{{ CURRENCY_SYMBOL }}0.00</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Item Discounts</td>
+                        <td class="text-end text-danger" id="previewItemDiscount">-{{ CURRENCY_SYMBOL }}0.00</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Invoice Discount Share</td>
+                        <td class="text-end text-danger" id="previewInvoiceDiscount">-{{ CURRENCY_SYMBOL }}0.00</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Tax Share</td>
+                        <td class="text-end" id="previewTax">{{ CURRENCY_SYMBOL }}0.00</td>
+                    </tr>
+                    <tr class="fw-bold border-top">
+                        <td>Estimated Refund</td>
+                        <td class="text-end text-success fs-5" id="previewRefund">{{ CURRENCY_SYMBOL }}0.00</td>
+                    </tr>
+                </table>
+                <hr>
+                <p class="text-muted small mb-3">
+                    <i class="las la-info-circle me-1"></i>
+                    Discount and tax are prorated proportionally to the value of returned items.
+                    Stock is restored to the original batches.
+                </p>
+                <button type="button" class="btn btn-danger w-100" id="submitReturnBtn">
+                    <i class="las la-undo-alt"></i> Process Return
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const returnForm = document.getElementById('returnForm');
+const CURRENCY = '{{ CURRENCY_SYMBOL }}';
+
+function computeRefundPreview() {
+    const invoiceDiscount = parseFloat(returnForm.dataset.invoiceDiscount) || 0;
+    const invoiceTax = parseFloat(returnForm.dataset.invoiceTax) || 0;
+    const invoiceTotal = parseFloat(returnForm.dataset.invoiceTotal) || 0;
+    const remainingGross = parseFloat(returnForm.dataset.remainingGross) || 0;
+
+    let lineGross = 0;
+    let itemDiscountShare = 0;
+    let anySelected = false;
+    let allSelected = true;
+
+    document.querySelectorAll('.return-qty-input').forEach(input => {
+        const qty = parseInt(input.value) || 0;
+        const max = parseInt(input.getAttribute('max'));
+        if (qty > 0) anySelected = true;
+        if (qty < max) allSelected = false;
+        if (qty <= 0) return;
+        const row = input.closest('tr');
+        const unitPrice = parseFloat(row.dataset.unitPrice) || 0;
+        const itemDiscount = parseFloat(row.dataset.itemDiscount) || 0;
+        const soldQty = parseFloat(row.dataset.soldQty) || 0;
+        lineGross += qty * unitPrice;
+        if (soldQty > 0) {
+            itemDiscountShare += itemDiscount * qty / soldQty;
+        }
+    });
+
+    let invoiceDiscountShare = 0;
+    let taxShare = 0;
+    if (remainingGross > 0 && lineGross > 0) {
+        invoiceDiscountShare = invoiceDiscount * lineGross / remainingGross;
+        taxShare = invoiceTax * lineGross / remainingGross;
+    }
+
+    let refund = lineGross - itemDiscountShare - invoiceDiscountShare + taxShare;
+    if (anySelected && allSelected) {
+        // Full-return snap: every remaining unit is returned (mirrors the model)
+        refund = invoiceTotal;
+    } else if (anySelected) {
+        // Partial returns are capped at the current invoice total (mirrors the model)
+        refund = Math.min(refund, invoiceTotal);
+    }
+
+    document.getElementById('previewLineGross').textContent = CURRENCY + lineGross.toFixed(2);
+    document.getElementById('previewItemDiscount').textContent = '-' + CURRENCY + itemDiscountShare.toFixed(2);
+    document.getElementById('previewInvoiceDiscount').textContent = '-' + CURRENCY + invoiceDiscountShare.toFixed(2);
+    document.getElementById('previewTax').textContent = CURRENCY + taxShare.toFixed(2);
+    document.getElementById('previewRefund').textContent = CURRENCY + Math.max(refund, 0).toFixed(2);
+
+    return {lineGross, refund};
+}
+
+document.querySelectorAll('.return-qty-input').forEach(input => {
+    input.addEventListener('input', computeRefundPreview);
+});
+
+document.getElementById('submitReturnBtn').addEventListener('click', function() {
+    let selected = 0;
+    document.querySelectorAll('.return-qty-input').forEach(input => {
+        const qty = parseInt(input.value) || 0;
+        const max = parseInt(input.getAttribute('max'));
+        if (qty > 0) {
+            selected++;
+            if (qty > max) {
+                showValidationModal(
+                    `Return quantity cannot exceed the maximum returnable quantity (${max}).`,
+                    'Invalid Quantity'
+                );
+                input.focus();
+                throw new Error('invalid quantity');
+            }
+        }
+    });
+
+    if (selected === 0) {
+        showValidationModal('Please select at least one item to return.', 'No Items Selected');
+        return;
+    }
+
+    const reason = document.querySelector('textarea[name="reason"]').value.trim();
+    if (!reason) {
+        showValidationModal('Please provide a reason for the return.', 'Reason Required');
+        return;
+    }
+
+    const {refund} = computeRefundPreview();
+    showConfirmModal(
+        `Process this return for an estimated refund of ${CURRENCY}${Math.max(refund, 0).toFixed(2)}? ` +
+        'Stock will be restored to the original batches.',
+        'Confirm Return',
+        function() {
+            returnForm.submit();
+        }
+    );
+});
+</script>
+{% endblock %}

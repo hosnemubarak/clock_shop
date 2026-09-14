@@ -68,16 +68,31 @@ class SaleAdmin(admin.ModelAdmin):
 class SaleReturnItemInline(admin.TabularInline):
     model = SaleReturnItem
     extra = 0
-    readonly_fields = ['sale_item', 'quantity']
+    readonly_fields = ['sale_item', 'quantity', 'unit_price', 'cost_price']
 
 
 @admin.register(SaleReturn)
 class SaleReturnAdmin(admin.ModelAdmin):
-    list_display = ['return_number', 'sale', 'return_date', 'refund_amount', 'reason', 'created_by']
-    list_filter = ['return_date', 'created_by']
+    list_display = ['return_number', 'sale', 'return_date', 'refund_amount',
+                    'payment_refund_amount', 'status', 'reason', 'created_by']
+    list_filter = ['status', 'return_date', 'created_by']
     search_fields = ['return_number', 'sale__invoice_number', 'reason']
-    readonly_fields = ['return_number', 'created_at', 'updated_at']
+    readonly_fields = ['return_number', 'refund_amount', 'payment_refund_amount',
+                       'created_at', 'updated_at']
     ordering = ['-return_date', '-created_at']
     list_per_page = 25
     inlines = [SaleReturnItemInline]
     date_hierarchy = 'return_date'
+
+    fieldsets = (
+        ('Return Info', {
+            'fields': ('return_number', 'sale', 'return_date', 'status')
+        }),
+        ('Refund', {
+            'fields': ('refund_amount', 'payment_refund_amount', 'reason', 'notes')
+        }),
+        ('Audit', {
+            'fields': ('created_by', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )

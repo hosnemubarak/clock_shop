@@ -9,6 +9,11 @@
         <div class="page-title-box d-sm-flex align-items-center justify-content-between">
             <h4 class="mb-sm-0">Invoice: {{ sale.invoice_number }}</h4>
             <div class="page-title-right">
+                {% if sale.status == 'completed' and any_returnable %}
+                <a href="{% url 'sale_return_create' sale.pk %}" class="btn btn-danger me-1">
+                    <i class="las la-undo-alt"></i> Return Items
+                </a>
+                {% endif %}
                 <a href="{% url 'sale_print' sale.pk %}" class="btn btn-primary" target="_blank">
                     <i class="las la-print"></i> Print
                 </a>
@@ -34,6 +39,7 @@
                                 <th>Product</th>
                                 <th>Batch</th>
                                 <th class="text-center">Qty</th>
+                                <th class="text-center">Returned</th>
                                 <th class="text-end">Price</th>
                                 <th class="text-end">Total</th>
                             </tr>
@@ -57,6 +63,13 @@
                                     {% endif %}
                                 </td>
                                 <td class="text-center">{{ item.quantity }}</td>
+                                <td class="text-center">
+                                    {% if item.returned_quantity > 0 %}
+                                        <span class="badge bg-danger-subtle text-danger">{{ item.returned_quantity }} / {{ item.quantity }}</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.unit_price|floatformat:2 }}</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ item.total_price|floatformat:2 }}</td>
                             </tr>
@@ -64,32 +77,37 @@
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="4" class="text-end">Subtotal:</td>
+                                <td colspan="5" class="text-end">Subtotal:</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.subtotal|floatformat:2 }}</td>
                             </tr>
                             {% if sale.discount_amount > 0 %}
                             <tr>
-                                <td colspan="4" class="text-end">Discount:</td>
+                                <td colspan="5" class="text-end">Discount:</td>
                                 <td class="text-end text-danger">-{{ CURRENCY_SYMBOL }}{{ sale.discount_amount|floatformat:2 }}</td>
                             </tr>
                             {% endif %}
                             {% if sale.tax_amount > 0 %}
                             <tr>
-                                <td colspan="4" class="text-end">Tax:</td>
+                                <td colspan="5" class="text-end">Tax:</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.tax_amount|floatformat:2 }}</td>
                             </tr>
                             {% endif %}
                             <tr class="fw-bold">
-                                <td colspan="4" class="text-end">Total:</td>
+                                <td colspan="5" class="text-end">Total:</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.total_amount|floatformat:2 }}</td>
                             </tr>
                             <tr class="text-success">
-                                <td colspan="4" class="text-end">Paid:</td>
+                                <td colspan="5" class="text-end">Paid:</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.paid_amount|floatformat:2 }}</td>
                             </tr>
                             {% if sale.due_amount > 0 %}
                             <tr class="text-danger fw-bold">
-                                <td colspan="4" class="text-end">Due:</td>
+                                <td colspan="5" class="text-end">Due:</td>
+                                <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2 }}</td>
+                            </tr>
+                            {% elif sale.due_amount < 0 %}
+                            <tr class="text-primary fw-bold">
+                                <td colspan="5" class="text-end">Credit (Overpaid):</td>
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ sale.due_amount|floatformat:2 }}</td>
                             </tr>
                             {% endif %}
@@ -122,6 +140,42 @@
                                 <td class="text-success">{{ CURRENCY_SYMBOL }}{{ payment.amount|floatformat:2 }}</td>
                                 <td>{{ payment.get_payment_method_display }}</td>
                                 <td>{{ payment.reference|default:"-" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% if sale.returns.all %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Return History</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Return #</th>
+                                <th>Date</th>
+                                <th>Items</th>
+                                <th class="text-end">Refund</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ret in sale.returns.all %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'sale_return_detail' ret.pk %}">{{ ret.return_number }}</a>
+                                    {% if ret.status != 'completed' %}
+                                    <span class="badge bg-secondary ms-1">{{ ret.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ ret.return_date|date:"M d, Y H:i" }}</td>
+                                <td>{{ ret.items.count }}</td>
+                                <td class="text-end text-danger">-{{ CURRENCY_SYMBOL }}{{ ret.refund_amount|floatformat:2 }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -215,7 +269,7 @@
         </div>
         {% endif %}
 
-        {% if sale.status == 'completed' and sale.paid_amount == 0 %}
+        {% if sale.status == 'completed' and sale.paid_amount == 0 and not sale.has_returns %}
         <div class="card border-danger">
             <div class="card-body">
                 <form method="post" action="{% url 'sale_cancel' sale.pk %}" id="cancelSaleForm">

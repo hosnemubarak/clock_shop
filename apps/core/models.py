@@ -11,6 +11,7 @@ class AuditLog(models.Model):
         ('TRANSFER', 'Transfer'),
         ('SALE', 'Sale'),
         ('PAYMENT', 'Payment'),
+        ('SALE_RETURN', 'Sale Return'),
         ('STOCK_IN', 'Stock In'),
         ('STOCK_OUT', 'Stock Out'),
     ]

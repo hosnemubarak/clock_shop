@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Sale Returns | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Sale Returns</h4>
+            <div class="page-title-right">
+                <span class="text-muted me-2">Total Refunds:</span>
+                <span class="badge bg-danger-subtle text-danger fs-14">
+                    {{ CURRENCY_SYMBOL }}{{ total_refunds|floatformat:2|intcomma|default:"0.00" }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <input type="text" name="search" class="form-control" placeholder="Search return #, invoice #, customer..." value="{{ search }}">
+                    </div>
+                    <div class="col-md-2">
+                        <select name="status" class="form-select">
+                            <option value="">All Status</option>
+                            <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+                            <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" name="date_from" class="form-control" placeholder="From" value="{{ request.GET.date_from }}">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" name="date_to" class="form-control" placeholder="To" value="{{ request.GET.date_to }}">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Return #</th>
+                                <th>Invoice #</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th class="text-center">Lines</th>
+                                <th class="text-center">Units</th>
+                                <th class="text-end">Refund</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ret in returns %}
+                            <tr>
+                                <td><a href="{% url 'sale_return_detail' ret.pk %}" class="fw-medium">{{ ret.return_number }}</a></td>
+                                <td><a href="{% url 'sale_detail' ret.sale.pk %}">{{ ret.sale.invoice_number }}</a></td>
+                                <td>{{ ret.sale.customer.name|default:"Walk-in" }}</td>
+                                <td>{{ ret.return_date|date:"M d, Y" }}</td>
+                                <td class="text-center">{{ ret.item_count }}</td>
+                                <td class="text-center">{{ ret.total_units|default:0 }}</td>
+                                <td class="text-end text-danger">-{{ CURRENCY_SYMBOL }}{{ ret.refund_amount|floatformat:2 }}</td>
+                                <td>
+                                    {% if ret.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Cancelled</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            <i class="las la-ellipsis-h"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item" href="{% url 'sale_return_detail' ret.pk %}"><i class="las la-eye me-2"></i>View Return</a></li>
+                                            <li><a class="dropdown-item" href="{% url 'sale_detail' ret.sale.pk %}"><i class="las la-file-invoice me-2"></i>View Invoice</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center text-muted py-4">No returns found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% with page_obj=returns %}
+                {% include 'includes/pagination.html' %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

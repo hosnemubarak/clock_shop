@@ -75,25 +75,35 @@ class Customer(TimeStampedModel):
                 raise ValidationError({'email': 'A customer with this email already exists.'})
     
     def recalculate_balance(self):
-        """Recalculate customer balance from sales and payments."""
-        from apps.sales.models import Sale
-        
-        # Total from completed sales
+        """Recalculate customer balance from sales, payments, and return refunds."""
+        from apps.sales.models import Sale, SaleReturn
+
+        # Total from completed sales (net of returns)
         sales_total = Sale.objects.filter(
             customer=self,
             status='completed'
         ).aggregate(
             total=models.Sum('total_amount')
         )['total'] or Decimal('0.00')
-        
+
         # Total payments
         payments_total = self.payments.aggregate(
             total=models.Sum('amount')
         )['total'] or Decimal('0.00')
-        
+
+        # Payment refunds issued on returns: when a paid invoice is returned,
+        # the over-payment is handed back to the customer, so it must not stay
+        # counted as paid nor reduce dues on their other invoices.
+        payment_refunds_total = SaleReturn.objects.filter(
+            sale__customer=self,
+            status='completed'
+        ).aggregate(
+            total=models.Sum('payment_refund_amount')
+        )['total'] or Decimal('0.00')
+
         self.total_purchases = sales_total
-        self.total_paid = payments_total
-        self.total_due = sales_total - payments_total
+        self.total_paid = payments_total - payment_refunds_total
+        self.total_due = sales_total - self.total_paid
         self.save(update_fields=['total_purchases', 'total_paid', 'total_due'])
     
     def get_purchase_history(self):

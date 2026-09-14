@@ -9,10 +9,15 @@ urlpatterns = [
     path('<int:pk>/cancel/', views.sale_cancel, name='sale_cancel'),
     path('<int:pk>/payment/', views.sale_payment, name='sale_payment'),
     path('<int:pk>/print/', views.sale_print, name='sale_print'),
-    
+
+    # Returns
+    path('returns/', views.sale_return_list, name='sale_return_list'),
+    path('<int:pk>/return/', views.sale_return_create, name='sale_return_create'),
+    path('returns/<int:pk>/', views.sale_return_detail, name='sale_return_detail'),
+
     # POS
     path('pos/', views.pos_view, name='pos'),
-    
+
     # API
     path('api/products/<int:product_id>/', views.api_product_info, name='api_product_info'),
 ]

@@ -11,7 +11,7 @@ from decimal import Decimal
 from .models import AuditLog, SystemSettings
 from .forms import SystemSettingsForm
 from apps.inventory.models import Product, Batch
-from apps.sales.models import Sale, SaleItem
+from apps.sales.models import Sale, SaleItem, SaleReturnItem
 from apps.customers.models import Customer
 from apps.warehouse.models import Warehouse
 
@@ -31,12 +31,22 @@ def dashboard(request):
         sale_date__date__gte=month_start
     ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
     
-    # Profit calculation
+    # Profit calculation (SaleItem-based; subtract returns on this month's sales
+    # because SaleItem.quantity is never mutated)
     profit_month = SaleItem.objects.filter(
         sale__sale_date__date__gte=month_start
     ).aggregate(
         profit=Sum(F('quantity') * (F('unit_price') - F('cost_price')))
     )['profit'] or Decimal('0')
+
+    returned_profit_month = SaleReturnItem.objects.filter(
+        sale_return__status='completed',
+        sale_item__sale__sale_date__date__gte=month_start,
+    ).aggregate(
+        profit=Sum(F('quantity') * (F('unit_price') - F('cost_price')))
+    )['profit'] or Decimal('0')
+
+    profit_month -= returned_profit_month
     
     # Inventory metrics
     total_products = Product.objects.filter(is_active=True).count()

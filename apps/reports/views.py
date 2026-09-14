@@ -8,9 +8,21 @@ from datetime import timedelta, date
 from decimal import Decimal
 
 from apps.inventory.models import Product, Batch, Category
-from apps.sales.models import Sale, SaleItem
+from apps.sales.models import Sale, SaleItem, SaleReturn, SaleReturnItem
 from apps.customers.models import Customer, Payment
 from apps.warehouse.models import Warehouse, StockTransfer
+
+
+def _return_filter_from(base_filter):
+    """
+    Build a SaleReturnItem filter mirroring a SaleItem base filter.
+
+    SaleItem-based filters translate to the return side by prefixing every
+    key with 'sale_item__'; only completed returns affect figures.
+    """
+    ret = {f'sale_item__{key}': value for key, value in base_filter.items()}
+    ret['sale_return__status'] = 'completed'
+    return ret
 
 
 @login_required
@@ -54,7 +66,7 @@ def sales_report(request):
             items__is_custom=False
         ).distinct()
     
-    # Summary stats
+    # Summary stats (total_amount is already net of returns)
     summary = sales.aggregate(
         total_sales=Sum('total_amount'),
         total_cost=Sum('total_cost'),
@@ -62,6 +74,13 @@ def sales_report(request):
         count=Count('id'),
     )
     summary['total_profit'] = (summary['total_sales'] or Decimal('0')) - (summary['total_cost'] or Decimal('0'))
+
+    # Informational: refunds issued for returns made in the period
+    returns_total = SaleReturn.objects.filter(
+        status='completed',
+        return_date__date__gte=date_from,
+        return_date__date__lte=date_to,
+    ).aggregate(total=Sum('refund_amount'))['total'] or Decimal('0')
     
     # Group by period
     if group_by == 'day':
@@ -86,19 +105,46 @@ def sales_report(request):
         sales_data.append(s)
     
     # Top selling products (exclude custom items)
-    top_products = SaleItem.objects.filter(
-        sale__status='completed',
-        sale__sale_date__date__gte=date_from,
-        sale__sale_date__date__lte=date_to,
-        is_custom=False,
-        product__isnull=False
+    top_filter = {
+        'sale__status': 'completed',
+        'sale__sale_date__date__gte': date_from,
+        'sale__sale_date__date__lte': date_to,
+        'is_custom': False,
+        'product__isnull': False,
+    }
+    top_products = list(SaleItem.objects.filter(
+        **top_filter
     ).values(
         'product__sku', 'product__brand__name'
     ).annotate(
         total_quantity=Sum('quantity'),
         total_revenue=Sum(F('quantity') * F('unit_price')),
         total_profit=Sum(F('quantity') * (F('unit_price') - F('cost_price')))
-    ).order_by('-total_revenue')[:10]
+    ).order_by('-total_revenue'))
+
+    # Subtract returned quantities/revenue (SaleItem.quantity is never mutated;
+    # returns must be joined via sale_item on sales within the same date range)
+    returned_by_product = {
+        (r['sale_item__product__sku'], r['sale_item__product__brand__name']): r
+        for r in SaleReturnItem.objects.filter(
+            **_return_filter_from(top_filter)
+        ).values(
+            'sale_item__product__sku', 'sale_item__product__brand__name'
+        ).annotate(
+            returned_qty=Sum('quantity'),
+            returned_revenue=Sum(F('quantity') * F('unit_price')),
+            returned_profit=Sum(F('quantity') * (F('unit_price') - F('cost_price'))),
+        )
+    }
+    for p in top_products:
+        r = returned_by_product.get((p['product__sku'], p['product__brand__name']))
+        if r:
+            p['total_quantity'] -= r['returned_qty']
+            p['total_revenue'] -= r['returned_revenue']
+            p['total_profit'] -= r['returned_profit']
+    top_products = [p for p in top_products if p['total_quantity'] > 0]
+    top_products.sort(key=lambda p: p['total_revenue'] or Decimal('0'), reverse=True)
+    top_products = top_products[:10]
     
     # Shop-wise sales breakdown (for comparison)
     shop_sales = []
@@ -129,6 +175,7 @@ def sales_report(request):
         'date_to': date_to,
         'group_by': group_by,
         'summary': summary,
+        'returns_total': returns_total,
         'sales_by_period': sales_data,
         'top_products': top_products,
         'shops': shops,
@@ -174,7 +221,36 @@ def profit_report(request):
     # Apply category filter
     if category_id:
         base_filter['product__category_id'] = category_id
-    
+
+    # Parallel filter for returned items (joined via sale_item on the same
+    # in-range sales; SaleItem quantities are never mutated by returns)
+    return_filter = _return_filter_from(base_filter)
+
+    # Returned quantities/revenue/cost per product
+    returned_by_product = {
+        (r['sale_item__product__sku'], r['sale_item__product__brand__name'],
+         r['sale_item__product__category__name']): r
+        for r in SaleReturnItem.objects.filter(**return_filter).values(
+            'sale_item__product__sku', 'sale_item__product__brand__name',
+            'sale_item__product__category__name'
+        ).annotate(
+            returned_qty=Sum('quantity'),
+            returned_revenue=Sum(F('quantity') * F('unit_price')),
+            returned_cost=Sum(F('quantity') * F('cost_price')),
+        )
+    }
+
+    # Returned revenue/cost per category
+    returned_by_category = {
+        r['sale_item__product__category__name']: r
+        for r in SaleReturnItem.objects.filter(**return_filter).values(
+            'sale_item__product__category__name'
+        ).annotate(
+            returned_revenue=Sum(F('quantity') * F('unit_price')),
+            returned_cost=Sum(F('quantity') * F('cost_price')),
+        )
+    }
+
     # Profit by product (exclude custom items)
     profit_by_product = SaleItem.objects.filter(
         **base_filter
@@ -187,10 +263,20 @@ def profit_report(request):
     ).annotate(
         profit=F('revenue') - F('cost'),
     ).order_by('-profit')
-    
-    # Calculate margin
+
+    # Subtract returns, calculate margin
     profit_data = []
     for p in profit_by_product:
+        r = returned_by_product.get(
+            (p['product__sku'], p['product__brand__name'], p['product__category__name'])
+        )
+        if r:
+            p['quantity_sold'] -= r['returned_qty']
+            p['revenue'] -= r['returned_revenue']
+            p['cost'] -= r['returned_cost']
+        if p['quantity_sold'] <= 0:
+            continue
+        p['profit'] = p['revenue'] - p['cost']
         if p['revenue'] and p['revenue'] > 0:
             p['margin'] = round((p['profit'] / p['revenue']) * 100, 2)
         else:
@@ -202,8 +288,8 @@ def profit_report(request):
     page = request.GET.get('page')
     profit_by_product_page = paginator.get_page(page)
     
-    # Profit by category (exclude custom items)
-    profit_by_category = SaleItem.objects.filter(
+    # Profit by category (exclude custom items, net of returns)
+    profit_by_category = list(SaleItem.objects.filter(
         **base_filter
     ).values(
         'product__category__name'
@@ -212,15 +298,36 @@ def profit_report(request):
         cost=Sum(F('quantity') * F('cost_price')),
     ).annotate(
         profit=F('revenue') - F('cost'),
-    ).order_by('-profit')
-    
-    # Profit by warehouse/shop (exclude custom items)
+    ).order_by('-profit'))
+
+    for p in profit_by_category:
+        r = returned_by_category.get(p['product__category__name'])
+        if r:
+            p['revenue'] -= r['returned_revenue']
+            p['cost'] -= r['returned_cost']
+        p['profit'] = p['revenue'] - p['cost']
+    profit_by_category = [p for p in profit_by_category if p['profit'] or p['revenue'] or p['cost']]
+    profit_by_category.sort(key=lambda p: p['profit'] or Decimal('0'), reverse=True)
+
+    # Profit by warehouse/shop (exclude custom items, net of returns)
     warehouse_filter = base_filter.copy()
     warehouse_filter['batch__isnull'] = False
     if 'product__isnull' in warehouse_filter:
         del warehouse_filter['product__isnull']
-    
-    profit_by_warehouse = SaleItem.objects.filter(
+
+    warehouse_return_filter = _return_filter_from(warehouse_filter)
+
+    returned_by_warehouse = {
+        (r['sale_item__batch__warehouse__name'], r['sale_item__batch__warehouse__is_shop']): r
+        for r in SaleReturnItem.objects.filter(**warehouse_return_filter).values(
+            'sale_item__batch__warehouse__name', 'sale_item__batch__warehouse__is_shop'
+        ).annotate(
+            returned_revenue=Sum(F('quantity') * F('unit_price')),
+            returned_cost=Sum(F('quantity') * F('cost_price')),
+        )
+    }
+
+    profit_by_warehouse = list(SaleItem.objects.filter(
         **warehouse_filter
     ).values(
         'batch__warehouse__name', 'batch__warehouse__is_shop'
@@ -229,15 +336,32 @@ def profit_report(request):
         cost=Sum(F('quantity') * F('cost_price')),
     ).annotate(
         profit=F('revenue') - F('cost'),
-    ).order_by('-profit')
-    
-    # Total summary (exclude custom items for accurate profit calc)
+    ).order_by('-profit'))
+
+    for p in profit_by_warehouse:
+        r = returned_by_warehouse.get(
+            (p['batch__warehouse__name'], p['batch__warehouse__is_shop'])
+        )
+        if r:
+            p['revenue'] -= r['returned_revenue']
+            p['cost'] -= r['returned_cost']
+        p['profit'] = p['revenue'] - p['cost']
+    profit_by_warehouse = [p for p in profit_by_warehouse if p['profit'] or p['revenue'] or p['cost']]
+    profit_by_warehouse.sort(key=lambda p: p['profit'] or Decimal('0'), reverse=True)
+
+    # Total summary (exclude custom items for accurate profit calc, net of returns)
     totals = SaleItem.objects.filter(
         **base_filter
     ).aggregate(
         total_revenue=Sum(F('quantity') * F('unit_price')),
         total_cost=Sum(F('quantity') * F('cost_price')),
     )
+    returned_totals = SaleReturnItem.objects.filter(**return_filter).aggregate(
+        returned_revenue=Sum(F('quantity') * F('unit_price')),
+        returned_cost=Sum(F('quantity') * F('cost_price')),
+    )
+    totals['total_revenue'] = (totals['total_revenue'] or Decimal('0')) - (returned_totals['returned_revenue'] or Decimal('0'))
+    totals['total_cost'] = (totals['total_cost'] or Decimal('0')) - (returned_totals['returned_cost'] or Decimal('0'))
     totals['total_profit'] = (totals['total_revenue'] or Decimal('0')) - (totals['total_cost'] or Decimal('0'))
     if totals['total_revenue'] and totals['total_revenue'] > 0:
         totals['margin'] = round((totals['total_profit'] / totals['total_revenue']) * 100, 2)
@@ -372,6 +496,12 @@ def customer_report(request):
         total_dues=Sum('total_due'),
         total_purchases=Sum('total_purchases'),
     )
+
+    # Total refunds issued on registered-customer sales
+    total_returns = SaleReturn.objects.filter(
+        status='completed',
+        sale__customer__isnull=False,
+    ).aggregate(total=Sum('refund_amount'))['total'] or Decimal('0')
     
     # Recent payments
     recent_payments = Payment.objects.select_related(
@@ -382,6 +512,7 @@ def customer_report(request):
         'customers_with_dues': customers_with_dues_page,
         'top_customers': top_customers,
         'customer_summary': customer_summary,
+        'total_returns': total_returns,
         'recent_payments': recent_payments,
     }
     return render(request, 'reports/customer_report.html', context)

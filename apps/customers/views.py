@@ -9,7 +9,7 @@ from decimal import Decimal
 
 from .models import Customer, Payment, CustomerNote
 from .forms import CustomerForm, PaymentForm, CustomerNoteForm, QuickPaymentForm
-from apps.sales.models import Sale
+from apps.sales.models import Sale, SaleReturn
 from apps.core.utils import create_audit_log
 
 
@@ -156,17 +156,25 @@ def customer_statement(request, pk):
     date_from = request.GET.get('date_from')
     date_to = request.GET.get('date_to')
     
-    # Get all transactions
-    sales = customer.sales.filter(status='completed')
+    # Get all transactions (annotate returned totals to avoid N+1 in the loop)
+    sales = customer.sales.filter(status='completed').annotate(
+        returned_total=Sum('returns__refund_amount', filter=Q(returns__status='completed'))
+    )
     payments = customer.payments.all()
-    
+    returns = SaleReturn.objects.filter(
+        sale__customer=customer,
+        status='completed',
+    )
+
     if date_from:
         sales = sales.filter(sale_date__date__gte=date_from)
         payments = payments.filter(payment_date__date__gte=date_from)
+        returns = returns.filter(return_date__date__gte=date_from)
     if date_to:
         sales = sales.filter(sale_date__date__lte=date_to)
         payments = payments.filter(payment_date__date__lte=date_to)
-    
+        returns = returns.filter(return_date__date__lte=date_to)
+
     # Combine and sort transactions
     transactions = []
     for sale in sales:
@@ -174,10 +182,12 @@ def customer_statement(request, pk):
             'date': sale.sale_date,
             'type': 'Invoice',
             'reference': sale.invoice_number,
-            'debit': sale.total_amount,
+            # Debit the ORIGINAL invoice amount: sale.total_amount is already
+            # net of returns, and returns appear as their own credit rows
+            'debit': sale.total_amount + (sale.returned_total or Decimal('0')),
             'credit': Decimal('0'),
         })
-    
+
     for payment in payments:
         transactions.append({
             'date': payment.payment_date,
@@ -186,6 +196,25 @@ def customer_statement(request, pk):
             'debit': Decimal('0'),
             'credit': payment.amount,
         })
+
+    for sale_return in returns:
+        transactions.append({
+            'date': sale_return.return_date,
+            'type': 'Return',
+            'reference': sale_return.return_number,
+            'debit': Decimal('0'),
+            'credit': sale_return.refund_amount,
+        })
+        # Refunds handed back to the customer reverse their payment, so they
+        # appear on the debit side to keep the ledger balanced
+        if sale_return.payment_refund_amount > 0:
+            transactions.append({
+                'date': sale_return.return_date,
+                'type': 'Refund',
+                'reference': sale_return.return_number,
+                'debit': sale_return.payment_refund_amount,
+                'credit': Decimal('0'),
+            })
     
     transactions.sort(key=lambda x: x['date'])
     

@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
-from django.db.models import Q, Sum, F
+from django.db.models import Q, Sum, F, Count
 from django.db import transaction
 from django.http import JsonResponse
 from django.utils import timezone
@@ -10,7 +11,7 @@ from decimal import Decimal
 import json
 import html
 
-from .models import Sale, SaleItem
+from .models import Sale, SaleItem, SaleReturn, SaleReturnItem
 from .forms import SaleForm, SaleItemForm, PaymentForm
 from apps.inventory.models import Product, Batch
 from apps.customers.models import Customer, Payment
@@ -64,11 +65,19 @@ def sale_detail(request, pk):
     """View sale/invoice details."""
     sale = get_object_or_404(
         Sale.objects.select_related('customer', 'created_by').prefetch_related(
-            'items__product', 'items__batch'
+            'items__product', 'items__batch', 'returns__items'
         ),
         pk=pk
     )
-    
+
+    # Cache returned quantities on items to avoid N+1 in the template
+    returned_by_item = sale._returned_before()
+    any_returnable = False
+    for item in sale.items.all():
+        item._returned_quantity_cache = returned_by_item.get(item.pk, 0)
+        if item.returnable_quantity > 0:
+            any_returnable = True
+
     # Get payments for this sale
     payments = []
     if sale.customer:
@@ -76,10 +85,11 @@ def sale_detail(request, pk):
             customer=sale.customer,
             sale=sale
         ).order_by('-payment_date')
-    
+
     context = {
         'sale': sale,
         'payments': payments,
+        'any_returnable': any_returnable,
     }
     return render(request, 'sales/sale_detail.html', context)
 
@@ -199,14 +209,20 @@ def sale_create(request):
 def sale_cancel(request, pk):
     """Cancel a sale and restore stock."""
     sale = get_object_or_404(Sale, pk=pk)
-    
+
     if request.method == 'POST':
-        if sale.status == 'cancelled':
-            messages.error(request, 'Sale is already cancelled.')
-        elif sale.paid_amount > 0:
-            messages.error(request, 'Cannot cancel a sale with payments. Process refund first.')
-        else:
-            with transaction.atomic():
+        with transaction.atomic():
+            # Re-fetch inside the lock so a concurrently processed return,
+            # payment, or cancel cannot interleave with the stock restore
+            sale = Sale.objects.select_for_update().get(pk=pk)
+
+            if sale.status == 'cancelled':
+                messages.error(request, 'Sale is already cancelled.')
+            elif sale.has_returns:
+                messages.error(request, 'Cannot cancel a sale with returns.')
+            elif sale.paid_amount > 0:
+                messages.error(request, 'Cannot cancel a sale with payments. Process refund first.')
+            else:
                 # Restore stock to batches (skip custom items)
                 for item in sale.items.all():
                     if not item.is_custom and item.batch and item.product:
@@ -214,20 +230,216 @@ def sale_cancel(request, pk):
                         batch.quantity += item.quantity
                         batch.save()
                         item.product.update_total_stock()
-                
+
                 # Update customer balance
                 if sale.customer:
                     sale.customer.total_purchases -= sale.total_amount
                     sale.customer.total_due -= sale.due_amount
                     sale.customer.save()
-                
+
                 sale.status = 'cancelled'
                 sale.save()
-                
+
                 create_audit_log(request, 'SALE', sale, {'action': 'cancelled'})
                 messages.success(request, f'Sale "{sale.invoice_number}" cancelled.')
-    
+
     return redirect('sale_detail', pk=sale.pk)
+
+
+@login_required
+def sale_return_create(request, pk):
+    """Create a return (full or partial) for a completed sale."""
+    sale = get_object_or_404(
+        Sale.objects.select_related('customer', 'created_by').prefetch_related(
+            'items__product', 'items__batch'
+        ),
+        pk=pk
+    )
+
+    if sale.status != 'completed':
+        messages.error(request, 'Returns can only be created for completed sales.')
+        return redirect('sale_detail', pk=sale.pk)
+
+    # Build item rows with returned/returnable quantities (single aggregated query)
+    returned_by_item = sale._returned_before()
+    items = []
+    any_returnable = False
+    for item in sale.items.all():
+        returned = returned_by_item.get(item.pk, 0)
+        returnable = item.quantity - returned
+        if returnable > 0:
+            any_returnable = True
+        items.append({
+            'item': item,
+            'returned': returned,
+            'returnable': returnable,
+            'entered': '',
+        })
+
+    if not any_returnable:
+        messages.info(request, 'All items on this invoice have already been fully returned.')
+        return redirect('sale_detail', pk=sale.pk)
+
+    if request.method == 'POST':
+        reason = request.POST.get('reason', '').strip()
+        notes = request.POST.get('notes', '').strip()
+        errors = []
+
+        if not reason:
+            errors.append('A reason is required.')
+
+        # Parse requested quantities per item
+        return_lines = []
+        for entry in items:
+            sale_item = entry['item']
+            qty_raw = request.POST.get(f'return_qty_{sale_item.pk}', '').strip()
+            entry['entered'] = qty_raw
+            if not qty_raw:
+                continue
+            try:
+                qty = int(qty_raw)
+            except (TypeError, ValueError):
+                errors.append(f'Invalid quantity for "{sale_item}".')
+                continue
+            if qty < 1:
+                errors.append(f'Quantity must be at least 1 for "{sale_item}".')
+                continue
+            if qty > entry['returnable']:
+                errors.append(
+                    f'Cannot return {qty} of "{sale_item}": '
+                    f'only {entry["returnable"]} returnable.'
+                )
+                continue
+            return_lines.append((sale_item, qty))
+
+        if not return_lines:
+            errors.append('Select at least one item to return.')
+
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+        else:
+            try:
+                with transaction.atomic():
+                    sale_return = SaleReturn.objects.create(
+                        sale=sale,
+                        return_date=timezone.now(),
+                        reason=reason,
+                        notes=notes,
+                        refund_amount=Decimal('0.00'),
+                        status='pending',
+                        created_by=request.user,
+                    )
+                    for sale_item, qty in return_lines:
+                        SaleReturnItem.objects.create(
+                            sale_return=sale_return,
+                            sale_item=sale_item,
+                            quantity=qty,
+                            unit_price=sale_item.unit_price,
+                            cost_price=sale_item.cost_price,
+                        )
+                    sale_return.process_return()
+
+                    create_audit_log(request, 'SALE_RETURN', sale_return, {
+                        'invoice': sale.invoice_number,
+                        'refund': str(sale_return.refund_amount),
+                        'items': len(return_lines),
+                    })
+
+                    success_msg = (
+                        f'Return "{sale_return.return_number}" processed. '
+                        f'Refund: {sale_return.refund_amount}.'
+                    )
+                    if sale_return.payment_refund_amount > 0:
+                        success_msg += (
+                            f' Payment refunded to customer: '
+                            f'{sale_return.payment_refund_amount}.'
+                        )
+                    messages.success(request, success_msg)
+                    return redirect('sale_return_detail', pk=sale_return.pk)
+            except (ValidationError, ValueError) as e:
+                messages.error(request, f'Return could not be processed: {e}')
+
+    # Remaining gross value for the live refund preview (same formula as the model)
+    remaining_gross = sum(
+        (entry['returnable'] * entry['item'].unit_price for entry in items),
+        Decimal('0.00'),
+    )
+
+    context = {
+        'sale': sale,
+        'items': items,
+        'remaining_gross': remaining_gross,
+    }
+    return render(request, 'sales/sale_return_form.html', context)
+
+
+@login_required
+def sale_return_list(request):
+    """List all sale returns with filtering."""
+    returns = SaleReturn.objects.select_related(
+        'sale', 'sale__customer', 'created_by'
+    ).annotate(
+        item_count=Count('items'),
+        total_units=Sum('items__quantity'),
+    ).order_by('-return_date', '-created_at')
+
+    # Search
+    search = request.GET.get('search', '')
+    if search:
+        returns = returns.filter(
+            Q(return_number__icontains=search) |
+            Q(sale__invoice_number__icontains=search) |
+            Q(sale__customer__name__icontains=search)
+        )
+
+    # Status filter
+    status = request.GET.get('status')
+    if status:
+        returns = returns.filter(status=status)
+
+    # Date filter
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    if date_from:
+        returns = returns.filter(return_date__date__gte=date_from)
+    if date_to:
+        returns = returns.filter(return_date__date__lte=date_to)
+
+    # Summary of filtered results (before pagination)
+    total_refunds = returns.aggregate(
+        total=Sum('refund_amount')
+    )['total'] or Decimal('0.00')
+
+    paginator = Paginator(returns, 10)
+    page = request.GET.get('page')
+    returns = paginator.get_page(page)
+
+    context = {
+        'returns': returns,
+        'search': search,
+        'total_refunds': total_refunds,
+    }
+    return render(request, 'sales/sale_return_list.html', context)
+
+
+@login_required
+def sale_return_detail(request, pk):
+    """View return details."""
+    sale_return = get_object_or_404(
+        SaleReturn.objects.select_related(
+            'sale', 'sale__customer', 'created_by'
+        ).prefetch_related('items__sale_item__product', 'items__sale_item__batch'),
+        pk=pk
+    )
+    total_units = sale_return.items.aggregate(total=Sum('quantity'))['total'] or 0
+    invoice_reduction = sale_return.refund_amount - sale_return.payment_refund_amount
+    context = {
+        'sale_return': sale_return,
+        'total_units': total_units,
+        'invoice_reduction': invoice_reduction,
+    }
+    return render(request, 'sales/sale_return_detail.html', context)
 
 
 @login_required
