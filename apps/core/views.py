@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.conf import settings as django_settings
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.contrib.auth import login
@@ -248,5 +249,9 @@ def system_settings(request):
     context = {
         'form': form,
         'settings': settings,
+        'env_shop_name': getattr(django_settings, 'SHOP_NAME', ''),
+        'env_shop_address': getattr(django_settings, 'SHOP_ADDRESS', ''),
+        'env_currency': getattr(django_settings, 'CURRENCY_SYMBOL', ''),
+        'env_low_stock': getattr(django_settings, 'LOW_STOCK_THRESHOLD', ''),
     }
     return render(request, 'core/system_settings.html', context)

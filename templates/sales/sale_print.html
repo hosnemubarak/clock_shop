@@ -28,7 +28,7 @@
 
     <div class="header">
         <h1>{{ SHOP_NAME }}</h1>
-        <p>Retail Clock Shop</p>
+        {% if SHOP_ADDRESS %}<p>{{ SHOP_ADDRESS|linebreaksbr }}</p>{% endif %}
     </div>
 
     <div class="invoice-info">
@@ -56,7 +56,6 @@
         <thead>
             <tr>
                 <th>Product</th>
-                <th>SKU</th>
                 <th class="text-right">Qty</th>
                 <th class="text-right">Price</th>
                 <th class="text-right">Total</th>
@@ -65,8 +64,7 @@
         <tbody>
             {% for item in sale.items.all %}
             <tr>
-                <td>{% if item.is_custom %}{{ item.custom_description }} <em>(Custom)</em>{% else %}{{ item.product.sku }}{% endif %}</td>
-                <td>{% if item.is_custom %}-{% else %}{{ item.product.sku }}{% endif %}</td>
+                <td>{% if item.is_custom %}{{ item.custom_description }} <em>(Custom)</em>{% else %}{{ item.product.display_name }}{% endif %}</td>
                 <td class="text-right">{{ item.quantity }}</td>
                 <td class="text-right">{{ CURRENCY_SYMBOL }}{{ item.unit_price|floatformat:2 }}</td>
                 <td class="text-right">{{ CURRENCY_SYMBOL }}{{ item.total_price|floatformat:2 }}</td>
@@ -118,7 +116,7 @@
 
     <div class="footer">
         <p>Thank you for your business!</p>
-        <p>{{ SHOP_NAME }} - Retail Clock Shop</p>
+        <p>{{ SHOP_NAME }}</p>
     </div>
 </body>
 </html>

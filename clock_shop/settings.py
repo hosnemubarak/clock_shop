@@ -178,6 +178,7 @@ LOGOUT_REDIRECT_URL = 'login'
 
 # Business Settings
 SHOP_NAME = os.environ.get('SHOP_NAME', "Clock Shop")
+SHOP_ADDRESS = os.environ.get('SHOP_ADDRESS', "")
 CURRENCY_SYMBOL = os.environ.get('CURRENCY_SYMBOL', "৳")
 LOW_STOCK_THRESHOLD = int(os.environ.get('LOW_STOCK_THRESHOLD', 5))
 
