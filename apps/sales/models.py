@@ -147,7 +147,12 @@ class Sale(TimeStampedModel):
     def profit(self):
         """Calculate profit for this sale."""
         return self.total_amount - self.discount_amount - self.total_cost
-    
+
+    @property
+    def total_quantity(self):
+        """Total units sold across all items on this invoice."""
+        return sum(item.quantity for item in self.items.all())
+
     def update_payment_status(self):
         """Update payment status based on paid amount."""
         if self.paid_amount >= self.total_amount:

@@ -71,6 +71,14 @@
             </tr>
             {% endfor %}
         </tbody>
+        <tfoot>
+            <tr style="font-weight: bold; background: #f9f9f9;">
+                <td>Total Qty: {{ sale.total_quantity }}</td>
+                <td class="text-right">{{ sale.total_quantity }}</td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tfoot>
     </table>
 
     <div class="totals">
