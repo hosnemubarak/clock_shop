@@ -61,7 +61,7 @@ def get_product_stock_history(product, limit=None):
     for so in product.stockout_items.exclude(stockout__status='cancelled').select_related('stockout', 'stockout__created_by', 'stockout__warehouse'):
         history.append({
             'timestamp': so.created_at,
-            'date': so.stockout.date,
+            'date': so.stockout.stockout_date,
             'type': 'STOCK_OUT',
             'type_label': f'Stock Out ({so.stockout.get_reason_display()})',
             'reference': so.stockout.stockout_number,
