@@ -73,7 +73,7 @@
                     {% endif %}
                     
                     <!-- Invoice Selection Section -->
-                    <div class="mb-3 d-none" id="invoiceSection" {% if not customer %}{% endif %}>
+                    <div class="mb-3{% if not customer %} d-none{% endif %}" id="invoiceSection">
                         <label class="form-label">Select Invoice</label>
                         <div class="table-responsive min-h-300" >
                             <table class="table table-sm table-hover" id="invoiceTable">
