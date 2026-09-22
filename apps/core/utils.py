@@ -1,6 +1,7 @@
 from typing import Optional, Dict, Any
 from django.core.paginator import Page, Paginator
 from django.db import models, transaction, IntegrityError
+from django.db.models.functions import Length
 from django.utils import timezone
 from .models import AuditLog
 
@@ -42,27 +43,33 @@ def create_audit_log(request: Any, action: str, instance: models.Model, changes:
 def save_with_sequential_number(instance: models.Model, field_name: str, prefix: str, *args: Any, **kwargs: Any) -> None:
     """
     Generate a unique sequential number with a retry loop and save the instance.
-    Replaces identical save overrides across models.
+    Format: PREFIX + 4-digit sequence (e.g., INV0001, PO0002).
     """
     if getattr(instance, field_name):
         super(instance.__class__, instance).save(*args, **kwargs)
         return
 
     model_class = instance.__class__
-    today_prefix = f"{prefix}{timezone.localdate().strftime('%Y%m%d')}"
+    prefix_len = len(prefix)
     attempts = 0
-    
+
     while attempts < 10:
+        # Only match new-format records (prefix + exactly 4 digits)
+        # so old date-based records (e.g. INV202609220001) are ignored.
         last = model_class.objects.filter(
-            **{f"{field_name}__startswith": today_prefix}
+            **{f"{field_name}__startswith": prefix}
+        ).annotate(
+            _field_len=Length(field_name)
+        ).filter(
+            _field_len=prefix_len + 4
         ).order_by(f"-{field_name}").first()
-        
+
         if last:
-            last_num = int(getattr(last, field_name)[-4:])
-            setattr(instance, field_name, f"{today_prefix}{last_num + 1:04d}")
+            last_num = int(getattr(last, field_name)[prefix_len:])
+            setattr(instance, field_name, f"{prefix}{last_num + 1:04d}")
         else:
-            setattr(instance, field_name, f"{today_prefix}0001")
-            
+            setattr(instance, field_name, f"{prefix}0001")
+
         try:
             with transaction.atomic():
                 super(model_class, instance).save(*args, **kwargs)
@@ -71,3 +78,4 @@ def save_with_sequential_number(instance: models.Model, field_name: str, prefix:
             attempts += 1
             if attempts >= 10:
                 raise
+
