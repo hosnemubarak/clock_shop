@@ -7,9 +7,9 @@
 
 {% block content %}
 {% url 'inventory:category_list' as inv_url %}
-{% url 'inventory:product_create' as create_url %}
-{% url 'inventory:brand_list' as brand_url %}
-{% url 'inventory:category_list' as cat_url %}
+{% if perms.inventory.add_product %}{% url 'inventory:product_create' as create_url %}{% endif %}
+{% if perms.inventory.view_brand %}{% url 'inventory:brand_list' as brand_url %}{% endif %}
+{% if perms.inventory.view_category %}{% url 'inventory:category_list' as cat_url %}{% endif %}
 {% include 'includes/page_header.html' with title='Products' breadcrumb=True parent_label='Inventory' parent_url=inv_url action_url=create_url action_label='Add Product' action_icon='las la-plus' action2_url=brand_url action2_label='Brands' action2_icon='las la-copyright' action2_class='btn-soft-info' action3_url=cat_url action3_label='Categories' action3_icon='las la-tags' action3_class='btn-soft-primary' %}
 
 <!-- Products Table -->
@@ -110,16 +110,20 @@
                                 </td>
                                 <td>
                                     <div class="d-flex gap-2 justify-content-center">
+                                        {% if perms.inventory.add_purchase %}
                                         <button type="button" class="btn btn-sm btn-soft-primary" 
                                                 title="Add Stock" 
                                                 onclick="openQuickAddStockModal({{ product.pk }}, '{{ product.display_name|escapejs }}', '{{ product.average_cost|default_if_none:'0.00' }}')">
                                             <i class="las la-plus"></i> Add Stock
                                         </button>
+                                        {% endif %}
                                         {% capture as row_menu %}
                                             <li><a class="dropdown-item" href="{% url 'inventory:product_detail' product.pk %}"><i class="las la-eye me-2"></i>View</a></li>
-                                            <li><a class="dropdown-item" href="{% url 'inventory:product_edit' product.pk %}"><i class="las la-pen me-2"></i>Edit</a></li>
+                                            {% if perms.inventory.change_product %}<li><a class="dropdown-item" href="{% url 'inventory:product_edit' product.pk %}"><i class="las la-pen me-2"></i>Edit</a></li>{% endif %}
+                                            {% if perms.inventory.delete_product %}
                                             <li><hr class="dropdown-divider"></li>
                                             <li><a class="dropdown-item text-danger" href="{% url 'inventory:product_delete' product.pk %}"><i class="las la-trash me-2"></i>Delete</a></li>
+                                            {% endif %}
                                         {% endcapture %}
                                         {% include 'includes/row_actions.html' with menu=row_menu %}
                                     </div>
@@ -140,9 +144,13 @@
     </div>
 </div>
 
+{% if perms.inventory.add_purchase %}
 {% include 'includes/quick_add_stock_modal.html' %}
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
+{% if perms.inventory.add_purchase %}
 <script src="{% static 'js/stock-actions.js' %}?v=1"></script>
+{% endif %}
 {% endblock %}
