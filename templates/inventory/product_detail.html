@@ -31,7 +31,7 @@
                             {% endif %}
                             {% if perms.inventory.add_purchase %}
                             <button type="button" class="btn btn-primary flex-grow-1" 
-                                    onclick="openQuickAddStockModal({{ product.pk }}, '{{ product.display_name|escapejs }}', '{{ product.average_cost|default_if_none:'0.00' }}')">
+                                    onclick="openQuickAddStockModal({{ product.pk }}, '{{ product.display_name|escapejs }}', '{% if SHOW_AVG_COST %}{{ product.average_cost|default_if_none:'0.00' }}{% else %}0.00{% endif %}')">
                                 <i class="las la-plus"></i> Quick Stock
                             </button>
                             {% endif %}
@@ -118,7 +118,9 @@
                             <tr>
                                 <th>Warehouse</th>
                                 <th>Quantity</th>
+                                {% if SHOW_AVG_COST %}
                                 <th>Est. Value</th>
+                                {% endif %}
                             </tr>
                         </thead>
                         <tbody>
@@ -133,11 +135,13 @@
                                     </a>
                                 </td>
                                 <td><span class="badge bg-primary">{{ stock.quantity }}</span></td>
+                                {% if SHOW_AVG_COST %}
                                 <td>{{ CURRENCY_SYMBOL }}{{ stock.total_value|floatformat:0|intcomma }}</td>
+                                {% endif %}
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="3" class="text-center text-muted py-4">No stock available</td>
+                                <td colspan="{% if SHOW_AVG_COST %}3{% else %}2{% endif %}" class="text-center text-muted py-4">No stock available</td>
                             </tr>
                             {% endfor %}
                         </tbody>

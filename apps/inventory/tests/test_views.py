@@ -69,3 +69,11 @@ class ProductAddStockPermissionTests(TestCase):
         content = response.content.decode('utf-8')
         self.assertIn('openQuickAddStockModal', content)
         self.assertIn('Quick Stock', content)
+
+    def test_product_detail_est_value_hidden_without_cost_permission(self):
+        request = self.factory.get(f'/inventory/products/{self.product.pk}/')
+        request.user = self.user_without_add_stock
+        response = product_detail(request, pk=self.product.pk)
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+        self.assertNotIn('Est. Value', content)

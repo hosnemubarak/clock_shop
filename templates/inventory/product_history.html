@@ -27,7 +27,9 @@
                                 <th>Reference Number</th>
                                 <th>Warehouse Location</th>
                                 <th class="text-end">Quantity Change</th>
+                                {% if SHOW_AVG_COST %}
                                 <th class="text-end">Unit Price/Cost</th>
+                                {% endif %}
                                 <th>Recorded By</th>
                             </tr>
                         </thead>
@@ -58,6 +60,7 @@
                                     <span class="text-primary fw-bold fs-15">{{ record.quantity }}</span>
                                     {% endif %}
                                 </td>
+                                {% if SHOW_AVG_COST %}
                                 <td class="text-end">
                                     {% if record.price > 0 %}
                                     {{ CURRENCY_SYMBOL }}{{ record.price|floatformat:0|intcomma }}
@@ -65,11 +68,12 @@
                                     -
                                     {% endif %}
                                 </td>
+                                {% endif %}
                                 <td>{{ record.user }}</td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-5">
+                                <td colspan="{% if SHOW_AVG_COST %}7{% else %}6{% endif %}" class="text-center text-muted py-5">
                                     <i class="las la-box-open fs-1 mb-2"></i>
                                     <p>No stock history found for this product.</p>
                                 </td>

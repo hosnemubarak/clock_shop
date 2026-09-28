@@ -21,6 +21,7 @@
             </div>
         </div>
     </div>
+    {% if SHOW_AVG_COST %}
     <div class="col-xl-3 col-md-6">
         <div class="card card-animate">
             <div class="card-body">
@@ -29,6 +30,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <div class="row">
@@ -57,7 +59,9 @@
                             <tr>
                                 <th>Product (SKU - Brand)</th>
                                 <th class="text-center">Quantity</th>
+                                {% if SHOW_AVG_COST %}
                                 <th class="text-end">Value</th>
+                                {% endif %}
                             </tr>
                         </thead>
                         <tbody>
@@ -70,11 +74,13 @@
                                     </a>
                                 </td>
                                 <td class="text-center">{{ stock.quantity }}</td>
+                                {% if SHOW_AVG_COST %}
                                 <td class="text-end">{{ CURRENCY_SYMBOL }}{{ stock.total_value|floatformat:0 }}</td>
+                                {% endif %}
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center text-muted">No stock in this warehouse</td>
+                                <td colspan="{% if SHOW_AVG_COST %}3{% else %}2{% endif %}" class="text-center text-muted">No stock in this warehouse</td>
                             </tr>
                             {% endfor %}
                         </tbody>

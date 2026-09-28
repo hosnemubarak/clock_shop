@@ -113,7 +113,7 @@
                                         {% if perms.inventory.add_purchase %}
                                         <button type="button" class="btn btn-sm btn-soft-primary" 
                                                 title="Add Stock" 
-                                                onclick="openQuickAddStockModal({{ product.pk }}, '{{ product.display_name|escapejs }}', '{{ product.average_cost|default_if_none:'0.00' }}')">
+                                                onclick="openQuickAddStockModal({{ product.pk }}, '{{ product.display_name|escapejs }}', '{% if SHOW_AVG_COST %}{{ product.average_cost|default_if_none:'0.00' }}{% else %}0.00{% endif %}')">
                                             <i class="las la-plus"></i> Add Stock
                                         </button>
                                         {% endif %}
