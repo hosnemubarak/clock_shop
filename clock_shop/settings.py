@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'apps.quotations',
     'apps.notifications',
     'django_rq',
+    'import_export',
 ]
 
 MIDDLEWARE = [

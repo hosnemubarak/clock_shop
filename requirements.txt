@@ -12,3 +12,5 @@ mysqlclient>=2.2.4
 apprise>=1.9.0
 django-rq>=2.10.0
 redis>=5.0.0
+django-import-export>=4.4.0
+
