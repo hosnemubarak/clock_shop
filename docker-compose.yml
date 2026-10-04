@@ -10,22 +10,24 @@
 
 version: '3.8'
 
+name: clock_shop_dhaka
+
 services:
   # ==========================================================================
   # PostgreSQL Database
   # ==========================================================================
   db:
     image: postgres:15-alpine
-    container_name: clock_shop_db
+    container_name: clock_shop_db_dhaka
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-clock_shop}
-      POSTGRES_USER: ${POSTGRES_USER:-clock_shop}
+      POSTGRES_DB: ${POSTGRES_DB:-clock_shop_dhaka}
+      POSTGRES_USER: ${POSTGRES_USER:-clock_shop_dhaka}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-clock_shop_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-clock_shop} -d ${POSTGRES_DB:-clock_shop}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-clock_shop_dhaka} -d ${POSTGRES_DB:-clock_shop_dhaka}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -35,22 +37,22 @@ services:
   # ==========================================================================
   web:
     build: .
-    container_name: clock_shop_web
+    container_name: clock_shop_web_dhaka
     restart: unless-stopped
     ports:
-      - "${APP_PORT:-8090}:8000"
+      - "${APP_PORT:-8091}:8000"
     environment:
       # Database
-      DATABASE_URL: postgres://${POSTGRES_USER:-clock_shop}:${POSTGRES_PASSWORD:-clock_shop_password}@db:5432/${POSTGRES_DB:-clock_shop}
+      DATABASE_URL: postgres://${POSTGRES_USER:-clock_shop_dhaka}:${POSTGRES_PASSWORD:-clock_shop_password}@db:5432/${POSTGRES_DB:-clock_shop_dhaka}
       # Redis
       REDIS_URL: redis://redis:6379/0
       # Security
       SECRET_KEY: ${SECRET_KEY:-change-this-secret-key-in-production}
       DEBUG: ${DEBUG:-False}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
-      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://localhost:8090,http://127.0.0.1:8090}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://localhost:8091,http://127.0.0.1:8091}
       # Business
-      SHOP_NAME: ${SHOP_NAME:-Your Shop}
+      SHOP_NAME: ${SHOP_NAME:-Clock Shop Dhaka}
       CURRENCY_SYMBOL: ${CURRENCY_SYMBOL:-৳}
       LOW_STOCK_THRESHOLD: ${LOW_STOCK_THRESHOLD:-5}
     volumes:
@@ -67,7 +69,7 @@ services:
   # ==========================================================================
   redis:
     image: redis:7-alpine
-    container_name: clock_shop_redis
+    container_name: clock_shop_redis_dhaka
     restart: unless-stopped
     volumes:
       - redis_data:/data
@@ -82,15 +84,15 @@ services:
   # ==========================================================================
   rq_worker:
     build: .
-    container_name: clock_shop_rq_worker
+    container_name: clock_shop_rq_worker_dhaka
     restart: unless-stopped
     command: python manage.py rqworker default
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-clock_shop}:${POSTGRES_PASSWORD:-clock_shop_password}@db:5432/${POSTGRES_DB:-clock_shop}
+      DATABASE_URL: postgres://${POSTGRES_USER:-clock_shop_dhaka}:${POSTGRES_PASSWORD:-clock_shop_password}@db:5432/${POSTGRES_DB:-clock_shop_dhaka}
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: ${SECRET_KEY:-change-this-secret-key-in-production}
       DEBUG: ${DEBUG:-False}
-      SHOP_NAME: ${SHOP_NAME:-Your Shop}
+      SHOP_NAME: ${SHOP_NAME:-Clock Shop Dhaka}
       CURRENCY_SYMBOL: ${CURRENCY_SYMBOL:-৳}
     depends_on:
       db:
