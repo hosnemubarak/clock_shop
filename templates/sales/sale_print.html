@@ -13,6 +13,7 @@
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
         th { background: #f5f5f5; }
         .text-right { text-align: right; }
+        .text-center { text-align: center; }
         .totals { margin-top: 20px; }
         .totals table { width: 300px; margin-left: auto; }
         .totals td { border: none; padding: 5px 10px; }
@@ -55,6 +56,7 @@
     <table>
         <thead>
             <tr>
+                <th class="text-center" style="width: 50px;">SL No.</th>
                 <th>Product</th>
                 <th class="text-right">Qty</th>
                 <th class="text-right">Price</th>
@@ -64,6 +66,7 @@
         <tbody>
             {% for item in sale.items.all %}
             <tr>
+                <td class="text-center">{{ forloop.counter }}</td>
                 <td>{% if item.is_custom %}{{ item.custom_description }} <em>(Custom)</em>{% else %}{{ item.product.display_name }}{% endif %}</td>
                 <td class="text-right">{{ item.quantity }}</td>
                 <td class="text-right">{{ CURRENCY_SYMBOL }}{{ item.unit_price|floatformat:2 }}</td>
@@ -73,7 +76,7 @@
         </tbody>
         <tfoot>
             <tr style="font-weight: bold; background: #f9f9f9;">
-                <td>Total Qty: {{ sale.total_quantity }}</td>
+                <td colspan="2">Total Qty: {{ sale.total_quantity }}</td>
                 <td class="text-right">{{ sale.total_quantity }}</td>
                 <td></td>
                 <td></td>
