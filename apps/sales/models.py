@@ -205,6 +205,8 @@ class SaleItem(TimeStampedModel):
         # Auto-set cost price from product average cost if not set
         if self.cost_price is None and self.product:
             self.cost_price = self.product.average_cost
+        elif self.cost_price is None:
+            self.cost_price = Decimal('0.00')
         super().save(*args, **kwargs)
 
 

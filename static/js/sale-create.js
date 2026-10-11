@@ -47,7 +47,7 @@ function initSaleCreate() {
      'btnComplete', 'btnReset', 'customerMetaBox',
      'customerMetaName', 'customerMetaPhone', 'customerMetaDue', 'customerMetaDueRow',
       'customerLoyaltyBox', 'customerLoyalty',
-      'saleCustomItemModal', 'saleCustomDesc', 'saleCustomPrice', 'saleCustomQty',
+      'saleCustomItemModal', 'saleCustomDesc', 'saleCustomPrice', 'saleCustomCost', 'saleCustomQty',
       'btnSaleCustomAdd', 'btnSaleCustomConfirm',
       'saleSuccessModal', 'successInvoice', 'btnPrintReceipt', 'btnNextSale',
      'saleConfirmModal', 'confirmGrandTotal', 'confirmItemsCount', 'confirmAmountPaid',
@@ -405,8 +405,11 @@ function initSaleCreate() {
 
     function renderProductCell(line) {
         if (line.isCustom) {
+            var costInfo = (line.costPrice && line.costPrice > 0)
+                ? ' &bull; Cost: ' + escapeHtml(CFG.currency) + toMajor(line.costPrice)
+                : '';
             return '<div class="fw-medium">' + escapeHtml(line.customDescription) + '</div>' +
-                '<div class="text-muted small">Custom item</div>';
+                '<div class="text-muted small">Custom item' + costInfo + '</div>';
         }
         var over = line.qty > line.stock;
         var canTransfer = CFG.canQuickTransfer && over && line.transferableStock > 0;
@@ -614,6 +617,7 @@ function initSaleCreate() {
                     payload.product_id = null;
                     payload.is_custom = true;
                     payload.custom_description = line.customDescription;
+                    payload.cost_price = toMajor(line.costPrice || 0);
                 }
                 return payload;
             }),
@@ -684,6 +688,9 @@ function initSaleCreate() {
     function openCustomItemModal() {
         el.saleCustomDesc.value = '';
         el.saleCustomPrice.value = '0';
+        if (el.saleCustomCost) {
+            el.saleCustomCost.value = '0';
+        }
         el.saleCustomQty.value = '1';
         el.saleCustomDesc.classList.remove('is-invalid');
         el.saleCustomItemModalInstance.show();
@@ -692,6 +699,7 @@ function initSaleCreate() {
     function addCustomItem() {
         var description = el.saleCustomDesc.value.trim();
         var price = toMinor(el.saleCustomPrice.value);
+        var cost = el.saleCustomCost ? toMinor(el.saleCustomCost.value) : 0;
         var quantity = parseInt(el.saleCustomQty.value, 10);
         el.saleCustomDesc.classList.toggle('is-invalid', !description);
         if (!description || description.length > 255 || isNaN(quantity) || quantity < MIN_QTY) {
@@ -699,6 +707,9 @@ function initSaleCreate() {
                 (description.length > 255 ? 'Custom item description cannot exceed 255 characters.' :
                     'Custom item quantity must be at least one.'), 'Invalid custom item');
             return;
+        }
+        if (isNaN(cost) || cost < 0) {
+            cost = 0;
         }
         cart.push({
             productId: null,
@@ -709,6 +720,7 @@ function initSaleCreate() {
             label: description,
             meta: 'Custom item',
             unitPrice: price,
+            costPrice: cost,
             qty: quantity,
             discount: 0,
             stock: 0,

@@ -97,7 +97,7 @@
                                     {% capture as row_menu %}
                                             <li><a class="dropdown-item" href="{% url 'sales:sale_detail' sale.pk %}"><i class="las la-eye me-2"></i>View</a></li>
                                             <li><a class="dropdown-item" href="{% url 'sales:sale_print' sale.pk %}" target="_blank"><i class="las la-print me-2"></i>Print</a></li>
-                                            {% if sale.due_amount > 0 %}
+                                            {% if sale.due_amount > 0 and perms.customers.add_payment %}
                                             <li><a class="dropdown-item" href="{% url 'sales:sale_detail' sale.pk %}#payment"><i class="las la-money-bill me-2"></i>Receive Payment</a></li>
                                             {% endif %}
                                     {% endcapture %}
