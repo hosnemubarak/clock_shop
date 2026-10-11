@@ -179,7 +179,7 @@
             </div>
         </div>
 
-        {% if sale.due_amount > 0 and sale.status == 'completed' %}
+        {% if sale.due_amount > 0 and sale.status == 'completed' and perms.customers.add_payment %}
         <div class="card" id="payment">
             <div class="card-header">
                 <h5 class="card-title mb-0">Receive Payment</h5>

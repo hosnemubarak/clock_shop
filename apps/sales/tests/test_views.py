@@ -222,6 +222,29 @@ class PosCheckoutTests(SaleScreenTestMixin, TestCase):
         self.assertEqual(sale.total_cost, Decimal('0.00'))
         self.assertEqual(ProductStock.objects.get(product=self.product, warehouse=self.shop).quantity, 10)
 
+    def test_custom_sale_with_cost_price_calculates_profit_correctly(self):
+        response = self.checkout({
+            'items': [{
+                'product_id': None,
+                'is_custom': True,
+                'custom_description': 'Watch Repair Service',
+                'quantity': 2,
+                'unit_price': '500.00',
+                'cost_price': '200.00',
+            }],
+            'payment_amount': '1000.00',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        sale = Sale.objects.get(pk=response.json()['sale_id'])
+        item = sale.items.get()
+        self.assertTrue(item.is_custom)
+        self.assertEqual(item.cost_price, Decimal('200.00'))
+        self.assertEqual(item.total_cost, Decimal('400.00'))
+        self.assertEqual(sale.total_amount, Decimal('1000.00'))
+        self.assertEqual(sale.total_cost, Decimal('400.00'))
+        self.assertEqual(sale.profit, Decimal('600.00'))
+
     def test_mixed_sale_deducts_stock_only_for_product_line(self):
         response = self.checkout(self.cart(
             items=[
@@ -269,6 +292,7 @@ class PosCheckoutTests(SaleScreenTestMixin, TestCase):
             ({'is_custom': True, 'custom_description': 'x' * 256, 'quantity': 1, 'unit_price': '1'}, '255'),
             ({'is_custom': True, 'custom_description': 'Service', 'quantity': 1, 'unit_price': '-1'}, 'negative'),
             ({'is_custom': True, 'custom_description': 'Service', 'quantity': 0, 'unit_price': '1'}, 'greater than zero'),
+            ({'is_custom': True, 'custom_description': 'Service', 'quantity': 1, 'unit_price': '10', 'cost_price': '-5'}, 'negative'),
         )
         for item, fragment in cases:
             with self.subTest(item=item):

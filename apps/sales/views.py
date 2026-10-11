@@ -186,7 +186,7 @@ def sale_cancel(request, pk):
     return redirect('sales:sale_detail', pk=sale.pk)
 
 
-@has_permission('sales.add_payment')
+@has_permission('customers.add_payment')
 def sale_payment(request, pk):
     """Record payment for a sale."""
     sale_base = get_object_or_404(Sale, pk=pk)

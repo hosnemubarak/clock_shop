@@ -280,12 +280,54 @@ def profit_report(request):
         else:
             p['margin'] = 0
         profit_data.append(p)
-    
+
+    # Include custom items in product list when not filtering by specific product or category
+    if not product_id and not category_id:
+        custom_filter = {
+            'sale__status': 'completed',
+            'sale__sale_date__gte': date_from,
+            'sale__sale_date__lte': date_to,
+            'is_custom': True,
+        }
+        if shop_id:
+            custom_filter['warehouse_id'] = shop_id
+
+        custom_items_qs = SaleItem.objects.filter(
+            **custom_filter
+        ).values(
+            'custom_description'
+        ).annotate(
+            quantity_sold=Sum(F('quantity') - F('returned_quantity')),
+            revenue=Sum(
+                ExpressionWrapper(
+                    ((F('unit_price') * F('quantity') - F('discount')) * (F('quantity') - F('returned_quantity'))) / F('quantity'),
+                    output_field=DecimalField()
+                )
+            ),
+            cost=Sum((F('quantity') - F('returned_quantity')) * F('cost_price')),
+        ).annotate(
+            profit=F('revenue') - F('cost'),
+        ).order_by('-profit')
+
+        for c in custom_items_qs:
+            margin = round((c['profit'] / c['revenue']) * 100, 2) if c['revenue'] and c['revenue'] > 0 else 0
+            profit_data.append({
+                'product__sku': c['custom_description'] or 'Custom Item',
+                'product__brand__name': '',
+                'product__category__name': 'Custom',
+                'quantity_sold': c['quantity_sold'],
+                'revenue': c['revenue'],
+                'cost': c['cost'],
+                'profit': c['profit'],
+                'margin': margin,
+            })
+        profit_data.sort(key=lambda x: x['profit'] or Decimal('0'), reverse=True)
+
     # Paginate profit by product
     paginator = Paginator(profit_data, 25)
     page = request.GET.get('page')
     profit_by_product_page = paginator.get_page(page)
-    
+
     # Profit by category (exclude custom items)
     profit_by_category = SaleItem.objects.filter(
         **base_filter
@@ -302,13 +344,13 @@ def profit_report(request):
     ).annotate(
         profit=F('revenue') - F('cost'),
     ).order_by('-profit')
-    
+
     # Profit by warehouse/shop (exclude custom items)
     warehouse_filter = base_filter.copy()
     warehouse_filter['warehouse__isnull'] = False
     if 'product__isnull' in warehouse_filter:
         del warehouse_filter['product__isnull']
-    
+
     profit_by_warehouse = SaleItem.objects.filter(
         **warehouse_filter
     ).values(
@@ -324,10 +366,24 @@ def profit_report(request):
     ).annotate(
         profit=F('revenue') - F('cost'),
     ).order_by('-profit')
-    
-    # Total summary (exclude custom items for accurate profit calc)
+
+    # Total summary (includes custom items when not filtering by specific product/category)
+    totals_filter = {
+        'sale__status': 'completed',
+        'sale__sale_date__gte': date_from,
+        'sale__sale_date__lte': date_to,
+    }
+    if product_id:
+        totals_filter['product_id'] = product_id
+        totals_filter['is_custom'] = False
+    elif category_id:
+        totals_filter['product__category_id'] = category_id
+        totals_filter['is_custom'] = False
+    if shop_id:
+        totals_filter['warehouse_id'] = shop_id
+
     totals = SaleItem.objects.filter(
-        **base_filter
+        **totals_filter
     ).aggregate(
         total_revenue=Sum(
             ExpressionWrapper(

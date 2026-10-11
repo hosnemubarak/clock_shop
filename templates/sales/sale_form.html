@@ -342,12 +342,17 @@
                         <input type="text" class="form-control" id="saleCustomDesc" maxlength="255" placeholder="e.g. Installation Service">
                     </div>
                     <div class="row g-3">
-                        <div class="col-sm-6">
-                            <label for="saleCustomPrice" class="form-label">Unit Price</label>
-                            <input type="number" class="form-control" id="saleCustomPrice" value="0" min="0" step="1">
+                        <div class="col-sm-4">
+                            <label for="saleCustomPrice" class="form-label">Unit Price <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="saleCustomPrice" value="0" min="0" step="any">
                         </div>
-                        <div class="col-sm-6">
-                            <label for="saleCustomQty" class="form-label">Quantity</label>
+                        <div class="col-sm-4">
+                            <label for="saleCustomCost" class="form-label">Cost Price</label>
+                            <input type="number" class="form-control" id="saleCustomCost" value="0" min="0" step="any" placeholder="0.00">
+                            <div class="form-text">Per unit cost (optional)</div>
+                        </div>
+                        <div class="col-sm-4">
+                            <label for="saleCustomQty" class="form-label">Quantity <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="saleCustomQty" value="1" min="1" step="1">
                         </div>
                     </div>

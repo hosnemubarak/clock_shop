@@ -82,12 +82,20 @@ class SaleService:
             if discount > quantity * unit_price:
                 raise ValueError(f'Discount for item #{index} cannot exceed the line total.')
 
+            cost_price = _to_decimal(
+                item_data.get('cost_price', 0) if is_custom else 0,
+                f'cost price for item #{index}'
+            )
+            if is_custom and cost_price < 0:
+                raise ValueError(f'Cost price for item #{index} cannot be negative.')
+
             parsed_items.append({
                 'product_id': None if is_custom else _to_int(
                     item_data.get('product_id'), f'product for item #{index}'
                 ),
                 'quantity': quantity,
                 'unit_price': unit_price,
+                'cost_price': cost_price,
                 'discount': discount,
                 'is_custom': is_custom,
                 'custom_description': description,
@@ -162,7 +170,7 @@ class SaleService:
                     warehouse=None,
                     quantity=item_data['quantity'],
                     unit_price=item_data['unit_price'],
-                    cost_price=Decimal('0.00'),
+                    cost_price=item_data['cost_price'],
                     discount=item_data['discount'],
                     is_custom=True,
                     custom_description=item_data['custom_description'],
