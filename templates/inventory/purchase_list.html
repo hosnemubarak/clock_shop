@@ -35,9 +35,16 @@
                                 <td>{{ CURRENCY_SYMBOL }}{{ purchase.total_amount|floatformat:0|intcomma }}</td>
                                 <td>{{ purchase.created_by.username|default:"-" }}</td>
                                 <td>
-                                    <a href="{% url 'inventory:purchase_detail' purchase.pk %}" class="btn btn-soft-info btn-sm">
-                                        <i class="las la-eye"></i>
-                                    </a>
+                                    <div class="d-flex gap-1">
+                                        <a href="{% url 'inventory:purchase_detail' purchase.pk %}" class="btn btn-soft-info btn-sm" title="View Details">
+                                            <i class="las la-eye"></i>
+                                        </a>
+                                        {% if perms.inventory.change_purchase %}
+                                        <a href="{% url 'inventory:purchase_edit' purchase.pk %}" class="btn btn-soft-primary btn-sm" title="Edit Cost Price">
+                                            <i class="las la-pen"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
                                 </td>
                             </tr>
                             {% empty %}

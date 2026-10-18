@@ -12,9 +12,10 @@ import logging
 
 from .models import Product, Category, Brand, ProductStock, Purchase, PurchaseItem, StockOut, StockOutItem
 from apps.core.models import SystemSettings
-from .services import get_product_stock_history
+from .services import (get_product_stock_history, recalculate_product_costing,
+                      update_purchase_item_cost, update_purchase_and_costs)
 from .forms import (ProductForm, CategoryForm, BrandForm, 
-                    PurchaseForm, PurchaseItemForm, StockOutForm)
+                    PurchaseForm, PurchaseEditForm, PurchaseItemForm, StockOutForm)
 from apps.warehouse.models import Warehouse
 from apps.core.utils import create_audit_log, paginate
 
@@ -491,6 +492,114 @@ def purchase_detail(request, pk):
         pk=pk
     )
     return render(request, 'inventory/purchase_detail.html', {'purchase': purchase})
+
+
+@has_permission('inventory.change_purchase')
+def purchase_edit(request, pk):
+    """Edit purchase details and item cost prices."""
+    purchase = get_object_or_404(
+        Purchase.objects.select_related('created_by').prefetch_related('items__product', 'items__warehouse'),
+        pk=pk
+    )
+    if request.method == 'POST':
+        form = PurchaseEditForm(request.POST, instance=purchase)
+        if form.is_valid():
+            item_prices = {}
+            has_errors = False
+            for item in purchase.items.all():
+                raw_price = request.POST.get(f'item_price_{item.id}')
+                if raw_price is not None:
+                    try:
+                        price = Decimal(str(raw_price).strip())
+                        if price < Decimal('0.00'):
+                            messages.error(request, f'Cost price for {item.product.sku} cannot be negative.')
+                            has_errors = True
+                            break
+                        item_prices[item.id] = price
+                    except (InvalidOperation, TypeError, ValueError):
+                        messages.error(request, f'Invalid cost price entered for {item.product.sku}.')
+                        has_errors = True
+                        break
+
+            if not has_errors:
+                reason = form.cleaned_data.get('reason', '')
+                try:
+                    update_purchase_and_costs(
+                        purchase=purchase,
+                        purchase_data=form.cleaned_data,
+                        item_prices=item_prices,
+                        user=request.user,
+                        reason=reason,
+                        request=request
+                    )
+                    messages.success(request, f'Stock In record "{purchase.purchase_number}" updated successfully.')
+                    return redirect('inventory:purchase_detail', pk=purchase.pk)
+                except ValueError as e:
+                    messages.error(request, str(e))
+                except Exception:
+                    logger.exception('Failed to update purchase %s', pk)
+                    messages.error(request, 'An error occurred while updating the purchase record.')
+    else:
+        form = PurchaseEditForm(instance=purchase)
+
+    return render(request, 'inventory/purchase_edit.html', {
+        'purchase': purchase,
+        'form': form,
+    })
+
+
+@has_permission('inventory.change_purchase', json_for_ajax=True)
+def api_edit_purchase_item_cost(request, item_id):
+    """API endpoint to edit the cost price of a single purchase item."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+
+    item = get_object_or_404(
+        PurchaseItem.objects.select_related('purchase', 'product', 'warehouse'),
+        pk=item_id
+    )
+
+    try:
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+            unit_price_raw = data.get('unit_price')
+            reason = data.get('reason', '')
+        else:
+            unit_price_raw = request.POST.get('unit_price')
+            reason = request.POST.get('reason', '')
+
+        if unit_price_raw is None or str(unit_price_raw).strip() == '':
+            return JsonResponse({'success': False, 'error': 'Unit cost price is required.'}, status=400)
+
+        unit_price = Decimal(str(unit_price_raw).strip())
+        if unit_price < Decimal('0.00'):
+            return JsonResponse({'success': False, 'error': 'Unit cost price cannot be negative.'}, status=400)
+    except (ValueError, TypeError, InvalidOperation):
+        return JsonResponse({'success': False, 'error': 'Invalid cost price value.'}, status=400)
+
+    try:
+        result = update_purchase_item_cost(
+            purchase_item=item,
+            new_unit_price=unit_price,
+            user=request.user,
+            reason=reason,
+            request=request
+        )
+        return JsonResponse({
+            'success': True,
+            'message': f'Cost price for {result["product"].sku} updated to {result["new_unit_price"]}.',
+            'item_id': item.id,
+            'new_unit_price': str(result['new_unit_price']),
+            'new_total': str(result['item'].total_price),
+            'new_purchase_total': str(result['purchase'].total_amount),
+            'new_average_cost': str(result['new_avg_cost']),
+        })
+    except ValueError as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    except Exception:
+        logger.exception('Failed to edit purchase item cost for item %s', item_id)
+        return JsonResponse({'success': False, 'error': 'Could not update cost price. Please try again.'}, status=500)
+
 
 
 @has_permission('inventory.view_product')

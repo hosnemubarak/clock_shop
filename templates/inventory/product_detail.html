@@ -186,7 +186,17 @@
                                     <span class="badge bg-soft-primary text-primary">{{ record.type_label }}</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ record.reference }}</td>
+                                <td>
+                                    {% if record.type == 'STOCK_IN' and record.purchase_id %}
+                                    <a href="{% url 'inventory:purchase_detail' record.purchase_id %}" class="text-primary fw-medium" title="View Stock In Record">{{ record.reference }}</a>
+                                    {% elif record.type == 'SALE' and record.sale_id %}
+                                    <a href="{% url 'sales:sale_detail' record.sale_id %}" class="text-primary fw-medium" title="View Sale">{{ record.reference }}</a>
+                                    {% elif record.type == 'STOCK_OUT' and record.stockout_id %}
+                                    <a href="{% url 'inventory:stockout_detail' record.stockout_id %}" class="text-primary fw-medium" title="View Stock Out">{{ record.reference }}</a>
+                                    {% else %}
+                                    {{ record.reference }}
+                                    {% endif %}
+                                </td>
                                 <td>{{ record.warehouse }}</td>
                                 <td>
                                     {% if record.is_positive == True %}

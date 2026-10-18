@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Edit {{ purchase.purchase_number }} | {{ SHOP_NAME }}{% endblock %}
+
+{% block content %}
+{% url 'inventory:purchase_detail' purchase.pk as detail_url %}
+{% url 'inventory:purchase_list' as list_url %}
+{% include 'includes/page_header.html' with title='Edit Stock In Record: '|add:purchase.purchase_number active_label='Edit Cost' breadcrumb=True parent_label=purchase.purchase_number parent_url=detail_url %}
+
+<form method="post" id="purchaseEditForm">
+    {% csrf_token %}
+    {% include 'includes/form_errors.html' %}
+
+    <div class="row">
+        <!-- Stock Items & Cost Prices -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Stock Items & Cost Prices</h5>
+                    <span class="badge bg-soft-info text-info"><i class="las la-coins me-1"></i>Edit Cost Price per unit</span>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info py-2 px-3 small mb-3">
+                        <i class="las la-info-circle me-1"></i>
+                        <strong>Cost Price Adjustment:</strong> You can edit the cost price per unit for any item in this stock-in record. 
+                        Stock counts and warehouse quantities are preserved, while the product's moving average cost, inventory valuations, 
+                        and profit reports will be recalculated automatically.
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table align-middle table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Warehouse</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="w-25">Unit Cost Price</th>
+                                    <th class="text-end">Line Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in purchase.items.all %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold text-primary">{{ item.product.display_name }}</div>
+                                        <div class="small text-muted">SKU: <code>{{ item.product.sku }}</code></div>
+                                    </td>
+                                    <td>{{ item.warehouse.name }}</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary fs-13">{{ item.quantity }}</span>
+                                        <input type="hidden" id="qty_{{ item.id }}" value="{{ item.quantity }}">
+                                    </td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">{{ CURRENCY_SYMBOL }}</span>
+                                            <input type="number" 
+                                                   name="item_price_{{ item.id }}" 
+                                                   id="price_{{ item.id }}" 
+                                                   class="form-control item-cost-input" 
+                                                   step="0.01" 
+                                                   min="0" 
+                                                   value="{{ item.unit_price }}" 
+                                                   required 
+                                                   data-item-id="{{ item.id }}"
+                                                   data-qty="{{ item.quantity }}"
+                                                   oninput="recalculateTotals()">
+                                        </div>
+                                        <div class="small text-muted mt-1">Original: {{ CURRENCY_SYMBOL }}{{ item.unit_price|floatformat:2|intcomma }}</div>
+                                    </td>
+                                    <td class="text-end fw-bold" id="itemTotal_{{ item.id }}">
+                                        {{ CURRENCY_SYMBOL }}{{ item.total_price|floatformat:2|intcomma }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-active">
+                                    <td colspan="4" class="text-end fw-bold fs-15">New Total:</td>
+                                    <td class="text-end fw-bold fs-15 text-primary" id="footerNewTotal">
+                                        {{ CURRENCY_SYMBOL }}{{ purchase.total_amount|floatformat:2|intcomma }}
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Purchase Header Details & Save -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Record Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">PO Number</label>
+                        <input type="text" class="form-control" value="{{ purchase.purchase_number }}" readonly disabled>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.supplier.id_for_label }}" class="form-label">Supplier</label>
+                        {{ form.supplier }}
+                        {% if form.supplier.errors %}
+                        <div class="text-danger small">{{ form.supplier.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.purchase_date.id_for_label }}" class="form-label">Stock In Date <span class="text-danger">*</span></label>
+                        {{ form.purchase_date }}
+                        {% if form.purchase_date.errors %}
+                        <div class="text-danger small">{{ form.purchase_date.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                        <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.reason.id_for_label }}" class="form-label">Correction Reason</label>
+                        {{ form.reason }}
+                        <div class="form-text">Reason recorded in audit log.</div>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <!-- Summary calculation -->
+                    <div class="p-3 bg-light rounded mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Original Total:</span>
+                            <span class="fw-semibold">{{ CURRENCY_SYMBOL }}{{ purchase.total_amount|floatformat:2|intcomma }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Updated Total:</span>
+                            <span class="fw-bold text-primary" id="summaryNewTotal">{{ CURRENCY_SYMBOL }}{{ purchase.total_amount|floatformat:2|intcomma }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Difference:</span>
+                            <span class="fw-semibold" id="summaryDiff">{{ CURRENCY_SYMBOL }}0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="las la-save me-1"></i> Save Changes
+                        </button>
+                        <a href="{{ detail_url }}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    'use strict';
+    var currency = '{{ CURRENCY_SYMBOL }}';
+    var originalTotal = parseFloat('{{ purchase.total_amount }}') || 0;
+
+    window.recalculateTotals = function() {
+        var inputs = document.querySelectorAll('.item-cost-input');
+        var grandTotal = 0;
+
+        inputs.forEach(function(input) {
+            var itemId = input.dataset.itemId;
+            var qty = parseFloat(input.dataset.qty) || 0;
+            var price = parseFloat(input.value) || 0;
+            var lineTotal = qty * price;
+            grandTotal += lineTotal;
+
+            var cell = document.getElementById('itemTotal_' + itemId);
+            if (cell) {
+                cell.textContent = currency + lineTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            }
+        });
+
+        var formattedTotal = currency + grandTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        var footerTotal = document.getElementById('footerNewTotal');
+        if (footerTotal) footerTotal.textContent = formattedTotal;
+
+        var summaryTotal = document.getElementById('summaryNewTotal');
+        if (summaryTotal) summaryTotal.textContent = formattedTotal;
+
+        var diff = grandTotal - originalTotal;
+        var diffSpan = document.getElementById('summaryDiff');
+        if (diffSpan) {
+            var sign = diff > 0 ? '+' : '';
+            diffSpan.textContent = sign + currency + diff.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            diffSpan.className = diff > 0 ? 'fw-semibold text-danger' : (diff < 0 ? 'fw-semibold text-success' : 'fw-semibold text-muted');
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        recalculateTotals();
+    });
+})();
+</script>
+{% endblock %}

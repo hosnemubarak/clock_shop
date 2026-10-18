@@ -59,6 +59,8 @@ def has_permission(perm, json_for_ajax=False, json_message='You do not have perm
     redirecting to the unauthorized page if necessary.
     """
     def check_perms(user):
+        if not getattr(settings, 'ENABLE_RBAC', True):
+            return user.is_authenticated and user.is_active
         if user.is_superuser:
             return True
         if isinstance(perm, str):
