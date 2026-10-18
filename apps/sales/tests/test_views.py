@@ -724,6 +724,7 @@ class QuickTransferApiTests(SaleScreenTestMixin, TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json()['status'], 'error')
 
+    @override_settings(ENABLE_RBAC=True)
     def test_permission_denial_is_json_for_ajax_calls(self):
         self.user.user_permissions.remove(self.transfer_permission)
         self.user = User.objects.get(pk=self.user.pk)
@@ -740,6 +741,7 @@ class QuickTransferApiTests(SaleScreenTestMixin, TestCase):
         self.assertEqual(lookup.json()['status'], 'error')
         self.assertIn('permission', transfer.json()['message'])
 
+    @override_settings(ENABLE_RBAC=True)
     def test_permission_denial_preserves_normal_redirect(self):
         self.user.user_permissions.remove(self.transfer_permission)
         self.user = User.objects.get(pk=self.user.pk)

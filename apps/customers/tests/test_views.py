@@ -79,13 +79,16 @@ class CustomerInfoApiTests(TestCase):
         self.assertEqual(response.status_code, 302)
 
 
-@override_settings(SECURE_SSL_REDIRECT=False)
+@override_settings(SECURE_SSL_REDIRECT=False, ENABLE_RBAC=True)
 class OpeningBalanceViewTests(TestCase):
     def setUp(self):
         self.customer = Customer.objects.create(name='Legacy Customer', phone='01733333333')
         self.permission = Permission.objects.get(codename='set_opening_balance')
         self.user = User.objects.create_user(username='manager', password='password')
-        self.user.user_permissions.add(self.permission)
+        self.user.user_permissions.add(
+            self.permission,
+            Permission.objects.get(codename='view_customer', content_type__app_label='customers')
+        )
         self.client.force_login(self.user)
         self.url = reverse('customers:opening_balance_set', args=[self.customer.pk])
 

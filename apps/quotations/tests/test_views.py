@@ -12,7 +12,7 @@ from apps.inventory.models import Brand, Category, Product
 from apps.quotations.models import Quotation, QuotationItem
 
 
-@override_settings(SECURE_SSL_REDIRECT=False)
+@override_settings(SECURE_SSL_REDIRECT=False, ENABLE_RBAC=True)
 class QuotationViewTests(TestCase):
     def setUp(self):
         self.creator = User.objects.create_user(username='creator', password='password')

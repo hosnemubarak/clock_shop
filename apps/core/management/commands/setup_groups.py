@@ -20,6 +20,8 @@ class Command(BaseCommand):
         ).exclude(codename__startswith='delete_').exclude(
             codename='set_opening_balance'
         ).exclude(
+            codename__in=['change_purchase', 'change_purchaseitem']
+        ).exclude(
             content_type__app_label='warehouse',
             content_type__model='stocktransfer',
         )

@@ -27,6 +27,7 @@ urlpatterns = [
     path('purchases/', views.purchase_list, name='purchase_list'),
     path('purchases/create/', views.purchase_create, name='purchase_create'),
     path('purchases/<int:pk>/', views.purchase_detail, name='purchase_detail'),
+    path('purchases/<int:pk>/edit/', views.purchase_edit, name='purchase_edit'),
     
     # Stock Out
     path('stockout/', views.stockout_list, name='stockout_list'),
@@ -37,5 +38,6 @@ urlpatterns = [
     # API
     path('api/products/<int:product_id>/stocks/', views.api_product_stocks, name='api_product_stocks'),
     path('api/products/<int:product_id>/quick-add-stock/', views.api_quick_add_stock, name='api_quick_add_stock'),
+    path('api/purchase-items/<int:item_id>/edit-cost/', views.api_edit_purchase_item_cost, name='api_edit_purchase_item_cost'),
     path('api/warehouses/<int:warehouse_id>/stocks/', views.api_warehouse_stocks, name='api_warehouse_stocks'),
 ]

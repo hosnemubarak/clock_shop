@@ -107,6 +107,25 @@ class PurchaseForm(forms.ModelForm):
         }
 
 
+class PurchaseEditForm(forms.ModelForm):
+    reason = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Reason for cost price correction (optional, e.g. Supplier invoice correction)'
+        })
+    )
+
+    class Meta:
+        model = Purchase
+        fields = ['supplier', 'purchase_date', 'notes']
+        widgets = {
+            'supplier': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. ABC Distributors'}),
+            'purchase_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'e.g. Notes...'}),
+        }
+
+
 class PurchaseItemForm(forms.Form):
     """Form for adding items to a purchase."""
     product = forms.ModelChoiceField(
