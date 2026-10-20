@@ -82,6 +82,7 @@
                                 <td>
                                     {% capture as row_menu %}
                                             <li><a class="dropdown-item" href="{% url 'quotations:quotation_detail' q.pk %}"><i class="las la-eye me-2"></i>View</a></li>
+                                            {% if perms.sales.add_sale %}<li><a class="dropdown-item text-success" href="{% url 'sales:sale_create' %}?quotation={{ q.pk }}"><i class="las la-shopping-cart me-2"></i>Convert to Sale</a></li>{% endif %}
                                             {% if perms.quotations.change_quotation %}<li><a class="dropdown-item" href="{% url 'quotations:quotation_edit' q.pk %}"><i class="las la-pen me-2"></i>Edit</a></li>{% endif %}
                                             <li><a class="dropdown-item" href="{% url 'quotations:quotation_print' q.pk %}" target="_blank"><i class="las la-print me-2"></i>Print</a></li>
                                             <li><hr class="dropdown-divider"></li>

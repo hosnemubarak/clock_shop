@@ -137,6 +137,58 @@ def sale_create(request):
         messages.error(request, 'No shop warehouse configured. Please configure a shop warehouse first.')
         return redirect('core:dashboard')
 
+    quotation_id = request.GET.get('quotation')
+    initial_data = None
+    if quotation_id:
+        from apps.quotations.models import Quotation
+        try:
+            quotation = Quotation.objects.prefetch_related(
+                'items__product__brand', 'items__product__category'
+            ).get(pk=quotation_id)
+
+            product_ids = [item.product_id for item in quotation.items.all() if item.product_id]
+            shop_stocks = {
+                s.product_id: s.quantity
+                for s in ProductStock.objects.filter(warehouse=shop, product_id__in=product_ids)
+            }
+            transferable_stocks = {
+                row['product_id']: row['qty']
+                for row in ProductStock.objects.filter(
+                    product_id__in=product_ids,
+                    warehouse__is_active=True,
+                    warehouse__is_shop=False,
+                    quantity__gt=0,
+                ).values('product_id').annotate(qty=Sum('quantity'))
+            }
+
+            initial_data = {
+                'quotation_number': quotation.quotation_number,
+                'discount': str(quotation.discount_amount),
+                'notes': f"Quotation {quotation.quotation_number}. {quotation.notes}".strip(),
+                'items': [{
+                    'product_id': item.product_id,
+                    'sku': item.product.sku if item.product else '',
+                    'display_name': (
+                        item.custom_description if item.is_custom
+                        else item.product.display_name if item.product
+                        else item.custom_description or 'Product removed'
+                    ),
+                    'brand': item.product.brand.name if item.product and item.product.brand else '',
+                    'category': item.product.category.name if item.product and item.product.category else '',
+                    'is_custom': item.is_custom or (item.product_id is None),
+                    'custom_description': item.custom_description,
+                    'quantity': item.quantity,
+                    'unit_price': str(item.unit_price),
+                    'cost_price': str(item.product.average_cost) if item.product else '0.00',
+                    'discount': str(item.discount),
+                    'shop_stock': shop_stocks.get(item.product_id, 0),
+                    'transferable_stock': transferable_stocks.get(item.product_id, 0),
+                    'total_stock': item.product.total_stock if item.product else 0,
+                } for item in quotation.items.all()]
+            }
+        except (Quotation.DoesNotExist, ValueError):
+            messages.warning(request, 'Quotation not found.')
+
     form = SaleForm(initial={'sale_date': timezone.localdate()})
 
     context = {
@@ -146,6 +198,7 @@ def sale_create(request):
         # sat in the markup and silently persisted against the reports.
         'payment_methods': Payment.PaymentMethod.choices,
         'can_quick_transfer': request.user.has_perm('warehouse.add_stocktransfer'),
+        'initial_data': initial_data,
     }
     return render(request, 'sales/sale_form.html', context)
 
