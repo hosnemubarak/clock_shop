@@ -264,3 +264,16 @@ class QuotationViewTests(TestCase):
         self.assertEqual(self.client.post(delete_url).status_code, 302)
         self.assertFalse(Quotation.objects.filter(pk=self.quotation.pk).exists())
         self.assertTrue(AuditLog.objects.filter(action='DELETE', object_id=self.quotation.pk).exists())
+
+    def test_detail_and_list_render_convert_to_sale_link(self):
+        self.editor.user_permissions.add(Permission.objects.get(
+            content_type__app_label='sales', codename='add_sale'
+        ))
+        convert_target = reverse('sales:sale_create') + f'?quotation={self.quotation.pk}'
+        detail_response = self.client.get(reverse('quotations:quotation_detail', args=[self.quotation.pk]))
+        self.assertContains(detail_response, convert_target)
+        self.assertContains(detail_response, 'Convert to Sale')
+
+        list_response = self.client.get(reverse('quotations:quotation_list'))
+        self.assertContains(list_response, convert_target)
+        self.assertContains(list_response, 'Convert to Sale')

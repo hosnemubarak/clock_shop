@@ -1648,6 +1648,72 @@ function initSaleCreate() {
         });
     }
 
+    function loadInitialData() {
+        var node = document.getElementById('saleInitialData');
+        if (!node) return;
+        try {
+            var data = JSON.parse(node.textContent);
+            if (!data) return;
+
+            if (data.notes && notesField) {
+                notesField.value = data.notes;
+            }
+            if (data.discount && el.orderDiscount) {
+                el.orderDiscount.value = data.discount;
+            }
+            if (Array.isArray(data.items)) {
+                data.items.forEach(function (item) {
+                    var isCustom = item.is_custom || !item.product_id;
+                    var unitPrice = toMinor(item.unit_price);
+                    var discount = toMinor(item.discount);
+                    var qty = Math.max(MIN_QTY, parseInt(item.quantity, 10) || 1);
+
+                    if (isCustom) {
+                        cart.push({
+                            productId: null,
+                            cartId: nextCustomId--,
+                            isCustom: true,
+                            customDescription: item.custom_description || item.display_name,
+                            sku: '',
+                            label: item.custom_description || item.display_name,
+                            meta: 'Custom item',
+                            unitPrice: unitPrice,
+                            costPrice: toMinor(item.cost_price || 0),
+                            qty: qty,
+                            discount: discount,
+                            stock: 0,
+                            transferableStock: 0,
+                            totalStock: 0
+                        });
+                    } else {
+                        var metaArr = [];
+                        if (item.brand) metaArr.push('Brand: ' + item.brand);
+                        if (item.category) metaArr.push('Category: ' + item.category);
+                        cart.push({
+                            productId: item.product_id,
+                            sku: item.sku || '',
+                            label: item.display_name || item.sku,
+                            meta: metaArr.join(' · '),
+                            brand: item.brand || '',
+                            unitPrice: unitPrice,
+                            qty: qty,
+                            discount: discount,
+                            stock: item.shop_stock != null ? item.shop_stock : 0,
+                            transferableStock: item.transferable_stock != null ? item.transferable_stock : 0,
+                            totalStock: item.total_stock != null ? item.total_stock : 0
+                        });
+                    }
+                });
+            }
+            if (cart.length > 0 && el.amountPaid) {
+                el.amountPaid.value = toMajor(grandTotal());
+            }
+        } catch (err) {
+            console.error('Failed to load initial sale data:', err);
+        }
+    }
+
+    loadInitialData();
     renderCustomerChip();
     render();
     el.productSearch.focus();

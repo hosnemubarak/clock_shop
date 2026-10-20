@@ -14,9 +14,11 @@ from django.test import TestCase, override_settings
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
+from datetime import date
 from apps.customers.models import Customer, Payment
 from apps.inventory.models import Brand, Category, Product, ProductStock
 from apps.core.models import AuditLog
+from apps.quotations.models import Quotation, QuotationItem
 from apps.sales.models import Sale, SaleItem
 from apps.warehouse.models import StockTransfer, Warehouse
 
@@ -661,6 +663,53 @@ class SaleCreatePageTests(SaleScreenTestMixin, TestCase):
         self.client.logout()
         response = self.client.get(reverse('sales:sale_create'))
         self.assertEqual(response.status_code, 302)
+
+    def test_prefills_from_quotation(self):
+        customer = Customer.objects.create(
+            name='Quotation Customer',
+            phone='01712345678',
+            credit_limit=Decimal('5000.00'),
+        )
+        quotation = Quotation.objects.create(
+            title='Office Clock Deal',
+            quotation_date=date(2026, 10, 20),
+            client_name='Quotation Customer',
+            client_phone='01712345678',
+            discount_amount=Decimal('50.00'),
+            notes='Special package deal',
+            created_by=self.user,
+        )
+        QuotationItem.objects.create(
+            quotation=quotation,
+            product=self.product,
+            quantity=2,
+            unit_price=Decimal('120.00'),
+            discount=Decimal('10.00'),
+        )
+        QuotationItem.objects.create(
+            quotation=quotation,
+            is_custom=True,
+            custom_description='Wall Mounting Service',
+            quantity=1,
+            unit_price=Decimal('80.00'),
+            discount=Decimal('0.00'),
+        )
+        quotation.calculate_totals()
+
+        response = self.client.get(reverse('sales:sale_create'), {'quotation': quotation.pk})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('initial_data', response.context)
+        initial = response.context['initial_data']
+        self.assertEqual(initial['quotation_number'], quotation.quotation_number)
+        self.assertNotIn('customer_id', initial)
+        self.assertEqual(initial['discount'], '50.00')
+        self.assertIn('Quotation', initial['notes'])
+        self.assertEqual(len(initial['items']), 2)
+        self.assertEqual(initial['items'][0]['product_id'], self.product.pk)
+        self.assertEqual(initial['items'][0]['quantity'], 2)
+        self.assertEqual(initial['items'][1]['is_custom'], True)
+        self.assertEqual(initial['items'][1]['custom_description'], 'Wall Mounting Service')
+        self.assertContains(response, 'id="saleInitialData"')
 
 
 class QuickTransferApiTests(SaleScreenTestMixin, TestCase):

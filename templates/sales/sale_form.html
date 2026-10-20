@@ -33,7 +33,12 @@
      data-currency="{{ CURRENCY_SYMBOL }}"
      data-allow-walkin="{{ ALLOW_WALKIN_CUSTOMERS|yesno:'true,false' }}">
 
-    {% include 'includes/page_header.html' with title='New Sale' %}
+    {% if initial_data %}
+        {% include 'includes/page_header.html' with title='New Sale (from Quotation: '|add:initial_data.quotation_number|add:')' %}
+        {{ initial_data|json_script:"saleInitialData" }}
+    {% else %}
+        {% include 'includes/page_header.html' with title='New Sale' %}
+    {% endif %}
 
     <form id="saleForm" novalidate>
         {% csrf_token %}
